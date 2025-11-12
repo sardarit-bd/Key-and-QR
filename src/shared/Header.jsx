@@ -21,7 +21,7 @@ export default function Header() {
                             </Link>
                         </li>
                         <li>
-                            <Link href="/about" className="text-gray-700 hover:text-[var(--brandColor,#3074B5)] transition-colors">
+                            <Link href="/shop" className="text-gray-700 hover:text-[var(--brandColor,#3074B5)] transition-colors">
                                 Shop
                             </Link>
                         </li>
