@@ -19,7 +19,7 @@ export default function Collection() {
     const [currentIndex, setCurrentIndex] = useState(0);
     const totalImages = images.length;
 
-    // ✅ Navigation bounds (loop correctly)
+    // Navigation bounds (loop correctly)
     const nextSlide = () => {
         setCurrentIndex((prev) =>
             prev + 1 > totalImages - VISIBLE_COUNT ? 0 : prev + 1
@@ -32,7 +32,7 @@ export default function Collection() {
         );
     };
 
-    // ✅ Visible images calculation
+    // Visible images calculation
     const visibleImages = useMemo(() => {
         return images.slice(currentIndex, currentIndex + VISIBLE_COUNT).length ===
             VISIBLE_COUNT
