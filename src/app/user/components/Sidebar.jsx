@@ -3,9 +3,11 @@ import Link from "next/link";
 import Image from "next/image";
 import { Home, Heart, QrCode, Settings, LogOut, ShoppingBag, Bookmark } from "lucide-react";
 import { useUserStore } from "@/store/userStore";
+import { useAuthStore } from "@/store/authStore";
 
 export default function Sidebar() {
     const { user } = useUserStore();
+    const { logout } = useAuthStore();
 
     const menu = [
         { name: "Dashboard", icon: Home, link: "/user" },
@@ -45,7 +47,9 @@ export default function Sidebar() {
                 ))}
 
                 <li className="pt-4">
-                    <button className="flex items-center gap-3 px-4 py-2 rounded-md text-red-500 hover:bg-red-50 w-full transition">
+                    <button
+                        onClick={logout}
+                        className="flex items-center gap-3 px-4 py-2 rounded-md text-red-500 hover:bg-red-50 w-full transition">
                         <LogOut size={18} /> Log Out
                     </button>
                 </li>
