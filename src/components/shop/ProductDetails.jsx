@@ -1,38 +1,68 @@
 "use client";
+
 import { useState } from "react";
 import Image from "next/image";
 import { Minus, Plus } from "lucide-react";
-
-const images = [
-    "/shop/chabi1.png",
-    "/shop/chabi2.png",
-    "/shop/chabi3.png",
-    "/shop/chabi4.png",
-];
+import Link from "next/link";
+import { useParams } from "next/navigation";
+import { useProductStore } from "@/store/productStore";
+import { useCartStore } from "@/store/cartStore";
+import RelatedProducts from "./Relatedproduct";
 
 export default function ProductDetails() {
-    const [selectedImage, setSelectedImage] = useState(images[0]);
+    const { id } = useParams();                          // dynamic id from URL
+    const products = useProductStore((state) => state.products);
+
+    const product = products.find((p) => p.id === Number(id));  // find product
+
+    const addToCart = useCartStore((state) => state.addToCart);
+
     const [quantity, setQuantity] = useState(1);
+
+    // fallback (404 style)
+    if (!product) {
+        return (
+            <section className="py-20 text-center text-xl">
+                Product Not Found
+            </section>
+        );
+    }
+
+    // If product has multiple images, use them, otherwise fallback to one image
+    const gallery = product.images ?? [product.image];
+    const [selectedImage, setSelectedImage] = useState(gallery[0]);
+
+    const handleAdd = () => {
+        for (let i = 0; i < quantity; i++) {
+            addToCart({
+                id: product.id,
+                name: product.name,
+                price: product.price,
+                img: selectedImage,
+            });
+        }
+    };
 
     return (
         <section className="bg-white text-black py-16 px-4 md:px-8">
             <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
-                {/* Left: Images */}
+
+                {/* LEFT: IMAGE GALLERY */}
                 <div>
                     {/* Main Image */}
-                    <div className="w-full rounded-xl overflow-hidden shadow-sm mb-4">
+                    <div className="w-full rounded-xl overflow-hidden shadow-sm mb-2">
                         <Image
                             src={selectedImage}
-                            alt="Digital Keychain"
+                            alt={product.name}
                             width={600}
                             height={600}
                             className="w-full h-auto object-cover rounded-xl"
                         />
                     </div>
 
-                    {/* Thumbnail Gallery */}
-                    <div className="flex gap-3 justify-start">
-                        {images.map((img, index) => (
+                    {/* Thumbnails */}
+                    <div className="flex gap-3">
+                        {gallery.map((img, index) => (
                             <button
                                 key={index}
                                 onClick={() => setSelectedImage(img)}
@@ -41,7 +71,7 @@ export default function ProductDetails() {
                             >
                                 <Image
                                     src={img}
-                                    alt={`Thumbnail ${index + 1}`}
+                                    alt={`Thumbnail ${index}`}
                                     width={80}
                                     height={80}
                                     className="object-cover hover:opacity-80 transition"
@@ -51,38 +81,27 @@ export default function ProductDetails() {
                     </div>
                 </div>
 
-                {/* Right: Product Info */}
-                <div className="flex flex-col justify-center text-left space-y-5">
-                    <h1 className="text-3xl font-semibold">Digital Keychain</h1>
-                    <p className="text-2xl font-medium text-gray-800">$250.00</p>
+                {/* RIGHT: PRODUCT INFO */}
+                <div className="flex flex-col justify-center space-y-5">
+                    <h1 className="text-3xl font-semibold">{product.name}</h1>
+                    <p className="text-2xl font-medium text-gray-800">
+                        ${product.price}
+                    </p>
 
                     <p className="text-gray-600 leading-relaxed">
-                        A premium smart keychain that combines sleek design with modern
-                        connectivity. Built with high-grade metal, it features both NFC and
-                        QR code technology—allowing instant sharing of your digital profile,
-                        website, or business links with a single tap or scan.
+                        {product.description || "High-quality premium NFC/QR smart keychain."}
                     </p>
 
                     <p className="text-sm text-gray-500">
-                        <strong>Brand:</strong> TAGTAG &nbsp; | &nbsp;
-                        <strong>Color:</strong> Black
+                        <strong>Brand:</strong> TAGTAG &nbsp;|&nbsp;
+                        <strong>Category:</strong> {product.category}
                     </p>
 
-                    <div>
-                        <h4 className="font-semibold mb-2">Key Features</h4>
-                        <ul className="list-disc list-inside text-gray-600 text-sm space-y-1">
-                            <li>Dual Technology: NFC + QR Code</li>
-                            <li>Works instantly with any smartphone</li>
-                            <li>Durable metallic body & branding options</li>
-                            <li>Secure data inside (read-only NFC tag)</li>
-                            <li>Ships worldwide</li>
-                        </ul>
-                    </div>
-
-                    {/* Quantity and Buttons */}
+                    {/* Quantity + Buttons */}
                     <div className="flex items-center gap-4 mt-4">
+
                         {/* Quantity Selector */}
-                        <div className="flex items-center border border-gray-300 rounded-md">
+                        <div className="flex items-center border border-gray-300 py-1 rounded-md">
                             <button
                                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
                                 className="p-2 hover:bg-gray-100"
@@ -98,16 +117,27 @@ export default function ProductDetails() {
                             </button>
                         </div>
 
-                        {/* Buttons */}
-                        <button className="px-6 py-3 border border-black rounded-md hover:bg-black hover:text-white transition">
+                        {/* Add to Cart */}
+                        <button
+                            onClick={handleAdd}
+                            className="px-6 py-3 border border-gray-700 rounded-md hover:bg-gray-700 hover:text-white transition"
+                        >
                             Add to Cart
                         </button>
-                        <button className="px-6 py-3 bg-black text-white rounded-md hover:bg-gray-800 transition">
+
+                        {/* Buy Now */}
+                        <Link
+                            href="/checkout"
+                            className="px-6 py-3 bg-gray-700 text-white rounded-md hover:bg-gray-800 transition"
+                        >
                             Buy it Now
-                        </button>
+                        </Link>
                     </div>
                 </div>
             </div>
+
+            {/* Related Products */}
+            <RelatedProducts />
         </section>
     );
 }

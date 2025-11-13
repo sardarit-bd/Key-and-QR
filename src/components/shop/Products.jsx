@@ -1,96 +1,13 @@
 "use client";
+
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-
-const products = [
-    {
-        id: 1,
-        name: "Digital Keychain",
-        price: "$400",
-        category: "Smart NFC Keychain",
-        image: "/shop/chabi1.png",
-    },
-    {
-        id: 2,
-        name: "Flex QR Keyring",
-        price: "$600",
-        category: "Custom Engraved Tag",
-        image: "/shop/chabi2.png",
-    },
-    {
-        id: 3,
-        name: "One Smart Keychain",
-        price: "$500",
-        category: "NFC & QR Hybrid",
-        image: "/shop/chabi3.png",
-    },
-    {
-        id: 4,
-        name: "Digital Keychain",
-        price: "$250",
-        category: "NFC Ready Gift",
-        image: "/shop/chabi4.png",
-    },
-    {
-        id: 5,
-        name: "Flex QR Keyring",
-        price: "$550",
-        category: "Laser Engraved Metal",
-        image: "/shop/chabi5.png",
-    },
-    {
-        id: 6,
-        name: "One Smart Keychain",
-        price: "$500",
-        category: "NFC + QR Edition",
-        image: "/shop/chabi6.png",
-    },
-    {
-        id: 7,
-        name: "Flex QR Keyring",
-        price: "$450",
-        category: "Premium Finish",
-        image: "/shop/chabi7.png",
-    },
-    {
-        id: 8,
-        name: "One Smart Keychain",
-        price: "$510",
-        category: "Digital NFC Tag",
-        image: "/shop/chabi8.png",
-    },
-    {
-        id: 9,
-        name: "Flex QR Keyring",
-        price: "$490",
-        category: "Engraved Black Steel",
-        image: "/shop/chabi9.png",
-    },
-    {
-        id: 10,
-        name: "One Smart Keychain",
-        price: "$520",
-        category: "Smart Gift Edition",
-        image: "/shop/chabi10.png",
-    },
-    {
-        id: 11,
-        name: "Digital Keychain",
-        price: "$500",
-        category: "Personal NFC Tag",
-        image: "/shop/chabi11.png",
-    },
-    {
-        id: 12,
-        name: "Flex QR Keyring",
-        price: "$460",
-        category: "Engraved Leather",
-        image: "/shop/chabi12.png",
-    },
-];
+import { useProductStore } from "@/store/productStore";
 
 export default function ShopGrid() {
+    const products = useProductStore((state) => state.products);
+
     const [page, setPage] = useState(1);
     const perPage = 12;
 
@@ -101,11 +18,13 @@ export default function ShopGrid() {
     return (
         <section className="bg-white text-black py-16 px-4 md:px-8">
             <div className="max-w-7xl mx-auto">
+
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
                     <p className="text-gray-500 text-sm">
                         Showing {(start + 1)}–{start + paginated.length} of {products.length} results
                     </p>
+
                     <button className="p-2 border border-gray-300 rounded-md hover:bg-gray-100 transition">
                         <svg
                             xmlns="http://www.w3.org/2000/svg"
@@ -140,12 +59,15 @@ export default function ShopGrid() {
                                     className="w-full h-56 object-cover"
                                 />
                             </Link>
+
                             <div className="p-4 text-left">
                                 <h3 className="font-semibold text-base">
                                     <Link href={`/shop/${product.id}`}>{product.name}</Link>
                                 </h3>
                                 <p className="text-gray-500 text-sm">{product.category}</p>
-                                <p className="text-gray-900 font-semibold mt-1">{product.price}</p>
+                                <p className="text-gray-900 font-semibold mt-1">
+                                    ${product.price}
+                                </p>
                             </div>
                         </div>
                     ))}
@@ -165,8 +87,8 @@ export default function ShopGrid() {
                             key={i}
                             onClick={() => setPage(i + 1)}
                             className={`px-3 py-1 border rounded ${page === i + 1
-                                ? "bg-black text-white border-black"
-                                : "border-gray-300 text-gray-600 hover:bg-gray-100"
+                                    ? "bg-black text-white border-black"
+                                    : "border-gray-300 text-gray-600 hover:bg-gray-100"
                                 }`}
                         >
                             {i + 1}
@@ -180,6 +102,7 @@ export default function ShopGrid() {
                         &gt;
                     </button>
                 </div>
+
             </div>
         </section>
     );
