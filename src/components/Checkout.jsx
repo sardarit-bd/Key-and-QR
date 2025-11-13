@@ -4,15 +4,22 @@ import Image from "next/image";
 import Link from "next/link";
 import { useCartStore } from "@/store/cartStore";
 import { useState } from "react";
+import { ChevronDown } from "lucide-react";
 
 export default function Checkout() {
     const cart = useCartStore((state) => state.cart);
 
-    // price calculations
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-    const taxRate = 0.0875; // 8.75%
+    const taxRate = 0.0875;
     const tax = subtotal * taxRate;
     const total = subtotal + tax;
+
+    const [countryOpen, setCountryOpen] = useState(false);
+    const [selectedCountry, setSelectedCountry] = useState("Select your country");
+
+    const [paymentMethod, setPaymentMethod] = useState("cod");
+
+    const countries = ["Bangladesh", "India", "USA", "UK", "Australia"];
 
     return (
         <section className="max-w-6xl mx-auto py-12 px-4 md:px-8 grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -25,7 +32,6 @@ export default function Checkout() {
 
                 <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
 
-                {/* Cart Items */}
                 <div className="space-y-4">
                     {cart.map((item) => (
                         <div key={item.id} className="flex items-center justify-between">
@@ -47,23 +53,19 @@ export default function Checkout() {
                     ))}
                 </div>
 
-                {/* Price Breakdown */}
                 <div className="border-t mt-6 pt-4 space-y-2 text-sm">
                     <div className="flex justify-between text-gray-600">
                         <span>Subtotal</span>
                         <span>${subtotal.toFixed(2)}</span>
                     </div>
-
                     <div className="flex justify-between text-gray-600">
                         <span>Tax (8.75%)</span>
                         <span>${tax.toFixed(2)}</span>
                     </div>
-
                     <div className="flex justify-between text-gray-600">
                         <span>Shipping</span>
                         <span className="text-green-600">Free</span>
                     </div>
-
                     <div className="flex justify-between text-base font-semibold mt-2">
                         <span>Total</span>
                         <span>${total.toFixed(2)}</span>
@@ -77,7 +79,7 @@ export default function Checkout() {
 
                 <form className="space-y-6">
 
-                    {/* Contact info */}
+                    {/* Email */}
                     <div>
                         <label className="text-sm font-medium">Email</label>
                         <input
@@ -87,36 +89,7 @@ export default function Checkout() {
                         />
                     </div>
 
-                    {/* PAYMENT METHOD */}
-                    <div>
-                        <label className="text-sm font-medium">Payment method</label>
-
-                        <div className="space-y-2 mt-2">
-                            <button
-                                type="button"
-                                className="flex items-center justify-between w-full border rounded-md px-4 py-3 hover:bg-gray-50"
-                            >
-                                <span>💳 Card</span>
-                            </button>
-
-                            <button
-                                type="button"
-                                className="flex items-center justify-between w-full border rounded-md px-4 py-3 hover:bg-gray-50"
-                            >
-                                <span>🏦 Bank</span>
-                            </button>
-
-                            <button
-                                type="button"
-                                className="flex items-center justify-between w-full border rounded-md px-4 py-3 hover:bg-gray-50"
-                            >
-                                <span>… More</span>
-                                <span className="text-gray-400">Visa | Amex | Bkash | Nagad</span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Shipping Information */}
+                    {/* Shipping Info */}
                     <div>
                         <h3 className="text-sm font-medium mb-2">Shipping information</h3>
 
@@ -127,18 +100,86 @@ export default function Checkout() {
                                 className="w-full border rounded-md px-4 py-2"
                             />
 
-                            <select className="w-full border rounded-md px-4 py-2">
-                                <option>Select your country</option>
-                                <option>Bangladesh</option>
-                                <option>India</option>
-                                <option>USA</option>
-                            </select>
+                            {/* CUSTOM SELECT DROPDOWN */}
+                            <div className="relative">
+                                <button
+                                    type="button"
+                                    onClick={() => setCountryOpen(!countryOpen)}
+                                    className="w-full border rounded-md px-4 py-2 flex justify-between items-center"
+                                >
+                                    {selectedCountry}
+                                    <ChevronDown size={18} />
+                                </button>
+
+                                {countryOpen && (
+                                    <div className="absolute bg-white w-full border rounded-md shadow-md mt-1 z-10">
+                                        {countries.map((c) => (
+                                            <p
+                                                key={c}
+                                                onClick={() => {
+                                                    setSelectedCountry(c);
+                                                    setCountryOpen(false);
+                                                }}
+                                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                            >
+                                                {c}
+                                            </p>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
 
                             <input
                                 type="text"
                                 placeholder="Address"
                                 className="w-full border rounded-md px-4 py-2"
                             />
+                        </div>
+
+                        {/* PAYMENT METHOD TABS */}
+                        <div className="mt-6">
+                            <h3 className="text-sm font-medium mb-3">
+                                Payment Method
+                            </h3>
+
+                            <div className="flex items-center gap-3 border rounded-lg p-1 bg-gray-100">
+                                <button
+                                    type="button"
+                                    onClick={() => setPaymentMethod("cod")}
+                                    className={`flex-1 py-2 rounded-md text-sm font-medium transition ${paymentMethod === "cod"
+                                        ? "bg-white shadow-sm"
+                                        : "text-gray-600"
+                                        }`}
+                                >
+                                    Cash on Delivery
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => setPaymentMethod("stripe")}
+                                    className={`flex-1 py-2 rounded-md text-sm font-medium transition ${paymentMethod === "stripe"
+                                        ? "bg-white shadow-sm"
+                                        : "text-gray-600"
+                                        }`}
+                                >
+                                    Pay with Card (Stripe)
+                                </button>
+                            </div>
+
+                            {/* TAB CONTENT */}
+                            <div className="mt-4">
+                                {paymentMethod === "cod" && (
+                                    <p className="text-sm text-gray-600">
+                                        You will pay in cash after the product is delivered.
+                                    </p>
+                                )}
+
+                                {paymentMethod === "stripe" && (
+                                    <p className="text-sm text-gray-600">
+                                        A secure popup will appear to complete your card payment.
+                                    </p>
+                                )}
+                            </div>
                         </div>
                     </div>
 
@@ -152,7 +193,6 @@ export default function Checkout() {
 
                 </form>
             </div>
-
         </section>
     );
 }

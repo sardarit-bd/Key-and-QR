@@ -3,7 +3,7 @@ import Checkout from "@/components/Checkout"
 
 export default function page() {
     return (
-        <>
+        <section className="bg-white">
             <Banner
                 title="Shop"
                 breadcrumbs={[
@@ -16,6 +16,6 @@ export default function page() {
             />
 
             <Checkout />
-        </>
+        </section>
     )
 }
