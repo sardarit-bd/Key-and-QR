@@ -1,5 +1,6 @@
-import Banner from "@/shared/Banner";
-import Cart from "@/components/Cart";
+import Banner from "@/shared/Banner"
+import Checkout from "@/components/Checkout"
+
 export default function page() {
     return (
         <>
@@ -10,9 +11,11 @@ export default function page() {
                     { label: "Shop", href: "/shop" },
                     { label: "Product Details", href: "#" },
                     { label: "Cart", href: "/cart" },
+                    { label: "Checkout", href: "/checkout" },
                 ]}
             />
-            <Cart />
+
+            <Checkout />
         </>
     )
 }

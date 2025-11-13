@@ -29,7 +29,7 @@ export default function ProductDetails() {
     }
 
     // If product has multiple images, use them, otherwise fallback to one image
-    const gallery = product.images ?? [product.image];
+    const gallery = product.gallery ?? [product.image];
     const [selectedImage, setSelectedImage] = useState(gallery[0]);
 
     const handleAdd = () => {
@@ -93,7 +93,7 @@ export default function ProductDetails() {
                     </p>
 
                     <p className="text-sm text-gray-500">
-                        <strong>Brand:</strong> TAGTAG &nbsp;|&nbsp;
+                        <strong>Brand:</strong> {product.brand} &nbsp;|&nbsp;
                         <strong>Category:</strong> {product.category}
                     </p>
 
