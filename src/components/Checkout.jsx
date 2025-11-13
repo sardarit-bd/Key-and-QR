@@ -167,7 +167,7 @@ export default function Checkout() {
                             </div>
 
                             {/* TAB CONTENT */}
-                            <div className="mt-4">
+                            <div className="mt-2">
                                 {paymentMethod === "cod" && (
                                     <p className="text-sm text-gray-600">
                                         You will pay in cash after the product is delivered.
@@ -186,7 +186,7 @@ export default function Checkout() {
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-900 mt-4"
+                        className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-900"
                     >
                         Place Order
                     </button>

@@ -76,9 +76,10 @@ export default function Testimonial() {
                             key={prev.id + "before"}
                             initial={{ opacity: 0, x: -100 }}
                             animate={{ opacity: 0.5, x: 0, scale: 0.95 }}
+                            onClick={prevSlide}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.5 }}
-                            className="hidden md:block w-[180px] absolute left-0 bottom-0 rounded-xl overflow-hidden shadow-sm"
+                            className="hidden md:block w-[180px] absolute left-[170px] bottom-0 rounded-xl overflow-hidden shadow-sm"
                         >
                             <Image
                                 src={prev.image}
@@ -139,7 +140,8 @@ export default function Testimonial() {
                             animate={{ opacity: 0.5, x: 0, scale: 0.95 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.5 }}
-                            className="absolute right-0 top-0 hidden md:block w-[180px] rounded-xl overflow-hidden shadow-sm"
+                            onClick={nextSlide}
+                            className="absolute right-[170px] top-0 hidden md:block w-[180px] rounded-xl overflow-hidden shadow-sm"
                         >
                             <Image
                                 src={next.image}
