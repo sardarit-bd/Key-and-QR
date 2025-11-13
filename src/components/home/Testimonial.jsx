@@ -64,7 +64,7 @@ export default function Testimonial() {
                     {/* Left Arrow */}
                     <button
                         onClick={prevSlide}
-                        className="absolute left-[200px] md:left-[305px] top-0 z-20 bg-white p-3 rounded-lg border-2 border-gray-100 hover:scale-110 transition"
+                        className="absolute left-[0px] md:left-[305px] top-0 z-20 bg-white p-3 rounded-lg border-2 border-gray-100 hover:scale-110 transition"
                     >
                         <ArrowLeft className="w-5 h-5 text-gray-800" />
                     </button>
@@ -161,7 +161,7 @@ export default function Testimonial() {
                     {/* Right Arrow */}
                     <button
                         onClick={nextSlide}
-                        className="absolute right-[200px] md:right-[305px] bottom-0 z-20 bg-white p-3 rounded-lg border-2 border-gray-100 hover:scale-110 transition"
+                        className="absolute right-[0px] md:right-[305px] bottom-0 z-20 bg-white p-3 rounded-lg border-2 border-gray-100 hover:scale-110 transition"
                     >
                         <ArrowRight className="w-5 h-5 text-gray-800" />
                     </button>
