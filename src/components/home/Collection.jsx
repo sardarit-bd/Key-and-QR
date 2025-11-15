@@ -64,7 +64,7 @@ export default function Collection() {
                     transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
                     viewport={{ once: true }}
                 >
-                    Choose your perfect keychain. Each one comes with a unique QR code and inspirational quote.
+                    Choose your perfect keychain. Each one comes with a unique QR <br />code and inspirational quote.
                 </motion.p>
 
                 {/* Carousel */}

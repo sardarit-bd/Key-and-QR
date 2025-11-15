@@ -35,7 +35,7 @@ export default function Sidebar() {
 
             <ul className="mt-6 space-y-2">
                 {menu.map((item) => (
-                    <li key={item.name}>
+                    <li key={item.name}>        
                         <Link
                             href={item.link}
                             className="flex items-center gap-3 px-4 py-2 rounded-md hover:bg-gray-100 transition"
@@ -45,7 +45,7 @@ export default function Sidebar() {
                         </Link>
                     </li>
                 ))}
-
+ 
                 <li className="pt-4">
                     <button
                         onClick={logout}

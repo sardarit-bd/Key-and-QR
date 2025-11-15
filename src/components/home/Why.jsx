@@ -7,7 +7,7 @@ const features = [
     {
         icon: QrCode,
         title: "Auto QR Generation",
-        desc: "Every keychain comes with a unique QR code that links to an inspirational quote.",
+        desc: `Every keychain comes with a unique QR code that links to an inspirational quote.`,
         direction: "left",
     },
     {
@@ -46,11 +46,11 @@ export default function Why() {
                     transition={{ duration: 1, delay: 0.1, ease: "easeOut" }}
                     viewport={{ once: true }}
                 >
-                    More than just a keychain – it’s a daily reminder of what truly matters.
+                    More than just a keychain – it's a daily reminder of what <br /> matters most
                 </motion.p>
 
                 {/* Feature Cards */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10 mt-8">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 md:gap-10 mt-8 text-left py-4">
                     {features.map((item, index) => {
                         const Icon = item.icon;
 
@@ -73,13 +73,13 @@ export default function Why() {
                                     delay: index * 0.15,
                                 }}
                                 viewport={{ once: true }}
-                                className="bg-gray-50 hover:bg-gray-100 rounded-2xl p-8 sm:p-10 shadow-sm hover:shadow-lg transform hover:scale-[1.03] transition-all duration-300 ease-in-out"
+                                className="bg-gray-50  hover:bg-gray-100 rounded-2xl p-8 sm:p-10  shadow-sm hover:shadow-lg transform hover:scale-[1.03] transition-all duration-300 ease-in-out"
                             >
-                                <div className="bg-white w-14 h-14 mx-auto flex items-center justify-center rounded-xl shadow mb-6">
+                                <div className="bg-white text-left w-14 h-14 flex items-center justify-center rounded-xl shadow mb-6">
                                     <Icon size={28} className="text-gray-800" />
                                 </div>
-                                <h3 className="text-lg md:text-xl font-semibold mb-2">{item.title}</h3>
-                                <p className="text-gray-600 text-sm sm:text-base leading-relaxed">{item.desc}</p>
+                                <h3 className="text-lg md:text-xl text-gray-800 font-semibold mb-2 mt-6">{item.title}</h3>
+                                <p className="text-gray-600 text-sm sm:text-base max-w-[320px] leading-relaxed mt-6">{item.desc}</p>
                             </motion.div>
                         );
                     })}
