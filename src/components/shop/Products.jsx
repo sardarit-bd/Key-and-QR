@@ -31,36 +31,34 @@ export default function ShopGrid() {
                         {/* GRID VIEW BUTTON */}
                         <button
                             onClick={() => setView("grid")}
-                            className={`p-2 border rounded-md transition ${
-                                view === "grid"
+                            className={`p-2 border rounded-md transition ${view === "grid"
                                     ? "bg-black text-white border-black"
                                     : "border-gray-300 text-gray-600 hover:bg-gray-100"
-                            }`}
+                                }`}
                         >
                             {/* Grid Icon */}
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
-                                 viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"
-                                 className="w-5 h-5">
-                                <path strokeLinecap="round" strokeLinejoin="round" 
-                                      d="M3.75 3.75h6v6h-6v-6zM14.25 3.75h6v6h-6v-6zM3.75 14.25h6v6h-6v-6zM14.25 14.25h6v6h-6v-6z" />
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none"
+                                viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"
+                                className="w-5 h-5">
+                                <path strokeLinecap="round" strokeLinejoin="round"
+                                    d="M3.75 3.75h6v6h-6v-6zM14.25 3.75h6v6h-6v-6zM3.75 14.25h6v6h-6v-6zM14.25 14.25h6v6h-6v-6z" />
                             </svg>
                         </button>
 
                         {/* LIST VIEW BUTTON */}
                         <button
                             onClick={() => setView("list")}
-                            className={`p-2 border rounded-md transition ${
-                                view === "list"
+                            className={`p-2 border rounded-md transition ${view === "list"
                                     ? "bg-black text-white border-black"
                                     : "border-gray-300 text-gray-600 hover:bg-gray-100"
-                            }`}
+                                }`}
                         >
                             {/* List Icon */}
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none"
-                                 viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"
-                                 className="w-5 h-5">
+                                viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"
+                                className="w-5 h-5">
                                 <path strokeLinecap="round" strokeLinejoin="round"
-                                      d="M3 4.5h18M3 9h18M3 13.5h18M3 18h18" />
+                                    d="M3 4.5h18M3 9h18M3 13.5h18M3 18h18" />
                             </svg>
                         </button>
                     </div>
@@ -148,11 +146,10 @@ export default function ShopGrid() {
                         <button
                             key={i}
                             onClick={() => setPage(i + 1)}
-                            className={`px-3 py-1 border rounded ${
-                                page === i + 1
+                            className={`px-3 py-1 border rounded ${page === i + 1
                                     ? "bg-black text-white border-black"
                                     : "border-gray-300 text-gray-600 hover:bg-gray-100"
-                            }`}
+                                }`}
                         >
                             {i + 1}
                         </button>

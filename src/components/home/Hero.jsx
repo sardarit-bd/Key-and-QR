@@ -44,8 +44,8 @@ export default function Hero() {
                 {/* Right Image */}
                 <motion.div
                     className="w-full md:w-1/2 flex justify-center md:justify-end"
-                    initial={{ opacity: 0, scale: 0.9, x: 50 }}
-                    whileInView={{ opacity: 1, scale: 1, x: 0 }}
+                    initial={{ opacity: 0, scale: 0.9, y: 50 }}
+                    whileInView={{ opacity: 1, scale: 1, y: 0 }}
                     transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
                     viewport={{ once: true }}
                 >

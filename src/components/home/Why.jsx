@@ -43,7 +43,7 @@ export default function Why() {
                     className="text-gray-600 text-base sm:text-lg md:text-xl leading-relaxed mb-14"
                     initial={{ opacity: 0, y: 30 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 1, delay: 0.1, ease: "easeOut" }}
+                    transition={{ duration: 0.6, delay: 0.1, ease: "easeOut" }}
                     viewport={{ once: true }}
                 >
                     More than just a keychain – it's a daily reminder of what <br /> matters most
@@ -66,11 +66,11 @@ export default function Why() {
                                 initial={variants[item.direction].initial}
                                 whileInView={variants[item.direction].animate}
                                 transition={{
-                                    type: "spring",
+                                    type: "tween",
                                     stiffness: 60,
-                                    damping: 14,
-                                    duration: 1.1,
-                                    delay: index * 0.15,
+                                    damping: 10,
+                                    duration: 0.6,
+                                    delay: index * 0.1,
                                 }}
                                 viewport={{ once: true }}
                                 className="bg-gray-50  hover:bg-gray-100 rounded-2xl p-8 sm:p-10  shadow-sm hover:shadow-lg transform hover:scale-[1.03] transition-all duration-300 ease-in-out"
