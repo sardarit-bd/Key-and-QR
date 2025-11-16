@@ -9,7 +9,7 @@ export default function ShopGrid() {
     const products = useProductStore((state) => state.products);
 
     const [page, setPage] = useState(1);
-    const [view, setView] = useState("grid"); // grid | list
+    const [view, setView] = useState("grid");
 
     const perPage = 12;
     const totalPages = Math.ceil(products.length / perPage);
@@ -32,8 +32,8 @@ export default function ShopGrid() {
                         <button
                             onClick={() => setView("grid")}
                             className={`p-2 border rounded-md transition ${view === "grid"
-                                    ? "bg-black text-white border-black"
-                                    : "border-gray-300 text-gray-600 hover:bg-gray-100"
+                                ? "bg-black text-white border-black"
+                                : "border-gray-300 text-gray-600 hover:bg-gray-100"
                                 }`}
                         >
                             {/* Grid Icon */}
@@ -49,8 +49,8 @@ export default function ShopGrid() {
                         <button
                             onClick={() => setView("list")}
                             className={`p-2 border rounded-md transition ${view === "list"
-                                    ? "bg-black text-white border-black"
-                                    : "border-gray-300 text-gray-600 hover:bg-gray-100"
+                                ? "bg-black text-white border-black"
+                                : "border-gray-300 text-gray-600 hover:bg-gray-100"
                                 }`}
                         >
                             {/* List Icon */}
@@ -147,8 +147,8 @@ export default function ShopGrid() {
                             key={i}
                             onClick={() => setPage(i + 1)}
                             className={`px-3 py-1 border rounded ${page === i + 1
-                                    ? "bg-black text-white border-black"
-                                    : "border-gray-300 text-gray-600 hover:bg-gray-100"
+                                ? "bg-black text-white border-black"
+                                : "border-gray-300 text-gray-600 hover:bg-gray-100"
                                 }`}
                         >
                             {i + 1}
