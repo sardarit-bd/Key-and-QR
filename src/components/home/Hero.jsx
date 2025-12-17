@@ -43,19 +43,19 @@ export default function Hero() {
 
                 {/* Right Image */}
                 <motion.div
-                    className="w-full md:w-1/2 flex justify-center md:justify-end"
+                    className="w-full md:w-1/2 flex justify-center items"
                     initial={{ opacity: 0, scale: 0.9, y: 50 }}
                     whileInView={{ opacity: 1, scale: 1, y: 0 }}
                     transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
                     viewport={{ once: true }}
                 >
-                    <div className="relative w-full max-w-[500px] sm:max-w-[600px]">
+                    <div className="relative w-full max-w-[350px] h-[300px] sm:max-w-[600px] sm:max-h-[450px]">
                         <Image
-                            src="/home/hero.png"
+                            src="/home/keychain.png"
                             alt="Hero Image"
-                            width={600}
-                            height={400}
-                            className="rounded-xl shadow-lg grayscale hover:grayscale-0 transition w-full h-auto"
+                            width={1000}
+                            height={1000}
+                            className="w-full h-full"
                             priority
                         />
                     </div>
