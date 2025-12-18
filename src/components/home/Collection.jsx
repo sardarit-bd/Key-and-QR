@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useMemo } from "react";
 import { motion } from "framer-motion";
-import Image from "next/image";
 import { ArrowLeft, ArrowRight } from "lucide-react";
+import Image from "next/image";
+import { useMemo, useState } from "react";
 
 const images = [
     "/home/chabi1.png",
@@ -45,7 +45,7 @@ export default function Collection() {
 
     return (
         <section className="bg-white text-black py-20 overflow-hidden">
-            <div className="container mx-auto text-center relative px-4 sm:px-6 lg:px-8">
+            <div className="max-w-7xl mx-auto text-center relative px-4">
                 {/* Heading */}
                 <motion.h2
                     className="text-3xl md:text-5xl font-bold mb-4"
@@ -68,18 +68,18 @@ export default function Collection() {
                 </motion.p>
 
                 {/* Carousel */}
-                <div className="relative w-full  flex items-center justify-center">
+                <div className="relative w-full flex items-center justify-center">
                     {/* Left Arrow */}
                     <button
                         aria-label="Previous slide"
                         onClick={prevSlide}
-                        className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow hover:scale-110 transition-transform duration-300"
+                        className="absolute left-2 md:-left-5 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm shadow-xl p-3 rounded-lg hover:scale-110 transition-transform duration-300 curosr-pointer"
                     >
                         <ArrowLeft className="w-5 h-5 text-gray-800" />
                     </button>
 
                     {/* Image Wrapper */}
-                    <div className="overflow-hidden rounded-lg w-full md:w-[92%] mx-auto">
+                    <div className="overflow-hidden rounded-lg w-full md:w-[100%] mx-auto">
                         <motion.div
                             key={currentIndex}
                             initial={{ x: 80, opacity: 0 }}
@@ -109,7 +109,7 @@ export default function Collection() {
                     <button
                         aria-label="Next slide"
                         onClick={nextSlide}
-                        className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm p-3 rounded-lg shadow hover:scale-110 transition-transform duration-300"
+                        className="absolute right-2 md:-right-5 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm p-3 rounded-lg hover:scale-110 shadow-xl transition-transform duration-300 curosr-pointer"
                     >
                         <ArrowRight className="w-5 h-5 text-gray-800" />
                     </button>

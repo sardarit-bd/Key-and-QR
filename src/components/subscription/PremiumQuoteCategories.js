@@ -1,43 +1,45 @@
+import { Dice5, HandHeart, Handshake, PartyPopper, Rocket, Sparkles } from "lucide-react";
+
 export default function PremiumQuoteCategories() {
   const categories = [
     {
       title: "Motivation",
       desc: "Stay driven with quotes that spark your ambition and push you forward.",
-      icon: "🚀",
+      icon: <Rocket />,
     },
     {
       title: "Love",
       desc: "Discover words that warm your heart and celebrate meaningful connections.",
-      icon: "💞",
+      icon: <HandHeart />,
     },
     {
       title: "Gratitude",
       desc: "Find calm and appreciation through quotes that remind you to cherish life’s blessings.",
-      icon: "🙏",
+      icon: <Handshake />,
     },
     {
       title: "Faith",
       desc: "Uplifting thoughts to strengthen your spirit and renew your sense of hope.",
-      icon: "✨",
+      icon: <Sparkles />,
     },
     {
       title: "Joy",
       desc: "Spread smiles with quotes that celebrate positivity and simple joys.",
-      icon: "🎉",
+      icon: <PartyPopper />,
     },
     {
       title: "Random",
       desc: "Let fate pick your quote — a fresh dose of inspiration every time.",
-      icon: "🎲",
+      icon: <Dice5 />,
     },
   ];
 
   return (
-    <section className="bg-white py-20 px-4">
-      <div className="max-w-6xl mx-auto">
-        
+    <section className="bg-white py-20">
+      <div className="max-w-7xl px-4 mx-auto">
+
         {/* Heading */}
-        <h2 className="text-center text-2xl font-semibold text-gray-900 mb-12">
+        <h2 className="text-center text-3xl font-semibold text-gray-900 mb-12">
           Premium Quote Categories
         </h2>
 
@@ -46,7 +48,7 @@ export default function PremiumQuoteCategories() {
           {categories.map((item, index) => (
             <div
               key={index}
-              className="rounded-xl bg-gray-50 p-6 transition hover:shadow-md"
+              className="rounded-lg bg-[#F4F5F7] p-6 transition hover:shadow-md"
             >
               {/* Icon */}
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-white text-lg shadow-sm">

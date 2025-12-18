@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useState } from "react";
 
 const products = [
     {
@@ -69,9 +69,9 @@ export default function RelatedProducts() {
             </h2>
 
             {/* Product grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-4">
                 {products.slice(0, visibleCount).map((item) => (
-                    <div key={item.id} className="border rounded-lg overflow-hidden">
+                    <div key={item.id} className="bg-gray-100 rounded-md overflow-hidden">
                         {/* Image */}
                         <div className="relative w-full h-[220px]">
                             <Link href={`/shop/${item.id}`}>

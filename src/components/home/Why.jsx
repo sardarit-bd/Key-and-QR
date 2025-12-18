@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { QrCode, Sparkles, Crown } from "lucide-react";
+import { Crown, QrCode, Sparkles } from "lucide-react";
 
 const features = [
     {
@@ -27,7 +27,7 @@ const features = [
 export default function Why() {
     return (
         <section className="bg-white text-black py-20 overflow-hidden">
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <div className="max-w-7xl mx-auto px-4 text-center">
                 {/* Heading */}
                 <motion.h2
                     className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6"
