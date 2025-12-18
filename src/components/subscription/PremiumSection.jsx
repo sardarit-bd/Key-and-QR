@@ -1,11 +1,15 @@
+import { Crown } from "lucide-react";
+
 export default function PremiumSection() {
   return (
-    <section className="flex items-center justify-center bg-white py-20 px-4">
+    <section className="flex items-center justify-center bg-white py-20 pb-6 px-4">
       <div className="w-full max-w-md text-center">
-        
+
         {/* Badge */}
-        <div className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-4 py-1 text-sm text-gray-700 mb-6">
-          <span className="text-base">👑</span>
+        <div className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-md text-gray-700 mb-6">
+          <span className="text-base">
+            <Crown size={18} />
+          </span>
           <span>Premium Membership</span>
         </div>
 
@@ -21,7 +25,7 @@ export default function PremiumSection() {
 
         {/* Card */}
         <div className="rounded-xl border border-gray-200 p-8 shadow-sm">
-          
+
           {/* Price */}
           <div className="mb-6">
             <span className="text-4xl font-bold text-gray-900">$2.99</span>

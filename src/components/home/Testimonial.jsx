@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import Image from "next/image";
+import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, Quote } from "lucide-react";
+import Image from "next/image";
+import { useState } from "react";
 
 const testimonials = [
     {
@@ -50,7 +50,7 @@ export default function Testimonial() {
 
     return (
         <section className="bg-white text-black py-20 overflow-hidden">
-            <div className="container mx-auto px-6 text-center relative">
+            <div className="max-w-7xl mx-auto px-4 text-center relative">
                 {/* Heading */}
                 <h2 className="text-3xl md:text-5xl font-bold mb-4">
                     What Our Client Say
@@ -64,9 +64,9 @@ export default function Testimonial() {
                     {/* Left Arrow */}
                     <button
                         onClick={prevSlide}
-                        className="absolute left-[0px] md:left-[305px] top-0 z-20 bg-white p-3 rounded-lg border-2 border-gray-100 hover:scale-110 transition"
+                        className="absolute left-[75%] lg:left-[175px] top-[90%] lg:top-0 z-20 bg-gray-900 p-3 rounded-lg border-2 border-gray-100 hover:scale-110 transition cursor-pointer"
                     >
-                        <ArrowLeft className="w-5 h-5 text-gray-800" />
+                        <ArrowLeft className="w-5 h-5 text-white" />
                     </button>
 
                     {/* Slider */}
@@ -75,18 +75,18 @@ export default function Testimonial() {
                         <motion.div
                             key={prev.id + "before"}
                             initial={{ opacity: 0, x: -100 }}
-                            animate={{ opacity: 0.5, x: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, x: 0, scale: 0.95 }}
                             onClick={prevSlide}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.5 }}
-                            className="hidden md:block w-[180px] absolute left-[170px] bottom-0 rounded-xl overflow-hidden shadow-sm"
+                            className="hidden lg:block w-[150px] h-[180px] absolute left-[75px] bottom-0 rounded-xl overflow-hidden shadow-sm"
                         >
                             <Image
                                 src={prev.image}
                                 alt={prev.name}
                                 width={200}
                                 height={200}
-                                className="rounded-xl object-cover"
+                                className="rounded-xl h-full object-cover"
                             />
                             <div className="absolute bottom-2 left-2 text-left text-white text-sm z-10">
                                 <p className="font-semibold">{prev.name}</p>
@@ -103,7 +103,7 @@ export default function Testimonial() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -30 }}
                                 transition={{ duration: 0.5 }}
-                                className="bg-gray-50 rounded-2xl p-6 md:p-10 flex flex-col md:flex-row items-center gap-8 max-w-3xl shadow-md"
+                                className="bg-gray-50 rounded-2xl p-2 flex flex-col md:flex-row items-center gap-8 max-w-3xl shadow-md"
                             >
                                 <div className="flex-shrink-0">
                                     <Image
@@ -137,18 +137,18 @@ export default function Testimonial() {
                         <motion.div
                             key={next.id + "after"}
                             initial={{ opacity: 0, x: 100 }}
-                            animate={{ opacity: 0.5, x: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, x: 0, scale: 0.95 }}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.5 }}
                             onClick={nextSlide}
-                            className="absolute right-[170px] top-0 hidden md:block w-[180px] rounded-xl overflow-hidden shadow-sm"
+                            className="absolute right-[75px] top-0 hidden lg:block w-[150px] h-[180px] rounded-xl overflow-hidden shadow-sm"
                         >
                             <Image
                                 src={next.image}
                                 alt={next.name}
                                 width={200}
                                 height={200}
-                                className="rounded-xl object-cover"
+                                className="h-full rounded-xl object-cover"
                             />
                             <div className="absolute bottom-2 left-2 text-left text-white text-sm z-10">
                                 <p className="font-semibold">{next.name}</p>
@@ -161,9 +161,9 @@ export default function Testimonial() {
                     {/* Right Arrow */}
                     <button
                         onClick={nextSlide}
-                        className="absolute right-[0px] md:right-[305px] bottom-0 z-20 bg-white p-3 rounded-lg border-2 border-gray-100 hover:scale-110 transition"
+                        className="absolute right-[0px] md:right-[175px] bottom-0 z-20 bg-gray-800 p-3 rounded-lg border-2 border-gray-100 hover:scale-110 transition cursor-pointer"
                     >
-                        <ArrowRight className="w-5 h-5 text-gray-800" />
+                        <ArrowRight className="w-5 h-5 text-white" />
                     </button>
                 </div>
             </div>

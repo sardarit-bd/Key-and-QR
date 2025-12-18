@@ -1,13 +1,13 @@
 "use client";
 
-import { Facebook, Instagram, Linkedin, Twitter, Phone, Mail, MapPin } from "lucide-react";
+import { Facebook, Instagram, Linkedin, Mail, MapPin, Phone, Twitter } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function Footer() {
     return (
         <footer className="bg-[#1E1E1E] text-gray-300 py-14">
-            <div className="container mx-auto px-6 md:px-12">
+            <div className="max-w-7xl mx-auto px-4">
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-10 mb-10">
                     {/* Brand */}
                     <div>

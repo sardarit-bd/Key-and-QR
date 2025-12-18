@@ -1,12 +1,12 @@
 "use client";
 
-import { useState } from "react";
-import Image from "next/image";
+import { useCartStore } from "@/store/cartStore";
+import { useProductStore } from "@/store/productStore";
 import { Minus, Plus } from "lucide-react";
+import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useProductStore } from "@/store/productStore";
-import { useCartStore } from "@/store/cartStore";
+import { useState } from "react";
 import RelatedProducts from "./Relatedproduct";
 
 export default function ProductDetails() {
@@ -16,7 +16,8 @@ export default function ProductDetails() {
     const product = products.find((p) => p.id === Number(id));  // find product
 
     const addToCart = useCartStore((state) => state.addToCart);
-
+    const [selectedOption, setSelectedOption] = useState('gift');
+    const [customMessage, setCustomMessage] = useState('');
     const [quantity, setQuantity] = useState(1);
 
     // fallback (404 style)
@@ -44,8 +45,8 @@ export default function ProductDetails() {
     };
 
     return (
-        <section className="bg-white text-black py-16 px-4 md:px-8">
-            <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-10">
+        <section className="bg-white text-black py-16">
+            <div className="max-w-7xl px-4 mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
 
                 {/* LEFT: IMAGE GALLERY */}
                 <div>
@@ -97,8 +98,104 @@ export default function ProductDetails() {
                         <strong>Category:</strong> {product.category}
                     </p>
 
+
+                    {/* customize qutes box here */}
+                    <div className="">
+                        {/* Title */}
+                        <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                            Choose Your Message
+                        </h2>
+
+                        {/* Options Container */}
+                        <div className="space-y-4">
+                            {/* Option 1: Purchase for yourself */}
+                            <button
+                                onClick={() => setSelectedOption('yourself')}
+                                className={`w-full text-left p-5 rounded-xl border-2 transition-all ${selectedOption === 'yourself'
+                                    ? 'border-gray-900 bg-gray-50'
+                                    : 'border-gray-200 bg-white hover:border-gray-300'
+                                    }`}
+                            >
+                                <div className="flex items-start gap-4">
+                                    {/* Radio Button */}
+                                    <div className="flex-shrink-0 mt-0.5">
+                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${selectedOption === 'yourself'
+                                            ? 'border-gray-900'
+                                            : 'border-gray-300'
+                                            }`}>
+                                            {selectedOption === 'yourself' && (
+                                                <div className="w-2.5 h-2.5 rounded-full bg-gray-900"></div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="flex-1">
+                                        <h3 className="font-semibold text-gray-900 mb-1">
+                                            Purchase for yourself
+                                        </h3>
+                                        <p className="text-sm text-gray-500">
+                                            We'll select a beautiful quote from our collection
+                                        </p>
+                                    </div>
+                                </div>
+                            </button>
+
+                            {/* Option 2: Purchase for Gift */}
+                            <button
+                                onClick={() => setSelectedOption('gift')}
+                                className={`w-full text-left p-5 rounded-xl border-2 transition-all ${selectedOption === 'gift'
+                                    ? 'border-gray-900 bg-gray-900'
+                                    : 'border-gray-200 bg-white hover:border-gray-300'
+                                    }`}
+                            >
+                                <div className="flex items-start gap-4">
+                                    {/* Radio Button */}
+                                    <div className="flex-shrink-0 mt-0.5">
+                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${selectedOption === 'gift'
+                                            ? 'border-white'
+                                            : 'border-gray-300'
+                                            }`}>
+                                            {selectedOption === 'gift' && (
+                                                <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Content */}
+                                    <div className="flex-1">
+                                        <h3 className={`font-semibold mb-1 ${selectedOption === 'gift' ? 'text-white' : 'text-gray-900'
+                                            }`}>
+                                            Purchase for Gift
+                                        </h3>
+                                        <p className={`text-sm ${selectedOption === 'gift' ? 'text-gray-300' : 'text-gray-500'
+                                            }`}>
+                                            Personalize with your own words
+                                        </p>
+                                    </div>
+                                </div>
+                            </button>
+
+                            {/* Text Area - Only show when "gift" is selected */}
+                            {selectedOption === 'gift' && (
+                                <div className="animate-fadeIn">
+                                    <textarea
+                                        value={customMessage}
+                                        onChange={(e) => setCustomMessage(e.target.value)}
+                                        placeholder="Write something meaningful..."
+                                        rows={4}
+                                        className="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-gray-900 focus:outline-none transition-colors resize-none text-gray-900 placeholder:text-gray-400"
+                                    />
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+
+
+
                     {/* Quantity + Buttons */}
-                    <div className="flex items-center gap-4 mt-4">
+                    <div className="flex items-center gap-4 mt-1">
 
                         {/* Quantity Selector */}
                         <div className="flex items-center border border-gray-300 py-1 rounded-md">

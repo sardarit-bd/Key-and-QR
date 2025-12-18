@@ -1,10 +1,10 @@
 "use client";
 
+import { useCartStore } from "@/store/cartStore";
+import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useCartStore } from "@/store/cartStore";
 import { useState } from "react";
-import { ChevronDown } from "lucide-react";
 
 export default function Checkout() {
     const cart = useCartStore((state) => state.cart);
@@ -22,11 +22,11 @@ export default function Checkout() {
     const countries = ["Bangladesh", "India", "USA", "UK", "Australia"];
 
     return (
-        <section className="max-w-6xl mx-auto py-12 px-4 md:px-8 grid grid-cols-1 md:grid-cols-2 gap-12">
+        <section className="max-w-7xl mx-auto py-16 px-4 grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-52">
 
             {/* LEFT — ORDER SUMMARY */}
             <div>
-                <Link href="/cart" className="text-sm text-gray-500 hover:underline mb-4 block">
+                <Link href="/cart" className="text-md text-gray-500 hover:underline mb-4 block">
                     ← Back
                 </Link>
 
@@ -53,7 +53,7 @@ export default function Checkout() {
                     ))}
                 </div>
 
-                <div className="border-t mt-6 pt-4 space-y-2 text-sm">
+                <div className="border-t border-gray-300 mt-6 pt-4 space-y-2 text-sm">
                     <div className="flex justify-between text-gray-600">
                         <span>Subtotal</span>
                         <span>${subtotal.toFixed(2)}</span>
@@ -62,11 +62,11 @@ export default function Checkout() {
                         <span>Tax (8.75%)</span>
                         <span>${tax.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between text-gray-600">
+                    <div className="flex justify-between text-gray-600 pb-4">
                         <span>Shipping</span>
                         <span className="text-green-600">Free</span>
                     </div>
-                    <div className="flex justify-between text-base font-semibold mt-2">
+                    <div className="flex justify-between text-base font-semibold mt-2 border-t border-gray-300 pt-4">
                         <span>Total</span>
                         <span>${total.toFixed(2)}</span>
                     </div>
@@ -85,7 +85,7 @@ export default function Checkout() {
                         <input
                             type="email"
                             placeholder="you@example.com"
-                            className="w-full mt-1 border rounded-md px-4 py-2"
+                            className="w-full mt-1 border border-gray-300 rounded-md px-4 py-2"
                         />
                     </div>
 
@@ -97,7 +97,7 @@ export default function Checkout() {
                             <input
                                 type="text"
                                 placeholder="Full name"
-                                className="w-full border rounded-md px-4 py-2"
+                                className="w-full border border-gray-300 rounded-md px-4 py-2"
                             />
 
                             {/* CUSTOM SELECT DROPDOWN */}
@@ -105,14 +105,14 @@ export default function Checkout() {
                                 <button
                                     type="button"
                                     onClick={() => setCountryOpen(!countryOpen)}
-                                    className="w-full border rounded-md px-4 py-2 flex justify-between items-center"
+                                    className="w-full border border-gray-300 rounded-md px-4 py-2 flex justify-between items-center"
                                 >
                                     {selectedCountry}
                                     <ChevronDown size={18} />
                                 </button>
 
                                 {countryOpen && (
-                                    <div className="absolute bg-white w-full border rounded-md shadow-md mt-1 z-10">
+                                    <div className="absolute bg-white w-full border border-gray-300 rounded-md shadow-md mt-1 z-10">
                                         {countries.map((c) => (
                                             <p
                                                 key={c}
@@ -132,7 +132,7 @@ export default function Checkout() {
                             <input
                                 type="text"
                                 placeholder="Address"
-                                className="w-full border rounded-md px-4 py-2"
+                                className="w-full border border-gray-300 rounded-md px-4 py-2"
                             />
                         </div>
 
@@ -142,12 +142,12 @@ export default function Checkout() {
                                 Payment Method
                             </h3>
 
-                            <div className="flex items-center gap-3 border rounded-lg p-1 bg-gray-100">
+                            <div className="flex items-center gap-4 p-1">
                                 <button
                                     type="button"
                                     onClick={() => setPaymentMethod("cod")}
-                                    className={`flex-1 py-2 rounded-md text-sm font-medium transition ${paymentMethod === "cod"
-                                        ? "bg-white shadow-sm"
+                                    className={`flex-1 py-2 border border-gray-300 rounded-lg rounded-md text-sm font-medium transition ${paymentMethod === "cod"
+                                        ? "bg-black text-white shadow-sm"
                                         : "text-gray-600"
                                         }`}
                                 >
@@ -157,7 +157,7 @@ export default function Checkout() {
                                 <button
                                     type="button"
                                     onClick={() => setPaymentMethod("stripe")}
-                                    className={`flex-1 py-2 rounded-md text-sm font-medium transition ${paymentMethod === "stripe"
+                                    className={`flex-1 py-2 border border-gray-300 rounded-lg rounded-md text-sm font-medium transition ${paymentMethod === "stripe"
                                         ? "bg-white shadow-sm"
                                         : "text-gray-600"
                                         }`}

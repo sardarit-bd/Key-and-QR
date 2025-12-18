@@ -1,9 +1,10 @@
 "use client";
 
+import { useProductStore } from "@/store/productStore";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
-import { useProductStore } from "@/store/productStore";
+import PaginationDemo from "./PaginationDemo";
 
 export default function ShopGrid() {
     const products = useProductStore((state) => state.products);
@@ -17,12 +18,12 @@ export default function ShopGrid() {
     const paginated = products.slice(start, start + perPage);
 
     return (
-        <section className="bg-white text-black py-16 px-4 md:px-8">
+        <section className="bg-white text-black py-16 px-4">
             <div className="max-w-7xl mx-auto">
 
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
-                    <p className="text-gray-500 text-sm">
+                    <p className="text-gray-900 font-semibold text-lg md:text-xl">
                         Showing {(start + 1)}–{start + paginated.length} of {products.length} results
                     </p>
 
@@ -71,7 +72,7 @@ export default function ShopGrid() {
                         {paginated.map((product) => (
                             <div
                                 key={product.id}
-                                className="bg-gray-50 overflow-hidden shadow-sm hover:shadow-md transition"
+                                className="bg-gray-100 rounded-md overflow-hidden"
                             >
                                 <Link href={`/shop/${product.id}`}>
                                     <Image
@@ -134,34 +135,8 @@ export default function ShopGrid() {
                 )}
 
                 {/* Pagination */}
-                <div className="flex items-center justify-center mt-10 space-x-2">
-                    <button
-                        onClick={() => setPage(page > 1 ? page - 1 : totalPages)}
-                        className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 transition"
-                    >
-                        &lt;
-                    </button>
 
-                    {Array.from({ length: totalPages }).map((_, i) => (
-                        <button
-                            key={i}
-                            onClick={() => setPage(i + 1)}
-                            className={`px-3 py-1 border rounded ${page === i + 1
-                                ? "bg-black text-white border-black"
-                                : "border-gray-300 text-gray-600 hover:bg-gray-100"
-                                }`}
-                        >
-                            {i + 1}
-                        </button>
-                    ))}
-
-                    <button
-                        onClick={() => setPage(page < totalPages ? page + 1 : 1)}
-                        className="px-3 py-1 border border-gray-300 rounded hover:bg-gray-100 transition"
-                    >
-                        &gt;
-                    </button>
-                </div>
+                <PaginationDemo />
 
             </div>
         </section>

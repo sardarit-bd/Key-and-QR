@@ -1,19 +1,25 @@
 "use client";
 
+import { useAuthStore } from "@/store/authStore";
+import { useCartStore } from "@/store/cartStore";
+import { CircleUserRound, Menu, ShoppingBag, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { ShoppingBag, Menu, X, User } from "lucide-react";
-import { useCartStore } from "@/store/cartStore";
-import { useAuthStore } from "@/store/authStore";
+import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function Header() {
     const cart = useCartStore((state) => state.cart);
     const { user, logout } = useAuthStore();
-
     const cartCount = cart.reduce((sum, i) => sum + i.qty, 0);
-
     const [open, setOpen] = useState(false);
+    const pathname = usePathname();
+
+    const isDashboard = pathname.startsWith("/dashboard");
+
+    console.log(isDashboard);
+
+
 
     // Body scroll lock when drawer open
     useEffect(() => {
@@ -32,7 +38,7 @@ export default function Header() {
         <>
             {/* HEADER */}
             <header className="shadow-sm py-3 bg-white sticky top-0 z-50">
-                <div className="container mx-auto px-4 flex items-center justify-between">
+                <div className={`${isDashboard ? "px-6 flex items-center justify-between" : "max-w-7xl px-4 mx-auto flex items-center justify-between"}`}>
 
                     {/* Logo */}
                     <Link href="/" className="flex items-center space-x-2">
@@ -40,7 +46,7 @@ export default function Header() {
                     </Link>
 
                     {/* Desktop Navigation */}
-                    <nav className="hidden md:block">
+                    <nav className={`${`${isDashboard ? "hidden" : "hidden md:block"}`}`}>
                         <ul className="flex space-x-12 text-gray-700 font-medium">
                             <li><Link href="/" className="hover:text-brandColor">Home</Link></li>
                             <li><Link href="/shop" className="hover:text-brandColor">Shop</Link></li>
@@ -55,7 +61,7 @@ export default function Header() {
                         <Link href="/cart" className="relative">
                             <ShoppingBag className="text-gray-700" />
                             {cartCount > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                                <span className="absolute -top-2 -right-2 bg-black text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
                                     {cartCount}
                                 </span>
                             )}
@@ -63,9 +69,7 @@ export default function Header() {
                         {user ? (
                             <div className="relative group">
                                 {/* Avatar */}
-                                <button className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center shadow-sm">
-                                    <User size={20} className="text-gray-700" />
-                                </button>
+                                <CircleUserRound size={36} className="text-gray-800" />
 
                                 {/* Dropdown */}
                                 <div className="absolute right-0 mt-3 w-44 bg-white shadow-lg rounded-lg p-2 
@@ -74,7 +78,7 @@ export default function Header() {
                                     <p className="px-3 py-1 text-sm text-gray-600">{user.name}</p>
 
                                     <Link
-                                        href="/user"
+                                        href="/dashboard"
                                         className="block px-3 py-2 rounded hover:bg-gray-100"
                                     >
                                         Dashboard
