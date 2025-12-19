@@ -18,8 +18,6 @@ export default function Header() {
 
     const isDashboard = pathname.startsWith("/dashboard");
 
-    console.log(isDashboard);
-
 
 
     // Body scroll lock when drawer open
