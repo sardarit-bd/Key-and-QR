@@ -42,7 +42,7 @@ export default function Header() {
                 <div className={`${isDashboard ? "px-6 flex items-center justify-between" : "max-w-7xl px-4 mx-auto flex items-center justify-between"}`}>
 
                     {/* Logo */}
-                    <Link href="/" className={`${isDashboard ? "flex items-center space-x-2 ml-12" : "flex items-center space-x-2"}`}>
+                    <Link href="/" className={`${isDashboard ? "flex items-center space-x-2 ml-12 lg:ml-0" : "flex items-center space-x-2"}`}>
                         <Image src="/logo.png" alt="Logo" width={100} height={50} />
                     </Link>
 
