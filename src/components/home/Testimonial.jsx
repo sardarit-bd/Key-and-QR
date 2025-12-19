@@ -64,7 +64,7 @@ export default function Testimonial() {
                     {/* Left Arrow */}
                     <button
                         onClick={prevSlide}
-                        className="absolute left-[75%] lg:left-[175px] top-[90%] lg:top-0 z-20 bg-gray-900 p-3 rounded-lg border-2 border-gray-100 hover:scale-110 transition cursor-pointer"
+                        className="absolute left-[100%] xl:left-[175px] translate-y-[-110%] md:translate-y-[-106%] translate-x-[-220%] md:translate-x-[-227%] xl:translate-x-[0%] xl:translate-y-[0%] top-[100%] xl:top-0 z-20 bg-gray-900 p-3 rounded-lg border-2 border-gray-100 hover:scale-110 transition cursor-pointer"
                     >
                         <ArrowLeft className="w-5 h-5 text-white" />
                     </button>
@@ -79,7 +79,7 @@ export default function Testimonial() {
                             onClick={prevSlide}
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.5 }}
-                            className="hidden lg:block w-[150px] h-[180px] absolute left-[75px] bottom-0 rounded-xl overflow-hidden shadow-sm"
+                            className="hidden xl:block w-[150px] h-[180px] absolute left-[75px] bottom-0 rounded-xl overflow-hidden shadow-sm"
                         >
                             <Image
                                 src={prev.image}
@@ -103,15 +103,15 @@ export default function Testimonial() {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -30 }}
                                 transition={{ duration: 0.5 }}
-                                className="bg-gray-50 rounded-2xl p-2 flex flex-col md:flex-row items-center gap-8 max-w-3xl shadow-md"
+                                className="bg-gray-50 rounded-2xl p-2 flex flex-col md:flex-row items-center gap-8 xl:max-w-3xl shadow-md"
                             >
-                                <div className="flex-shrink-0">
+                                <div className="flex-shrink-0 w-[200px] h-[230px] rounded-xl overflow-hidden object-cover">
                                     <Image
                                         src={current.image}
                                         alt={current.name}
-                                        width={220}
-                                        height={220}
-                                        className="rounded-xl object-cover"
+                                        width={1000}
+                                        height={1000}
+                                        className="w-full h-full rounded-xl object-cover"
                                     />
                                 </div>
 
@@ -141,7 +141,7 @@ export default function Testimonial() {
                             exit={{ opacity: 0 }}
                             transition={{ duration: 0.5 }}
                             onClick={nextSlide}
-                            className="absolute right-[75px] top-0 hidden lg:block w-[150px] h-[180px] rounded-xl overflow-hidden shadow-sm"
+                            className="absolute right-[75px] top-0 hidden xl:block w-[150px] h-[180px] rounded-xl overflow-hidden shadow-sm"
                         >
                             <Image
                                 src={next.image}
@@ -161,7 +161,7 @@ export default function Testimonial() {
                     {/* Right Arrow */}
                     <button
                         onClick={nextSlide}
-                        className="absolute right-[0px] md:right-[175px] bottom-0 z-20 bg-gray-800 p-3 rounded-lg border-2 border-gray-100 hover:scale-110 transition cursor-pointer"
+                        className="absolute right-[1%] xl:right-[175px] bottom-[1%] z-20 bg-gray-800 p-3 rounded-lg border-2 border-gray-100 hover:scale-110 transition cursor-pointer"
                     >
                         <ArrowRight className="w-5 h-5 text-white" />
                     </button>

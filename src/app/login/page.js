@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -25,7 +26,7 @@ export default function LoginPage() {
     return (
         <div className="p-3">
             <div className="max-w-md mx-auto my-36 p-6 border rounded-xl shadow-sm bg-white">
-                <h2 className="text-2xl font-semibold mb-4">Sign In</h2>
+                <h2 className="text-2xl text-center font-semibold mb-4">Sign In</h2>
 
                 {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
 
@@ -50,6 +51,8 @@ export default function LoginPage() {
                 >
                     {loading ? "Authenticating..." : "Login"}
                 </button>
+
+                <p className="text-center pt-3 text-gray-500">Don't have an account? <Link className="text-gray-900" href="/signup">Sign Up</Link></p>
             </div>
         </div>
     );

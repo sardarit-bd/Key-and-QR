@@ -1,15 +1,16 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
 
 export default function SignUpPage() {
     const router = useRouter();
     const login = useAuthStore((state) => state.login);
     const loading = useAuthStore((state) => state.loading);
 
-    const [name,setName] = useState("");
+    const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
@@ -26,13 +27,13 @@ export default function SignUpPage() {
     return (
         <div className="p-3">
             <div className="max-w-md mx-auto my-36 p-6 border rounded-xl shadow-sm bg-white">
-                <h2 className="text-2xl font-semibold mb-4">Sign Up</h2>
+                <h2 className="text-2xl font-semibold mb-4 text-center">Sign Up</h2>
 
                 {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
 
 
                 <input
-                type="text"
+                    type="text"
                     className="w-full border px-4 py-2 rounded-md mb-3"
                     placeholder="Your Name"
                     value={name}
@@ -41,7 +42,7 @@ export default function SignUpPage() {
 
 
                 <input
-                type="email"
+                    type="email"
                     className="w-full border px-4 py-2 rounded-md mb-3"
                     placeholder="Email"
                     value={email}
@@ -62,6 +63,8 @@ export default function SignUpPage() {
                 >
                     {loading ? "Sign Up..." : "Sign Up"}
                 </button>
+
+                <p className="text-center pt-3 text-gray-500">Already have an account? <Link className="text-gray-900" href="/login">Sign In</Link></p>
             </div>
         </div>
     );

@@ -13,11 +13,11 @@ export const useAuthStore = create(
             login: async ({ email, password }) => {
                 set({ loading: true });
 
-                if (email === "ahsan@gmail.com" && password === "123456") {
+                if (email === "mdemong87@gmail.com" && password === "123456") {
                     const userData = {
                         id: 1,
-                        name: "Demo User",
-                        email: "ahsan@gmail.com",
+                        name: "Md Emon Hossen",
+                        email: "mdemong87@gmailcom",
                     };
 
                     set({ user: userData, loading: false });
