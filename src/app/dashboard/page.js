@@ -2,8 +2,8 @@
 
 
 
-import React, { useState } from 'react';
-import { Heart, QrCode, Package, CreditCard, Settings, LogOut, ShoppingBag, Scan, Menu, X, ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, CreditCard, Heart, LogOut, Menu, Package, QrCode, Scan, Settings, ShoppingBag, X } from 'lucide-react';
+import { useState } from 'react';
 
 export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -28,15 +28,15 @@ export default function Dashboard() {
       {/* Mobile Menu Button */}
       <button
         onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg"
+        className="lg:hidden fixed top-2 left-4 z-50 p-2"
       >
-        {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
+        {isSidebarOpen ? <X size={26} className='cursor-pointer' /> : <Menu size={26} className='cursor-pointer' />}
       </button>
 
       {/* Overlay for mobile */}
       {isSidebarOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+          className="lg:hidden fixed inset-0 bg-black opacity-40 z-30"
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
@@ -61,11 +61,10 @@ export default function Dashboard() {
           {menuItems.map((item, index) => (
             <button
               key={index}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${
-                item.active
-                  ? 'bg-gray-900 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${item.active
+                ? 'bg-gray-900 text-white'
+                : 'text-gray-600 hover:bg-gray-100'
+                }`}
             >
               <item.icon size={18} />
               <span>{item.label}</span>
@@ -80,9 +79,8 @@ export default function Dashboard() {
 
       {/* Mobile Sidebar */}
       <aside
-        className={`lg:hidden fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 p-6 transform transition-transform duration-300 ease-in-out ${
-          isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        className={`lg:hidden fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 p-6 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
       >
         <div className="mb-6 pt-12">
           <div className="flex items-center gap-3">
@@ -105,11 +103,10 @@ export default function Dashboard() {
             <button
               key={index}
               onClick={() => setIsSidebarOpen(false)}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${
-                item.active
-                  ? 'bg-gray-900 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${item.active
+                ? 'bg-gray-900 text-white'
+                : 'text-gray-600 hover:bg-gray-100'
+                }`}
             >
               <item.icon size={18} />
               <span>{item.label}</span>

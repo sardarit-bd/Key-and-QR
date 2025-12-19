@@ -32,7 +32,7 @@ export default function ShopGrid() {
                         {/* GRID VIEW BUTTON */}
                         <button
                             onClick={() => setView("grid")}
-                            className={`p-2 border rounded-md transition ${view === "grid"
+                            className={`p-2 border rounded-md transition cursor-pointer ${view === "grid"
                                 ? "bg-black text-white border-black"
                                 : "border-gray-300 text-gray-600 hover:bg-gray-100"
                                 }`}
@@ -49,7 +49,7 @@ export default function ShopGrid() {
                         {/* LIST VIEW BUTTON */}
                         <button
                             onClick={() => setView("list")}
-                            className={`p-2 border rounded-md transition ${view === "list"
+                            className={`p-2 border rounded-md transition cursor-pointer ${view === "list"
                                 ? "bg-black text-white border-black"
                                 : "border-gray-300 text-gray-600 hover:bg-gray-100"
                                 }`}

@@ -2,11 +2,12 @@
 
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
-import { CircleUserRound, Menu, ShoppingBag, X } from "lucide-react";
+import { CircleUserRound, LayoutDashboard, LogOut, Menu, ShoppingBag, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+
 
 export default function Header() {
     const cart = useCartStore((state) => state.cart);
@@ -41,7 +42,7 @@ export default function Header() {
                 <div className={`${isDashboard ? "px-6 flex items-center justify-between" : "max-w-7xl px-4 mx-auto flex items-center justify-between"}`}>
 
                     {/* Logo */}
-                    <Link href="/" className="flex items-center space-x-2">
+                    <Link href="/" className={`${isDashboard ? "flex items-center space-x-2 ml-12" : "flex items-center space-x-2"}`}>
                         <Image src="/logo.png" alt="Logo" width={100} height={50} />
                     </Link>
 
@@ -58,7 +59,7 @@ export default function Header() {
                     <div className="hidden md:flex items-center space-x-4">
 
                         {/* Cart */}
-                        <Link href="/cart" className="relative">
+                        <Link href="/cart" className="relative mt-0.5">
                             <ShoppingBag className="text-gray-700" />
                             {cartCount > 0 && (
                                 <span className="absolute -top-2 -right-2 bg-black text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
@@ -72,24 +73,50 @@ export default function Header() {
                                 <CircleUserRound size={36} className="text-gray-800" />
 
                                 {/* Dropdown */}
-                                <div className="absolute right-0 mt-3 w-44 bg-white shadow-lg rounded-lg p-2 
-                                opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                                {/* Improved Dropdown */}
+                                <div className="absolute right-0 mt-2 w-64 bg-white shadow-2xl rounded-xl overflow-hidden border border-gray-100 
+opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
 
-                                    <p className="px-3 py-1 text-sm text-gray-600">{user.name}</p>
+                                    {/* User Info Section */}
+                                    <div className="px-4 py-4 bg-gray-100 border-b border-gray-100">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center">
+                                                <CircleUserRound size={22} className="text-white" />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm font-semibold text-gray-800">{user.name}</p>
+                                                <p className="text-xs text-gray-500">View Profile</p>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                    <Link
-                                        href="/dashboard"
-                                        className="block px-3 py-2 rounded hover:bg-gray-100"
-                                    >
-                                        Dashboard
-                                    </Link>
+                                    {/* Menu Items */}
+                                    <div className="py-0">
+                                        {/* Dashboard Link */}
+                                        <Link
+                                            href="/dashboard"
+                                            className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors group"
+                                        >
+                                            <div className="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center group-hover:bg-gray-100 transition-colors">
+                                                <LayoutDashboard size={18} className="text-gray-600 group-hover:text-gray-600 transition-colors" />
+                                            </div>
+                                            <span className="text-sm font-medium">Dashboard</span>
+                                        </Link>
 
-                                    <button
-                                        onClick={logout}
-                                        className="block w-full text-left px-3 py-2 rounded hover:bg-gray-100 text-red-600"
-                                    >
-                                        Logout
-                                    </button>
+                                        {/* Divider */}
+                                        <div className="my-1 border-t border-gray-100"></div>
+
+                                        {/* Logout Button */}
+                                        <button
+                                            onClick={logout}
+                                            className="flex items-center gap-3 px-4 py-2 w-full text-gray-700 hover:bg-gray-50 transition-colors group"
+                                        >
+                                            <div className="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center group-hover:bg-gray-100 transition-colors">
+                                                <LogOut size={18} className="text-gray-600" />
+                                            </div>
+                                            <span className="text-sm font-medium">Logout</span>
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         ) : (
@@ -116,7 +143,7 @@ export default function Header() {
                         onClick={() => setOpen(true)}
                         className="md:hidden text-gray-700"
                     >
-                        <Menu size={26} />
+                        <Menu size={26} className="cursor-pointer" />
                     </button>
                 </div>
             </header>
@@ -131,15 +158,15 @@ export default function Header() {
 
             {/* LEFT DRAWER */}
             <div
-                className={`fixed top-0 left-0 h-full w-72 bg-white z-50 shadow-xl
+                className={`fixed top-0 left-0 h-full w-72 bg-white z-[999] shadow-xl
                 transform transition-transform duration-300 ease-out
                 ${open ? "translate-x-0" : "-translate-x-full"}`}
             >
                 {/* Drawer Header */}
-                <div className="flex items-center justify-between px-4 py-4 border-b">
+                <div className="flex items-center justify-between px-4 py-4 border-b border-gray-300">
                     <h3 className="text-lg font-semibold">Menu</h3>
                     <button onClick={() => setOpen(false)}>
-                        <X size={26} className="text-gray-700" />
+                        <X size={26} className="text-gray-700 cursor-pointer" />
                     </button>
                 </div>
 
@@ -162,7 +189,7 @@ export default function Header() {
                     <Link
                         href="/cart"
                         onClick={() => setOpen(false)}
-                        className="flex items-center gap-2 border-t pt-3 hover:text-brandColor"
+                        className="flex items-center gap-2 border-t border-gray-300 pt-3 hover:text-brandColor"
                     >
                         <ShoppingBag />
                         <span>Cart ({cartCount})</span>
@@ -172,7 +199,7 @@ export default function Header() {
                     {user ? (
                         <>
                             <Link
-                                href="/user"
+                                href="/dashboard"
                                 onClick={() => setOpen(false)}
                                 className="block w-full px-4 py-2 rounded-md bg-gray-200"
                             >
@@ -184,7 +211,7 @@ export default function Header() {
                                     logout();
                                     setOpen(false);
                                 }}
-                                className="w-full text-left px-4 py-2 mt-2 rounded-md border text-red-600"
+                                className="w-full text-left px-4 py-2 mt-2 rounded-md border text-red-600 cursor-pointer"
                             >
                                 Logout
                             </button>
