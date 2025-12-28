@@ -7,7 +7,7 @@ import { useState } from "react";
 
 export default function LoginPage() {
     const router = useRouter();
-    const login = useAuthStore((state) => state.login);
+    const { user, login } = useAuthStore();
     const loading = useAuthStore((state) => state.loading);
 
     const [email, setEmail] = useState("");
@@ -17,7 +17,13 @@ export default function LoginPage() {
     const handleLogin = async () => {
         const success = await login({ email, password });
         if (success) {
-            router.push("/dashboard");
+
+            if (success?.role === "admin") {
+                router.push("/dashboard/admin");
+            } else {
+                router.push("/dashboard/user");
+            }
+
         } else {
             setError("Invalid email or password!");
         }

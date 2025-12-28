@@ -1,6 +1,6 @@
 "use client";
 
-import { ShoppingCart, QrCode, Sparkles } from "lucide-react";
+import { QrCode, ShoppingCart, Sparkles } from "lucide-react";
 
 export default function Howwork() {
     const steps = [
@@ -49,8 +49,8 @@ export default function Howwork() {
 
                                 {/* Icon with number */}
                                 <div className="relative z-10 mb-6">
-                                    <div className="bg-gray-700 text-white w-14 h-14 flex items-center justify-center rounded-lg shadow-md">
-                                        <Icon size={24} />
+                                    <div className={`${Icon === Sparkles ? "bg-yellow-500" : Icon === QrCode ? "bg-gray-700" : "bg-blue-400"} text-white w-14 h-14 flex items-center justify-center rounded-lg shadow-md`}>
+                                        <Icon size={24} className={`text-gray-50}`} />
                                     </div>
                                     <span className="absolute -top-2 -right-2 bg-white border text-xs font-semibold rounded-full w-6 h-6 flex items-center justify-center shadow">
                                         {step.id}

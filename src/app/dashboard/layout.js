@@ -2,29 +2,63 @@
 
 
 
-import { CreditCard, Heart, LogOut, Menu, Package, QrCode, Settings, ShoppingBag, X } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
+import { CreditCard, Heart, LogOut, Menu, Package, QrCode, ShoppingBag, X } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 export default function DashboardLayout({ children }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [expandedOrder, setExpandedOrder] = useState(null);
+    const { user, logout } = useAuthStore();
     const pathname = usePathname();
+    const router = useRouter();
 
-    const menuItems = [
-        { icon: Package, label: 'Dashboard', active: true, link: "/dashboard" },
-        { icon: ShoppingBag, label: 'My Orders', active: false, link: "/dashboard/orders" },
-        { icon: Heart, label: 'Favorites', active: false, link: "/dashboard/favorites" },
-        { icon: QrCode, label: 'QR History', active: false, link: "/dashboard/qr-history" },
-        { icon: CreditCard, label: 'Subscription', active: false, link: "/dashboard/subscription" },
-        { icon: Settings, label: 'Account Settings', active: false, link: "/dashboard/settings" },
+
+
+    /********************* menu item for admin **************************/
+    const menuItemsforAdmin = [
+        { icon: Package, label: 'Dashboard', active: true, link: "/dashboard/admin" },
+        { icon: ShoppingBag, label: 'All Orders', active: false, link: "/dashboard/admin/orders" },
+        { icon: QrCode, label: 'QR History', active: false, link: "/dashboard/admin/qr-history" },
+        { icon: CreditCard, label: 'Subscription', active: false, link: "/dashboard/admin/subscription" },
     ];
+
+
+
+
+
+
+
+    /********************* menu item for user **************************/
+    const menuItemsforUser = [
+        { icon: Package, label: 'Dashboard', active: true, link: "/dashboard/user" },
+        { icon: Heart, label: 'Favorites', active: false, link: "/dashboard/user/favorites" },
+        { icon: CreditCard, label: 'Subscription', active: false, link: "/dashboard/user/subscription" },
+    ];
+
+
 
     const orders = [
         { id: 'ORD-001', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
         { id: 'ORD-002', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
     ];
+
+
+
+    const RoleDesider = user?.role === "admin" ? menuItemsforAdmin : menuItemsforUser;
+
+
+
+    //handle logout function is here
+    const handleLogout = () => {
+        logout();
+        router.push("/login");
+    }
+
+
+
 
     return (
         <div className="flex min-h-screen bg-gray-50">
@@ -55,13 +89,14 @@ export default function DashboardLayout({ children }) {
                             className="w-full h-full object-cover"
                         />
                     </div>
-                    <h3 className="font-semibold text-gray-900">John Doe</h3>
-                    <p className="text-sm text-gray-500">alma.lawson@gmail.com</p>
+                    <h3 className="font-semibold text-gray-900">{user?.name}</h3>
+                    <p className="text-sm text-gray-500">{user?.email}</p>
+                    <p className="text-xs bg-green-100 text-green-700 w-fit px-3 py-1 rounded-full">{user?.role}</p>
                 </div>
 
                 {/* Navigation */}
                 <nav className="space-y-1">
-                    {menuItems.map((item, index) => (
+                    {RoleDesider?.map((item, index) => (
                         <Link
                             href={item.link}
                             key={index}
@@ -74,7 +109,7 @@ export default function DashboardLayout({ children }) {
                             <span>{item.label}</span>
                         </Link>
                     ))}
-                    <button className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors mt-4">
+                    <button onClick={() => { handleLogout() }} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors mt-4">
                         <LogOut size={18} />
                         <span>Log Out</span>
                     </button>
@@ -96,14 +131,15 @@ export default function DashboardLayout({ children }) {
                             />
                         </div>
                         <div>
-                            <h3 className="font-semibold text-gray-900">John Doe</h3>
-                            <p className="text-xs text-gray-500">alma.lawson@gmail.com</p>
+                            <h3 className="font-semibold text-gray-900">{user?.name}</h3>
+                            <p className="text-xs text-gray-500">{user?.email}</p>
+                            <p className="text-xs bg-green-100 text-green-700 w-fit px-3 py-1 rounded-full">{user?.role}</p>
                         </div>
                     </div>
                 </div>
 
                 <nav className="space-y-1">
-                    {menuItems.map((item, index) => (
+                    {RoleDesider?.map((item, index) => (
                         <Link
                             href={item?.link}
                             key={index}
@@ -118,7 +154,7 @@ export default function DashboardLayout({ children }) {
                         </Link>
                     ))}
                     <button
-                        onClick={() => setIsSidebarOpen(false)}
+                        onClick={() => { handleLogout() }}
                         className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors mt-4"
                     >
                         <LogOut size={18} />
