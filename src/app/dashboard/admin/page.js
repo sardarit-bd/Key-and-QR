@@ -2,7 +2,7 @@
 
 
 
-import { ChevronDown, ChevronUp, CreditCard, Heart, Package, QrCode, Scan, Settings, ShoppingBag } from 'lucide-react';
+import { ChevronDown, ChevronUp, CreditCard, Heart, Package, QrCode, Settings, ShoppingBag } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Dashboard() {
@@ -28,28 +28,6 @@ export default function Dashboard() {
     <>
       {/* Main Content */}
       < main className="flex-1 w-full">
-        {/* Mobile Profile Header */}
-        <div div div div className="lg:hidden px-4 pt-16 pb-4">
-          <div className="bg-white rounded-lg p-4 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 overflow-hidden">
-                  <img
-                    src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop"
-                    alt="Profile"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div>
-                  <h3 className="font-semibold text-gray-900">John Doe</h3>
-                  <p className="text-xs text-gray-500">alma.lawson@gmail.com</p>
-                </div>
-              </div>
-              <ChevronDown size={20} className="text-gray-400" />
-            </div>
-          </div>
-        </div>
-
         <div className="p-4 lg:p-8">
           {/* Header */}
           <div className="mb-6 lg:mb-8">
@@ -65,20 +43,6 @@ export default function Dashboard() {
                 <div>11/12/2025</div>
               </div>
             </div>
-          </div>
-
-          {/* Daily Quote */}
-          <div className="bg-white rounded-lg p-4 lg:p-6 mb-4 lg:mb-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-gray-900 text-sm lg:text-base">Your Daily Quote</h2>
-              <span className="text-xs bg-gray-100 px-2 lg:px-3 py-1 rounded-full text-gray-600 flex items-center gap-1">
-                <span className="text-base lg:text-lg">💡</span> Motivation
-              </span>
-            </div>
-            <p className="text-sm lg:text-base text-gray-700 italic mb-2">
-              "Happiness can be found even in the darkest of times, if one only remembers to turn on the light."
-            </p>
-            <p className="text-xs lg:text-sm text-gray-500">— J.K. Rowling</p>
           </div>
 
           {/* Stats Grid */}
@@ -189,33 +153,6 @@ export default function Dashboard() {
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Action Cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
-            <button className="bg-white rounded-lg p-4 lg:p-6 border border-gray-200 hover:border-gray-300 transition-all hover:shadow-md active:scale-[0.98]">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <ShoppingBag size={24} className="text-gray-600" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold text-gray-900 mb-1">Shop Keychains</h3>
-                  <p className="text-sm text-gray-500">Browse our collection</p>
-                </div>
-              </div>
-            </button>
-
-            <button className="bg-white rounded-lg p-4 lg:p-6 border border-gray-200 hover:border-gray-300 transition-all hover:shadow-md active:scale-[0.98]">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                  <Scan size={24} className="text-gray-600" />
-                </div>
-                <div className="text-left">
-                  <h3 className="font-semibold text-gray-900 mb-1">Scan QR Code</h3>
-                  <p className="text-sm text-gray-500">View your keychain cycle</p>
-                </div>
-              </div>
-            </button>
           </div>
         </div>
       </main >

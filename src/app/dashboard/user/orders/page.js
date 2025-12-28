@@ -7,7 +7,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useState } from 'react';
 
 
-const DashboardSubscription = () => {
+const DashboardOrders = () => {
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
     const [expandedOrder, setExpandedOrder] = useState(null);
@@ -34,7 +34,7 @@ const DashboardSubscription = () => {
             {/* Recent Orders */}
             <div className="bg-white rounded-lg border border-gray-200 mb-4 lg:mb-6">
                 <div className="flex items-center justify-between p-4 lg:p-6 border-b border-gray-200">
-                    <h2 className="font-semibold text-gray-900">Subscriptions</h2>
+                    <h2 className="font-semibold text-gray-900">Recent Orders</h2>
                 </div>
 
                 {/* Desktop Table View */}
@@ -116,4 +116,4 @@ const DashboardSubscription = () => {
     )
 }
 
-export default DashboardSubscription;
+export default DashboardOrders;

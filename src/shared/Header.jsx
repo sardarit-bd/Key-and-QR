@@ -5,7 +5,7 @@ import { useCartStore } from "@/store/cartStore";
 import { CircleUserRound, LayoutDashboard, LogOut, Menu, ShoppingBag, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 
@@ -15,7 +15,7 @@ export default function Header() {
     const cartCount = cart.reduce((sum, i) => sum + i.qty, 0);
     const [open, setOpen] = useState(false);
     const pathname = usePathname();
-
+    const router = useRouter();
     const isDashboard = pathname.startsWith("/dashboard");
 
 
@@ -31,6 +31,30 @@ export default function Header() {
             document.body.style.overflow = "auto";
         };
     }, [open]);
+
+
+
+
+
+
+
+    // hangle logout function is here
+    const hangleLogout = () => {
+        logout();
+        setOpen(false);
+        router.push("/login");
+    }
+
+
+
+
+
+
+
+
+
+
+
 
 
     return (
@@ -72,8 +96,7 @@ export default function Header() {
 
                                 {/* Dropdown */}
                                 {/* Improved Dropdown */}
-                                <div className="absolute right-0 mt-2 w-64 bg-white shadow-2xl rounded-xl overflow-hidden border border-gray-100 
-opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                                <div className="absolute right-0 mt-2 w-64 bg-white shadow-2xl rounded-xl overflow-hidden border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
 
                                     {/* User Info Section */}
                                     <div className="px-4 py-4 bg-gray-100 border-b border-gray-100">
@@ -82,8 +105,8 @@ opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all d
                                                 <CircleUserRound size={22} className="text-white" />
                                             </div>
                                             <div>
-                                                <p className="text-sm font-semibold text-gray-800">{user.name}</p>
-                                                <p className="text-xs text-gray-500">View Profile</p>
+                                                <p className="text-sm font-semibold text-gray-800">{user?.name}</p>
+                                                <p className="text-xs bg-green-100 text-green-700 w-fit px-3 py-1 rounded-full">{user?.role}</p>
                                             </div>
                                         </div>
                                     </div>
@@ -92,7 +115,7 @@ opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all d
                                     <div className="py-0">
                                         {/* Dashboard Link */}
                                         <Link
-                                            href="/dashboard"
+                                            href={`${user?.role === "admin" ? "/dashboard/admin" : "/dashboard/user"}`}
                                             className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors group"
                                         >
                                             <div className="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center group-hover:bg-gray-100 transition-colors">
@@ -106,7 +129,7 @@ opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all d
 
                                         {/* Logout Button */}
                                         <button
-                                            onClick={logout}
+                                            onClick={() => { hangleLogout() }}
                                             className="flex items-center gap-3 px-4 py-2 w-full text-gray-700 hover:bg-gray-50 transition-colors group"
                                         >
                                             <div className="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center group-hover:bg-gray-100 transition-colors">
@@ -205,10 +228,7 @@ opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all d
                             </Link>
 
                             <button
-                                onClick={() => {
-                                    logout();
-                                    setOpen(false);
-                                }}
+                                onClick={() => { hangleLogout() }}
                                 className="w-full text-left px-4 py-2 mt-2 rounded-md border text-red-600 cursor-pointer"
                             >
                                 Logout

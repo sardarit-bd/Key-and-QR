@@ -8,7 +8,7 @@ export default function PremiumSection() {
         {/* Badge */}
         <div className="inline-flex items-center gap-2 rounded-full bg-gray-100 px-4 py-2 text-md text-gray-700 mb-6">
           <span className="text-base">
-            <Crown size={18} />
+            <Crown className="text-yellow-600" size={18} />
           </span>
           <span>Premium Membership</span>
         </div>
@@ -55,7 +55,7 @@ export default function PremiumSection() {
           </ul>
 
           {/* CTA */}
-          <button className="w-full rounded-lg bg-gray-900 py-3 text-white font-medium hover:bg-gray-800 transition">
+          <button className="w-full rounded-lg bg-gray-900 py-3 text-white font-medium hover:bg-gray-800 transition cursor-pointer">
             Start Premium Trial – 7 Days Free
           </button>
 

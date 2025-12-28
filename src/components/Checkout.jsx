@@ -138,21 +138,11 @@ export default function Checkout() {
 
                         {/* PAYMENT METHOD TABS */}
                         <div className="mt-6">
-                            <h3 className="text-sm font-medium mb-3">
+                            {/* <h3 className="text-sm font-medium mb-3">
                                 Payment Method
                             </h3>
 
                             <div className="flex items-center gap-4 p-1">
-                                <button
-                                    type="button"
-                                    onClick={() => setPaymentMethod("cod")}
-                                    className={`flex-1 py-2 border border-gray-300 rounded-lg rounded-md text-sm font-medium transition ${paymentMethod === "cod"
-                                        ? "bg-black text-white shadow-sm"
-                                        : "text-gray-600"
-                                        }`}
-                                >
-                                    Cash on Delivery
-                                </button>
 
                                 <button
                                     type="button"
@@ -164,29 +154,23 @@ export default function Checkout() {
                                 >
                                     Pay with Card (Stripe)
                                 </button>
-                            </div>
+                            </div> */}
 
                             {/* TAB CONTENT */}
-                            <div className="mt-2">
-                                {paymentMethod === "cod" && (
-                                    <p className="text-sm text-gray-600">
-                                        You will pay in cash after the product is delivered.
-                                    </p>
-                                )}
-
+                            {/* <div className="mt-2">
                                 {paymentMethod === "stripe" && (
                                     <p className="text-sm text-gray-600">
                                         A secure popup will appear to complete your card payment.
                                     </p>
                                 )}
-                            </div>
+                            </div> */}
                         </div>
                     </div>
 
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-900"
+                        className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-900 cursor-pointer transition"
                     >
                         Place Order
                     </button>

@@ -76,7 +76,7 @@ export default function Why() {
                                 className="bg-gray-50  hover:bg-gray-100 rounded-2xl p-8 sm:p-10  shadow-sm hover:shadow-lg transform hover:scale-[1.03] transition-all duration-300 ease-in-out"
                             >
                                 <div className="bg-white text-left w-14 h-14 flex items-center justify-center rounded-xl shadow mb-6">
-                                    <Icon size={28} className="text-gray-800" />
+                                    <Icon size={28} className={`${Icon == QrCode ? "text-gray-800" : Icon == Sparkles ? "text-yellow-500" : "text-blue-600"}`} />
                                 </div>
                                 <h3 className="text-lg md:text-xl text-gray-800 font-semibold mb-2 mt-6">{item.title}</h3>
                                 <p className="text-gray-600 text-sm sm:text-base max-w-[320px] leading-relaxed mt-6">{item.desc}</p>
