@@ -34,6 +34,7 @@ export default function DashboardLayout({ children }) {
     /********************* menu item for user **************************/
     const menuItemsforUser = [
         { icon: Package, label: 'Home', active: true, link: "/dashboard/user" },
+        { icon: Package, label: 'My Quote', active: true, link: "/dashboard/user/myquotes" },
         { icon: Heart, label: 'Favorites', active: false, link: "/dashboard/user/favorites" },
         { icon: CreditCard, label: 'Subscription', active: false, link: "/dashboard/user/subscription" },
     ];
@@ -79,7 +80,7 @@ export default function DashboardLayout({ children }) {
             )}
 
             {/* Sidebar - Desktop Only */}
-            <aside className="hidden lg:block w-64 bg-white border-r border-gray-200 p-6">
+            <aside className="hidden sticky h-screen top-14 lg:block w-64 bg-white border-r border-gray-200 p-6">
                 {/* Profile Section */}
                 <div className="flex flex-col items-center mb-8">
                     <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 mb-4 overflow-hidden">
@@ -101,7 +102,7 @@ export default function DashboardLayout({ children }) {
                             href={item.link}
                             key={index}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${item.link === pathname
-                                ? 'bg-gray-900 text-white'
+                                ? 'bg-gray-300'
                                 : 'text-gray-600 hover:bg-gray-100'
                                 }`}
                         >
@@ -109,7 +110,7 @@ export default function DashboardLayout({ children }) {
                             <span>{item.label}</span>
                         </Link>
                     ))}
-                    <button onClick={() => { handleLogout() }} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors mt-4">
+                    <button onClick={() => { handleLogout() }} className="bg-gray-900 text-white absolute bottom-20 w-[200px] flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-gray-600 hover:bg-gray-700 transition-colors mt-4">
                         <LogOut size={18} />
                         <span>Log Out</span>
                     </button>
@@ -145,7 +146,7 @@ export default function DashboardLayout({ children }) {
                             key={index}
                             onClick={() => setIsSidebarOpen(false)}
                             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${item.link === pathname
-                                ? 'bg-gray-900 text-white'
+                                ? 'bg-gray-300'
                                 : 'text-gray-600 hover:bg-gray-100'
                                 }`}
                         >
@@ -155,7 +156,7 @@ export default function DashboardLayout({ children }) {
                     ))}
                     <button
                         onClick={() => { handleLogout() }}
-                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-gray-600 hover:bg-gray-100 transition-colors mt-4"
+                        className="bg-gray-900 text-white absolute bottom-5 w-[200px] flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-gray-600 hover:bg-gray-700 transition-colors mt-4"
                     >
                         <LogOut size={18} />
                         <span>Log Out</span>

@@ -65,7 +65,7 @@ export default function Dashboard() {
 
             <div className="bg-white rounded-lg p-4 lg:p-6 border border-gray-200">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-gray-600">QR Scans</span>
+                <span className="text-sm text-gray-600">Scans</span>
                 <QrCode size={20} className="text-gray-400" />
               </div>
               <div className="text-2xl lg:text-3xl font-bold text-gray-900">03</div>
