@@ -64,7 +64,7 @@ export default function Header() {
                 <div className={`${isDashboard ? "px-6 flex items-center justify-between" : "max-w-7xl px-4 mx-auto flex items-center justify-between"}`}>
 
                     {/* Logo */}
-                    <Link href="/" className={`${isDashboard ? "flex items-center space-x-2 ml-12 lg:ml-0" : "flex items-center space-x-2"}`}>
+                    <Link href="/" className={`${isDashboard ? "flex items-center space-x-2 ml-0 md:ml-12 lg:ml-0" : "flex items-center space-x-2"}`}>
                         <Image src="/logo.png" alt="Logo" width={100} height={50} />
                     </Link>
 
@@ -162,7 +162,7 @@ export default function Header() {
                     {/* Mobile Menu Button */}
                     <button
                         onClick={() => setOpen(true)}
-                        className="md:hidden text-gray-700"
+                        className={`${isDashboard ? "hidden" : "block"} md:hidden text-gray-700`}
                     >
                         <Menu size={26} className="cursor-pointer" />
                     </button>
@@ -220,7 +220,7 @@ export default function Header() {
                     {user ? (
                         <>
                             <Link
-                                href="/dashboard"
+                                href={`${user?.role === "admin" ? "/dashboard/admin" : "/dashboard/user"}`}
                                 onClick={() => setOpen(false)}
                                 className="block w-full px-4 py-2 rounded-md bg-gray-200"
                             >
