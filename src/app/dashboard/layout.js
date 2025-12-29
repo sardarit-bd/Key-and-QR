@@ -21,7 +21,7 @@ export default function DashboardLayout({ children }) {
     const menuItemsforAdmin = [
         { icon: Package, label: 'Dashboard', active: true, link: "/dashboard/admin" },
         { icon: ShoppingBag, label: 'All Orders', active: false, link: "/dashboard/admin/orders" },
-        { icon: QrCode, label: 'QR History', active: false, link: "/dashboard/admin/qr-history" },
+        { icon: QrCode, label: 'Scan History', active: false, link: "/dashboard/admin/qr-history" },
         { icon: CreditCard, label: 'Subscription', active: false, link: "/dashboard/admin/subscription" },
     ];
 
@@ -33,7 +33,7 @@ export default function DashboardLayout({ children }) {
 
     /********************* menu item for user **************************/
     const menuItemsforUser = [
-        { icon: Package, label: 'Dashboard', active: true, link: "/dashboard/user" },
+        { icon: Package, label: 'Home', active: true, link: "/dashboard/user" },
         { icon: Heart, label: 'Favorites', active: false, link: "/dashboard/user/favorites" },
         { icon: CreditCard, label: 'Subscription', active: false, link: "/dashboard/user/subscription" },
     ];
@@ -65,7 +65,7 @@ export default function DashboardLayout({ children }) {
             {/* Mobile Menu Button */}
             <button
                 onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="lg:hidden fixed top-2 left-4 z-50 p-2"
+                className="lg:hidden fixed top-2 right-4 w-fit md:left-4 z-50 p-2"
             >
                 {isSidebarOpen ? <X size={26} className='cursor-pointer' /> : <Menu size={26} className='cursor-pointer' />}
             </button>

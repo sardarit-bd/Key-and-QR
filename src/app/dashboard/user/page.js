@@ -8,6 +8,7 @@ import { useState } from 'react';
 export default function Dashboard() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [expandedOrder, setExpandedOrder] = useState(null);
+  const [category, setcategory] = useState("motivation")
 
   const menuItems = [
     { icon: Package, label: 'Dashboard', active: true },
@@ -62,13 +63,70 @@ export default function Dashboard() {
 
 
 
+          <div className='bg-green-100 rounded-lg p-4 lg:p-6 mb-4 lg:mb-6 border border-gray-200'>
+            <div className='flex flex-col md:flex-row gap-5 items-center justify-between'>
+              <h3 className='text-lg font-semibold text-gray-600'>Choose Your Quote Category</h3>
+              <select onChange={(e) => { setcategory(e.target.value) }} className='border border-gray-300 px-4 bg-white py-2 w-full md:w-fit rounded-lg cursor-pointer focus:outline-none' name="quote_category" id="quote_category">
+                <option value="motivation">Select Quote Category</option>
+
+                {/* General */}
+                <option value="motivation">Motivation</option>
+                <option value="inspiration">Inspiration</option>
+                <option value="success">Success</option>
+                <option value="life">Life</option>
+                <option value="happiness">Happiness</option>
+                <option value="wisdom">Wisdom</option>
+                <option value="positivity">Positivity</option>
+                <option value="growth">Growth</option>
+
+                {/* Emotional */}
+                <option value="love">Love</option>
+                <option value="friendship">Friendship</option>
+                <option value="family">Family</option>
+                <option value="relationships">Relationships</option>
+                <option value="kindness">Kindness</option>
+                <option value="gratitude">Gratitude</option>
+
+                {/* <!-- Work & Success --> */}
+                <option value="leadership">Leadership</option>
+                <option value="hard_work">Hard Work</option>
+                <option value="discipline">Discipline</option>
+                <option value="productivity">Productivity</option>
+                <option value="business">Business</option>
+                <option value="career">Career</option>
+
+                {/* <!-- Deep & Thoughtful --> */}
+                <option value="philosophy">Philosophy</option>
+                <option value="spirituality">Spirituality</option>
+                <option value="truth">Truth</option>
+                <option value="purpose">Purpose</option>
+                <option value="time">Time</option>
+                <option value="change">Change</option>
+
+                {/* <!-- Lifestyle --> */}
+                <option value="health">Health</option>
+                <option value="mental_health">Mental Health</option>
+                <option value="self_care">Self Care</option>
+                <option value="confidence">Confidence</option>
+                <option value="freedom">Freedom</option>
+
+                {/* <!-- Fun --> */}
+                <option value="humor">Humor</option>
+                <option value="short_quotes">Short Quotes</option>
+                <option value="famous_quotes">Famous Quotes</option>
+                <option value="daily_quotes">Daily Quotes</option>
+              </select>
+
+            </div>
+          </div>
+
 
           {/* Daily Quote */}
           <div className="bg-white rounded-lg p-4 lg:p-6 mb-4 lg:mb-6 border border-gray-200">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-gray-900 text-sm lg:text-base">Your Daily Quote</h2>
+              <h2 className="font-semibold text-gray-900 text-sm lg:text-base">Your weekly Quote</h2>
               <span className="text-xs bg-gray-100 px-2 lg:px-3 py-1 rounded-full text-gray-600 flex items-center gap-1">
-                <span className="text-base lg:text-lg">💡</span> Motivation
+                <span className="text-base lg:text-lg"></span> {category}
               </span>
             </div>
             <p className="text-sm lg:text-base text-gray-700 italic mb-2">
@@ -83,9 +141,9 @@ export default function Dashboard() {
           {/* Daily Quote */}
           <div className="bg-white rounded-lg p-4 lg:p-6 mb-4 lg:mb-6 border border-gray-200">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-gray-900 text-sm lg:text-base">Your Daily Quote</h2>
+              <h2 className="font-semibold text-gray-900 text-sm lg:text-base">Your weekly Quote</h2>
               <span className="text-xs bg-gray-100 px-2 lg:px-3 py-1 rounded-full text-gray-600 flex items-center gap-1">
-                <span className="text-base lg:text-lg">💡</span> Motivation
+                <span className="text-base lg:text-lg"></span> {category}
               </span>
             </div>
             <p className="text-sm lg:text-base text-gray-700 italic mb-2">
@@ -98,9 +156,9 @@ export default function Dashboard() {
           {/* Daily Quote */}
           <div className="bg-white rounded-lg p-4 lg:p-6 mb-4 lg:mb-6 border border-gray-200">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-semibold text-gray-900 text-sm lg:text-base">Your Daily Quote</h2>
+              <h2 className="font-semibold text-gray-900 text-sm lg:text-base">Your weekly Quote</h2>
               <span className="text-xs bg-gray-100 px-2 lg:px-3 py-1 rounded-full text-gray-600 flex items-center gap-1">
-                <span className="text-base lg:text-lg">💡</span> Motivation
+                <span className="text-base lg:text-lg"></span> {category}
               </span>
             </div>
             <p className="text-sm lg:text-base text-gray-700 italic mb-2">
