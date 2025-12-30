@@ -3,7 +3,8 @@
 
 
 import { useAuthStore } from '@/store/authStore';
-import { CreditCard, Heart, LogOut, Menu, Package, QrCode, ShoppingBag, X } from 'lucide-react';
+import { CircleDotDashed, CreditCard, Heart, House, LogOut, Menu, Package, QrCode, ShoppingBag, X } from 'lucide-react';
+
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -21,6 +22,7 @@ export default function DashboardLayout({ children }) {
     const menuItemsforAdmin = [
         { icon: Package, label: 'Dashboard', active: true, link: "/dashboard/admin" },
         { icon: ShoppingBag, label: 'All Orders', active: false, link: "/dashboard/admin/orders" },
+        { icon: CircleDotDashed, label: 'Pending Quotes', active: false, link: "/dashboard/admin/pending" },
         { icon: QrCode, label: 'Scan History', active: false, link: "/dashboard/admin/qr-history" },
         { icon: CreditCard, label: 'Subscription', active: false, link: "/dashboard/admin/subscription" },
     ];
@@ -33,7 +35,7 @@ export default function DashboardLayout({ children }) {
 
     /********************* menu item for user **************************/
     const menuItemsforUser = [
-        { icon: Package, label: 'Home', active: true, link: "/dashboard/user" },
+        { icon: House, label: 'Home', active: true, link: "/dashboard/user" },
         { icon: Package, label: 'My Quote', active: true, link: "/dashboard/user/myquotes" },
         { icon: Heart, label: 'Favorites', active: false, link: "/dashboard/user/favorites" },
         { icon: CreditCard, label: 'Subscription', active: false, link: "/dashboard/user/subscription" },
