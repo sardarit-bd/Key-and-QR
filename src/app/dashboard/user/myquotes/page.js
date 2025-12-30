@@ -1,150 +1,173 @@
 'use client'
 
 
-
-import { CreditCard, Heart, Package, QrCode, Settings, ShoppingBag } from 'lucide-react';
+import { Heart, Sparkles, Target } from 'lucide-react';
 import { useState } from 'react';
 
-export default function Myquotes() {
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [expandedOrder, setExpandedOrder] = useState(null);
-    const [category, setcategory] = useState("motivation")
+export default function QuotePage() {
+    const [savedToFavorites, setSavedToFavorites] = useState(false);
 
-    const menuItems = [
-        { icon: Package, label: 'Dashboard', active: true },
-        { icon: ShoppingBag, label: 'My Orders', active: false },
-        { icon: Heart, label: 'Favorites', active: false },
-        { icon: QrCode, label: 'QR History', active: false },
-        { icon: CreditCard, label: 'Subscription', active: false },
-        { icon: Settings, label: 'Account Settings', active: false },
+    const [category, setcategory] = useState("💡 Motivation");
+
+
+
+    const quoteCategories = [
+        "💡 Motivation",
+        "✨ Inspiration",
+        "🏆 Success",
+        "🌱 Life",
+        "😊 Happiness",
+        "🧠 Wisdom",
+        "☀️ Positivity",
+        "📈 Growth",
+
+        "❤️ Love",
+        "🤝 Friendship",
+        "👨‍👩‍👧‍👦 Family",
+        "💞 Relationships",
+        "🤍 Kindness",
+        "🙏 Gratitude",
+
+        "🧭 Leadership",
+        "💪 Hard Work",
+        "📅 Discipline",
+        "⚡ Productivity",
+        "💼 Business",
+        "🎯 Career",
+
+        "📜 Philosophy",
+        "🕊️ Spirituality",
+        "🔍 Truth",
+        "🎯 Purpose",
+        "⏳ Time",
+        "🔄 Change",
+
+        "🏃 Health",
+        "🧠 Mental Health",
+        "🛀 Self Care",
+        "😎 Confidence",
+        "🕊️ Freedom",
+
+        "💡 Humor",
+        "📝 Short Quotes",
+        "⭐ Famous Quotes",
+        "📆 Daily Quotes"
     ];
 
-    const orders = [
-        { id: 'ORD-001', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
-        { id: 'ORD-002', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
-    ];
+
+    const handleSaveToFavorites = () => {
+        setSavedToFavorites(!savedToFavorites);
+    };
 
     return (
-
-        <>
-            {/* Main Content */}
-            < main className="flex-1 w-full">
-                <div className="p-4 lg:p-8">
-
-
-
-
-
-                    {/* Daily Quote */}
-                    <div className="bg-white rounded-lg p-4 lg:p-6 mb-4 lg:mb-6 border border-gray-200 text-center">
-                        <div className="flex flex-col items-center justify-between mb-3">
-                            <span className="text-xs bg-gray-100 px-2 lg:px-3 mb-4 py-1 rounded-full text-gray-600 flex items-center gap-1">
-                                <span className="text-base lg:text-lg">Motivation</span>
-                            </span>
-                            <h2 className="font-semibold text-gray-900 text-sm lg:text-lg">Your Quote</h2>
-
-                        </div>
-                        <p className="text-sm lg:text-base text-center text-gray-700 italic mb-2">
-                            "Happiness can be found even in the darkest of times, if one only remembers to turn on the light."
-                        </p>
-                        <p className="text-xs lg:text-sm text-gray-500 text-center">— J.K. Rowling</p>
-                    </div>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-                    <div className='bg-green-100 rounded-lg p-4 lg:p-6 mb-4 lg:mb-6 border border-gray-200'>
-                        <div className='flex flex-col md:flex-row gap-5 items-center justify-center'>
-
-                            <button className='border border-gray-300 px-4 bg-blue-600 text-white py-2 w-full rounded-lg cursor-pointer font-semibold focus:outline-none'>
-                                Save
-                            </button>
-
-
-                            <select onChange={(e) => { setcategory(e.target.value) }} className='border border-gray-300 font-semibold px-4 bg-yellow-600 text-white py-2 w-full rounded-lg cursor-pointer focus:outline-none' name="quote_category" id="quote_category">
-                                <option value="motivation">Select Quote Category</option>
-
-
-                                <option value="motivation">Motivation</option>
-                                <option value="inspiration">Inspiration</option>
-                                <option value="success">Success</option>
-                                <option value="life">Life</option>
-                                <option value="happiness">Happiness</option>
-                                <option value="wisdom">Wisdom</option>
-                                <option value="positivity">Positivity</option>
-                                <option value="growth">Growth</option>
-
-
-                                <option value="love">Love</option>
-                                <option value="friendship">Friendship</option>
-                                <option value="family">Family</option>
-                                <option value="relationships">Relationships</option>
-                                <option value="kindness">Kindness</option>
-                                <option value="gratitude">Gratitude</option>
-
-
-                                <option value="leadership">Leadership</option>
-                                <option value="hard_work">Hard Work</option>
-                                <option value="discipline">Discipline</option>
-                                <option value="productivity">Productivity</option>
-                                <option value="business">Business</option>
-                                <option value="career">Career</option>
-
-
-                                <option value="philosophy">Philosophy</option>
-                                <option value="spirituality">Spirituality</option>
-                                <option value="truth">Truth</option>
-                                <option value="purpose">Purpose</option>
-                                <option value="time">Time</option>
-                                <option value="change">Change</option>
-
-
-                                <option value="health">Health</option>
-                                <option value="mental_health">Mental Health</option>
-                                <option value="self_care">Self Care</option>
-                                <option value="confidence">Confidence</option>
-                                <option value="freedom">Freedom</option>
-
-
-                                <option value="humor">Humor</option>
-                                <option value="short_quotes">Short Quotes</option>
-                                <option value="famous_quotes">Famous Quotes</option>
-                                <option value="daily_quotes">Daily Quotes</option>
-                            </select>
-
-
-
-
-
-
-
-                            <button className='border border-gray-300 px-4 bg-red-600 font-semibold text-white py-2 w-full rounded-lg cursor-pointer focus:outline-none'>
-                                Get Another
-                            </button>
-
+        <div className="h-fit flex-1 w-full bg-white flex items-center justify-center ">
+            <div className='w-full bg-[#F4F5F7] rounded-lg py-4'>
+                <div className="max-w-4xl mx-auto w-full">
+                    {/* Motivation Badge */}
+                    <div className="flex justify-center mt-6">
+                        <div className="inline-flex items-center gap-1 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-200">
+                            💡
+                            <span className="text-md font-medium text-gray-700">Motivation</span>
                         </div>
                     </div>
 
+                    {/* Main Card */}
+                    <div className="rounded-2xl p-8 md:p-12 mb-2">
+                        {/* Greeting */}
+                        <div className="text-center mb-12">
+                            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
+                                Hello Emon,
+                            </h1>
+                            <p className="text-gray-500">Here's your message for today...</p>
+                        </div>
 
+                        {/* Quote Section */}
+                        <div className="bg-white rounded-xl p-8 border border-gray-300 mb-8">
+                            <p className="text-lg md:text-xl text-gray-800 text-center leading-relaxed mb-4">
+                                "Happiness can be found even in the darkest of times, if one only remembers to turn on the light."
+                            </p>
+                            <p className="text-sm text-gray-500 text-center italic">— J.K. Rowling</p>
+                        </div>
 
+                        {/* Birthday Message */}
+                        <div className="bg-white rounded-xl p-8 border border-gray-300">
+                            <h2 className="text-2xl font-bold text-gray-900 text-center mb-4">
+                                Happy Birthday!
+                            </h2>
+                            <p className="text-gray-600 text-center italic leading-relaxed">
+                                "Wishing you success, good health, and endless achievements in the year ahead. May your journey continue to inspire everyone around you."
+                            </p>
+                        </div>
 
+                        {/* Action Buttons */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-8">
 
+                            <button className="flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-lg hover:scale-[1.01] transition-all hover:shadow-md active:scale-[0.98] cursor-pointer">
+                                <Sparkles size={18} />
+                                <span className="text-sm font-medium">Subscribe for Daily Quotes</span>
+                            </button>
 
+                            <button
+                                onClick={handleSaveToFavorites}
+                                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all hover:shadow-md hover:scale-[1.01] active:scale-[0.98] cursor-pointer ${savedToFavorites
+                                    ? 'bg-red-500 text-white hover:bg-red-600'
+                                    : 'bg-gray-900 text-white hover:bg-gray-800'
+                                    }`}
+                            >
+                                <Heart size={18} className={savedToFavorites ? 'fill-current' : ''} />
+                                <span className="text-sm font-medium">
+                                    {savedToFavorites ? 'Saved to Favorites' : 'Save to Favorites'}
+                                </span>
+                            </button>
+                        </div>
+                    </div>
 
-
+                    {/* Bottom Links */}
+                    {/* <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm mb-4">
+                        <button className="text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-2 group">
+                            <Share2 size={16} className="group-hover:scale-110 transition-transform" />
+                            <span className="underline">Share this quote</span>
+                        </button>
+                        <button className="text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-2 group">
+                            <ShoppingBag size={16} className="group-hover:scale-110 transition-transform" />
+                            <span className="underline">Get another keychain</span>
+                        </button>
+                    </div> */}
                 </div>
-            </main >
 
-        </>
+
+
+
+                <div className="bg-white rounded-lg p-4 lg:p-6 mb-4 lg:mb-6 border border-gray-200 mx-6">
+                    <h2 className='text-center text-gray-800 text-xl font-semibold pb-6'>Choose Your Quote Category</h2>
+                    <div className="flex items-center gap-3 justify-center flex-wrap mb-3">
+
+                        {quoteCategories.map((item, index) => (
+                            <span
+                                onClick={() => { setcategory(item) }}
+                                key={index}
+                                className={`${category === item ? "bg-gray-800 text-white" : ""} text-md bg-gray-100 px-2 lg:px-3 py-1 rounded-full text-gray-600 flex items-center gap-1 hover:bg-gray-800 hover:text-white border border-gray-200 cursor-pointer`}
+                            >
+                                {item}
+                            </span>
+                        ))}
+
+                    </div>
+                </div>
+
+
+                <div className='flex items-center justify-center'>
+                    <button className="flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-lg hover:scale-[1.01] transition-all hover:shadow-md active:scale-[0.98] cursor-pointer mt-4 mb-8">
+
+                        <Target size={18} />
+                        <span className="text-sm font-medium">Get Another Quote</span>
+                    </button>
+                </div>
+
+
+
+
+            </div>
+        </div>
     );
 }
