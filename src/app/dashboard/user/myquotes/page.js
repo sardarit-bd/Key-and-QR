@@ -1,7 +1,8 @@
 'use client'
 
 
-import { Heart, Sparkles, Target } from 'lucide-react';
+import { Heart, Sparkles } from 'lucide-react';
+import Link from 'next/link';
 import { useState } from 'react';
 
 export default function QuotePage() {
@@ -13,45 +14,11 @@ export default function QuotePage() {
 
     const quoteCategories = [
         "💡 Motivation",
-        "✨ Inspiration",
-        "🏆 Success",
-        "🌱 Life",
-        "😊 Happiness",
-        "🧠 Wisdom",
-        "☀️ Positivity",
-        "📈 Growth",
-
         "❤️ Love",
-        "🤝 Friendship",
-        "👨‍👩‍👧‍👦 Family",
-        "💞 Relationships",
-        "🤍 Kindness",
         "🙏 Gratitude",
-
-        "🧭 Leadership",
-        "💪 Hard Work",
-        "📅 Discipline",
-        "⚡ Productivity",
-        "💼 Business",
-        "🎯 Career",
-
-        "📜 Philosophy",
-        "🕊️ Spirituality",
-        "🔍 Truth",
-        "🎯 Purpose",
-        "⏳ Time",
-        "🔄 Change",
-
-        "🏃 Health",
-        "🧠 Mental Health",
-        "🛀 Self Care",
-        "😎 Confidence",
-        "🕊️ Freedom",
-
-        "💡 Humor",
-        "📝 Short Quotes",
-        "⭐ Famous Quotes",
-        "📆 Daily Quotes"
+        "🎯 Faith",
+        "🏃 Healing",
+        "🕊️ Random",
     ];
 
 
@@ -90,22 +57,19 @@ export default function QuotePage() {
                         </div>
 
                         {/* Birthday Message */}
-                        <div className="bg-white rounded-xl p-8 border border-gray-300">
+                        {/* <div className="bg-white rounded-xl p-8 border border-gray-300">
                             <h2 className="text-2xl font-bold text-gray-900 text-center mb-4">
                                 Happy Birthday!
                             </h2>
                             <p className="text-gray-600 text-center italic leading-relaxed">
                                 "Wishing you success, good health, and endless achievements in the year ahead. May your journey continue to inspire everyone around you."
                             </p>
-                        </div>
+                        </div> */}
 
                         {/* Action Buttons */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-8">
+                        <div className="flex items-center justify-center gap-3 mt-8">
 
-                            <button className="flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-lg hover:scale-[1.01] transition-all hover:shadow-md active:scale-[0.98] cursor-pointer">
-                                <Sparkles size={18} />
-                                <span className="text-sm font-medium">Subscribe for Daily Quotes</span>
-                            </button>
+
 
                             <button
                                 onClick={handleSaveToFavorites}
@@ -153,16 +117,23 @@ export default function QuotePage() {
                         ))}
 
                     </div>
+
+                    <div className='flex items-center justify-center mt-10'>
+
+                        <Link href={'/subscription'} className="flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-lg hover:scale-[1.01] transition-all hover:shadow-md active:scale-[0.98] cursor-pointer">
+                            <Sparkles size={18} />
+                            <span className="text-sm font-medium">Subscribe for Weekly Quotes</span>
+                        </Link>
+
+                    </div>
+
                 </div>
 
 
-                <div className='flex items-center justify-center'>
-                    <button className="flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-lg hover:scale-[1.01] transition-all hover:shadow-md active:scale-[0.98] cursor-pointer mt-4 mb-8">
 
-                        <Target size={18} />
-                        <span className="text-sm font-medium">Get Another Quote</span>
-                    </button>
-                </div>
+
+
+
 
 
 

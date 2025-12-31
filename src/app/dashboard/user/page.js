@@ -14,45 +14,11 @@ export default function Dashboard() {
 
   const quoteCategories = [
     "💡 Motivation",
-    "✨ Inspiration",
-    "🏆 Success",
-    "🌱 Life",
-    "😊 Happiness",
-    "🧠 Wisdom",
-    "☀️ Positivity",
-    "📈 Growth",
-
     "❤️ Love",
-    "🤝 Friendship",
-    "👨‍👩‍👧‍👦 Family",
-    "💞 Relationships",
-    "🤍 Kindness",
     "🙏 Gratitude",
-
-    "🧭 Leadership",
-    "💪 Hard Work",
-    "📅 Discipline",
-    "⚡ Productivity",
-    "💼 Business",
-    "🎯 Career",
-
-    "📜 Philosophy",
-    "🕊️ Spirituality",
-    "🔍 Truth",
-    "🎯 Purpose",
-    "⏳ Time",
-    "🔄 Change",
-
-    "🏃 Health",
-    "🧠 Mental Health",
-    "🛀 Self Care",
-    "😎 Confidence",
-    "🕊️ Freedom",
-
-    "💡 Humor",
-    "📝 Short Quotes",
-    "⭐ Famous Quotes",
-    "📆 Daily Quotes"
+    "🎯 Faith",
+    "🏃 Healing",
+    "🕊️ Random",
   ];
 
 

@@ -1,38 +1,21 @@
-import { Dice5, HandHeart, Handshake, PartyPopper, Rocket, Sparkles } from "lucide-react";
+'use client'
+import { useState } from "react";
 
 export default function PremiumQuoteCategories() {
-  const categories = [
-    {
-      title: "Motivation",
-      desc: "Stay driven with quotes that spark your ambition and push you forward.",
-      icon: <Rocket className="text-purple-600" />,
-    },
-    {
-      title: "Love",
-      desc: "Discover words that warm your heart and celebrate meaningful connections.",
-      icon: <HandHeart className="text-red-600" />,
-    },
-    {
-      title: "Gratitude",
-      desc: "Find calm and appreciation through quotes that remind you to cherish life’s blessings.",
-      icon: <Handshake className="text-blue-700" />,
-    },
-    {
-      title: "Faith",
-      desc: "Uplifting thoughts to strengthen your spirit and renew your sense of hope.",
-      icon: <Sparkles className="text-yellow-500" />,
-    },
-    {
-      title: "Joy",
-      desc: "Spread smiles with quotes that celebrate positivity and simple joys.",
-      icon: <PartyPopper className="text-purple-600" />,
-    },
-    {
-      title: "Random",
-      desc: "Let fate pick your quote — a fresh dose of inspiration every time.",
-      icon: <Dice5 className="text-sky-600" />,
-    },
+
+  const [category, setcategory] = useState("💡 Motivation");
+
+
+
+  const quoteCategories = [
+    "💡 Motivation",
+    "❤️ Love",
+    "🙏 Gratitude",
+    "🎯 Faith",
+    "🏃 Healing",
+    "🕊️ Random",
   ];
+
 
   return (
     <section className="bg-white py-20">
@@ -43,29 +26,18 @@ export default function PremiumQuoteCategories() {
           Premium Quote Categories
         </h2>
 
-        {/* Grid */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {categories.map((item, index) => (
-            <div
+        <div className="flex items-center gap-3 justify-center flex-wrap mb-3">
+
+          {quoteCategories.map((item, index) => (
+            <span
+              onClick={() => { setcategory(item) }}
               key={index}
-              className="rounded-lg bg-[#F4F5F7] p-6 transition hover:shadow-md"
+              className={`${category === item ? "bg-gray-800 text-white" : ""} text-md bg-gray-100 px-2 lg:px-3 py-1 rounded-full text-gray-600 flex items-center gap-1 hover:bg-gray-800 hover:text-white border border-gray-200 cursor-pointer`}
             >
-              {/* Icon */}
-              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-white text-lg shadow-sm">
-                {item.icon}
-              </div>
-
-              {/* Title */}
-              <h3 className="mb-2 text-base font-semibold text-gray-900">
-                {item.title}
-              </h3>
-
-              {/* Description */}
-              <p className="text-sm text-gray-500 leading-relaxed">
-                {item.desc}
-              </p>
-            </div>
+              {item}
+            </span>
           ))}
+
         </div>
       </div>
     </section>
