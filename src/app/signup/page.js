@@ -26,7 +26,7 @@ export default function SignUpPage() {
 
     return (
         <div className="p-3">
-            <div className="max-w-md mx-auto my-36 p-6 border rounded-xl shadow-sm bg-white">
+            <div className="max-w-md mx-auto my-36 p-6 border border-gray-400 rounded-xl shadow-sm bg-white">
                 <h2 className="text-2xl font-semibold mb-4 text-center">Sign Up</h2>
 
                 {error && <p className="text-red-500 text-sm mb-2">{error}</p>}
@@ -34,7 +34,7 @@ export default function SignUpPage() {
 
                 <input
                     type="text"
-                    className="w-full border px-4 py-2 rounded-md mb-3"
+                    className="w-full border border-gray-400 px-4 py-2 rounded-md mb-3"
                     placeholder="Your Name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -43,7 +43,7 @@ export default function SignUpPage() {
 
                 <input
                     type="email"
-                    className="w-full border px-4 py-2 rounded-md mb-3"
+                    className="w-full border border-gray-400 px-4 py-2 rounded-md mb-3"
                     placeholder="Email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -51,7 +51,7 @@ export default function SignUpPage() {
 
                 <input
                     type="password"
-                    className="w-full border px-4 py-2 rounded-md mb-4"
+                    className="w-full border border-gray-400 px-4 py-2 rounded-md mb-4"
                     placeholder="Password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
