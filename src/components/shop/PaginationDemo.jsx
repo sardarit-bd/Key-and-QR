@@ -1,68 +1,7 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import React, { useState } from 'react';
+import React from 'react';
 
-// Sample data array
-const sampleData = Array.from({ length: 100 }, (_, i) => ({
-    id: i + 1,
-    name: `Item ${i + 1}`,
-    description: `This is item number ${i + 1}`
-}));
-
-export default function PaginationDemo() {
-    const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 10;
-
-    // Calculate pagination
-    const totalPages = Math.ceil(sampleData.length / itemsPerPage);
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    const currentItems = sampleData.slice(startIndex, endIndex);
-
-    // Generate page numbers to display
-    const getPageNumbers = () => {
-        const pages = [];
-        const maxPagesToShow = 5;
-
-        if (totalPages <= maxPagesToShow) {
-            for (let i = 1; i <= totalPages; i++) {
-                pages.push(i);
-            }
-        } else {
-            if (currentPage <= 3) {
-                pages.push(1, 2, 3, 4, '...', totalPages);
-            } else if (currentPage >= totalPages - 2) {
-                pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
-            } else {
-                pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
-            }
-        }
-
-        return pages;
-    };
-
-    const handlePageChange = (page) => {
-        if (page >= 1 && page <= totalPages) {
-            setCurrentPage(page);
-        }
-    };
-
-    return (
-        <div className="h-fit  pt-10">
-            <div className="max-w-4xl mx-auto">
-
-                {/* Pagination Component */}
-                <Pagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={handlePageChange}
-                />
-            </div>
-        </div>
-    );
-}
-
-// Reusable Pagination Component
-function Pagination({ currentPage, totalPages, onPageChange }) {
+export default function Pagination({ currentPage, totalPages, onPageChange }) {
     const getPageNumbers = () => {
         const pages = [];
         const maxPagesToShow = 5;
@@ -87,7 +26,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
     const pageNumbers = getPageNumbers();
 
     return (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-2 pt-10">
             {/* Previous Button */}
             <button
                 onClick={() => onPageChange(currentPage - 1)}

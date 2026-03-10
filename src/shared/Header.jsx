@@ -11,14 +11,12 @@ import { useEffect, useState } from "react";
 
 export default function Header() {
     const cart = useCartStore((state) => state.cart);
-    const { user, logout } = useAuthStore();
+    const { user, logout, loading } = useAuthStore();
     const cartCount = cart.reduce((sum, i) => sum + i.qty, 0);
     const [open, setOpen] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
     const isDashboard = pathname.startsWith("/dashboard");
-
-
 
     // Body scroll lock when drawer open
     useEffect(() => {
@@ -32,30 +30,23 @@ export default function Header() {
         };
     }, [open]);
 
-
-
-
-
-
-
-    // hangle logout function is here
-    const hangleLogout = () => {
-        logout();
+    // handle logout function
+    const handleLogout = async () => {
+        await logout();
         setOpen(false);
-        router.push("/login");
-    }
+        router.push("/");
+    };
 
-
-
-
-
-
-
-
-
-
-
-
+    // Get user initials for avatar
+    const getUserInitials = () => {
+        if (!user?.name) return "U";
+        return user.name
+            .split(" ")
+            .map(word => word[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2);
+    };
 
     return (
         <>
@@ -89,24 +80,40 @@ export default function Header() {
                                 </span>
                             )}
                         </Link>
+
                         {user ? (
                             <div className="relative group">
-                                {/* Avatar */}
-                                <CircleUserRound size={36} className="text-gray-800" />
+                                {/* Avatar - User initials or icon */}
+                                <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center cursor-pointer">
+                                    {user?.name ? (
+                                        <span className="text-white text-sm font-semibold">
+                                            {getUserInitials()}
+                                        </span>
+                                    ) : (
+                                        <CircleUserRound size={24} className="text-white" />
+                                    )}
+                                </div>
 
                                 {/* Dropdown */}
-                                {/* Improved Dropdown */}
-                                <div className="absolute right-0 mt-2 w-64 bg-white shadow-2xl rounded-xl overflow-hidden border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
+                                <div className="absolute right-0 mt-2 w-64 bg-white shadow-2xl rounded-xl overflow-hidden border border-gray-100 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
 
                                     {/* User Info Section */}
                                     <div className="px-4 py-4 bg-gray-100 border-b border-gray-100">
                                         <div className="flex items-center gap-3">
                                             <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center">
-                                                <CircleUserRound size={22} className="text-white" />
+                                                {user?.name ? (
+                                                    <span className="text-white text-sm font-semibold">
+                                                        {getUserInitials()}
+                                                    </span>
+                                                ) : (
+                                                    <CircleUserRound size={22} className="text-white" />
+                                                )}
                                             </div>
                                             <div>
-                                                <p className="text-sm font-semibold text-gray-800">{user?.name}</p>
-                                                <p className="text-xs bg-green-100 text-green-700 w-fit px-3 py-1 rounded-full">{user?.role}</p>
+                                                <p className="text-sm font-semibold text-gray-800 capitalize">{user?.name || "User"}</p>
+                                                <p className="text-xs bg-green-100 text-green-700 w-fit px-3 py-1 rounded-full">
+                                                    {user?.role === "admin" ? "Admin" : "User"}
+                                                </p>
                                             </div>
                                         </div>
                                     </div>
@@ -119,9 +126,9 @@ export default function Header() {
                                             className="flex items-center gap-3 px-4 py-2 text-gray-700 hover:bg-gray-50 transition-colors group"
                                         >
                                             <div className="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center group-hover:bg-gray-100 transition-colors">
-                                                <LayoutDashboard size={18} className="text-gray-600 group-hover:text-gray-600 transition-colors" />
+                                                <LayoutDashboard size={18} className="text-gray-600" />
                                             </div>
-                                            <span className="text-sm font-medium">Dashboard</span>
+                                            <span className="text-sm font-medium ">Dashboard</span>
                                         </Link>
 
                                         {/* Divider */}
@@ -129,13 +136,16 @@ export default function Header() {
 
                                         {/* Logout Button */}
                                         <button
-                                            onClick={() => { hangleLogout() }}
-                                            className="flex items-center gap-3 px-4 py-2 w-full text-gray-700 hover:bg-gray-50 transition-colors group"
+                                            onClick={handleLogout}
+                                            disabled={loading}
+                                            className="flex items-center gap-3 px-4 py-2 w-full text-gray-700 hover:bg-gray-50 transition-colors group disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                                         >
                                             <div className="w-9 h-9 bg-gray-50 rounded-lg flex items-center justify-center group-hover:bg-gray-100 transition-colors">
                                                 <LogOut size={18} className="text-gray-600" />
                                             </div>
-                                            <span className="text-sm font-medium">Logout</span>
+                                            <span className="text-sm font-medium">
+                                                {loading ? "Logging out..." : "Logout"}
+                                            </span>
                                         </button>
                                     </div>
                                 </div>
@@ -151,7 +161,7 @@ export default function Header() {
 
                                 <Link
                                     href="/signup"
-                                    className="bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-[#255a90] transition"
+                                    className="bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-800 transition"
                                 >
                                     Get Started
                                 </Link>
@@ -219,19 +229,29 @@ export default function Header() {
                     {/* 🔥 MOBILE AUTH CHECK */}
                     {user ? (
                         <>
+                            {/* Mobile User Info */}
+                            <div className="bg-gray-100 p-3 rounded-lg mb-2">
+                                <p className="font-semibold text-gray-800">{user?.name || "User"}</p>
+                                <p className="text-xs text-gray-600">{user?.email}</p>
+                                <p className="text-xs bg-green-100 text-green-700 w-fit px-3 py-1 rounded-full mt-1">
+                                    {user?.role === "admin" ? "Admin" : "User"}
+                                </p>
+                            </div>
+
                             <Link
                                 href={`${user?.role === "admin" ? "/dashboard/admin" : "/dashboard/user"}`}
                                 onClick={() => setOpen(false)}
-                                className="block w-full px-4 py-2 rounded-md bg-gray-200"
+                                className="block w-full px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 transition"
                             >
                                 Dashboard
                             </Link>
 
                             <button
-                                onClick={() => { hangleLogout() }}
-                                className="w-full text-left px-4 py-2 mt-2 rounded-md border text-red-600 cursor-pointer"
+                                onClick={handleLogout}
+                                disabled={loading}
+                                className="w-full text-left px-4 py-2 mt-2 rounded-md border border-red-200 text-red-600 hover:bg-red-50 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                Logout
+                                {loading ? "Logging out..." : "Logout"}
                             </button>
                         </>
                     ) : (
@@ -239,7 +259,7 @@ export default function Header() {
                             <Link
                                 href="/login"
                                 onClick={() => setOpen(false)}
-                                className="block w-full px-4 py-2 border rounded-md mt-4"
+                                className="block w-full px-4 py-2 border rounded-md mt-4 hover:bg-gray-50 transition"
                             >
                                 Sign In
                             </Link>
@@ -247,7 +267,7 @@ export default function Header() {
                             <Link
                                 href="/signup"
                                 onClick={() => setOpen(false)}
-                                className="block w-full bg-gray-700 text-white px-4 py-2 rounded-md"
+                                className="block w-full bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-800 transition"
                             >
                                 Get Started
                             </Link>

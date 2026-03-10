@@ -6,37 +6,56 @@ import { Minus, Plus } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import RelatedProducts from "./Relatedproduct";
 
 export default function ProductDetails() {
-    const { id } = useParams();                          // dynamic id from URL
-    const products = useProductStore((state) => state.products);
-
-    const product = products.find((p) => p.id === Number(id));  // find product
-
+    // ========== ALL HOOKS FIRST ==========
+    const { id } = useParams();
+    const { products, fetchProducts, getProductById } = useProductStore();
     const addToCart = useCartStore((state) => state.addToCart);
+
+    // State declarations
+    const [product, setProduct] = useState(null);
+    const [loading, setLoading] = useState(true);
     const [selectedOption, setSelectedOption] = useState('gift');
     const [customMessage, setCustomMessage] = useState('');
     const [quantity, setQuantity] = useState(1);
+    const [selectedImage, setSelectedImage] = useState("");
 
-    // fallback (404 style)
-    if (!product) {
-        return (
-            <section className="py-20 text-center text-xl">
-                Product Not Found
-            </section>
-        );
-    }
+    // ========== EFFECTS ==========
+    // Load product data
+    useEffect(() => {
+        const loadProduct = async () => {
+            setLoading(true);
 
-    // If product has multiple images, use them, otherwise fallback to one image
-    const gallery = product.gallery ?? [product.image];
-    const [selectedImage, setSelectedImage] = useState(gallery[0]);
+            // If products not loaded yet, fetch them
+            if (products.length === 0) {
+                await fetchProducts();
+            }
 
+            // Find product by id
+            const found = getProductById(id);
+            setProduct(found || null);
+            setLoading(false);
+        };
+
+        loadProduct();
+    }, [id, products.length, fetchProducts, getProductById]);
+
+    // Set selected image when product loads
+    useEffect(() => {
+        if (product) {
+            const gallery = product.gallery?.length ? product.gallery : [product.image];
+            setSelectedImage(gallery[0] || "/placeholder.jpg");
+        }
+    }, [product]);
+
+    // ========== HANDLER FUNCTIONS ==========
     const handleAdd = () => {
         for (let i = 0; i < quantity; i++) {
             addToCart({
-                id: product.id,
+                id: product._id || product.id,
                 name: product.name,
                 price: product.price,
                 img: selectedImage,
@@ -44,13 +63,48 @@ export default function ProductDetails() {
         }
     };
 
+    // ========== CONDITIONAL RETURNS (AFTER ALL HOOKS) ==========
+
+    // Loading state
+    if (loading) {
+        return (
+            <section className="bg-white text-black py-16">
+                <div className="max-w-7xl px-4 mx-auto flex justify-center items-center min-h-[400px]">
+                    <div className="text-center">
+                        <div className="w-16 h-16 border-4 border-gray-200 border-t-black rounded-full animate-spin mx-auto"></div>
+                        <p className="mt-4 text-gray-600">Loading product...</p>
+                    </div>
+                </div>
+            </section>
+        );
+    }
+
+    // Not found
+    if (!product) {
+        return (
+            <section className="bg-white text-black py-16">
+                <div className="max-w-7xl px-4 mx-auto text-center">
+                    <h2 className="text-2xl font-semibold text-gray-900 mb-4">Product Not Found</h2>
+                    <p className="text-gray-600 mb-8">The product you're looking for doesn't exist or has been removed.</p>
+                    <Link
+                        href="/shop"
+                        className="inline-block px-6 py-3 bg-gray-900 text-white rounded-md hover:bg-gray-800 transition"
+                    >
+                        Back to Shop
+                    </Link>
+                </div>
+            </section>
+        );
+    }
+
+    // Gallery images
+    const gallery = product.gallery?.length ? product.gallery : [product.image];
+
     return (
         <section className="bg-white text-black py-16">
             <div className="max-w-7xl px-4 mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
-
                 {/* LEFT: IMAGE GALLERY */}
                 <div>
-                    {/* Main Image */}
                     <div className="w-full rounded-xl overflow-hidden shadow-sm mb-2">
                         <Image
                             src={selectedImage}
@@ -58,28 +112,35 @@ export default function ProductDetails() {
                             width={600}
                             height={600}
                             className="w-full h-auto object-cover rounded-xl"
+                            onError={(e) => {
+                                e.target.src = "/placeholder.jpg";
+                            }}
                         />
                     </div>
 
-                    {/* Thumbnails */}
-                    <div className="flex gap-3">
-                        {gallery.map((img, index) => (
-                            <button
-                                key={index}
-                                onClick={() => setSelectedImage(img)}
-                                className={`border-2 rounded-lg overflow-hidden ${selectedImage === img ? "border-black" : "border-transparent"
-                                    }`}
-                            >
-                                <Image
-                                    src={img}
-                                    alt={`Thumbnail ${index}`}
-                                    width={80}
-                                    height={80}
-                                    className="object-cover hover:opacity-80 transition"
-                                />
-                            </button>
-                        ))}
-                    </div>
+                    {gallery.length > 1 && (
+                        <div className="flex gap-3">
+                            {gallery.map((img, index) => (
+                                <button
+                                    key={index}
+                                    onClick={() => setSelectedImage(img)}
+                                    className={`border-2 rounded-lg overflow-hidden ${selectedImage === img ? "border-black" : "border-transparent"
+                                        }`}
+                                >
+                                    <Image
+                                        src={img}
+                                        alt={`Thumbnail ${index}`}
+                                        width={80}
+                                        height={80}
+                                        className="object-cover hover:opacity-80 transition"
+                                        onError={(e) => {
+                                            e.target.src = "/placeholder.jpg";
+                                        }}
+                                    />
+                                </button>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 {/* RIGHT: PRODUCT INFO */}
@@ -94,34 +155,30 @@ export default function ProductDetails() {
                     </p>
 
                     <p className="text-sm text-gray-500">
-                        <strong>Brand:</strong> {product.brand} &nbsp;|&nbsp;
+                        <strong>Brand:</strong> {product.brand || "Sardar IT"} &nbsp;|&nbsp;
                         <strong>Category:</strong> {product.category}
                     </p>
 
-
-                    {/* customize qutes box here */}
+                    {/* customize quotes box here */}
                     <div className="">
-                        {/* Title */}
                         <h2 className="text-xl font-semibold text-gray-900 mb-6">
                             Choose Your Message
                         </h2>
 
-                        {/* Options Container */}
                         <div className="space-y-4">
                             {/* Option 1: Purchase for yourself */}
                             <button
                                 onClick={() => setSelectedOption('yourself')}
                                 className={`w-full text-left p-5 rounded-xl border-2 transition-all ${selectedOption === 'yourself'
-                                    ? 'border-gray-900 bg-gray-50'
-                                    : 'border-gray-200 bg-white hover:border-gray-300'
+                                        ? 'border-gray-900 bg-gray-50'
+                                        : 'border-gray-200 bg-white hover:border-gray-300'
                                     }`}
                             >
                                 <div className="flex items-start gap-4">
-                                    {/* Radio Button */}
                                     <div className="flex-shrink-0 mt-0.5">
                                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${selectedOption === 'yourself'
-                                            ? 'border-gray-900'
-                                            : 'border-gray-300'
+                                                ? 'border-gray-900'
+                                                : 'border-gray-300'
                                             }`}>
                                             {selectedOption === 'yourself' && (
                                                 <div className="w-2.5 h-2.5 rounded-full bg-gray-900"></div>
@@ -129,7 +186,6 @@ export default function ProductDetails() {
                                         </div>
                                     </div>
 
-                                    {/* Content */}
                                     <div className="flex-1">
                                         <h3 className="font-semibold text-gray-900 mb-1">
                                             Purchase for yourself
@@ -145,16 +201,15 @@ export default function ProductDetails() {
                             <button
                                 onClick={() => setSelectedOption('gift')}
                                 className={`w-full text-left p-5 rounded-xl border-2 transition-all ${selectedOption === 'gift'
-                                    ? 'border-gray-900 bg-gray-900'
-                                    : 'border-gray-200 bg-white hover:border-gray-300'
+                                        ? 'border-gray-900 bg-gray-900'
+                                        : 'border-gray-200 bg-white hover:border-gray-300'
                                     }`}
                             >
                                 <div className="flex items-start gap-4">
-                                    {/* Radio Button */}
                                     <div className="flex-shrink-0 mt-0.5">
                                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${selectedOption === 'gift'
-                                            ? 'border-white'
-                                            : 'border-gray-300'
+                                                ? 'border-white'
+                                                : 'border-gray-300'
                                             }`}>
                                             {selectedOption === 'gift' && (
                                                 <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
@@ -162,7 +217,6 @@ export default function ProductDetails() {
                                         </div>
                                     </div>
 
-                                    {/* Content */}
                                     <div className="flex-1">
                                         <h3 className={`font-semibold mb-1 ${selectedOption === 'gift' ? 'text-white' : 'text-gray-900'
                                             }`}>
@@ -191,13 +245,8 @@ export default function ProductDetails() {
                         </div>
                     </div>
 
-
-
-
                     {/* Quantity + Buttons */}
                     <div className="flex items-center gap-4 mt-1">
-
-                        {/* Quantity Selector */}
                         <div className="flex items-center border border-gray-300 py-1 rounded-md">
                             <button
                                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -214,7 +263,6 @@ export default function ProductDetails() {
                             </button>
                         </div>
 
-                        {/* Add to Cart */}
                         <button
                             onClick={handleAdd}
                             className="px-6 py-3 border border-gray-700 rounded-md hover:bg-gray-700 hover:text-white transition"
@@ -222,7 +270,6 @@ export default function ProductDetails() {
                             Add to Cart
                         </button>
 
-                        {/* Buy Now */}
                         <Link
                             href="/checkout"
                             className="px-6 py-3 bg-gray-700 text-white rounded-md hover:bg-gray-800 transition"
@@ -234,7 +281,7 @@ export default function ProductDetails() {
             </div>
 
             {/* Related Products */}
-            <RelatedProducts />
+            <RelatedProducts currentProductId={product._id || product.id} />
         </section>
     );
 }

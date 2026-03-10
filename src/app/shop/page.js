@@ -1,5 +1,6 @@
 import Banner from "@/shared/Banner";
 import Products from "@/components/shop/Products";
+import ShopGrid from "@/components/shop/Products";
 export default function page() {
   return (
     <>
@@ -10,7 +11,7 @@ export default function page() {
           { label: "Shop", href: "/shop" },
         ]}
       />
-      <Products />
+      <ShopGrid />
     </>
   )
 }
