@@ -92,25 +92,25 @@ export default function ShopGrid() {
                             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 {paginated.map((product) => (
                                     <div
-                                        key={product._id || product.id}
+                                        key={product._id}
                                         className="bg-gray-100 rounded-md overflow-hidden"
                                     >
-                                        <Link href={`/shop/${product._id || product.id}`}>
+                                        <Link href={`/shop/${product._id}`}>
                                             <Image
-                                                src={product.image}
+                                                src={product.image?.url || product.image || "/placeholder.png"}
                                                 alt={product.name}
                                                 width={400}
                                                 height={400}
                                                 className="w-full h-56 object-cover"
-                                            // onError={(e) => {
-                                            //     e.target.src = "/placeholder.jpg";
-                                            // }}
+                                                onError={(e) => {
+                                                    e.target.src = "/placeholder.png";
+                                                }}
                                             />
                                         </Link>
 
                                         <div className="p-4 text-left">
                                             <h3 className="font-semibold text-base mb-2">
-                                                <Link href={`/shop/${product._id || product.id}`}>
+                                                <Link href={`/shop/${product._id}`}>
                                                     {product.name}
                                                 </Link>
                                             </h3>
@@ -129,25 +129,25 @@ export default function ShopGrid() {
                             <div className="space-y-6">
                                 {paginated.map((product) => (
                                     <div
-                                        key={product._id || product.id}
+                                        key={product._id}
                                         className="flex bg-gray-50 shadow-sm hover:shadow-md transition overflow-hidden"
                                     >
-                                        <Link href={`/shop/${product._id || product.id}`}>
+                                        <Link href={`/shop/${product._id}`}>
                                             <Image
-                                                src={product.image}
+                                                src={product.image?.url || product.image || "/placeholder.png"}
                                                 alt={product.name}
                                                 width={200}
                                                 height={200}
                                                 className="w-44 h-44 object-cover"
-                                            // onError={(e) => {
-                                            //     e.target.src = "/placeholder.jpg";
-                                            // }}
+                                                onError={(e) => {
+                                                    e.target.src = "/placeholder.png";
+                                                }}
                                             />
                                         </Link>
 
                                         <div className="p-5 flex flex-col justify-center text-left w-full">
                                             <h3 className="font-semibold text-lg mb-2">
-                                                <Link href={`/shop/${product._id || product.id}`}>
+                                                <Link href={`/shop/${product._id}`}>
                                                     {product.name}
                                                 </Link>
                                             </h3>

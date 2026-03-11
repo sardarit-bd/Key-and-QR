@@ -1,6 +1,7 @@
 import ProductDetails from "@/components/shop/ProductDetails";
 import Banner from "@/shared/Banner";
-export default function page() {
+
+export default function Page() {
     return (
         <>
             <Banner
@@ -13,5 +14,5 @@ export default function page() {
             />
             <ProductDetails />
         </>
-    )
+    );
 }

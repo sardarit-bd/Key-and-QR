@@ -22,6 +22,7 @@ export default function ProductDetails() {
     const [customMessage, setCustomMessage] = useState('');
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState("");
+    const [imageError, setImageError] = useState(false);
 
     // ========== EFFECTS ==========
     // Load product data
@@ -46,8 +47,9 @@ export default function ProductDetails() {
     // Set selected image when product loads
     useEffect(() => {
         if (product) {
-            const gallery = product.gallery?.length ? product.gallery : [product.image];
-            setSelectedImage(gallery[0] || "/placeholder.jpg");
+            const gallery = product.gallery?.length ? product.gallery.map(img => img.url) : [product.image?.url];
+            setSelectedImage(gallery[0] || "/placeholder.png");
+            setImageError(false);
         }
     }, [product]);
 
@@ -55,12 +57,18 @@ export default function ProductDetails() {
     const handleAdd = () => {
         for (let i = 0; i < quantity; i++) {
             addToCart({
-                id: product._id || product.id,
+                id: product._id,
                 name: product.name,
                 price: product.price,
                 img: selectedImage,
             });
         }
+    };
+
+    const handleImageError = (e) => {
+        e.target.src = "/placeholder.png";
+        e.target.onerror = null; // Prevent infinite loop
+        setImageError(true);
     };
 
     // ========== CONDITIONAL RETURNS (AFTER ALL HOOKS) ==========
@@ -97,8 +105,13 @@ export default function ProductDetails() {
         );
     }
 
-    // Gallery images
-    const gallery = product.gallery?.length ? product.gallery : [product.image];
+    // Gallery images - filter out any null/undefined values
+    const gallery = product.gallery?.length
+        ? product.gallery.map(img => img.url).filter(Boolean)
+        : [product.image?.url].filter(Boolean);
+
+    // If no valid images, use placeholder
+    const displayGallery = gallery.length > 0 ? gallery : ["/placeholder.png"];
 
     return (
         <section className="bg-white text-black py-16">
@@ -107,20 +120,19 @@ export default function ProductDetails() {
                 <div>
                     <div className="w-full rounded-xl overflow-hidden shadow-sm mb-2">
                         <Image
-                            src={selectedImage}
+                            src={selectedImage || "/placeholder.png"}
                             alt={product.name}
                             width={600}
                             height={600}
                             className="w-full h-auto object-cover rounded-xl"
-                            onError={(e) => {
-                                e.target.src = "/placeholder.jpg";
-                            }}
+                            onError={handleImageError}
+                            unoptimized={true}
                         />
                     </div>
 
-                    {gallery.length > 1 && (
+                    {displayGallery.length > 1 && (
                         <div className="flex gap-3">
-                            {gallery.map((img, index) => (
+                            {displayGallery.map((img, index) => (
                                 <button
                                     key={index}
                                     onClick={() => setSelectedImage(img)}
@@ -128,14 +140,13 @@ export default function ProductDetails() {
                                         }`}
                                 >
                                     <Image
-                                        src={img}
+                                        src={img || "/placeholder.png"}
                                         alt={`Thumbnail ${index}`}
                                         width={80}
                                         height={80}
                                         className="object-cover hover:opacity-80 transition"
-                                        onError={(e) => {
-                                            e.target.src = "/placeholder.jpg";
-                                        }}
+                                        onError={handleImageError}
+                                        unoptimized={true}
                                     />
                                 </button>
                             ))}
@@ -170,15 +181,15 @@ export default function ProductDetails() {
                             <button
                                 onClick={() => setSelectedOption('yourself')}
                                 className={`w-full text-left p-5 rounded-xl border-2 transition-all ${selectedOption === 'yourself'
-                                        ? 'border-gray-900 bg-gray-50'
-                                        : 'border-gray-200 bg-white hover:border-gray-300'
+                                    ? 'border-gray-900 bg-gray-50'
+                                    : 'border-gray-200 bg-white hover:border-gray-300'
                                     }`}
                             >
                                 <div className="flex items-start gap-4">
                                     <div className="flex-shrink-0 mt-0.5">
                                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${selectedOption === 'yourself'
-                                                ? 'border-gray-900'
-                                                : 'border-gray-300'
+                                            ? 'border-gray-900'
+                                            : 'border-gray-300'
                                             }`}>
                                             {selectedOption === 'yourself' && (
                                                 <div className="w-2.5 h-2.5 rounded-full bg-gray-900"></div>
@@ -201,15 +212,15 @@ export default function ProductDetails() {
                             <button
                                 onClick={() => setSelectedOption('gift')}
                                 className={`w-full text-left p-5 rounded-xl border-2 transition-all ${selectedOption === 'gift'
-                                        ? 'border-gray-900 bg-gray-900'
-                                        : 'border-gray-200 bg-white hover:border-gray-300'
+                                    ? 'border-gray-900 bg-gray-900'
+                                    : 'border-gray-200 bg-white hover:border-gray-300'
                                     }`}
                             >
                                 <div className="flex items-start gap-4">
                                     <div className="flex-shrink-0 mt-0.5">
                                         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${selectedOption === 'gift'
-                                                ? 'border-white'
-                                                : 'border-gray-300'
+                                            ? 'border-white'
+                                            : 'border-gray-300'
                                             }`}>
                                             {selectedOption === 'gift' && (
                                                 <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
@@ -281,7 +292,7 @@ export default function ProductDetails() {
             </div>
 
             {/* Related Products */}
-            <RelatedProducts currentProductId={product._id || product.id} />
+            <RelatedProducts currentProductId={product._id} />
         </section>
     );
 }
