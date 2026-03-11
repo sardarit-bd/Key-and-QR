@@ -2,65 +2,44 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useProductStore } from "@/store/productStore";
 
-const products = [
-    {
-        id: 1,
-        title: "One Smart Keychain",
-        desc: "Premium Matte Keychain with NFC & Dynamic QR",
-        price: 500,
-        oldPrice: 700,
-        img: "/shop/chabi1.png",
-    },
-    {
-        id: 2,
-        title: "Digital Keychain",
-        desc: "NFC + QR Smart Metal Keychain for Instant Sharing",
-        price: 250,
-        oldPrice: 350,
-        img: "/shop/chabi2.png",
-    },
-    {
-        id: 3,
-        title: "Flex QR Keyring",
-        desc: "Silicone Loop Keychain with QR Contact Code",
-        price: 600,
-        oldPrice: 350,
-        img: "/shop/chabi4.png",
-    },
-    {
-        id: 4,
-        title: "One Smart Keychain",
-        desc: "Premium Matte Keychain with NFC & Dynamic QR",
-        price: 500,
-        oldPrice: 700,
-        img: "/shop/chabi6.png",
-    },
-    {
-        id: 5,
-        title: "Digital Keychain",
-        desc: "NFC + QR Smart Metal Keychain for Instant Sharing",
-        price: 250,
-        oldPrice: 350,
-        img: "/shop/chabi3.png",
-    },
-    {
-        id: 6,
-        title: "Flex QR Keyring",
-        desc: "Silicone Loop Keychain with QR Contact Code",
-        price: 600,
-        oldPrice: 350,
-        img: "/shop/chabi5.png",
-    },
-];
-
-export default function RelatedProducts() {
+export default function RelatedProducts({ currentProductId }) {
+    const { products } = useProductStore();
     const [visibleCount, setVisibleCount] = useState(4);
+    const [relatedProducts, setRelatedProducts] = useState([]);
+
+    useEffect(() => {
+        // Get 6 random products excluding current product
+        const otherProducts = products
+            .filter(p => p._id !== currentProductId)
+            .sort(() => 0.5 - Math.random())
+            .slice(0, 6)
+            .map(p => ({
+                id: p._id,
+                title: p.name,
+                desc: p.description?.substring(0, 50) + "...",
+                price: p.price,
+                oldPrice: Math.round(p.price * 1.4), // Example old price
+                img: p.image?.url || "/placeholder.png"
+            }));
+
+        setRelatedProducts(otherProducts);
+    }, [products, currentProductId]);
 
     const handleShowMore = () => {
         setVisibleCount((prev) => prev + 4);
     };
+
+    const handleImageError = (e) => {
+        e.target.src = "/placeholder.png";
+        e.target.onerror = null;
+    };
+
+    if (relatedProducts.length === 0) {
+        return null;
+    }
 
     return (
         <section className="py-10 mt-16">
@@ -70,7 +49,7 @@ export default function RelatedProducts() {
 
             {/* Product grid */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-4">
-                {products.slice(0, visibleCount).map((item) => (
+                {relatedProducts.slice(0, visibleCount).map((item) => (
                     <div key={item.id} className="bg-gray-100 rounded-md overflow-hidden">
                         {/* Image */}
                         <div className="relative w-full h-[220px]">
@@ -80,6 +59,8 @@ export default function RelatedProducts() {
                                     alt={item.title}
                                     fill
                                     className="object-cover"
+                                    onError={handleImageError}
+                                    unoptimized={true}
                                 />
                             </Link>
                         </div>
@@ -103,7 +84,7 @@ export default function RelatedProducts() {
             </div>
 
             {/* Show More button */}
-            {visibleCount < products.length && (
+            {visibleCount < relatedProducts.length && (
                 <div className="flex justify-center mt-8">
                     <button
                         onClick={handleShowMore}

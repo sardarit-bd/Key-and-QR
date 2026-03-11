@@ -21,6 +21,7 @@ export default function DashboardLayout({ children }) {
     /********************* menu item for admin **************************/
     const menuItemsforAdmin = [
         { icon: Package, label: 'Dashboard', active: true, link: "/dashboard/admin" },
+        { icon: Package, label: 'Add Products', active: true, link: "/dashboard/admin/products" },
         { icon: ShoppingBag, label: 'All Orders', active: false, link: "/dashboard/admin/orders" },
         { icon: CircleDotDashed, label: 'Pending Quotes', active: false, link: "/dashboard/admin/pending" },
         { icon: QrCode, label: 'Scan History', active: false, link: "/dashboard/admin/qr-history" },
