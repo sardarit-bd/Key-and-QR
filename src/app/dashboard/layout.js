@@ -3,7 +3,7 @@
 
 
 import { useAuthStore } from '@/store/authStore';
-import { CircleDotDashed, CreditCard, Heart, House, LogOut, Menu, Package, QrCode, ShoppingBag, X } from 'lucide-react';
+import { Camera, CircleDotDashed, CreditCard, Heart, House, LogOut, Menu, Package, QrCode, ShoppingBag, X } from 'lucide-react';
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -26,6 +26,7 @@ export default function DashboardLayout({ children }) {
         { icon: CircleDotDashed, label: 'Pending Quotes', active: false, link: "/dashboard/admin/pending" },
         { icon: QrCode, label: 'Scan History', active: false, link: "/dashboard/admin/qr-history" },
         { icon: CreditCard, label: 'Subscription', active: false, link: "/dashboard/admin/subscription" },
+        { icon: Camera, label: 'My Profile', active: false, link: "/dashboard/admin/profile" },
     ];
 
 

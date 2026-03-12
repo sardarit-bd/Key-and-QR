@@ -1,7 +1,7 @@
 "use client";
 
 import { useCartStore } from "@/store/cartStore";
-import { Trash2 } from "lucide-react";
+import { Minus, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
 
 export default function Cart() {
@@ -45,21 +45,21 @@ export default function Cart() {
 
                             <div className="flex items-center gap-5 w-full justify-start md:justify-end">
                                 {/* Quantity */}
-                                <div className="flex items-center gap-3 border-2 border-gray-400 rounded-lg w-[130px] mr-5">
+                                <div className="flex items-center gap-3 p-1 border-2 border-gray-400 rounded-lg w-[130px] mr-5">
                                     <button
                                         onClick={() => decreaseQty(item.id)}
-                                        className="px-3 py-1"
+                                        className="px-3 py-1 cursor-pointer"
                                     >
-                                        –
+                                        <Minus size={16} />
                                     </button>
 
                                     <span className="w-6 text-center">{item.qty}</span>
 
                                     <button
                                         onClick={() => increaseQty(item.id)}
-                                        className="px-3 py-1"
+                                        className="px-3 py-1 cursor-pointer"
                                     >
-                                        +
+                                        <Plus size={16} />
                                     </button>
                                 </div>
 
@@ -71,7 +71,7 @@ export default function Cart() {
                                 {/* Remove */}
                                 <button
                                     onClick={() => removeItem(item.id)}
-                                    className="text-red-500 hover:text-red-600 w-fit"
+                                    className="text-red-500 hover:text-red-600 w-fit cursor-pointer"
                                 >
                                     <Trash2 size={20} />
                                 </button>
@@ -104,7 +104,7 @@ export default function Cart() {
                 </div>
 
                 <div className="mt-5">
-                    <button className="w-full bg-black text-white py-3 text-center px-6 rounded-lg hover:bg-gray-900">
+                    <button className="w-full bg-black text-white py-3 text-center px-6 rounded-lg hover:bg-gray-900 cursor-pointer">
                         Proceed to checkout
                     </button>
                 </div>

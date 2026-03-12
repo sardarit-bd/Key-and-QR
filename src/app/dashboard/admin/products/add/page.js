@@ -26,6 +26,9 @@ export default function AddProductPage() {
     const [galleryImages, setGalleryImages] = useState([]);
     const [galleryPreviews, setGalleryPreviews] = useState([]);
 
+    // Track if main image is uploaded
+    const [isMainImageUploaded, setIsMainImageUploaded] = useState(false);
+
     // Handle text input changes
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -41,11 +44,16 @@ export default function AddProductPage() {
         if (file) {
             setMainImage(file);
             setMainImagePreview(URL.createObjectURL(file));
+            setIsMainImageUploaded(true);
         }
     };
 
-    // Handle gallery images selection
     const handleGalleryChange = (e) => {
+        if (!isMainImageUploaded) {
+            setError("Please upload main image first before adding gallery images");
+            return;
+        }
+
         const files = Array.from(e.target.files);
         if (files.length > 0) {
             const newImages = [...galleryImages, ...files];
@@ -53,6 +61,7 @@ export default function AddProductPage() {
 
             setGalleryImages(newImages);
             setGalleryPreviews([...galleryPreviews, ...newPreviews]);
+            setError(""); // Clear any previous error
         }
     };
 
@@ -74,6 +83,12 @@ export default function AddProductPage() {
         }
         setMainImage(null);
         setMainImagePreview("");
+        setIsMainImageUploaded(false);
+
+        // Clear gallery images as well since main image is removed
+        setGalleryImages([]);
+        setGalleryPreviews([]);
+
         document.getElementById("main-image-input").value = "";
     };
 
@@ -146,6 +161,7 @@ export default function AddProductPage() {
                     </button>
                     <h1 className="text-2xl font-semibold text-gray-900">Add New Product</h1>
                 </div>
+
                 {/* Error Message */}
                 {error && (
                     <div className="bg-red-50 text-red-600 p-4 rounded-lg mb-6">
@@ -281,11 +297,14 @@ export default function AddProductPage() {
                             </div>
                         </div>
 
-                        {/* Gallery Images Upload */}
+                        {/* Gallery Images Upload - Disabled until main image is uploaded */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Gallery Images
-                            </label>
+                            <div className="flex items-center justify-between mb-2">
+                                <label className="block text-sm font-medium text-gray-700">
+                                    Gallery Images {!isMainImageUploaded && <span className="text-xs text-red-500 ml-2">(Upload main image first)</span>}
+                                </label>
+                            </div>
+
                             <div className="space-y-3">
                                 <input
                                     id="gallery-input"
@@ -294,20 +313,32 @@ export default function AddProductPage() {
                                     multiple
                                     onChange={handleGalleryChange}
                                     className="hidden"
+                                    disabled={!isMainImageUploaded}
                                 />
 
                                 <button
                                     type="button"
-                                    onClick={() => document.getElementById("gallery-input").click()}
-                                    className="w-full h-24 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center gap-2 hover:border-gray-400 transition"
+                                    onClick={() => {
+                                        if (!isMainImageUploaded) {
+                                            setError("Please upload main image first before adding gallery images");
+                                            return;
+                                        }
+                                        document.getElementById("gallery-input").click();
+                                    }}
+                                    className={`w-full h-24 border-2 border-dashed rounded-lg flex items-center justify-center gap-2 transition ${isMainImageUploaded
+                                        ? 'border-gray-300 hover:border-gray-400 cursor-pointer'
+                                        : 'border-gray-200 bg-gray-50 cursor-not-allowed opacity-50'
+                                        }`}
                                 >
-                                    <Upload size={18} className="text-gray-400" />
-                                    <span className="text-sm text-gray-500">Add gallery images</span>
+                                    <Upload size={18} className={isMainImageUploaded ? "text-gray-400" : "text-gray-300"} />
+                                    <span className={`text-sm ${isMainImageUploaded ? "text-gray-500" : "text-gray-400"}`}>
+                                        {isMainImageUploaded ? 'Add gallery images' : 'Upload main image first'}
+                                    </span>
                                 </button>
 
                                 {/* Gallery Previews */}
                                 {galleryPreviews.length > 0 && (
-                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
                                         {galleryPreviews.map((preview, index) => (
                                             <div key={index} className="relative group">
                                                 <img
@@ -350,14 +381,14 @@ export default function AddProductPage() {
                             <button
                                 type="button"
                                 onClick={() => router.back()}
-                                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
                             >
                                 Cancel
                             </button>
                             <button
                                 type="submit"
-                                disabled={loading}
-                                className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+                                disabled={loading || !mainImage}
+                                className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
                             >
                                 {loading ? (
                                     <>

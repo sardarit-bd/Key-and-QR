@@ -51,11 +51,11 @@ export default function Header() {
     return (
         <>
             {/* HEADER */}
-            <header className="shadow-sm py-3 bg-white sticky top-0 z-50">
+            <header className={`py-3 bg-white sticky top-0 z-50 ${!isDashboard && 'md:shadow-sm'}`}>
                 <div className={`${isDashboard ? "px-6 flex items-center justify-between" : "max-w-7xl px-4 mx-auto flex items-center justify-between"}`}>
 
-                    {/* Logo */}
-                    <Link href="/" className={`${isDashboard ? "flex items-center space-x-2 ml-0 md:ml-12 lg:ml-0" : "flex items-center space-x-2"}`}>
+                    {/* Logo - Hidden on mobile, visible on desktop */}
+                    <Link href="/" className={`${isDashboard ? "flex items-center space-x-2 ml-0 md:ml-12 lg:ml-0" : "flex items-center space-x-2"} hidden md:block`}>
                         <Image src="/logo.png" alt="Logo" width={100} height={50} />
                     </Link>
 
@@ -169,10 +169,10 @@ export default function Header() {
                         )}
                     </div>
 
-                    {/* Mobile Menu Button */}
+                    {/* Mobile Menu Button - Always on right side */}
                     <button
                         onClick={() => setOpen(true)}
-                        className={`${isDashboard ? "hidden" : "block"} md:hidden text-gray-700`}
+                        className="md:hidden text-gray-700 ml-auto"
                     >
                         <Menu size={26} className="cursor-pointer" />
                     </button>
@@ -216,7 +216,7 @@ export default function Header() {
                         Subscription
                     </Link>
 
-                    {/* Cart */}
+                    {/* Cart - Inside drawer for mobile */}
                     <Link
                         href="/cart"
                         onClick={() => setOpen(false)}
