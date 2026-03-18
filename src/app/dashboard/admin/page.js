@@ -1,9 +1,15 @@
-'use client'
-
-import api from '@/services/api';
-import { useAuthStore } from '@/store/authStore';
-import { ChevronDown, ChevronUp, Heart, Package, QrCode, ShoppingBag } from 'lucide-react';
-import { useEffect, useState } from 'react';
+"use client";
+import api from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
+import {
+  ChevronDown,
+  ChevronUp,
+  Heart,
+  Package,
+  QrCode,
+  ShoppingBag,
+} from "lucide-react";
+import { useEffect, useState } from "react";
 
 export default function Dashboard() {
   const { user } = useAuthStore();
@@ -11,18 +17,18 @@ export default function Dashboard() {
   const [stats, setStats] = useState({
     totalOrders: 0,
     totalFavorites: 0,
-    totalScans: 0
+    totalScans: 0,
   });
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [greeting, setGreeting] = useState('');
+  const [greeting, setGreeting] = useState("");
 
   // Greeting based on time
   useEffect(() => {
     const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Good Morning');
-    else if (hour < 18) setGreeting('Good Afternoon');
-    else setGreeting('Good Evening');
+    if (hour < 12) setGreeting("Good Morning");
+    else if (hour < 18) setGreeting("Good Afternoon");
+    else setGreeting("Good Evening");
   }, []);
 
   // Fetch dashboard data from backend
@@ -37,21 +43,20 @@ export default function Dashboard() {
         setRecentOrders(orders.slice(0, 5)); // Show only 5 recent orders
 
         // Fetch user's favorites
-        const favoritesResponse = await api.get('/favorites');
+        const favoritesResponse = await api.get("/favorites");
         const favorites = favoritesResponse.data.data || [];
 
         // Fetch user's scan history
-        const scansResponse = await api.get('/qr-history');
+        const scansResponse = await api.get("/qr-history");
         const scans = scansResponse.data.data || [];
 
         setStats({
           totalOrders: orders.length,
           totalFavorites: favorites.length,
-          totalScans: scans.length
+          totalScans: scans.length,
         });
-
       } catch (error) {
-        console.error('Error fetching dashboard data:', error);
+        console.error("Error fetching dashboard data:", error);
       } finally {
         setLoading(false);
       }
@@ -63,20 +68,24 @@ export default function Dashboard() {
   // Format date
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).replace(/\//g, '/');
+    return date
+      .toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      })
+      .replace(/\//g, "/");
   };
 
   // Get current date
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).replace(/(\d+)\/(\d+)\/(\d+)/, '$1/$2/$3');
+  const currentDate = new Date()
+    .toLocaleDateString("en-US", {
+      weekday: "long",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    })
+    .replace(/(\d+)\/(\d+)\/(\d+)/, "$1/$2/$3");
 
   return (
     <main className="flex-1 w-full">
@@ -86,12 +95,19 @@ export default function Dashboard() {
           <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-2">
             <div>
               <h1 className="text-xl lg:text-2xl font-semibold text-gray-900">
-                {greeting}, <span className="text-gray-900">{user?.name?.split(' ')[0] || 'User'}!</span>
+                {greeting},{" "}
+                <span className="text-gray-900">
+                  {user?.name?.split(" ")[0] || "User"}!
+                </span>
               </h1>
-              <p className="text-sm text-gray-500">Welcome back to your dashboard</p>
+              <p className="text-sm text-gray-500">
+                Welcome back to your dashboard
+              </p>
             </div>
             <div className="text-left lg:text-right text-sm text-gray-500">
-              <div>{new Date().toLocaleDateString('en-US', { weekday: 'long' })}</div>
+              <div>
+                {new Date().toLocaleDateString("en-US", { weekday: "long" })}
+              </div>
               <div>{formatDate(new Date())}</div>
             </div>
           </div>
@@ -155,7 +171,10 @@ export default function Dashboard() {
             // Loading Skeleton
             <div className="p-4 space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="h-12 bg-gray-200 animate-pulse rounded"></div>
+                <div
+                  key={i}
+                  className="h-12 bg-gray-200 animate-pulse rounded"
+                ></div>
               ))}
             </div>
           ) : recentOrders.length === 0 ? (
@@ -171,32 +190,54 @@ export default function Dashboard() {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="text-left p-4 text-sm font-medium text-gray-600">Order ID</th>
-                      <th className="text-left p-4 text-sm font-medium text-gray-600">Date</th>
-                      <th className="text-left p-4 text-sm font-medium text-gray-600">Items</th>
-                      <th className="text-left p-4 text-sm font-medium text-gray-600">Total</th>
-                      <th className="text-left p-4 text-sm font-medium text-gray-600">Status</th>
+                      <th className="text-left p-4 text-sm font-medium text-gray-600">
+                        Order ID
+                      </th>
+                      <th className="text-left p-4 text-sm font-medium text-gray-600">
+                        Date
+                      </th>
+                      <th className="text-left p-4 text-sm font-medium text-gray-600">
+                        Items
+                      </th>
+                      <th className="text-left p-4 text-sm font-medium text-gray-600">
+                        Total
+                      </th>
+                      <th className="text-left p-4 text-sm font-medium text-gray-600">
+                        Status
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
                     {recentOrders.map((order, index) => (
-                      <tr key={order._id || index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                        <td className="p-4 text-sm text-gray-900">{order.orderId || `ORD-${String(index + 1).padStart(3, '0')}`}</td>
-                        <td className="p-4 text-sm text-gray-600">{formatDate(order.createdAt)}</td>
+                      <tr
+                        key={order._id || index}
+                        className="border-b border-gray-100 hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="p-4 text-sm text-gray-900">
+                          {order.orderId ||
+                            `ORD-${String(index + 1).padStart(3, "0")}`}
+                        </td>
                         <td className="p-4 text-sm text-gray-600">
-                          {order.items?.length || 1} {order.items?.length === 1 ? 'item' : 'items'}
+                          {formatDate(order.createdAt)}
+                        </td>
+                        <td className="p-4 text-sm text-gray-600">
+                          {order.items?.length || 1}{" "}
+                          {order.items?.length === 1 ? "item" : "items"}
                         </td>
                         <td className="p-4 text-sm text-gray-900 font-medium">
-                          ${order.totalAmount?.toFixed(2) || '0.00'}
+                          ${order.totalAmount?.toFixed(2) || "0.00"}
                         </td>
                         <td className="p-4">
-                          <span className={`text-xs px-3 py-1 rounded-full ${order.status?.toLowerCase() === 'delivered'
-                            ? 'bg-green-50 text-green-700'
-                            : order.status?.toLowerCase() === 'pending'
-                              ? 'bg-yellow-50 text-yellow-700'
-                              : 'bg-blue-50 text-blue-700'
-                            }`}>
-                            {order.status || 'Pending'}
+                          <span
+                            className={`text-xs px-3 py-1 rounded-full ${
+                              order.status?.toLowerCase() === "delivered"
+                                ? "bg-green-50 text-green-700"
+                                : order.status?.toLowerCase() === "pending"
+                                  ? "bg-yellow-50 text-yellow-700"
+                                  : "bg-blue-50 text-blue-700"
+                            }`}
+                          >
+                            {order.status || "Pending"}
                           </span>
                         </td>
                       </tr>
@@ -211,12 +252,15 @@ export default function Dashboard() {
                   <div key={order._id || index} className="p-4">
                     <div
                       className="flex items-center justify-between cursor-pointer"
-                      onClick={() => setExpandedOrder(expandedOrder === index ? null : index)}
+                      onClick={() =>
+                        setExpandedOrder(expandedOrder === index ? null : index)
+                      }
                     >
                       <div className="flex-1">
                         <div className="flex items-center justify-between mb-2">
                           <span className="font-semibold text-gray-900 text-sm">
-                            {order.orderId || `ORD-${String(index + 1).padStart(3, '0')}`}
+                            {order.orderId ||
+                              `ORD-${String(index + 1).padStart(3, "0")}`}
                           </span>
                           {expandedOrder === index ? (
                             <ChevronUp size={20} className="text-gray-400" />
@@ -234,23 +278,28 @@ export default function Dashboard() {
                       <div className="mt-3 pt-3 border-t border-gray-100 space-y-2 animate-fadeIn">
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-500">Date:</span>
-                          <span className="text-gray-900">{formatDate(order.createdAt)}</span>
+                          <span className="text-gray-900">
+                            {formatDate(order.createdAt)}
+                          </span>
                         </div>
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-500">Total:</span>
                           <span className="text-gray-900 font-medium">
-                            ${order.totalAmount?.toFixed(2) || '0.00'}
+                            ${order.totalAmount?.toFixed(2) || "0.00"}
                           </span>
                         </div>
                         <div className="flex justify-between text-sm items-center">
                           <span className="text-gray-500">Status:</span>
-                          <span className={`text-xs px-3 py-1 rounded-full ${order.status?.toLowerCase() === 'delivered'
-                            ? 'bg-green-50 text-green-700'
-                            : order.status?.toLowerCase() === 'pending'
-                              ? 'bg-yellow-50 text-yellow-700'
-                              : 'bg-blue-50 text-blue-700'
-                            }`}>
-                            {order.status || 'Pending'}
+                          <span
+                            className={`text-xs px-3 py-1 rounded-full ${
+                              order.status?.toLowerCase() === "delivered"
+                                ? "bg-green-50 text-green-700"
+                                : order.status?.toLowerCase() === "pending"
+                                  ? "bg-yellow-50 text-yellow-700"
+                                  : "bg-blue-50 text-blue-700"
+                            }`}
+                          >
+                            {order.status || "Pending"}
                           </span>
                         </div>
                       </div>

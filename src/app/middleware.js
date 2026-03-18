@@ -1,29 +1,48 @@
 import { NextResponse } from "next/server";
 
-export function middleware(req) {
-    const auth = req.cookies.get("auth")?.value;
-    const url = req.nextUrl;
+export async function middleware(request) {
+  // Get token from cookies
+  const token = request.cookies.get("accessToken")?.value;
+  const path = request.nextUrl.pathname;
 
-    const protectedPaths = ["/user"];
+  console.log("Middleware - Path:", path);
+  console.log("Middleware - Token exists:", !!token);
 
-    const isProtected = protectedPaths.some((path) =>
-        url.pathname.startsWith(path)
-    );
+  // Public paths
+  const isPublicPath =
+    path === "/login" ||
+    path === "/signup" ||
+    path === "/forgot-password" ||
+    path === "/reset-password";
 
-    if (isProtected && !auth) {
-        return NextResponse.redirect(new URL("/login", req.url));
-    }
+  // Dashboard paths
+  const isAdminPath = path.startsWith("/dashboard/admin");
+  const isUserPath = path.startsWith("/dashboard/user");
 
-    if (auth && url.pathname.startsWith("/login")) {
-        return NextResponse.redirect(new URL("/user", req.url));
-    }
+  // If trying to access public paths while logged in
+  if (isPublicPath && token) {
+    console.log("User logged in, redirecting to dashboard");
+    // Since we can't verify role, redirect to user dashboard by default
+    return NextResponse.redirect(new URL("/dashboard/user", request.url));
+  }
 
-    return NextResponse.next();
+  // If trying to access protected paths without token
+  if (!isPublicPath && !token) {
+    console.log("No token, redirecting to login");
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  // Allow access to protected paths if token exists
+  // We'll let the client-side handle role-based redirects
+  return NextResponse.next();
 }
 
 export const config = {
-    matcher: [
-        "/user/:path*",
-        "/login",
-    ],
+  matcher: [
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/dashboard/:path*",
+  ],
 };
