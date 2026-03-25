@@ -109,7 +109,7 @@ export default function Header() {
                                                     <CircleUserRound size={22} className="text-white" />
                                                 )}
                                             </div>
-                                            <div>
+                                            <div className="flex items-center gap-3">
                                                 <p className="text-sm font-semibold text-gray-800 capitalize">{user?.name || "User"}</p>
                                                 <p className="text-xs bg-green-100 text-green-700 w-fit px-3 py-1 rounded-full">
                                                     {user?.role === "admin" ? "Admin" : "User"}

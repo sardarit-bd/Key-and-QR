@@ -3,6 +3,7 @@
 import { useCartStore } from "@/store/cartStore";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function Cart() {
     const { cart, increaseQty, decreaseQty, removeItem } = useCartStore();
@@ -104,9 +105,11 @@ export default function Cart() {
                 </div>
 
                 <div className="mt-5">
-                    <button className="w-full bg-black text-white py-3 text-center px-6 rounded-lg hover:bg-gray-900 cursor-pointer">
-                        Proceed to checkout
-                    </button>
+                    <Link href="/checkout">
+                        <button className="w-full bg-black text-white py-3 text-center px-6 rounded-lg hover:bg-gray-900 cursor-pointer">
+                            Proceed to Checkout
+                        </button>
+                    </Link>
                 </div>
             </div>
 

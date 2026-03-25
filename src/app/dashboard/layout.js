@@ -40,6 +40,7 @@ export default function DashboardLayout({ children }) {
         { icon: House, label: 'Home', active: true, link: "/dashboard/user" },
         { icon: Package, label: 'My Quote', active: true, link: "/dashboard/user/myquotes" },
         { icon: Heart, label: 'Favorites', active: false, link: "/dashboard/user/favorites" },
+        { icon: Heart, label: 'Orders', active: false, link: "/dashboard/user/orders" },
         { icon: CreditCard, label: 'Subscription', active: false, link: "/dashboard/user/subscription" },
     ];
 
