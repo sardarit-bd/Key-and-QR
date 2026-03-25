@@ -1,10 +1,9 @@
-// app/success/page.js
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
 import { orderService } from "@/services/order.service";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 
 export default function SuccessPage() {
     const searchParams = useSearchParams();
@@ -41,16 +40,12 @@ export default function SuccessPage() {
         );
     }
 
-    // ✅ Get tag info safely
     const getTagInfo = () => {
         if (!order?.assignedTag) return null;
 
-        // If assignedTag is an object with tagCode
         if (typeof order.assignedTag === 'object') {
             return order.assignedTag.tagCode || order.assignedTag._id;
         }
-
-        // If assignedTag is just a string ID
         return order.assignedTag;
     };
 
@@ -86,7 +81,6 @@ export default function SuccessPage() {
                             Order ID: <span className="font-mono">{order._id}</span>
                         </p>
 
-                        {/* ✅ Fixed: Check if tag exists and display properly */}
                         {order.assignedTag && (
                             <p className="text-sm text-gray-500 mb-2">
                                 Your Tag ID:{" "}
@@ -119,7 +113,7 @@ export default function SuccessPage() {
                         Continue Shopping
                     </Link>
                     <Link
-                        href="/account/orders"
+                        href="/dashboard/user/orders"
                         className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition"
                     >
                         View Orders

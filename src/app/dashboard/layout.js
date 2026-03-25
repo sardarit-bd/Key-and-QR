@@ -22,6 +22,7 @@ export default function DashboardLayout({ children }) {
     const menuItemsforAdmin = [
         { icon: Package, label: 'Dashboard', active: true, link: "/dashboard/admin" },
         { icon: Package, label: 'Add Products', active: true, link: "/dashboard/admin/products" },
+        { icon: Package, label: 'Add Tags', active: true, link: "/dashboard/admin/tags" },
         { icon: ShoppingBag, label: 'All Orders', active: false, link: "/dashboard/admin/orders" },
         { icon: CircleDotDashed, label: 'Pending Quotes', active: false, link: "/dashboard/admin/pending" },
         { icon: QrCode, label: 'Scan History', active: false, link: "/dashboard/admin/qr-history" },
@@ -169,9 +170,9 @@ export default function DashboardLayout({ children }) {
                 </nav>
             </aside>
 
-            {
-                children
-            }
+            <main className="flex-1 w-full">
+                {children}
+            </main>
         </div>
     );
 }

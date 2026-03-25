@@ -1,6 +1,7 @@
 "use client";
 
-import api from "@/services/api";
+import api from "@/lib/api";
+// import api from "@/services/api";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
