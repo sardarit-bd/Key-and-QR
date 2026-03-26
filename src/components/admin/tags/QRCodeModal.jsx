@@ -31,7 +31,7 @@ export default function QRCodeModal({ isOpen, onClose, tag }) {
             <div className="bg-white rounded-lg max-w-md w-full">
                 <div className="flex justify-between items-center p-6 border-b border-gray-200">
                     <h2 className="text-xl font-semibold text-gray-900">QR Code</h2>
-                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                    <button onClick={onClose} className="text-gray-400 hover:text-gray-600 cursor-pointer">
                         <X size={24} />
                     </button>
                 </div>
@@ -47,7 +47,7 @@ export default function QRCodeModal({ isOpen, onClose, tag }) {
                     <p className="font-mono text-sm text-gray-600 mb-2 break-all">{url}</p>
                     <button
                         onClick={() => handleCopyUrl(url)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition cursor-pointer"
                     >
                         {copied ? <Check size={16} /> : <Copy size={16} />}
                         {copied ? "Copied!" : "Copy URL"}
@@ -64,7 +64,7 @@ export default function QRCodeModal({ isOpen, onClose, tag }) {
                     </Link>
                     <button
                         onClick={handleDownload}
-                        className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2"
+                        className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 flex items-center justify-center gap-2 cursor-pointer"
                     >
                         <Download size={16} />
                         Download

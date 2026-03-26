@@ -1,119 +1,593 @@
+"use client";
 
-'use client'
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
+import { useAuthStore } from "@/store/authStore";
+import { Package, RefreshCw, XCircle } from "lucide-react";
+import OrderDetailsModal from "@/components/admin/orders/OrderDetailsModal";
+import AssignTagModal from "@/components/admin/orders/AssignTagModal";
+import OrderMobileCard from "@/components/admin/orders/OrderMobileCard";
+import OrdersTable from "@/components/admin/orders/OrdersTable";
+import OrderFilters from "@/components/admin/orders/OrderFilters";
+import OrderStatsCards from "@/components/admin/orders/OrderStatsCards";
+import CancelOrderModal from "@/components/admin/orders/CancelOrderModal";
+import ProcessRefundModal from "@/components/admin/orders/ProcessRefundModal";
+import ProcessReturnModal from "@/components/admin/orders/ProcessReturnModal";
 
+export default function AdminOrdersPage() {
+    const [orders, setOrders] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [selectedOrder, setSelectedOrder] = useState(null);
+    const [showTagModal, setShowTagModal] = useState(false);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [showRefundModal, setShowRefundModal] = useState(false);
+    const [showReturnModal, setShowReturnModal] = useState(false);
+    const [availableTags, setAvailableTags] = useState([]);
+    const [selectedTag, setSelectedTag] = useState("");
+    const [assigningTag, setAssigningTag] = useState(false);
+    const [updatingStatus, setUpdatingStatus] = useState(false);
+    const [statusUpdateOrder, setStatusUpdateOrder] = useState(null);
+    const [processingAction, setProcessingAction] = useState(false);
 
+    // Filters and Pagination
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filterStatus, setFilterStatus] = useState("all");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalOrders, setTotalOrders] = useState(0);
+    const itemsPerPage = 10;
 
-import { ChevronDown, ChevronUp } from 'lucide-react';
-import { useState } from 'react';
+    const { user, accessToken } = useAuthStore();
 
+    // Stats state
+    const [stats, setStats] = useState({
+        total: 0,
+        pending: 0,
+        assigned: 0,
+        shipped: 0,
+        delivered: 0,
+        cancelled: 0,
+        returned: 0,
+        paid: 0,
+        unpaid: 0,
+        refunded: 0
+    });
 
-const DashboardOrders = () => {
+    // Fetch orders with pagination and filters
+    const fetchOrders = async () => {
+        try {
+            setLoading(true);
+            setError(null);
 
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [expandedOrder, setExpandedOrder] = useState(null);
+            if (!accessToken) {
+                setError("Please login to view orders");
+                toast.error("Please login to view orders");
+                return;
+            }
 
+            const params = new URLSearchParams();
+            params.append("page", currentPage);
+            params.append("limit", itemsPerPage);
 
-    const orders = [
-        { id: 'ORD-001', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
-        { id: 'ORD-002', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
-        { id: 'ORD-001', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
-        { id: 'ORD-002', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
-        { id: 'ORD-001', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
-        { id: 'ORD-002', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
-        { id: 'ORD-001', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
-        { id: 'ORD-002', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
-        { id: 'ORD-001', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
-        { id: 'ORD-002', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
-    ];
+            if (searchTerm) {
+                params.append("search", searchTerm);
+            }
 
+            if (filterStatus !== "all") {
+                params.append("fulfillmentStatus", filterStatus);
+            }
 
-    return (
-        <div className="flex-1 w-full p-4">
+            const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/orders/admin/all?${params.toString()}`;
 
+            const response = await axios.get(endpoint, {
+                headers: {
+                    Authorization: `Bearer ${accessToken}`,
+                },
+            });
 
-            {/* Recent Orders */}
-            <div className="bg-white rounded-lg border border-gray-200 mb-4 lg:mb-6">
-                <div className="flex items-center justify-between p-4 lg:p-6 border-b border-gray-200">
-                    <h2 className="font-semibold text-gray-900">Recent Orders</h2>
-                </div>
+            setOrders(response.data?.data || []);
+            setTotalPages(response.data?.meta?.totalPage || 1);
+            setTotalOrders(response.data?.meta?.total || 0);
+        } catch (err) {
+            console.error("Fetch orders error:", err);
 
-                {/* Desktop Table View */}
-                <div className="hidden lg:block overflow-x-auto">
-                    <table className="w-full">
-                        <thead>
-                            <tr className="border-b border-gray-200">
-                                <th className="text-left p-4 text-sm font-medium text-gray-600">Order ID</th>
-                                <th className="text-left p-4 text-sm font-medium text-gray-600">Date</th>
-                                <th className="text-left p-4 text-sm font-medium text-gray-600">Items</th>
-                                <th className="text-left p-4 text-sm font-medium text-gray-600">Total</th>
-                                <th className="text-left p-4 text-sm font-medium text-gray-600">Status</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {orders.map((order, index) => (
-                                <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                    <td className="p-4 text-sm text-gray-900">{order.id}</td>
-                                    <td className="p-4 text-sm text-gray-600">{order.date}</td>
-                                    <td className="p-4 text-sm text-gray-600">{order.item}</td>
-                                    <td className="p-4 text-sm text-gray-900 font-medium">{order.amount}</td>
-                                    <td className="p-4">
-                                        <span className="text-xs bg-green-50 text-green-700 px-3 py-1 rounded-full">
-                                            {order.status}
-                                        </span>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+            let errorMessage = "Failed to fetch orders";
+            if (err.response?.status === 401) {
+                errorMessage = "Session expired. Please login again.";
+                toast.error(errorMessage);
+                setError(errorMessage);
+                setTimeout(() => {
+                    window.location.href = "/login";
+                }, 2000);
+            } else if (err.response?.status === 403) {
+                errorMessage = "You are not authorized to view orders.";
+                toast.error(errorMessage);
+                setError(errorMessage);
+            } else {
+                errorMessage = err.response?.data?.message || "Failed to fetch orders";
+                toast.error(errorMessage);
+                setError(errorMessage);
+            }
+        } finally {
+            setLoading(false);
+        }
+    };
 
-                {/* Mobile Card View */}
-                <div className="lg:hidden divide-y divide-gray-100">
-                    {orders.map((order, index) => (
-                        <div key={index} className="p-4">
-                            <div
-                                className="flex items-center justify-between cursor-pointer"
-                                onClick={() => setExpandedOrder(expandedOrder === index ? null : index)}
-                            >
-                                <div className="flex-1">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="font-semibold text-gray-900 text-sm">{order.id}</span>
-                                        {expandedOrder === index ? (
-                                            <ChevronUp size={20} className="text-gray-400" />
-                                        ) : (
-                                            <ChevronDown size={20} className="text-gray-400" />
-                                        )}
-                                    </div>
-                                    <div className="text-sm text-gray-600 mb-1">{order.item}</div>
-                                </div>
-                            </div>
+    // Fetch stats
+    const fetchStats = async () => {
+        try {
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/orders/admin/stats`, {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+            setStats(response.data?.data || stats);
+        } catch (error) {
+            console.error("Error fetching stats:", error);
+        }
+    };
 
-                            {expandedOrder === index && (
-                                <div className="mt-3 pt-3 border-t border-gray-100 space-y-2 animate-fadeIn">
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Date:</span>
-                                        <span className="text-gray-900">{order.date}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm">
-                                        <span className="text-gray-500">Total:</span>
-                                        <span className="text-gray-900 font-medium">{order.amount}</span>
-                                    </div>
-                                    <div className="flex justify-between text-sm items-center">
-                                        <span className="text-gray-500">Status:</span>
-                                        <span className="text-xs bg-green-50 text-green-700 px-3 py-1 rounded-full">
-                                            {order.status}
-                                        </span>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    ))}
+    // Fetch available tags (unused)
+    const fetchAvailableTags = async () => {
+        try {
+            const response = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/tags?limit=100`, {
+                headers: { Authorization: `Bearer ${accessToken}` }
+            });
+            const unusedTags = response.data.data.filter(tag => !tag.isActivated && !tag.owner);
+            setAvailableTags(unusedTags);
+        } catch (err) {
+            toast.error("Failed to fetch available tags");
+        }
+    };
+
+    // Open tag assignment modal
+    const handleOpenTagModal = async (order) => {
+        setSelectedOrder(order);
+        await fetchAvailableTags();
+        setSelectedTag("");
+        setShowTagModal(true);
+    };
+
+    // Assign tag to order
+    const handleAssignTag = async () => {
+        if (!selectedTag) {
+            toast.error("Please select a tag");
+            return;
+        }
+
+        setAssigningTag(true);
+        try {
+            await axios.patch(
+                `${process.env.NEXT_PUBLIC_API_URL}/orders/${selectedOrder._id}`,
+                { assignedTag: selectedTag },
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+
+            toast.success("Tag assigned successfully");
+            setShowTagModal(false);
+            fetchOrders();
+            fetchStats();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to assign tag");
+        } finally {
+            setAssigningTag(false);
+        }
+    };
+
+    const handleUpdateStatus = async (orderId, newStatus) => {
+        // Get current order to check status
+        const currentOrder = orders.find(o => o._id === orderId);
+        const currentStatus = currentOrder?.fulfillmentStatus;
+
+        // Check if trying to go backwards
+        const statusOrder = ["pending", "assigned", "shipped", "delivered"];
+        const currentIndex = statusOrder.indexOf(currentStatus);
+        const newIndex = statusOrder.indexOf(newStatus);
+
+        if (newIndex < currentIndex) {
+            toast.error(`Cannot change status from "${currentStatus}" back to "${newStatus}". Status can only move forward.`, {
+                duration: 4000,
+                icon: '⚠️'
+            });
+            return;
+        }
+
+        setUpdatingStatus(true);
+        setStatusUpdateOrder(orderId);
+
+        try {
+            const response = await axios.patch(
+                `${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}`,
+                { fulfillmentStatus: newStatus },
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+
+            toast.success(`Status updated from "${currentStatus}" to "${newStatus}" successfully`);
+            fetchOrders();
+            fetchStats();
+        } catch (err) {
+            console.error("Status update error:", err.response?.data);
+
+            // Extract and show user-friendly error message
+            let errorMessage = "Failed to update status";
+
+            if (err.response?.status === 400) {
+                errorMessage = err.response?.data?.message || "Invalid status transition";
+
+                // Add specific messages based on error
+                if (errorMessage.includes("tag first")) {
+                    errorMessage = "Cannot mark as assigned: Please assign a tag to this order first.";
+                } else if (errorMessage.includes("paid before shipping")) {
+                    errorMessage = "Cannot mark as shipped: Order payment is not confirmed yet.";
+                } else if (errorMessage.includes("Invalid status transition")) {
+                    errorMessage = `Cannot change from "${currentStatus}" to "${newStatus}". Status must follow: Pending → Assigned → Shipped → Delivered`;
+                }
+            } else if (err.response?.status === 401) {
+                errorMessage = "Session expired. Please login again.";
+                setTimeout(() => {
+                    window.location.href = "/login";
+                }, 2000);
+            } else if (err.response?.status === 403) {
+                errorMessage = "You are not authorized to update orders.";
+            } else {
+                errorMessage = err.response?.data?.message || "Failed to update status";
+            }
+
+            toast.error(errorMessage, {
+                duration: 5000,
+                icon: '❌'
+            });
+        } finally {
+            setUpdatingStatus(false);
+            setStatusUpdateOrder(null);
+        }
+    };
+
+    // 🆕 Cancel order
+    const handleCancelOrder = async (orderId, reason) => {
+        setProcessingAction(true);
+        try {
+            await axios.post(
+                `${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}/cancel`,
+                { reason },
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+            toast.success("Order cancelled successfully");
+            setShowCancelModal(false);
+            fetchOrders();
+            fetchStats();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to cancel order");
+        } finally {
+            setProcessingAction(false);
+        }
+    };
+
+    // 🆕 Process refund (approve/reject)
+    const handleProcessRefund = async (orderId, approve, rejectReason = null) => {
+        setProcessingAction(true);
+        try {
+            await axios.post(
+                `${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}/refund/process`,
+                { approve, rejectReason },
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+            toast.success(approve ? "Refund processed successfully" : "Refund request rejected");
+            setShowRefundModal(false);
+            fetchOrders();
+            fetchStats();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to process refund");
+        } finally {
+            setProcessingAction(false);
+        }
+    };
+
+    // 🆕 Process return
+    const handleProcessReturn = async (orderId, approve, trackingNumber = null, rejectReason = null) => {
+        setProcessingAction(true);
+        try {
+            await axios.post(
+                `${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}/return/process`,
+                { approve, trackingNumber, rejectReason },
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+            toast.success(approve ? "Return request approved" : "Return request rejected");
+            setShowReturnModal(false);
+            fetchOrders();
+            fetchStats();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to process return");
+        } finally {
+            setProcessingAction(false);
+        }
+    };
+
+    // 🆕 Complete return
+    const handleCompleteReturn = async (orderId) => {
+        setProcessingAction(true);
+        try {
+            await axios.post(
+                `${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}/return/complete`,
+                {},
+                { headers: { Authorization: `Bearer ${accessToken}` } }
+            );
+            toast.success("Return completed and refund processed");
+            fetchOrders();
+            fetchStats();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to complete return");
+        } finally {
+            setProcessingAction(false);
+        }
+    };
+
+    // Handle refresh
+    const handleRefresh = () => {
+        setSearchTerm("");
+        setFilterStatus("all");
+        setCurrentPage(1);
+        fetchOrders();
+        fetchStats();
+    };
+
+    // Handle page change
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
+    // Handle search with debounce
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (currentPage === 1) {
+                fetchOrders();
+            } else {
+                setCurrentPage(1);
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    // Handle filter change
+    useEffect(() => {
+        setCurrentPage(1);
+        fetchOrders();
+    }, [filterStatus]);
+
+    // Fetch on page change
+    useEffect(() => {
+        fetchOrders();
+    }, [currentPage]);
+
+    // Initial fetch
+    useEffect(() => {
+        if (accessToken) {
+            fetchOrders();
+            fetchStats();
+        }
+    }, [accessToken]);
+
+    if (loading && currentPage === 1 && orders.length === 0) {
+        return (
+            <div className="flex-1 w-full p-8 flex items-center justify-center min-h-[400px]">
+                <div className="text-center">
+                    <RefreshCw size={40} className="animate-spin text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">Loading orders...</p>
                 </div>
             </div>
+        );
+    }
 
+    if (error) {
+        return (
+            <div className="flex-1 w-full p-8 flex items-center justify-center min-h-[400px]">
+                <div className="text-center">
+                    <XCircle size={40} className="text-red-400 mx-auto mb-4" />
+                    <p className="text-red-600">{error}</p>
+                    <button
+                        onClick={fetchOrders}
+                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    >
+                        Try Again
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
+    return (
+        <div className="flex-1 w-full p-4 lg:p-8">
+            {/* Header */}
+            <div className="mb-6">
+                <h1 className="text-2xl font-semibold text-gray-900">Orders Management</h1>
+                <p className="text-gray-500 mt-1">Manage and track all customer orders</p>
+            </div>
+
+            {/* Stats Cards */}
+            <OrderStatsCards stats={stats} totalOrders={totalOrders} />
+
+            {/* Filters and Search */}
+            <OrderFilters
+                searchTerm={searchTerm}
+                setSearchTerm={setSearchTerm}
+                filterStatus={filterStatus}
+                setFilterStatus={setFilterStatus}
+                onRefresh={handleRefresh}
+            />
+
+            {/* Orders Table - Desktop */}
+            <div className="hidden lg:block bg-white rounded-lg border border-gray-200 overflow-hidden">
+                <OrdersTable
+                    orders={orders}
+                    onAssignTag={handleOpenTagModal}
+                    onViewDetails={(order) => {
+                        setSelectedOrder(order);
+                        setShowDetailsModal(true);
+                    }}
+                    onUpdateStatus={handleUpdateStatus}
+                    onCancelOrder={(order) => {
+                        setSelectedOrder(order);
+                        setShowCancelModal(true);
+                    }}
+                    onProcessRefund={(order) => {
+                        setSelectedOrder(order);
+                        setShowRefundModal(true);
+                    }}
+                    onProcessReturn={(order) => {
+                        setSelectedOrder(order);
+                        setShowReturnModal(true);
+                    }}
+                    onCompleteReturn={handleCompleteReturn}
+                    updatingStatus={updatingStatus}
+                    statusUpdateOrder={statusUpdateOrder}
+                    processingAction={processingAction}
+                />
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
+                        <div className="text-sm text-gray-500">
+                            Showing {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, totalOrders)} of {totalOrders} orders
+                        </div>
+                        <div className="flex gap-2">
+                            <button
+                                onClick={() => handlePageChange(currentPage - 1)}
+                                disabled={currentPage === 1}
+                                className="px-3 py-1 rounded-lg text-sm border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            >
+                                Previous
+                            </button>
+                            <button
+                                onClick={() => handlePageChange(currentPage + 1)}
+                                disabled={currentPage === totalPages}
+                                className="px-3 py-1 rounded-lg text-sm border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                            >
+                                Next
+                            </button>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            {/* Orders Cards - Mobile */}
+            <div className="lg:hidden bg-white rounded-lg border border-gray-200 overflow-hidden">
+                {orders.length === 0 ? (
+                    <div className="p-12 text-center text-gray-500">
+                        <Package size={48} className="mx-auto mb-4 text-gray-300" />
+                        <p>No orders found</p>
+                    </div>
+                ) : (
+                    <>
+                        {orders.map((order) => (
+                            <OrderMobileCard
+                                key={order._id}
+                                order={order}
+                                onAssignTag={handleOpenTagModal}
+                                onViewDetails={(order) => {
+                                    setSelectedOrder(order);
+                                    setShowDetailsModal(true);
+                                }}
+                                onUpdateStatus={handleUpdateStatus}
+                                onCancelOrder={(order) => {
+                                    setSelectedOrder(order);
+                                    setShowCancelModal(true);
+                                }}
+                                updatingStatus={updatingStatus}
+                                statusUpdateOrder={statusUpdateOrder}
+                            />
+                        ))}
+
+                        {/* Pagination for mobile */}
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
+                                <div className="text-xs text-gray-500">
+                                    Page {currentPage} of {totalPages}
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                        className="px-3 py-1 rounded-lg text-xs border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                    >
+                                        Previous
+                                    </button>
+                                    <button
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === totalPages}
+                                        className="px-3 py-1 rounded-lg text-xs border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+                                    >
+                                        Next
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+
+            {/* Modals */}
+            <AssignTagModal
+                isOpen={showTagModal}
+                onClose={() => setShowTagModal(false)}
+                order={selectedOrder}
+                availableTags={availableTags}
+                selectedTag={selectedTag}
+                setSelectedTag={setSelectedTag}
+                onAssign={handleAssignTag}
+                assigning={assigningTag}
+            />
+
+            <OrderDetailsModal
+                isOpen={showDetailsModal}
+                onClose={() => setShowDetailsModal(false)}
+                order={selectedOrder}
+                onAssignTag={handleOpenTagModal}
+                onCancelOrder={(order) => {
+                    setShowDetailsModal(false);
+                    setSelectedOrder(order);
+                    setShowCancelModal(true);
+                }}
+                onProcessRefund={(order) => {
+                    setShowDetailsModal(false);
+                    setSelectedOrder(order);
+                    setShowRefundModal(true);
+                }}
+                onProcessReturn={(order) => {
+                    setShowDetailsModal(false);
+                    setSelectedOrder(order);
+                    setShowReturnModal(true);
+                }}
+                onCompleteReturn={handleCompleteReturn}
+                processingAction={processingAction}
+            />
+
+            <CancelOrderModal
+                isOpen={showCancelModal}
+                onClose={() => setShowCancelModal(false)}
+                order={selectedOrder}
+                onConfirm={handleCancelOrder}
+                processing={processingAction}
+            />
+
+            <ProcessRefundModal
+                isOpen={showRefundModal}
+                onClose={() => setShowRefundModal(false)}
+                order={selectedOrder}
+                onConfirm={handleProcessRefund}
+                processing={processingAction}
+            />
+
+            <ProcessReturnModal
+                isOpen={showReturnModal}
+                onClose={() => setShowReturnModal(false)}
+                order={selectedOrder}
+                onConfirm={handleProcessReturn}
+                onCompleteReturn={handleCompleteReturn}
+                processing={processingAction}
+            />
         </div>
-    )
+    );
 }
-
-export default DashboardOrders;

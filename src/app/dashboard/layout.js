@@ -23,6 +23,7 @@ export default function DashboardLayout({ children }) {
         { icon: Package, label: 'Dashboard', active: true, link: "/dashboard/admin" },
         { icon: Package, label: 'Add Products', active: true, link: "/dashboard/admin/products" },
         { icon: Package, label: 'Add Tags', active: true, link: "/dashboard/admin/tags" },
+        { icon: Package, label: 'Add Quotes', active: true, link: "/dashboard/admin/quotes" },
         { icon: ShoppingBag, label: 'All Orders', active: false, link: "/dashboard/admin/orders" },
         { icon: CircleDotDashed, label: 'Pending Quotes', active: false, link: "/dashboard/admin/pending" },
         { icon: QrCode, label: 'Scan History', active: false, link: "/dashboard/admin/qr-history" },

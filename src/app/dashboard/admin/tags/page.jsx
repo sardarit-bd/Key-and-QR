@@ -1,4 +1,3 @@
-// app/dashboard/admin/tags/page.jsx
 "use client";
 
 import { useEffect, useState } from "react";
@@ -8,10 +7,6 @@ import api from "@/lib/api";
 import {
     Tag,
     Plus,
-    RefreshCw,
-    AlertCircle,
-    Check,
-    Shield
 } from "lucide-react";
 import QRCodeModal from "@/components/admin/tags/QRCodeModal";
 import CreateTagModal from "@/components/admin/tags/CreateTagModal";
@@ -32,6 +27,11 @@ export default function AdminTagsPage() {
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalTags, setTotalTags] = useState(0);
+    const itemsPerPage = 10;
+
     // Check admin access
     useEffect(() => {
         if (!accessToken) {
@@ -44,12 +44,34 @@ export default function AdminTagsPage() {
         }
     }, [accessToken, user, router]);
 
-    // Fetch tags
     const fetchTags = async () => {
         try {
             setLoading(true);
-            const response = await api.get("/tags");
-            setTags(response.data.data || []);
+
+            // Build query params
+            const params = new URLSearchParams();
+            params.append("page", currentPage);
+            params.append("limit", itemsPerPage);
+
+            if (searchTerm) {
+                params.append("search", searchTerm);
+            }
+
+            // Map filter status to API params
+            if (filterStatus === "active") {
+                params.append("isActivated", "true");
+            } else if (filterStatus === "pending") {
+                params.append("isActivated", "false");
+                params.append("isActive", "true");
+            } else if (filterStatus === "disabled") {
+                params.append("isActive", "false");
+            }
+
+            const response = await api.get(`/tags?${params.toString()}`);
+
+            setTags(response.data.data.data || []);
+            setTotalPages(response.data.data.meta?.totalPage || 1);
+            setTotalTags(response.data.data.meta?.total || 0);
             setError("");
         } catch (error) {
             console.error("Error fetching tags:", error);
@@ -59,34 +81,69 @@ export default function AdminTagsPage() {
         }
     };
 
-    useEffect(() => {
-        fetchTags();
-    }, []);
-
-    // Filter tags
-    const filteredTags = tags.filter((tag) => {
-        const matchesSearch = tag.tagCode.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesFilter = filterStatus === "all"
-            ? true
-            : filterStatus === "active"
-                ? tag.isActivated
-                : filterStatus === "pending"
-                    ? !tag.isActivated && tag.isActive
-                    : filterStatus === "disabled"
-                        ? !tag.isActive
-                        : true;
-        return matchesSearch && matchesFilter;
-    });
-
-    // Stats
-    const stats = {
-        total: tags.length,
-        activated: tags.filter(t => t.isActivated).length,
-        pending: tags.filter(t => !t.isActivated && t.isActive).length,
-        disabled: tags.filter(t => !t.isActive).length,
+    const fetchAllTagsForStats = async () => {
+        try {
+            const response = await api.get("/tags?limit=1000");
+            return response.data.data.data || [];
+        } catch (error) {
+            console.error("Error fetching stats:", error);
+            return [];
+        }
     };
 
-    if (loading) {
+    const [stats, setStats] = useState({
+        total: 0,
+        activated: 0,
+        pending: 0,
+        disabled: 0,
+    });
+
+    const loadStats = async () => {
+        const allTags = await fetchAllTagsForStats();
+        setStats({
+            total: allTags.length,
+            activated: allTags.filter(t => t.isActivated).length,
+            pending: allTags.filter(t => !t.isActivated && t.isActive).length,
+            disabled: allTags.filter(t => !t.isActive).length,
+        });
+    };
+
+    // Effect for paginated data
+    useEffect(() => {
+        fetchTags();
+    }, [currentPage, searchTerm, filterStatus]);
+
+    // Effect for stats
+    useEffect(() => {
+        loadStats();
+    }, []);
+
+    // Handle page change
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
+    // Handle refresh (refresh both table and stats)
+    const handleRefresh = () => {
+        fetchTags();
+        loadStats();
+    };
+
+    // Handle search (reset to page 1)
+    const handleSearch = (term) => {
+        setSearchTerm(term);
+        setCurrentPage(1);
+    };
+
+    // Handle filter change (reset to page 1)
+    const handleFilterChange = (status) => {
+        setFilterStatus(status);
+        setCurrentPage(1);
+    };
+
+    if (loading && currentPage === 1 && tags.length === 0) {
         return (
             <div className="min-h-screen bg-gray-50 p-8">
                 <div className="flex justify-center items-center h-64">
@@ -110,28 +167,31 @@ export default function AdminTagsPage() {
                                 <Tag className="w-8 h-8" />
                                 Admin Tags
                             </h1>
-                            <p className="text-gray-600 mt-1">Manage all NFC/QR tags</p>
+                            <p className="text-gray-600 mt-1">
+                                Manage all NFC/QR tags for physical keychains
+                                {totalTags > 0 && <span className="ml-2 text-sm">({totalTags} total tags)</span>}
+                            </p>
                         </div>
                         <button
                             onClick={() => setShowCreateModal(true)}
                             className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
                         >
                             <Plus size={18} />
-                            Create Tag
+                            Create New Tag
                         </button>
                     </div>
                 </div>
 
                 {/* Stats Cards */}
-                <StatsCards stats={stats} />
+                <StatsCards stats={stats} tags={[]} />
 
                 {/* Filters */}
                 <TagFilters
                     searchTerm={searchTerm}
-                    setSearchTerm={setSearchTerm}
+                    setSearchTerm={handleSearch}
                     filterStatus={filterStatus}
-                    setFilterStatus={setFilterStatus}
-                    onRefresh={fetchTags}
+                    setFilterStatus={handleFilterChange}
+                    onRefresh={handleRefresh}
                 />
 
                 {error && (
@@ -140,20 +200,27 @@ export default function AdminTagsPage() {
                     </div>
                 )}
 
-                {/* Tags Table */}
+                {/* Tags Table with Pagination */}
                 <TagsTable
-                    tags={filteredTags}
+                    tags={tags}
                     onShowQR={(tag) => {
                         setSelectedTag(tag);
                         setShowQRModal(true);
                     }}
+                    onRefresh={handleRefresh}
+                    currentPage={currentPage}
+                    totalPages={totalPages}
+                    onPageChange={handlePageChange}
                 />
 
                 {/* Create Tag Modal */}
                 <CreateTagModal
                     isOpen={showCreateModal}
                     onClose={() => setShowCreateModal(false)}
-                    onSuccess={fetchTags}
+                    onSuccess={() => {
+                        handleRefresh();
+                        setCurrentPage(1);
+                    }}
                 />
 
                 {/* QR Code Modal */}

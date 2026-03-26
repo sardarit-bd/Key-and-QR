@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { X, Sparkles, Edit, Copy, Check } from "lucide-react";
+import { X, Sparkles, Edit, Copy, Check, DollarSign } from "lucide-react";
 import api from "@/lib/api";
 
 export default function CreateTagModal({ isOpen, onClose, onSuccess }) {
     const [tagCode, setTagCode] = useState("");
+    const [subscriptionType, setSubscriptionType] = useState("free");
     const [creating, setCreating] = useState(false);
     const [error, setError] = useState("");
     const [mode, setMode] = useState("auto");
@@ -59,8 +60,12 @@ export default function CreateTagModal({ isOpen, onClose, onSuccess }) {
         try {
             setCreating(true);
             setError("");
-            await api.post("/tags", { tagCode: tagCode.trim() });
+            await api.post("/tags", {
+                tagCode: tagCode.trim(),
+                subscriptionType: subscriptionType
+            });
             setTagCode("");
+            setSubscriptionType("free");
             setMode("auto");
             onSuccess();
             onClose();
@@ -93,8 +98,8 @@ export default function CreateTagModal({ isOpen, onClose, onSuccess }) {
                                 setError("");
                             }}
                             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition cursor-pointer ${mode === "auto"
-                                ? "bg-black text-white shadow"
-                                : "text-gray-600 hover:bg-gray-200"
+                                    ? "bg-black text-white shadow"
+                                    : "text-gray-600 hover:bg-gray-200"
                                 }`}
                         >
                             <Sparkles size={16} />
@@ -107,13 +112,48 @@ export default function CreateTagModal({ isOpen, onClose, onSuccess }) {
                                 setError("");
                             }}
                             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition cursor-pointer ${mode === "manual"
-                                ? "bg-black text-white shadow"
-                                : "text-gray-600 hover:bg-gray-200"
+                                    ? "bg-black text-white shadow"
+                                    : "text-gray-600 hover:bg-gray-200"
                                 }`}
                         >
                             <Edit size={16} />
                             Create Manually
                         </button>
+                    </div>
+
+                    {/* Subscription Type Selection */}
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Subscription Type
+                        </label>
+                        <div className="flex gap-3">
+                            <button
+                                type="button"
+                                onClick={() => setSubscriptionType("free")}
+                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition ${subscriptionType === "free"
+                                        ? "border-gray-900 bg-gray-900 text-white"
+                                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                                    }`}
+                            >
+                                Free
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setSubscriptionType("subscriber")}
+                                className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition ${subscriptionType === "subscriber"
+                                        ? "border-purple-600 bg-purple-600 text-white"
+                                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                                    }`}
+                            >
+                                <DollarSign size={14} />
+                                Subscriber
+                            </button>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                            {subscriptionType === "subscriber"
+                                ? "Subscribers can choose categories and get 3 unlocks per day"
+                                : "Free users get 1 random quote per day"}
+                        </p>
                     </div>
 
                     {/* Auto Generate Mode */}

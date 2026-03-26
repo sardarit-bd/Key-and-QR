@@ -95,11 +95,10 @@ export default function ProductsPage() {
           </h1>
           <button
             onClick={() => setViewTrash(!viewTrash)}
-            className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm transition ${
-              viewTrash
+            className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm transition ${viewTrash
                 ? "bg-gray-900 text-white"
                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
+              }`}
           >
             <Archive size={16} />
             {viewTrash ? "View Products" : "View Trash"}
@@ -218,11 +217,10 @@ export default function ProductsPage() {
                     </td>
                     <td className="p-4">
                       <span
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          product.stock > 0
+                        className={`text-xs px-2 py-1 rounded-full ${product.stock > 0
                             ? "bg-green-50 text-green-700"
                             : "bg-red-50 text-red-700"
-                        }`}
+                          }`}
                       >
                         {product.stock > 0
                           ? `${product.stock} in stock`
@@ -340,11 +338,10 @@ export default function ProductsPage() {
                     ? handlePermanentDelete
                     : handleSoftDelete
                 }
-                className={`px-4 py-2 text-white rounded-lg transition ${
-                  deleteModal.type === "permanent"
+                className={`px-4 py-2 text-white rounded-lg transition ${deleteModal.type === "permanent"
                     ? "bg-red-600 hover:bg-red-700"
                     : "bg-orange-600 hover:bg-orange-700"
-                }`}
+                  }`}
               >
                 {deleteModal.type === "permanent"
                   ? "Permanently Delete"

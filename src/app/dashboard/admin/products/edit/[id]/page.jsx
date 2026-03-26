@@ -1,6 +1,6 @@
 "use client";
 
-import api from "@/services/api";
+import api from "@/lib/api";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -350,10 +350,10 @@ export default function EditProductPage() {
                                     onChange={handleChange}
                                     min="0"
                                     className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 ${formData.stock <= 0
-                                            ? 'border-red-300 bg-red-50'
-                                            : formData.stock <= 2
-                                                ? 'border-orange-300 bg-orange-50'
-                                                : 'border-gray-300'
+                                        ? 'border-red-300 bg-red-50'
+                                        : formData.stock <= 2
+                                            ? 'border-orange-300 bg-orange-50'
+                                            : 'border-gray-300'
                                         }`}
                                     placeholder="10"
                                 />
