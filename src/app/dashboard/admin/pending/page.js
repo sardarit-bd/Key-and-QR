@@ -1,134 +1,465 @@
+"use client";
 
-'use client'
+import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
+import { useAuthStore } from "@/store/authStore";
+import api from "@/lib/api";
+import {
+    CheckCircle,
+    XCircle,
+    Trash2,
+    RefreshCw,
+    Search,
+    ChevronLeft,
+    ChevronRight,
+    User,
+    MessageSquare,
+    Clock,
+    Eye,
+} from "lucide-react";
+import DeleteModal from "@/components/admin/pending-quotes/DeleteModal";
+import RejectModal from "@/components/admin/pending-quotes/RejectModal";
+import ApproveModal from "@/components/admin/pending-quotes/ApproveModal";
 
+const CATEGORY_COLORS = {
+    faith: "bg-purple-100 text-purple-700",
+    love: "bg-pink-100 text-pink-700",
+    hope: "bg-green-100 text-green-700",
+    success: "bg-blue-100 text-blue-700",
+    motivation: "bg-orange-100 text-orange-700",
+    other: "bg-gray-100 text-gray-700",
+};
 
+const CATEGORY_LABELS = {
+    faith: "Faith",
+    love: "Love",
+    hope: "Hope",
+    success: "Success",
+    motivation: "Motivation",
+    other: "Other",
+};
+// Main Page
+export default function PendingQuotesPage() {
+    const { accessToken } = useAuthStore();
+    const [quotes, setQuotes] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState("");
+    const [searchTerm, setSearchTerm] = useState("");
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalQuotes, setTotalQuotes] = useState(0);
+    const itemsPerPage = 10;
 
-import { CheckLine, ChevronDown, ChevronUp, Trash } from 'lucide-react';
-import { useState } from 'react';
+    // Modal states
+    const [selectedQuote, setSelectedQuote] = useState(null);
+    const [showApproveModal, setShowApproveModal] = useState(false);
+    const [showRejectModal, setShowRejectModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [expandedId, setExpandedId] = useState(null);
 
+    const fetchPendingQuotes = async () => {
+        try {
+            setLoading(true);
+            setError("");
 
+            const params = new URLSearchParams();
+            params.append("page", currentPage);
+            params.append("limit", itemsPerPage);
+            if (searchTerm) params.append("search", searchTerm);
 
-const PendingQutes = () => {
+            const response = await api.get(`/pending-quotes?${params.toString()}`);
+            setQuotes(response.data?.data || []);
+            setTotalPages(response.data?.meta?.totalPage || 1);
+            setTotalQuotes(response.data?.meta?.total || 0);
+        } catch (err) {
+            console.error("Error fetching pending quotes:", err);
+            setError(err.response?.data?.message || "Failed to load pending quotes");
+            toast.error("Failed to load pending quotes");
+        } finally {
+            setLoading(false);
+        }
+    };
 
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [expandedOrder, setExpandedOrder] = useState(null);
+    const handleApprove = async (id, adminNote) => {
+        try {
+            await api.patch(`/pending-quotes/${id}/approve`, { adminNote });
+            toast.success("Quote approved and added to main quotes");
+            fetchPendingQuotes();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to approve quote");
+            throw err;
+        }
+    };
 
+    const handleReject = async (id, adminNote) => {
+        try {
+            await api.patch(`/pending-quotes/${id}/reject`, { adminNote });
+            toast.success("Quote rejected");
+            fetchPendingQuotes();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to reject quote");
+            throw err;
+        }
+    };
 
-    const orders = [
-        { id: 'Md Emon Hossen', date: '11/10/2025', item: 'Digital Keychain', amount: 'Happiness can be found even in the darkest of times, if one only remembers to turn on the light', status: 'Pendding' },
-        { id: 'Md Emon Hossen', date: '11/10/2025', item: 'Digital Keychain', amount: 'Happiness can be found even in the darkest of times, if one only remembers to turn on the light', status: 'Pendding' },
-        { id: 'Md Emon Hossen', date: '11/10/2025', item: 'Digital Keychain', amount: 'Happiness can be found even in the darkest of times, if one only remembers to turn on the light', status: 'Pendding' },
-        { id: 'Md Emon Hossen', date: '11/10/2025', item: 'Digital Keychain', amount: 'Happiness can be found even in the darkest of times, if one only remembers to turn on the light', status: 'Pendding' },
-        { id: 'Md Emon Hossen', date: '11/10/2025', item: 'Digital Keychain', amount: 'Happiness can be found even in the darkest of times, if one only remembers to turn on the light', status: 'Pendding' },
-        { id: 'Md Emon Hossen', date: '11/10/2025', item: 'Digital Keychain', amount: 'Happiness can be found even in the darkest of times, if one only remembers to turn on the light', status: 'Pendding' },
-        { id: 'Md Emon Hossen', date: '11/10/2025', item: 'Digital Keychain', amount: 'Happiness can be found even in the darkest of times, if one only remembers to turn on the light', status: 'Pendding' },
-        { id: 'Md Emon Hossen', date: '11/10/2025', item: 'Digital Keychain', amount: 'Happiness can be found even in the darkest of times, if one only remembers to turn on the light', status: 'Pendding' },
-        { id: 'Md Emon Hossen', date: '11/10/2025', item: 'Digital Keychain', amount: 'Happiness can be found even in the darkest of times, if one only remembers to turn on the light', status: 'Pendding' },
-        { id: 'Md Emon Hossen', date: '11/10/2025', item: 'Digital Keychain', amount: 'Happiness can be found even in the darkest of times, if one only remembers to turn on the light', status: 'Pendding' },
-        { id: 'Md Emon Hossen', date: '11/10/2025', item: 'Digital Keychain', amount: 'Happiness can be found even in the darkest of times, if one only remembers to turn on the light', status: 'Pendding' },
-    ];
+    const handleDelete = async (id) => {
+        try {
+            await api.delete(`/pending-quotes/${id}`);
+            toast.success("Pending quote deleted");
+            fetchPendingQuotes();
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to delete quote");
+        }
+    };
 
+    const handleRefresh = () => {
+        setSearchTerm("");
+        setCurrentPage(1);
+        fetchPendingQuotes();
+    };
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
+    // Debounced search
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            if (currentPage === 1) {
+                fetchPendingQuotes();
+            } else {
+                setCurrentPage(1);
+            }
+        }, 500);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
+
+    useEffect(() => {
+        fetchPendingQuotes();
+    }, [currentPage]);
+
+    useEffect(() => {
+        if (accessToken) {
+            fetchPendingQuotes();
+        }
+    }, [accessToken]);
+
+    const formatDate = (date) => {
+        if (!date) return "N/A";
+        return new Date(date).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+        });
+    };
+
+    if (loading && currentPage === 1 && quotes.length === 0) {
+        return (
+            <div className="flex-1 w-full p-8 flex items-center justify-center min-h-[400px]">
+                <div className="text-center">
+                    <RefreshCw size={40} className="animate-spin text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">Loading pending quotes...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
-        <div className="flex-1 w-full p-4">
-
-
-            {/* Recent Orders */}
-            <div className="bg-white rounded-lg border border-gray-200 mb-4 lg:mb-6">
-                <div className="flex items-center justify-between p-4 lg:p-6 border-b border-gray-200">
-                    <h2 className="font-semibold text-gray-900">Pending Quotes</h2>
-                </div>
-
-                {/* Desktop Table View */}
-                <div className="hidden lg:block overflow-x-auto">
-                    <table className="w-full">
-                        <thead className=''>
-                            <tr className="border-b w-full border-gray-200">
-                                <th className="text-center w-fit p-4 text-sm font-medium text-gray-600">SL</th>
-                                <th className="text-center w-fit p-4 text-sm font-medium text-gray-600">User</th>
-                                <th className="text-center w-fit p-4 text-sm font-medium text-gray-600">Quotes</th>
-                                <th className="text-center w-fit p-4 text-sm font-medium text-gray-600">Status</th>
-                                <th className="text-center w-fit p-4 text-sm font-medium text-gray-600">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {orders.map((order, index) => (
-                                <tr key={index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                    <td className="p-4 w-fit text-sm text-gray-900">{index + 1}</td>
-                                    <td className="p-4 w-fit text-sm text-gray-900">{order.id}</td>
-                                    <td className="p-4 w-fit text-sm text-gray-900 font-medium">" {order.amount} "</td>
-                                    <td className="p-4 w-fit">
-                                        <span className="text-xs bg-green-50 text-green-700 px-3 py-1 rounded-full">
-                                            {order.status}
-                                        </span>
-                                    </td>
-                                    <td className="p-4 text-sm text-gray-900 font-medium flex items-center gap-2 w-fit">
-                                        <button className="bg-blue-400 hover:bg-blue-600 text-white p-2 rounded cursor-pointer">
-                                            <CheckLine size={18} />
-                                        </button>
-                                        <button className="bg-red-300 hover:bg-red-600 text-white p-2 rounded cursor-pointer">
-                                            <Trash size={18} />
-                                        </button>
-
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                {/* Mobile Card View */}
-                <div className="lg:hidden divide-y divide-gray-100">
-                    {orders.map((order, index) => (
-                        <div key={index} className="p-4">
-                            <div
-                                className="flex items-center justify-between cursor-pointer"
-                                onClick={() => setExpandedOrder(expandedOrder === index ? null : index)}
-                            >
-                                <div className="flex-1">
-                                    <div className="flex items-center justify-between mb-2">
-                                        <span className="font-semibold text-gray-900 text-sm">{order.id}</span>
-                                        {expandedOrder === index ? (
-                                            <ChevronUp size={20} className="text-gray-400" />
-                                        ) : (
-                                            <ChevronDown size={20} className="text-gray-400" />
-                                        )}
-                                    </div>
-                                    <div className="text-sm text-gray-600 mb-1">{order.amount}</div>
-                                </div>
-                            </div>
-
-                            {expandedOrder === index && (
-                                <div className="mt-3 pt-3 border-t border-gray-100 space-y-2 animate-fadeIn">
-                                    <div className="flex justify-between text-sm items-center">
-                                        <span className="text-gray-500">Status:</span>
-                                        <span className="text-xs bg-green-50 text-green-700 px-3 py-1 rounded-full">
-                                            {order.status}
-                                        </span>
-                                    </div>
-
-                                    <div className="flex justify-between text-sm items-center">
-                                        <span className="text-gray-500">Action:</span>
-                                        <div className="p-4 text-sm text-gray-900 font-medium flex items-center gap-2 w-fit">
-                                            <button className="bg-blue-400 hover:bg-blue-600 text-white p-2 rounded">
-                                                <CheckLine size={18} />
-                                            </button>
-                                            <button className="bg-red-300 hover:bg-blue-600 text-white p-2 rounded">
-                                                <Trash size={18} />
-                                            </button>
-
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    ))}
+        <div className="flex-1 w-full p-4 lg:p-8">
+            {/* Header */}
+            <div className="mb-6">
+                <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+                    <div>
+                        <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
+                            <Clock size={24} />
+                            Pending Quotes
+                        </h1>
+                        <p className="text-gray-500 mt-1">
+                            User submitted quotes waiting for approval
+                        </p>
+                    </div>
+                    <button
+                        onClick={handleRefresh}
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                    >
+                        <RefreshCw size={18} />
+                        Refresh
+                    </button>
                 </div>
             </div>
 
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-gray-500">Total Pending</span>
+                        <Clock size={18} className="text-yellow-500" />
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900">{totalQuotes}</div>
+                </div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-gray-500">Unique Users</span>
+                        <User size={18} className="text-blue-500" />
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900">
+                        {new Set(quotes.map(q => q.user?._id)).size}
+                    </div>
+                </div>
+                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm text-gray-500">Total Submissions</span>
+                        <MessageSquare size={18} className="text-purple-500" />
+                    </div>
+                    <div className="text-2xl font-bold text-gray-900">{totalQuotes}</div>
+                </div>
+            </div>
 
+            {/* Search */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+                <div className="relative">
+                    <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                    <input
+                        type="text"
+                        placeholder="Search quotes by text or user name..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
+                    />
+                </div>
+            </div>
+
+            {/* Error Message */}
+            {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-red-600">
+                    {error}
+                </div>
+            )}
+
+            {/* Quotes Table */}
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+                {quotes.length === 0 ? (
+                    <div className="p-12 text-center text-gray-500">
+                        <CheckCircle size={48} className="mx-auto mb-4 text-gray-300" />
+                        <p>No pending quotes found</p>
+                        <p className="text-sm mt-1">All quotes have been reviewed</p>
+                    </div>
+                ) : (
+                    <>
+                        {/* Desktop Table */}
+                        <div className="hidden lg:block overflow-x-auto">
+                            <table className="w-full">
+                                <thead className="bg-gray-50 border-b border-gray-200">
+                                    <tr>
+                                        <th className="text-left p-4 text-sm font-semibold text-gray-600">#</th>
+                                        <th className="text-left p-4 text-sm font-semibold text-gray-600">User</th>
+                                        <th className="text-left p-4 text-sm font-semibold text-gray-600">Quote</th>
+                                        <th className="text-left p-4 text-sm font-semibold text-gray-600">Category</th>
+                                        <th className="text-left p-4 text-sm font-semibold text-gray-600">Submitted</th>
+                                        <th className="text-left p-4 text-sm font-semibold text-gray-600">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y divide-gray-200">
+                                    {quotes.map((quote, index) => (
+                                        <tr key={quote._id} className="hover:bg-gray-50 transition">
+                                            <td className="p-4 text-sm text-gray-500">
+                                                {(currentPage - 1) * itemsPerPage + index + 1}
+                                            </td>
+                                            <td className="p-4">
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-900">{quote.user?.name || "Unknown"}</p>
+                                                    <p className="text-xs text-gray-500">{quote.user?.email}</p>
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="text-sm text-gray-700 max-w-md italic">
+                                                    "{quote.text}"
+                                                </div>
+                                            </td>
+                                            <td className="p-4">
+                                                <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${CATEGORY_COLORS[quote.category] || "bg-gray-100 text-gray-700"}`}>
+                                                    {CATEGORY_LABELS[quote.category] || quote.category}
+                                                </span>
+                                            </td>
+                                            <td className="p-4 text-sm text-gray-500">
+                                                {formatDate(quote.createdAt)}
+                                            </td>
+                                            <td className="p-4">
+                                                <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedQuote(quote);
+                                                            setShowApproveModal(true);
+                                                        }}
+                                                        className="p-1.5 hover:bg-green-50 rounded-lg transition group"
+                                                        title="Approve"
+                                                    >
+                                                        <CheckCircle size={18} className="text-gray-500 group-hover:text-green-600" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedQuote(quote);
+                                                            setShowRejectModal(true);
+                                                        }}
+                                                        className="p-1.5 hover:bg-red-50 rounded-lg transition group"
+                                                        title="Reject"
+                                                    >
+                                                        <XCircle size={18} className="text-gray-500 group-hover:text-red-600" />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedQuote(quote);
+                                                            setShowDeleteModal(true);
+                                                        }}
+                                                        className="p-1.5 hover:bg-red-50 rounded-lg transition group"
+                                                        title="Delete"
+                                                    >
+                                                        <Trash2 size={18} className="text-gray-500 group-hover:text-red-600" />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile Cards */}
+                        <div className="lg:hidden divide-y divide-gray-100">
+                            {quotes.map((quote) => (
+                                <div key={quote._id} className="p-4">
+                                    <div
+                                        className="flex items-center justify-between cursor-pointer"
+                                        onClick={() => setExpandedId(expandedId === quote._id ? null : quote._id)}
+                                    >
+                                        <div className="flex-1">
+                                            <div className="flex items-center justify-between mb-2">
+                                                <span className="font-medium text-gray-900">{quote.user?.name}</span>
+                                                {expandedId === quote._id ? (
+                                                    <ChevronUp size={20} className="text-gray-400" />
+                                                ) : (
+                                                    <ChevronDown size={20} className="text-gray-400" />
+                                                )}
+                                            </div>
+                                            <div className="text-sm text-gray-600 italic line-clamp-2">
+                                                "{quote.text}"
+                                            </div>
+                                            <div className="flex items-center gap-2 mt-2">
+                                                <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${CATEGORY_COLORS[quote.category] || "bg-gray-100 text-gray-700"}`}>
+                                                    {CATEGORY_LABELS[quote.category] || quote.category}
+                                                </span>
+                                                <span className="text-xs text-gray-400">
+                                                    {formatDate(quote.createdAt)}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {expandedId === quote._id && (
+                                        <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+                                            <div className="text-sm">
+                                                <span className="text-gray-500">User:</span>
+                                                <span className="text-gray-900 ml-2">{quote.user?.email}</span>
+                                            </div>
+                                            <div className="flex items-center gap-3 pt-2">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedQuote(quote);
+                                                        setShowApproveModal(true);
+                                                    }}
+                                                    className="flex-1 py-2 text-center text-sm text-green-600 font-medium border border-green-200 rounded-lg hover:bg-green-50 transition"
+                                                >
+                                                    <CheckCircle size={14} className="inline mr-1" />
+                                                    Approve
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedQuote(quote);
+                                                        setShowRejectModal(true);
+                                                    }}
+                                                    className="flex-1 py-2 text-center text-sm text-red-600 font-medium border border-red-200 rounded-lg hover:bg-red-50 transition"
+                                                >
+                                                    <XCircle size={14} className="inline mr-1" />
+                                                    Reject
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedQuote(quote);
+                                                        setShowDeleteModal(true);
+                                                    }}
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Pagination */}
+                        {totalPages > 1 && (
+                            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
+                                <div className="text-sm text-gray-500">
+                                    Showing {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, totalQuotes)} of {totalQuotes}
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handlePageChange(currentPage - 1)}
+                                        disabled={currentPage === 1}
+                                        className="px-3 py-1 rounded-lg text-sm border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        <ChevronLeft size={14} className="inline mr-1" />
+                                        Previous
+                                    </button>
+                                    <button
+                                        onClick={() => handlePageChange(currentPage + 1)}
+                                        disabled={currentPage === totalPages}
+                                        className="px-3 py-1 rounded-lg text-sm border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                    >
+                                        Next
+                                        <ChevronRight size={14} className="inline ml-1" />
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+                    </>
+                )}
+            </div>
+
+            {/* Modals */}
+            <ApproveModal
+                isOpen={showApproveModal}
+                onClose={() => {
+                    setShowApproveModal(false);
+                    setSelectedQuote(null);
+                }}
+                quote={selectedQuote}
+                onConfirm={handleApprove}
+            />
+
+            <RejectModal
+                isOpen={showRejectModal}
+                onClose={() => {
+                    setShowRejectModal(false);
+                    setSelectedQuote(null);
+                }}
+                quote={selectedQuote}
+                onConfirm={handleReject}
+            />
+
+            <DeleteModal
+                isOpen={showDeleteModal}
+                onClose={() => {
+                    setShowDeleteModal(false);
+                    setSelectedQuote(null);
+                }}
+                quote={selectedQuote}
+                onConfirm={handleDelete}
+            />
         </div>
-    )
+    );
 }
-
-export default PendingQutes;

@@ -24,7 +24,8 @@ export default function QRCodeModal({ isOpen, onClose, tag }) {
 
     if (!isOpen || !tag) return null;
 
-    const url = `https://keyandqr.com/t/${tag.tagCode}`;
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    const url = `${baseUrl}/t/${tag.tagCode}`;
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">

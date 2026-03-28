@@ -1,5 +1,15 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+
+  async rewrites() {
+    return [
+      {
+        source: "/api/:path*",
+        destination: "http://localhost:5000/api/v1/:path*",
+      },
+    ];
+  },
+
   images: {
     remotePatterns: [
       {
@@ -26,6 +36,11 @@ const nextConfig = {
       },
     ],
   },
+
+  allowedDevOrigins: [
+    "nonextensional-donita-drinkably.ngrok-free.dev"
+  ],
+
   reactCompiler: true,
 };
 
