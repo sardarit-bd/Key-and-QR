@@ -1,280 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
-import { useAuthStore } from "@/store/authStore";
+import CreateQuoteModal from "@/components/admin/quotes/CreateQuoteModal";
+import DeleteConfirmModal from "@/components/admin/quotes/DeleteConfirmModal";
+import EditQuoteModal from "@/components/admin/quotes/EditQuoteModal";
 import api from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
 import {
-    Quote,
-    Plus,
-    RefreshCw,
-    XCircle,
-    Search,
-    Filter,
-    Edit,
-    Trash2,
-    Eye,
-    Power,
-    PowerOff,
     ChevronLeft,
     ChevronRight,
+    Edit,
+    Eye,
+    Filter,
+    Plus,
+    Power,
+    PowerOff,
+    Quote,
+    RefreshCw,
+    Search,
+    Trash2
 } from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 
 // Category options
 const CATEGORIES = [
     { value: "faith", label: "Faith", color: "bg-purple-100 text-purple-700" },
-    { value: "love", label: "Love", color: "bg-pink-100 text-pink-700" },
+    { value: "love", label: "Love", color: "bg-red-100 text-pink-700" },
     { value: "hope", label: "Hope", color: "bg-green-100 text-green-700" },
     { value: "success", label: "Success", color: "bg-blue-100 text-blue-700" },
     { value: "motivation", label: "Motivation", color: "bg-orange-100 text-orange-700" },
 ];
 
-// Components
-const CreateQuoteModal = ({ isOpen, onClose, onSuccess }) => {
-    const [text, setText] = useState("");
-    const [category, setCategory] = useState("motivation");
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-
-    const handleSubmit = async () => {
-        if (!text.trim()) {
-            setError("Quote text is required");
-            return;
-        }
-        if (text.length < 3) {
-            setError("Quote must be at least 3 characters");
-            return;
-        }
-
-        setLoading(true);
-        setError("");
-        try {
-            await api.post("/quotes", { text: text.trim(), category });
-            toast.success("Quote created successfully");
-            onSuccess();
-            onClose();
-            setText("");
-            setCategory("motivation");
-        } catch (err) {
-            setError(err.response?.data?.message || "Failed to create quote");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (!isOpen) return null;
-
-    return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl max-w-2xl w-full shadow-xl">
-                <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900">Create New Quote</h3>
-                    <p className="text-sm text-gray-500 mt-1">Add a new inspirational quote</p>
-                </div>
-                <div className="p-6 space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Quote Text *
-                        </label>
-                        <textarea
-                            value={text}
-                            onChange={(e) => setText(e.target.value)}
-                            rows={4}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                            placeholder="Enter your quote here..."
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Category *
-                        </label>
-                        <select
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        >
-                            {CATEGORIES.map((cat) => (
-                                <option key={cat.value} value={cat.value}>
-                                    {cat.label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    {error && (
-                        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-                            {error}
-                        </div>
-                    )}
-                </div>
-                <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
-                        disabled={loading}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={loading || !text.trim()}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-                    >
-                        {loading ? "Creating..." : "Create Quote"}
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const EditQuoteModal = ({ isOpen, onClose, quote, onSuccess }) => {
-    const [text, setText] = useState("");
-    const [category, setCategory] = useState("");
-    const [isActive, setIsActive] = useState(true);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
-
-    useEffect(() => {
-        if (quote) {
-            setText(quote.text);
-            setCategory(quote.category);
-            setIsActive(quote.isActive);
-        }
-    }, [quote]);
-
-    const handleSubmit = async () => {
-        if (!text.trim()) {
-            setError("Quote text is required");
-            return;
-        }
-
-        setLoading(true);
-        setError("");
-        try {
-            await api.patch(`/quotes/${quote._id}`, { text: text.trim(), category, isActive });
-            toast.success("Quote updated successfully");
-            onSuccess();
-            onClose();
-        } catch (err) {
-            setError(err.response?.data?.message || "Failed to update quote");
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (!isOpen || !quote) return null;
-
-    return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl max-w-2xl w-full shadow-xl">
-                <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900">Edit Quote</h3>
-                    <p className="text-sm text-gray-500 mt-1">Update your quote</p>
-                </div>
-                <div className="p-6 space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Quote Text *
-                        </label>
-                        <textarea
-                            value={text}
-                            onChange={(e) => setText(e.target.value)}
-                            rows={4}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">
-                            Category *
-                        </label>
-                        <select
-                            value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        >
-                            {CATEGORIES.map((cat) => (
-                                <option key={cat.value} value={cat.value}>
-                                    {cat.label}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="checkbox"
-                            id="isActive"
-                            checked={isActive}
-                            onChange={(e) => setIsActive(e.target.checked)}
-                            className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
-                        />
-                        <label htmlFor="isActive" className="text-sm text-gray-700">
-                            Active (visible for scans)
-                        </label>
-                    </div>
-                    {error && (
-                        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
-                            {error}
-                        </div>
-                    )}
-                </div>
-                <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
-                        disabled={loading}
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={handleSubmit}
-                        disabled={loading || !text.trim()}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
-                    >
-                        {loading ? "Saving..." : "Save Changes"}
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const DeleteConfirmModal = ({ isOpen, onClose, quote, onConfirm }) => {
-    if (!isOpen || !quote) return null;
-
-    return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl max-w-md w-full shadow-xl">
-                <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900">Delete Quote</h3>
-                </div>
-                <div className="p-6">
-                    <p className="text-gray-600">
-                        Are you sure you want to delete this quote?
-                    </p>
-                    <p className="text-sm text-gray-500 mt-2 font-mono">
-                        "{quote.text?.substring(0, 100)}..."
-                    </p>
-                </div>
-                <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
-                    <button
-                        onClick={onClose}
-                        className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
-                    >
-                        Cancel
-                    </button>
-                    <button
-                        onClick={() => onConfirm(quote._id)}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
-                    >
-                        Delete
-                    </button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-// Main Page
 export default function QuotesManagementPage() {
     const { accessToken } = useAuthStore();
     const [quotes, setQuotes] = useState([]);
@@ -353,7 +109,7 @@ export default function QuotesManagementPage() {
             const response = await api.patch(`/quotes/${id}/toggle`);
             toast.success(`Quote ${response.data.data.isActive ? "activated" : "deactivated"}`);
             fetchQuotes();
-            fetchStats();
+            // fetchStats();
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to toggle quote status");
         }
@@ -366,7 +122,7 @@ export default function QuotesManagementPage() {
             setShowDeleteModal(false);
             setSelectedQuote(null);
             fetchQuotes();
-            fetchStats();
+            // fetchStats();
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to delete quote");
         }
@@ -377,7 +133,7 @@ export default function QuotesManagementPage() {
         setSelectedCategory("all");
         setCurrentPage(1);
         fetchQuotes();
-        fetchStats();
+        // fetchStats();
     };
 
     const handlePageChange = (newPage) => {
@@ -410,7 +166,7 @@ export default function QuotesManagementPage() {
     useEffect(() => {
         if (accessToken) {
             fetchQuotes();
-            fetchStats();
+            // fetchStats();
         }
     }, [accessToken]);
 
@@ -524,8 +280,8 @@ export default function QuotesManagementPage() {
                         <button
                             onClick={() => setSelectedCategory("all")}
                             className={`px-4 py-2 rounded-lg text-sm transition ${selectedCategory === "all"
-                                    ? "bg-gray-900 text-white"
-                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                ? "bg-gray-900 text-white"
+                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                 }`}
                         >
                             All
@@ -535,8 +291,8 @@ export default function QuotesManagementPage() {
                                 key={cat.value}
                                 onClick={() => setSelectedCategory(cat.value)}
                                 className={`px-4 py-2 rounded-lg text-sm transition ${selectedCategory === cat.value
-                                        ? cat.color.replace("text-", "bg-").replace("100", "500") + " text-white"
-                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                    ? cat.color.replace("text-", "bg-").replace("100", "500") + " text-white"
+                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                     }`}
                             >
                                 {cat.label}
@@ -600,8 +356,8 @@ export default function QuotesManagementPage() {
                                             </td>
                                             <td className="p-4">
                                                 <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${quote.isActive
-                                                        ? "bg-green-100 text-green-700"
-                                                        : "bg-red-100 text-red-700"
+                                                    ? "bg-green-100 text-green-700"
+                                                    : "bg-red-100 text-red-700"
                                                     }`}>
                                                     {quote.isActive ? <Power size={10} /> : <PowerOff size={10} />}
                                                     {quote.isActive ? "Active" : "Inactive"}
@@ -662,8 +418,8 @@ export default function QuotesManagementPage() {
                                         <div className="flex items-center gap-2">
                                             {getCategoryBadge(quote.category)}
                                             <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${quote.isActive
-                                                    ? "bg-green-100 text-green-700"
-                                                    : "bg-red-100 text-red-700"
+                                                ? "bg-green-100 text-green-700"
+                                                : "bg-red-100 text-red-700"
                                                 }`}>
                                                 {quote.isActive ? <Power size={10} /> : <PowerOff size={10} />}
                                                 {quote.isActive ? "Active" : "Inactive"}
@@ -743,7 +499,7 @@ export default function QuotesManagementPage() {
                 onClose={() => setShowCreateModal(false)}
                 onSuccess={() => {
                     fetchQuotes();
-                    fetchStats();
+                    // fetchStats();
                 }}
             />
 
@@ -756,8 +512,9 @@ export default function QuotesManagementPage() {
                 quote={selectedQuote}
                 onSuccess={() => {
                     fetchQuotes();
-                    fetchStats();
+                    // fetchStats();
                 }}
+                CATEGORIES={CATEGORIES}
             />
 
             <DeleteConfirmModal

@@ -33,7 +33,7 @@ export default function AdminDashboard() {
 
       // Fetch tags
       const tagsRes = await api.get("/tags");
-      const tags = tagsRes.data.data || [];
+      const tags = tagsRes.data.data.data || [];
 
       // Fetch orders
       const ordersRes = await api.get("/orders/admin/all");
@@ -184,8 +184,8 @@ export default function AdminDashboard() {
                         {formatPrice(order.product?.price || 0)}
                       </p>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${order.paymentStatus === "paid"
-                          ? "bg-green-50 text-green-700"
-                          : "bg-yellow-50 text-yellow-700"
+                        ? "bg-green-50 text-green-700"
+                        : "bg-yellow-50 text-yellow-700"
                         }`}>
                         {order.paymentStatus}
                       </span>
@@ -247,10 +247,10 @@ export default function AdminDashboard() {
                     </div>
                     <div className="text-right">
                       <span className={`text-xs px-2 py-0.5 rounded-full ${tag.isActivated
-                          ? "bg-green-50 text-green-700"
-                          : tag.isActive
-                            ? "bg-yellow-50 text-yellow-700"
-                            : "bg-red-50 text-red-700"
+                        ? "bg-green-50 text-green-700"
+                        : tag.isActive
+                          ? "bg-yellow-50 text-yellow-700"
+                          : "bg-red-50 text-red-700"
                         }`}>
                         {tag.isActivated ? "Activated" : tag.isActive ? "Pending" : "Disabled"}
                       </span>
