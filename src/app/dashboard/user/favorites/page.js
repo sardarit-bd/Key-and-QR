@@ -183,13 +183,13 @@ export default function DashboardFavorites() {
                             {totalFavorites} {totalFavorites === 1 ? "item" : "items"} saved
                         </p>
                     </div>
-                    <button
+                    {/* <button
                         onClick={fetchFavorites}
                         className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
                     >
                         <RefreshCw size={18} />
                         Refresh
-                    </button>
+                    </button> */}
                 </div>
             </div>
 
@@ -203,10 +203,21 @@ export default function DashboardFavorites() {
                     return (
                         <div
                             key={fav._id}
-                            className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-all"
+                            className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-lg transition-all relative"
                         >
+                            <button
+                                onClick={() => handleRemoveFromFavorites(fav._id, product?.name || "Quote")}
+                                disabled={isRemoving}
+                                className="absolute top-2 right-2 p-2 bg-white rounded-full shadow hover:bg-red-50 transition cursor-pointer disabled:opacity-50 z-10"
+                            >
+                                {isRemoving ? (
+                                    <RefreshCw size={16} className="animate-spin" />
+                                ) : (
+                                    <Trash2 size={16} className="text-gray-600 hover:text-red-500" />
+                                )}
+                            </button>
 
-                            {/* 🔥 IF PRODUCT */}
+                            {/* IF PRODUCT */}
                             {product ? (
                                 <>
                                     <Link href={`/shop/${product._id}`} className="block relative aspect-square bg-gray-100">
@@ -230,21 +241,13 @@ export default function DashboardFavorites() {
                                     </div>
                                 </>
                             ) : quote ? (
-                                // 🔥 IF QUOTE
+                                // IF QUOTE
                                 <div className="p-6 text-center">
                                     <Quote size={30} className="text-gray-300 mx-auto mb-3" />
                                     <p className="text-gray-800 italic">"{quote.text}"</p>
                                     <p className="text-xs text-gray-500 mt-2">— {quote.author}</p>
                                 </div>
                             ) : null}
-
-                            {/* DELETE BUTTON */}
-                            <button
-                                onClick={() => handleRemoveFromFavorites(fav._id, "Item")}
-                                className="absolute top-2 right-2 p-2 bg-white rounded-full shadow"
-                            >
-                                <Trash2 size={16} />
-                            </button>
                         </div>
                     );
                 })}

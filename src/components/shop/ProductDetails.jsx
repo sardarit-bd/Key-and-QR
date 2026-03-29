@@ -7,7 +7,7 @@ import { useProductStore } from "@/store/productStore";
 import { AlertCircle, BadgeCheck, Heart, Minus, Plus, Zap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import RelatedProducts from "./Relatedproduct";
 
@@ -58,6 +58,8 @@ export default function ProductDetails() {
     const [isFavorite, setIsFavorite] = useState(false);
     const [favoriteId, setFavoriteId] = useState(null);
     const [isSaving, setIsSaving] = useState(false);
+
+    const router = useRouter();
 
     // ========== EFFECTS ==========
     // Load product data
@@ -169,6 +171,23 @@ export default function ProductDetails() {
         } finally {
             setIsSaving(false);
         }
+    };
+
+    const handleBuyNow = () => {
+        if (!product || product.stock <= 0) return;
+
+        const qtyToAdd = Math.min(quantity, product.stock);
+
+        for (let i = 0; i < qtyToAdd; i++) {
+            addToCart({
+                id: product._id,
+                name: product.name,
+                price: product.price,
+                img: selectedImage,
+                qty: 1
+            });
+        }
+        router.push("/checkout");
     };
 
     const handleImageError = (e) => {
@@ -416,15 +435,15 @@ export default function ProductDetails() {
                             {isFavorite ? "Saved" : "Save"}
                         </button>
 
-                        <Link
-                            href="/checkout"
-                            className={`px-6 py-3 rounded-md transition flex-1 md:flex-none text-center ${product.stock <= 0
+                        <button
+                            onClick={handleBuyNow}
+                            className={`px-6 py-3 rounded-md transition flex-1 md:flex-none text-center cursor-pointer ${product.stock <= 0
                                 ? 'bg-gray-400 text-white cursor-not-allowed pointer-events-none'
                                 : 'bg-gray-700 text-white hover:bg-gray-800'
                                 }`}
                         >
                             Buy it Now
-                        </Link>
+                        </button>
                     </div>
 
                     {product.stock <= 2 && product.stock > 0 && (

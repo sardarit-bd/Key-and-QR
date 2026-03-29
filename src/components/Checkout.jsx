@@ -1,24 +1,31 @@
-// components/Checkout.js
 "use client";
 
 import { orderService } from "@/services/order.service";
+import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
 import { ChevronDown } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
+const PLACEHOLDER_IMAGE = "https://placehold.co/400x400/e2e8f0/1e293b?text=No+Image";
 
 export default function Checkout() {
     const router = useRouter();
+    const { user, accessToken } = useAuthStore();
     const cart = useCartStore((state) => state.cart);
     const clearCart = useCartStore((state) => state.clearCart);
     const [loading, setLoading] = useState(false);
     const [countryOpen, setCountryOpen] = useState(false);
+    const [imageErrors, setImageErrors] = useState({});
     const [formData, setFormData] = useState({
         email: "",
         fullName: "",
+        phone: "",
         address: "",
+        city: "",
+        postalCode: "",
         country: "Select your country",
         purchaseType: "self",
         giftMessage: "",
@@ -26,24 +33,50 @@ export default function Checkout() {
 
     const countries = ["Bangladesh", "India", "USA", "UK", "Australia"];
 
+    // Auto-fill user data if logged in
+    useEffect(() => {
+        if (user) {
+            setFormData(prev => ({
+                ...prev,
+                email: user.email || "",
+                fullName: user.name || "",
+            }));
+        }
+    }, [user]);
+
+    // Calculate totals
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
-    const taxRate = 0.0875;
-    const tax = subtotal * taxRate;
-    const total = subtotal + tax;
+    const shippingCost = 0;
+    const total = subtotal + shippingCost;
+
+    const handleImageError = (productId) => {
+        setImageErrors(prev => ({ ...prev, [productId]: true }));
+    };
+
+    const getImageUrl = (item) => {
+        if (imageErrors[item.id]) {
+            return PLACEHOLDER_IMAGE;
+        }
+        return item.img || PLACEHOLDER_IMAGE;
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (cart.length === 0) {
-            alert("Your cart is empty");
+            alert("Your cart is empty. Please add items before checkout.");
+            router.push("/shop");
+            return;
+        }
+
+        if (!formData.email || !formData.fullName || !formData.address || !formData.country || formData.country === "Select your country") {
+            alert("Please fill in all required fields");
             return;
         }
 
         setLoading(true);
 
         try {
-            // For now, we're using the first product
-            // If you want multiple products, you'll need to modify backend
             const firstItem = cart[0];
 
             const orderPayload = {
@@ -55,21 +88,21 @@ export default function Checkout() {
             const response = await orderService.createCheckout(orderPayload);
 
             if (response.data?.url) {
-                // Clear cart before redirect
-                clearCart();
-                // Redirect to Stripe checkout
                 window.location.href = response.data.url;
-            } else {
-                throw new Error("No checkout URL received");
+                return;
             }
+
+            throw new Error("No checkout URL received");
         } catch (error) {
             console.error("Checkout failed:", error);
-            alert(error.response?.data?.message || "Something went wrong. Please try again.");
+            const errorMessage = error.response?.data?.message || "Something went wrong. Please try again.";
+            alert(errorMessage);
         } finally {
             setLoading(false);
         }
     };
 
+    // Empty cart state
     if (cart.length === 0) {
         return (
             <section className="max-w-7xl mx-auto py-32 px-4 text-center">
@@ -95,25 +128,26 @@ export default function Checkout() {
                     ← Back to Cart
                 </Link>
 
-                <h2 className="text-xl font-semibold mb-6">Order Summary</h2>
+                <h2 className="text-xl font-semibold mb-6">Order Summary ({cart.reduce((sum, i) => sum + i.qty, 0)} items)</h2>
 
-                <div className="space-y-4">
+                <div className="space-y-4 max-h-96 overflow-y-auto">
                     {cart.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between">
+                        <div key={item.id} className="flex items-center justify-between border-b border-gray-100 pb-4">
                             <div className="flex items-center gap-4">
-                                <Image
-                                    src={item.img || "/placeholder.png"}
-                                    alt={item.name}
-                                    width={60}
-                                    height={60}
-                                    className="rounded-lg object-cover"
-                                    onError={(e) => {
-                                        e.target.src = "/placeholder.png";
-                                    }}
-                                />
+                                <div className="relative w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
+                                    <Image
+                                        src={getImageUrl(item)}
+                                        alt={item.name}
+                                        fill
+                                        className="object-cover"
+                                        onError={() => handleImageError(item.id)}
+                                        unoptimized={true}
+                                    />
+                                </div>
                                 <div>
                                     <h3 className="font-medium">{item.name}</h3>
                                     <p className="text-sm text-gray-500">Qty: {item.qty}</p>
+                                    <p className="text-sm text-gray-500">${item.price}</p>
                                 </div>
                             </div>
                             <p className="font-medium">${(item.price * item.qty).toFixed(2)}</p>
@@ -127,10 +161,6 @@ export default function Checkout() {
                         <span>${subtotal.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between text-gray-600">
-                        <span>Tax (8.75%)</span>
-                        <span>${tax.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-600 pb-4">
                         <span>Shipping</span>
                         <span className="text-green-600">Free</span>
                     </div>
@@ -172,6 +202,14 @@ export default function Checkout() {
                                 className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-black"
                             />
 
+                            <input
+                                type="tel"
+                                placeholder="Phone number"
+                                value={formData.phone}
+                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-black"
+                            />
+
                             {/* Country Dropdown */}
                             <div className="relative">
                                 <button
@@ -209,6 +247,23 @@ export default function Checkout() {
                                 onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                                 className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-black"
                             />
+
+                            <div className="grid grid-cols-2 gap-3">
+                                <input
+                                    type="text"
+                                    placeholder="City"
+                                    value={formData.city}
+                                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-black"
+                                />
+                                <input
+                                    type="text"
+                                    placeholder="Postal Code"
+                                    value={formData.postalCode}
+                                    onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
+                                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-black"
+                                />
+                            </div>
                         </div>
                     </div>
 
@@ -225,7 +280,7 @@ export default function Checkout() {
                         </select>
 
                         {formData.purchaseType === "gift" && (
-                            <div className="mt-3">
+                            <div className="mt-3 animate-fadeIn">
                                 <label className="text-sm font-medium block mb-2">Gift Message</label>
                                 <textarea
                                     placeholder="Write your gift message here..."
@@ -234,8 +289,35 @@ export default function Checkout() {
                                     rows={4}
                                     className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-black resize-none"
                                 />
+                                <p className="text-xs text-gray-500 mt-1">
+                                    This message will be included with your gift
+                                </p>
                             </div>
                         )}
+                    </div>
+
+                    {/* Delivery Info Note */}
+                    <div className="bg-blue-50 p-4 rounded-lg">
+                        <p className="text-sm text-blue-800">
+                            📦 <strong>Delivery Information:</strong> Free shipping worldwide.
+                            Estimated delivery: 7-14 business days after payment confirmation.
+                        </p>
+                    </div>
+
+                    {/* Order Summary for Mobile */}
+                    <div className="md:hidden border-t border-gray-200 pt-4">
+                        <div className="flex justify-between text-gray-600 mb-2">
+                            <span>Subtotal:</span>
+                            <span>${subtotal.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between text-gray-600 mb-2">
+                            <span>Shipping:</span>
+                            <span className="text-green-600">Free</span>
+                        </div>
+                        <div className="flex justify-between text-lg font-semibold mt-2">
+                            <span>Total:</span>
+                            <span>${total.toFixed(2)}</span>
+                        </div>
                     </div>
 
                     {/* Submit Button */}
@@ -244,8 +326,20 @@ export default function Checkout() {
                         disabled={loading}
                         className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-900 cursor-pointer transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        {loading ? "Processing..." : `Pay $${total.toFixed(2)}`}
+                        {loading ? (
+                            <div className="flex items-center justify-center gap-2">
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                Processing...
+                            </div>
+                        ) : (
+                            `Place Order • $${total.toFixed(2)}`
+                        )}
                     </button>
+
+                    {/* Payment Info Note */}
+                    <p className="text-xs text-gray-400 text-center">
+                        Secure payment powered by Stripe. Your payment information is encrypted and secure.
+                    </p>
                 </form>
             </div>
         </section>
