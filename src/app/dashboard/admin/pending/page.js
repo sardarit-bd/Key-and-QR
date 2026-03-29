@@ -1,25 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
-import { useAuthStore } from "@/store/authStore";
-import api from "@/lib/api";
-import {
-    CheckCircle,
-    XCircle,
-    Trash2,
-    RefreshCw,
-    Search,
-    ChevronLeft,
-    ChevronRight,
-    User,
-    MessageSquare,
-    Clock,
-    Eye,
-} from "lucide-react";
+import ApproveModal from "@/components/admin/pending-quotes/ApproveModal";
 import DeleteModal from "@/components/admin/pending-quotes/DeleteModal";
 import RejectModal from "@/components/admin/pending-quotes/RejectModal";
-import ApproveModal from "@/components/admin/pending-quotes/ApproveModal";
+import api from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
+import {
+    CheckCircle,
+    ChevronDown,
+    ChevronLeft,
+    ChevronRight,
+    Clock,
+    MessageSquare,
+    RefreshCw,
+    Search,
+    Trash2,
+    User,
+    XCircle
+} from "lucide-react";
+import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 
 const CATEGORY_COLORS = {
     faith: "bg-purple-100 text-purple-700",
@@ -293,7 +293,7 @@ export default function PendingQuotesPage() {
                                                             setSelectedQuote(quote);
                                                             setShowApproveModal(true);
                                                         }}
-                                                        className="p-1.5 hover:bg-green-50 rounded-lg transition group"
+                                                        className="p-1.5 hover:bg-green-50 rounded-lg transition group cursor-pointer"
                                                         title="Approve"
                                                     >
                                                         <CheckCircle size={18} className="text-gray-500 group-hover:text-green-600" />
@@ -303,17 +303,17 @@ export default function PendingQuotesPage() {
                                                             setSelectedQuote(quote);
                                                             setShowRejectModal(true);
                                                         }}
-                                                        className="p-1.5 hover:bg-red-50 rounded-lg transition group"
+                                                        className="p-1.5 hover:bg-red-50 rounded-lg transition group cursor-pointer"
                                                         title="Reject"
                                                     >
-                                                        <XCircle size={18} className="text-gray-500 group-hover:text-red-600" />
+                                                        <XCircle size={18} className="text-gray-500 group-hover:text-red-600 cursor-pointer" />
                                                     </button>
                                                     <button
                                                         onClick={() => {
                                                             setSelectedQuote(quote);
                                                             setShowDeleteModal(true);
                                                         }}
-                                                        className="p-1.5 hover:bg-red-50 rounded-lg transition group"
+                                                        className="p-1.5 hover:bg-red-50 rounded-lg transition group cursor-pointer"
                                                         title="Delete"
                                                     >
                                                         <Trash2 size={18} className="text-gray-500 group-hover:text-red-600" />
@@ -369,7 +369,7 @@ export default function PendingQuotesPage() {
                                                         setSelectedQuote(quote);
                                                         setShowApproveModal(true);
                                                     }}
-                                                    className="flex-1 py-2 text-center text-sm text-green-600 font-medium border border-green-200 rounded-lg hover:bg-green-50 transition"
+                                                    className="flex-1 py-2 text-center text-sm text-green-600 font-medium border border-green-200 rounded-lg hover:bg-green-50 transition cursor-pointer"
                                                 >
                                                     <CheckCircle size={14} className="inline mr-1" />
                                                     Approve
@@ -379,7 +379,7 @@ export default function PendingQuotesPage() {
                                                         setSelectedQuote(quote);
                                                         setShowRejectModal(true);
                                                     }}
-                                                    className="flex-1 py-2 text-center text-sm text-red-600 font-medium border border-red-200 rounded-lg hover:bg-red-50 transition"
+                                                    className="flex-1 py-2 text-center text-sm text-red-600 font-medium border border-red-200 rounded-lg hover:bg-red-50 transition cursor-pointer"
                                                 >
                                                     <XCircle size={14} className="inline mr-1" />
                                                     Reject
@@ -389,7 +389,7 @@ export default function PendingQuotesPage() {
                                                         setSelectedQuote(quote);
                                                         setShowDeleteModal(true);
                                                     }}
-                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
                                                 >
                                                     <Trash2 size={16} />
                                                 </button>

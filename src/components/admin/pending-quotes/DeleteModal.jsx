@@ -12,12 +12,12 @@ const DeleteModal = ({ isOpen, onClose, quote, onConfirm }) => {
                     <p className="text-sm text-gray-500 mt-2 italic">"{quote.text?.substring(0, 100)}..."</p>
                 </div>
                 <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
-                    <button onClick={onClose} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg">
+                    <button onClick={onClose} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer">
                         Cancel
                     </button>
                     <button
                         onClick={() => onConfirm(quote._id)}
-                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                        className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 cursor-pointer"
                     >
                         Delete
                     </button>

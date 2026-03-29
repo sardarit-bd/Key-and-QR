@@ -206,7 +206,7 @@ export default function QuotesManagementPage() {
                     </div>
                     <button
                         onClick={() => setShowCreateModal(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
                     >
                         <Plus size={18} />
                         Add New Quote

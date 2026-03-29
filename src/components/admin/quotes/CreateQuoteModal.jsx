@@ -62,7 +62,7 @@ export default function CreateQuoteModal({ isOpen, onClose, onSuccess }) {
                             value={text}
                             onChange={(e) => setText(e.target.value)}
                             rows={4}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                            className="w-full px-3 py-2 border border-gray-300 outline-0 rounded-lg focus:ring-1 focus:ring-black/30 focus:ring-offset-2 focus:ring-offset-white transition resize-none"
                             placeholder="Enter your quote here..."
                         />
                     </div>
@@ -91,7 +91,7 @@ export default function CreateQuoteModal({ isOpen, onClose, onSuccess }) {
                 <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                        className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition cursor-pointer"
                         disabled={loading}
                     >
                         Cancel
@@ -99,7 +99,7 @@ export default function CreateQuoteModal({ isOpen, onClose, onSuccess }) {
                     <button
                         onClick={handleSubmit}
                         disabled={loading || !text.trim()}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50"
+                        className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50 cursor-pointer"
                     >
                         {loading ? "Creating..." : "Create Quote"}
                     </button>

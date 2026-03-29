@@ -1,143 +1,386 @@
-'use client'
+"use client";
 
+import api from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
+import {
+    ArrowRight,
+    Bookmark,
+    BookmarkCheck,
+    Clock,
+    Heart,
+    Quote,
+    RefreshCw,
+    Share2,
+    ShoppingBag,
+    Sparkles,
+    Tag,
+} from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
 
-import { Heart, Sparkles } from 'lucide-react';
-import Link from 'next/link';
-import { useState } from 'react';
+// Category configuration with icons
+const CATEGORIES = [
+    { id: "motivation", label: "Motivation", icon: Sparkles, color: "bg-orange-100 text-orange-700" },
+    { id: "love", label: "Love", icon: Heart, color: "bg-pink-100 text-pink-700" },
+    { id: "gratitude", label: "Gratitude", icon: Bookmark, color: "bg-green-100 text-green-700" },
+    { id: "faith", label: "Faith", icon: Tag, color: "bg-purple-100 text-purple-700" },
+    { id: "healing", label: "Healing", icon: Heart, color: "bg-blue-100 text-blue-700" },
+    { id: "random", label: "Random", icon: RefreshCw, color: "bg-gray-100 text-gray-700" },
+];
 
 export default function QuotePage() {
+    const router = useRouter();
+    const { user, accessToken } = useAuthStore();
+
+    const [loading, setLoading] = useState(true);
+    const [quote, setQuote] = useState(null);
+    const [selectedCategory, setSelectedCategory] = useState("random");
     const [savedToFavorites, setSavedToFavorites] = useState(false);
+    const [favoriteId, setFavoriteId] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+    const [greeting, setGreeting] = useState("Hello");
+    const [userName, setUserName] = useState("");
 
-    const [category, setcategory] = useState("💡 Motivation");
+    // Set greeting and user name
+    useEffect(() => {
+        const hour = new Date().getHours();
+        if (hour < 12) setGreeting("Good Morning");
+        else if (hour < 18) setGreeting("Good Afternoon");
+        else setGreeting("Good Evening");
 
+        setUserName(user?.name?.split(" ")[0] || "there");
+    }, [user]);
 
+    // Fetch quote based on category
+    const fetchQuote = async (category = null) => {
+        try {
+            setLoading(true);
+            const categoryParam = category || selectedCategory;
 
-    const quoteCategories = [
-        "💡 Motivation",
-        "❤️ Love",
-        "🙏 Gratitude",
-        "🎯 Faith",
-        "🏃 Healing",
-        "🕊️ Random",
-    ];
+            // API call to get random quote by category
+            const response = await api.get(`/quotes/random?category=${categoryParam}`);
+            const quoteData = response.data.data;
 
+            setQuote({
+                text: quoteData.text,
+                category: quoteData.category,
+                author: quoteData.author || "InspireTag",
+                id: quoteData._id,
+            });
 
-    const handleSaveToFavorites = () => {
-        setSavedToFavorites(!savedToFavorites);
+            // Check if this quote is already in favorites
+            await checkFavoriteStatus(quoteData._id);
+
+        } catch (error) {
+            console.error("Error fetching quote:", error);
+
+            // Fallback quote if API fails
+            setQuote({
+                text: "Happiness can be found even in the darkest of times, if one only remembers to turn on the light.",
+                category: "motivation",
+                author: "J.K. Rowling",
+                id: "fallback",
+            });
+            toast.error("Could not load quote. Please try again.");
+        } finally {
+            setLoading(false);
+        }
     };
 
+    // Check if quote is in favorites
+    const checkFavoriteStatus = async (quoteId) => {
+
+        if (!accessToken || quoteId === "fallback") {
+            setSavedToFavorites(false);
+            setFavoriteId(null);
+            return;
+        }
+
+        try {
+            const response = await api.get("/favorites/check", {
+                params: { quoteId: quoteId }
+            });
+
+            const { isFavorite, favoriteId } = response.data.data || {};
+
+            setSavedToFavorites(isFavorite || false);
+            setFavoriteId(favoriteId || null);
+
+        } catch (error) {
+            console.error("Error checking favorite:", error);
+            setSavedToFavorites(false);
+            setFavoriteId(null);
+        }
+    };
+    // Save quote to favorites
+    const handleSaveToFavorites = async () => {
+
+        if (!accessToken) {
+            toast.error("Please login to save favorites");
+            setTimeout(() => {
+                router.push(`/login?redirect=/quote`);
+            }, 1500);
+            return;
+        }
+
+        if (!quote || quote.id === "fallback") {
+            toast.error("Cannot save this quote");
+            return;
+        }
+
+        setIsSaving(true);
+        try {
+            if (savedToFavorites) {
+                console.log("Attempting to REMOVE favorite with ID:", favoriteId);
+                if (!favoriteId) {
+                    toast.error("Favorite ID not found");
+                    return;
+                }
+
+                await api.delete(`/favorites/${favoriteId}`);
+                setSavedToFavorites(false);
+                setFavoriteId(null);
+                toast.success("Removed from favorites", { icon: "💔" });
+            } else {
+                console.log("Attempting to ADD favorite for quote ID:", quote.id);
+                const response = await api.post("/favorites", { quoteId: quote.id });
+                console.log("Add favorite response:", response.data);
+
+                setSavedToFavorites(true);
+                setFavoriteId(response.data.data._id);
+                toast.success("Saved to favorites", { icon: "❤️" });
+            }
+        } catch (error) {
+            console.error("Error details:", {
+                status: error.response?.status,
+                message: error.response?.data?.message,
+                data: error.response?.data
+            });
+
+            if (error.response?.status === 409) {
+                toast.error("Quote already in favorites");
+                // Force re-check the favorite status
+                await checkFavoriteStatus(quote.id);
+            } else {
+                toast.error(error.response?.data?.message || "Failed to save to favorites");
+            }
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    // Share quote
+    const handleShare = async () => {
+        if (!quote) return;
+
+        const shareText = `"${quote.text}" — ${quote.author}`;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: "InspireTag Quote",
+                    text: shareText,
+                    url: window.location.href,
+                });
+                toast.success("Shared successfully!");
+            } catch (error) {
+                if (error.name !== "AbortError") {
+                    copyToClipboard(shareText);
+                }
+            }
+        } else {
+            copyToClipboard(shareText);
+        }
+    };
+
+    const copyToClipboard = (text) => {
+        navigator.clipboard.writeText(text);
+        toast.success("Quote copied to clipboard!", {
+            icon: "📋",
+        });
+    };
+
+    // Handle category change
+    const handleCategoryChange = async (categoryId) => {
+        setSelectedCategory(categoryId);
+        await fetchQuote(categoryId);
+    };
+
+    // Get category display with icon
+    const getCategoryDisplay = (categoryId) => {
+        const cat = CATEGORIES.find(c => c.id === categoryId);
+        if (!cat) return categoryId;
+        const Icon = cat.icon;
+        return (
+            <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${cat.color}`}>
+                <Icon size={14} />
+                <span className="text-sm font-medium">{cat.label}</span>
+            </div>
+        );
+    };
+
+    // Initial load
+    useEffect(() => {
+        fetchQuote("random");
+    }, []);
+
+    if (loading && !quote) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#F4F5F7]">
+                <div className="text-center">
+                    <RefreshCw size={48} className="animate-spin text-gray-400 mx-auto mb-4" />
+                    <p className="text-gray-500">Loading your inspiration...</p>
+                </div>
+            </div>
+        );
+    }
+
+    const currentCategory = CATEGORIES.find(c => c.id === selectedCategory) || CATEGORIES[0];
+
     return (
-        <div className="h-fit flex-1 w-full bg-white flex items-center justify-center ">
-            <div className='w-full bg-[#F4F5F7] rounded-lg py-4'>
-                <div className="max-w-4xl mx-auto w-full">
-                    {/* Motivation Badge */}
-                    <div className="flex justify-center mt-6">
-                        <div className="inline-flex items-center gap-1 bg-white px-4 py-2 rounded-full shadow-sm border border-gray-200">
-                            💡
-                            <span className="text-md font-medium text-gray-700">Motivation</span>
-                        </div>
-                    </div>
-
-                    {/* Main Card */}
-                    <div className="rounded-2xl p-8 md:p-12 mb-2">
-                        {/* Greeting */}
-                        <div className="text-center mb-12">
-                            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-3">
-                                Hello Emon,
-                            </h1>
-                            <p className="text-gray-500">Here's your message for today...</p>
-                        </div>
-
-                        {/* Quote Section */}
-                        <div className="bg-white rounded-xl p-8 border border-gray-300 mb-8">
-                            <p className="text-lg md:text-xl text-gray-800 text-center leading-relaxed mb-4">
-                                "Happiness can be found even in the darkest of times, if one only remembers to turn on the light."
-                            </p>
-                            <p className="text-sm text-gray-500 text-center italic">— J.K. Rowling</p>
-                        </div>
-
-                        {/* Birthday Message */}
-                        {/* <div className="bg-white rounded-xl p-8 border border-gray-300">
-                            <h2 className="text-2xl font-bold text-gray-900 text-center mb-4">
-                                Happy Birthday!
-                            </h2>
-                            <p className="text-gray-600 text-center italic leading-relaxed">
-                                "Wishing you success, good health, and endless achievements in the year ahead. May your journey continue to inspire everyone around you."
-                            </p>
-                        </div> */}
-
-                        {/* Action Buttons */}
-                        <div className="flex items-center justify-center gap-3 mt-8">
-
-
-
-                            <button
-                                onClick={handleSaveToFavorites}
-                                className={`flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all hover:shadow-md hover:scale-[1.01] active:scale-[0.98] cursor-pointer ${savedToFavorites
-                                    ? 'bg-red-500 text-white hover:bg-red-600'
-                                    : 'bg-gray-900 text-white hover:bg-gray-800'
-                                    }`}
-                            >
-                                <Heart size={18} className={savedToFavorites ? 'fill-current' : ''} />
-                                <span className="text-sm font-medium">
-                                    {savedToFavorites ? 'Saved to Favorites' : 'Save to Favorites'}
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Bottom Links */}
-                    {/* <div className="flex flex-col sm:flex-row items-center justify-center gap-4 text-sm mb-4">
-                        <button className="text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-2 group">
-                            <Share2 size={16} className="group-hover:scale-110 transition-transform" />
-                            <span className="underline">Share this quote</span>
-                        </button>
-                        <button className="text-gray-600 hover:text-gray-900 transition-colors flex items-center gap-2 group">
-                            <ShoppingBag size={16} className="group-hover:scale-110 transition-transform" />
-                            <span className="underline">Get another keychain</span>
-                        </button>
-                    </div> */}
+        <div className="min-h-screen bg-[#F4F5F7] py-8">
+            <div className="px-8">
+                {/* Category Badge */}
+                <div className="flex justify-center mb-6">
+                    {quote && getCategoryDisplay(quote.category)}
                 </div>
 
-
-
-
-                <div className="bg-white rounded-lg p-4 lg:p-6 mb-4 lg:mb-6 border border-gray-200 mx-6">
-                    <h2 className='text-center text-gray-800 text-xl font-semibold pb-6'>Choose Your Quote Category</h2>
-                    <div className="flex items-center gap-3 justify-center flex-wrap mb-3">
-
-                        {quoteCategories.map((item, index) => (
-                            <span
-                                onClick={() => { setcategory(item) }}
-                                key={index}
-                                className={`${category === item ? "bg-gray-800 text-white" : ""} text-md bg-gray-100 px-2 lg:px-3 py-1 rounded-full text-gray-600 flex items-center gap-1 hover:bg-gray-800 hover:text-white border border-gray-200 cursor-pointer`}
-                            >
-                                {item}
-                            </span>
-                        ))}
-
+                {/* Main Quote Card */}
+                <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12 mb-6">
+                    {/* Greeting */}
+                    <div className="text-center mb-10">
+                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                            {greeting}, {userName}!
+                        </h1>
+                        <p className="text-gray-500">Here's your message for today...</p>
                     </div>
 
-                    <div className='flex items-center justify-center mt-10'>
+                    {/* Quote Section */}
+                    <div className="bg-gray-50 rounded-xl p-6 md:p-8 border border-gray-200 mb-6">
+                        <div className="relative">
+                            <Quote size={32} className="text-gray-300 absolute -top-3 -left-3 opacity-50" />
+                            <p className="text-lg md:text-xl text-gray-800 text-center leading-relaxed px-4">
+                                "{quote?.text}"
+                            </p>
+                            <Quote size={32} className="text-gray-300 absolute -bottom-3 -right-3 opacity-50 rotate-180" />
+                        </div>
+                        <p className="text-sm text-gray-500 text-center mt-6 italic">
+                            — {quote?.author}
+                        </p>
+                    </div>
 
-                        <Link href={'/subscription'} className="flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-lg hover:scale-[1.01] transition-all hover:shadow-md active:scale-[0.98] cursor-pointer">
-                            <Sparkles size={18} />
-                            <span className="text-sm font-medium">Subscribe for Weekly Quotes</span>
+                    {/* Action Buttons */}
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+                        <button
+                            onClick={handleSaveToFavorites}
+                            disabled={isSaving}
+                            className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${savedToFavorites
+                                ? "bg-red-500 text-white hover:bg-red-600"
+                                : "bg-gray-900 text-white hover:bg-gray-800"
+                                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                        >
+                            {savedToFavorites ? (
+                                <>
+                                    <BookmarkCheck size={18} />
+                                    <span className="text-sm font-medium">Saved to Favorites</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Heart size={18} />
+                                    <span className="text-sm font-medium">Save to Favorites</span>
+                                </>
+                            )}
+                        </button>
+
+                        <button
+                            onClick={handleShare}
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                        >
+                            <Share2 size={18} />
+                            <span className="text-sm font-medium">Share Quote</span>
+                        </button>
+
+                        <Link
+                            href="/shop"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                        >
+                            <ShoppingBag size={18} />
+                            <span className="text-sm font-medium">Get Another Keychain</span>
                         </Link>
-
                     </div>
-
                 </div>
 
+                {/* Category Selector Section */}
+                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                    <h2 className="text-center text-gray-800 text-xl font-semibold mb-6 flex items-center justify-center gap-2">
+                        <Sparkles size={20} />
+                        Choose Your Quote Category
+                    </h2>
 
+                    <div className="flex items-center gap-3 justify-center flex-wrap mb-6">
+                        {CATEGORIES.map((cat) => {
+                            const Icon = cat.icon;
+                            const isSelected = selectedCategory === cat.id;
+                            return (
+                                <button
+                                    key={cat.id}
+                                    onClick={() => handleCategoryChange(cat.id)}
+                                    disabled={loading}
+                                    className={`cursor-pointer text-sm px-4 py-2 rounded-full flex items-center gap-1.5 transition-all ${isSelected
+                                        ? "bg-gray-800 text-white shadow-md"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                >
+                                    <Icon size={14} />
+                                    {cat.label}
+                                </button>
+                            );
+                        })}
+                    </div>
 
+                    {/* Refresh Button */}
+                    <div className="flex justify-center">
+                        <button
+                            onClick={() => fetchQuote()}
+                            disabled={loading}
+                            className="inline-flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {loading ? (
+                                <>
+                                    <RefreshCw size={18} className="animate-spin" />
+                                    <span className="text-sm font-medium">Loading...</span>
+                                </>
+                            ) : (
+                                <>
+                                    <RefreshCw size={18} />
+                                    <span className="text-sm font-medium">Get New Quote</span>
+                                </>
+                            )}
+                        </button>
+                    </div>
 
+                    {/* Upgrade to Subscription Link */}
+                    <div className="mt-6 pt-4 border-t border-gray-100 text-center">
+                        <Link
+                            href="/subscription"
+                            className="inline-flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 transition-colors group cursor-pointer"
+                        >
+                            <Sparkles size={16} />
+                            <span className="font-medium">Subscribe for Weekly Quotes</span>
+                            <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                        </Link>
+                    </div>
+                </div>
 
-
-
-
-
-
+                {/* Daily Reminder */}
+                <div className="mt-6 text-center">
+                    <p className="text-xs text-gray-400 flex items-center justify-center gap-1">
+                        <Clock size={12} />
+                        New quote available every day. Check back tomorrow!
+                    </p>
+                </div>
             </div>
         </div>
     );

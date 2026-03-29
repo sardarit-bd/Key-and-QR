@@ -1,8 +1,10 @@
 "use client";
 
+import api from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
 import { useProductStore } from "@/store/productStore";
-import { AlertCircle, BadgeCheck, Minus, Plus, Zap } from "lucide-react";
+import { AlertCircle, BadgeCheck, Heart, Minus, Plus, Zap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -51,6 +53,12 @@ export default function ProductDetails() {
     const [selectedImage, setSelectedImage] = useState("");
     const [imageError, setImageError] = useState(false);
 
+    const { accessToken } = useAuthStore();
+
+    const [isFavorite, setIsFavorite] = useState(false);
+    const [favoriteId, setFavoriteId] = useState(null);
+    const [isSaving, setIsSaving] = useState(false);
+
     // ========== EFFECTS ==========
     // Load product data
     useEffect(() => {
@@ -91,6 +99,12 @@ export default function ProductDetails() {
         }
     }, [product]);
 
+    useEffect(() => {
+        if (product && accessToken) {
+            checkFavoriteStatus(product._id);
+        }
+    }, [product, accessToken]);
+
     // ========== HANDLER FUNCTIONS ==========
     const handleAdd = () => {
         if (!product || product.stock <= 0) return;
@@ -103,6 +117,57 @@ export default function ProductDetails() {
                 price: product.price,
                 img: selectedImage,
             });
+        }
+    };
+
+    const checkFavoriteStatus = async (productId) => {
+        if (!accessToken) return;
+
+        try {
+            const res = await api.get("/favorites");
+            const favorites = res.data.data || [];
+
+            const fav = favorites.find(
+                (f) => f.product?._id?.toString() === productId.toString()
+            );
+
+            if (fav) {
+                setIsFavorite(true);
+                setFavoriteId(fav._id);
+            } else {
+                setIsFavorite(false);
+                setFavoriteId(null);
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    const handleFavorite = async () => {
+        if (!accessToken) {
+            alert("Login first");
+            return;
+        }
+
+        setIsSaving(true);
+
+        try {
+            if (isFavorite) {
+                await api.delete(`/favorites/${favoriteId}`);
+                setIsFavorite(false);
+                setFavoriteId(null);
+            } else {
+                const res = await api.post("/favorites", {
+                    productId: product._id,
+                });
+
+                setIsFavorite(true);
+                setFavoriteId(res.data.data._id);
+            }
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setIsSaving(false);
         }
     };
 
@@ -331,12 +396,24 @@ export default function ProductDetails() {
                         <button
                             onClick={handleAdd}
                             disabled={product.stock <= 0}
-                            className={`px-6 py-3 border rounded-md transition flex-1 md:flex-none ${product.stock <= 0
+                            className={`px-6 py-3 border rounded-md transition flex-1 md:flex-none cursor-pointer ${product.stock <= 0
                                 ? 'border-gray-300 bg-gray-100 text-gray-500 cursor-not-allowed'
                                 : 'border-gray-700 hover:bg-gray-700 hover:text-white'
                                 }`}
                         >
                             {product.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
+                        </button>
+
+                        <button
+                            onClick={handleFavorite}
+                            disabled={isSaving}
+                            className={`px-4 py-3 border rounded-md flex items-center gap-2 transition cursor-pointer ${isFavorite
+                                ? "bg-red-500 text-white"
+                                : "border-gray-700 hover:bg-gray-700 hover:text-white"
+                                }`}
+                        >
+                            <Heart size={18} />
+                            {isFavorite ? "Saved" : "Save"}
                         </button>
 
                         <Link
