@@ -1,5 +1,6 @@
 "use client";
 
+import SocialLogin from "@/components/auth/SocialLogin";
 import { useAuthStore } from "@/store/authStore";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -7,22 +8,25 @@ import { useEffect, useState } from "react";
 
 export default function LoginPage() {
   const router = useRouter();
-  const {
-    user,
-    login,
-    loading,
-    error: storeError,
-    isInitialized,
-  } = useAuthStore();
+  const { user, login, loading, error: storeError } = useAuthStore();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  // Redirect if already logged in
+  // Check for OAuth error in URL
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const errorParam = urlParams.get("error");
+    if (errorParam) {
+      setError(errorParam === "google_auth_failed"
+        ? "Google login failed. Please try again."
+        : "Apple login failed. Please try again.");
+    }
+  }, []);
+
   useEffect(() => {
     if (user) {
-      console.log("User found in login page:", user);
       if (user.role === "admin") {
         router.push("/dashboard/admin");
       } else {
@@ -38,8 +42,6 @@ export default function LoginPage() {
     const userData = await login({ email, password });
 
     if (userData) {
-      await new Promise((resolve) => setTimeout(resolve, 300));
-
       if (userData.role === "admin") {
         window.location.href = "/dashboard/admin";
       } else {
@@ -96,6 +98,11 @@ export default function LoginPage() {
           >
             Forgot Password?
           </Link>
+        </div>
+
+        {/* Social Login */}
+        <div className="mt-6">
+          <SocialLogin />
         </div>
 
         <p className="text-center pt-3 text-gray-500">
