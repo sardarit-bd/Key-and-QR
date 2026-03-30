@@ -32,7 +32,7 @@ const CATEGORIES = [
 
 export default function QuotePage() {
     const router = useRouter();
-    const { user, accessToken } = useAuthStore();
+    const { user } = useAuthStore(); // 👈 Removed accessToken
 
     const [loading, setLoading] = useState(true);
     const [quote, setQuote] = useState(null);
@@ -61,17 +61,25 @@ export default function QuotePage() {
 
             // API call to get random quote by category
             const response = await api.get(`/quotes/random?category=${categoryParam}`);
-            const quoteData = response.data.data;
+            console.log("Quote response:", response.data);
+
+            // Handle different response structures
+            const quoteData = response.data?.data || response.data;
 
             setQuote({
                 text: quoteData.text,
                 category: quoteData.category,
                 author: quoteData.author || "InspireTag",
-                id: quoteData._id,
+                id: quoteData._id || quoteData.id,
             });
 
             // Check if this quote is already in favorites
-            await checkFavoriteStatus(quoteData._id);
+            if (quoteData._id || quoteData.id) {
+                await checkFavoriteStatus(quoteData._id || quoteData.id);
+            } else {
+                setSavedToFavorites(false);
+                setFavoriteId(null);
+            }
 
         } catch (error) {
             console.error("Error fetching quote:", error);
@@ -91,8 +99,7 @@ export default function QuotePage() {
 
     // Check if quote is in favorites
     const checkFavoriteStatus = async (quoteId) => {
-
-        if (!accessToken || quoteId === "fallback") {
+        if (!user || quoteId === "fallback") { // 👈 Check user instead of accessToken
             setSavedToFavorites(false);
             setFavoriteId(null);
             return;
@@ -103,7 +110,10 @@ export default function QuotePage() {
                 params: { quoteId: quoteId }
             });
 
-            const { isFavorite, favoriteId } = response.data.data || {};
+            console.log("Check favorite response:", response.data);
+
+            const result = response.data?.data || response.data;
+            const { isFavorite, favoriteId } = result || {};
 
             setSavedToFavorites(isFavorite || false);
             setFavoriteId(favoriteId || null);
@@ -114,10 +124,10 @@ export default function QuotePage() {
             setFavoriteId(null);
         }
     };
+
     // Save quote to favorites
     const handleSaveToFavorites = async () => {
-
-        if (!accessToken) {
+        if (!user) { // 👈 Check user instead of accessToken
             toast.error("Please login to save favorites");
             setTimeout(() => {
                 router.push(`/login?redirect=/quote`);
@@ -148,8 +158,9 @@ export default function QuotePage() {
                 const response = await api.post("/favorites", { quoteId: quote.id });
                 console.log("Add favorite response:", response.data);
 
+                const result = response.data?.data || response.data;
                 setSavedToFavorites(true);
-                setFavoriteId(response.data.data._id);
+                setFavoriteId(result._id || result.id);
                 toast.success("Saved to favorites", { icon: "❤️" });
             }
         } catch (error) {
@@ -211,7 +222,12 @@ export default function QuotePage() {
     // Get category display with icon
     const getCategoryDisplay = (categoryId) => {
         const cat = CATEGORIES.find(c => c.id === categoryId);
-        if (!cat) return categoryId;
+        if (!cat) return (
+            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-100 text-gray-700">
+                <Sparkles size={14} />
+                <span className="text-sm font-medium">{categoryId}</span>
+            </div>
+        );
         const Icon = cat.icon;
         return (
             <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full ${cat.color}`}>
@@ -241,32 +257,32 @@ export default function QuotePage() {
 
     return (
         <div className="min-h-screen bg-[#F4F5F7] py-8">
-            <div className="px-8">
+            <div className="px-4 md:px-8 max-w-6xl mx-auto">
                 {/* Category Badge */}
                 <div className="flex justify-center mb-6">
                     {quote && getCategoryDisplay(quote.category)}
                 </div>
 
                 {/* Main Quote Card */}
-                <div className="bg-white rounded-2xl shadow-lg p-8 md:p-12 mb-6">
+                <div className="bg-white rounded-2xl shadow-lg p-6 md:p-12 mb-6 transition-all duration-300 hover:shadow-xl">
                     {/* Greeting */}
-                    <div className="text-center mb-10">
-                        <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                    <div className="text-center mb-8 md:mb-10">
+                        <h1 className="text-2xl md:text-4xl font-bold text-gray-900 mb-2">
                             {greeting}, {userName}!
                         </h1>
-                        <p className="text-gray-500">Here's your message for today...</p>
+                        <p className="text-gray-500 text-sm md:text-base">Here's your message for today...</p>
                     </div>
 
                     {/* Quote Section */}
-                    <div className="bg-gray-50 rounded-xl p-6 md:p-8 border border-gray-200 mb-6">
+                    <div className="bg-gray-50 rounded-xl p-6 md:p-8 border border-gray-200 mb-6 transition-all duration-300">
                         <div className="relative">
-                            <Quote size={32} className="text-gray-300 absolute -top-3 -left-3 opacity-50" />
-                            <p className="text-lg md:text-xl text-gray-800 text-center leading-relaxed px-4">
+                            <Quote size={28} className="text-gray-300 absolute -top-3 -left-3 opacity-50 hidden sm:block" />
+                            <p className="text-base md:text-xl text-gray-800 text-center leading-relaxed px-2 md:px-4">
                                 "{quote?.text}"
                             </p>
-                            <Quote size={32} className="text-gray-300 absolute -bottom-3 -right-3 opacity-50 rotate-180" />
+                            <Quote size={28} className="text-gray-300 absolute -bottom-3 -right-3 opacity-50 rotate-180 hidden sm:block" />
                         </div>
-                        <p className="text-sm text-gray-500 text-center mt-6 italic">
+                        <p className="text-xs md:text-sm text-gray-500 text-center mt-6 italic">
                             — {quote?.author}
                         </p>
                     </div>
@@ -276,10 +292,10 @@ export default function QuotePage() {
                         <button
                             onClick={handleSaveToFavorites}
                             disabled={isSaving}
-                            className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${savedToFavorites
-                                ? "bg-red-500 text-white hover:bg-red-600"
-                                : "bg-gray-900 text-white hover:bg-gray-800"
-                                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                            className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all duration-300 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${savedToFavorites
+                                    ? "bg-red-500 text-white hover:bg-red-600"
+                                    : "bg-gray-900 text-white hover:bg-gray-800"
+                                } disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto`}
                         >
                             {savedToFavorites ? (
                                 <>
@@ -296,7 +312,7 @@ export default function QuotePage() {
 
                         <button
                             onClick={handleShare}
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-all duration-300 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer w-full sm:w-auto"
                         >
                             <Share2 size={18} />
                             <span className="text-sm font-medium">Share Quote</span>
@@ -304,7 +320,7 @@ export default function QuotePage() {
 
                         <Link
                             href="/shop"
-                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer"
+                            className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 transition-all duration-300 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer w-full sm:w-auto"
                         >
                             <ShoppingBag size={18} />
                             <span className="text-sm font-medium">Get Another Keychain</span>
@@ -313,7 +329,7 @@ export default function QuotePage() {
                 </div>
 
                 {/* Category Selector Section */}
-                <div className="bg-white rounded-xl border border-gray-200 p-6">
+                <div className="bg-white rounded-xl border border-gray-200 p-6 transition-all duration-300 hover:shadow-md">
                     <h2 className="text-center text-gray-800 text-xl font-semibold mb-6 flex items-center justify-center gap-2">
                         <Sparkles size={20} />
                         Choose Your Quote Category
@@ -328,9 +344,9 @@ export default function QuotePage() {
                                     key={cat.id}
                                     onClick={() => handleCategoryChange(cat.id)}
                                     disabled={loading}
-                                    className={`cursor-pointer text-sm px-4 py-2 rounded-full flex items-center gap-1.5 transition-all ${isSelected
-                                        ? "bg-gray-800 text-white shadow-md"
-                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                                    className={`cursor-pointer text-sm px-3 md:px-4 py-2 rounded-full flex items-center gap-1.5 transition-all duration-300 ${isSelected
+                                            ? "bg-gray-800 text-white shadow-md scale-105"
+                                            : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:scale-105"
                                         } disabled:opacity-50 disabled:cursor-not-allowed`}
                                 >
                                     <Icon size={14} />
@@ -345,7 +361,7 @@ export default function QuotePage() {
                         <button
                             onClick={() => fetchQuote()}
                             disabled={loading}
-                            className="inline-flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                            className="inline-flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-all duration-300 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             {loading ? (
                                 <>
@@ -365,11 +381,11 @@ export default function QuotePage() {
                     <div className="mt-6 pt-4 border-t border-gray-100 text-center">
                         <Link
                             href="/subscription"
-                            className="inline-flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 transition-colors group cursor-pointer"
+                            className="inline-flex items-center gap-2 text-sm text-purple-600 hover:text-purple-700 transition-all duration-200 group cursor-pointer"
                         >
                             <Sparkles size={16} />
                             <span className="font-medium">Subscribe for Weekly Quotes</span>
-                            <ArrowRight size={14} className="group-hover:translate-x-0.5 transition-transform" />
+                            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform duration-200" />
                         </Link>
                     </div>
                 </div>

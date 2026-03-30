@@ -3,12 +3,11 @@
 import { Apple } from "lucide-react";
 
 export default function SocialLogin() {
-    const handleGoogleLogin = () => {
-        window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/google`;
-    };
+    const backendUrl =
+        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 
-    const handleAppleLogin = () => {
-        window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/auth/apple`;
+    const handleGoogleLogin = () => {
+        window.location.href = `${backendUrl}/api/v1/auth/google`;
     };
 
     return (
@@ -25,11 +24,11 @@ export default function SocialLogin() {
             </div>
 
             <div className="grid grid-cols-2 gap-3">
+                {/* Google */}
                 <button
                     onClick={handleGoogleLogin}
                     className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition cursor-pointer"
                 >
-                    {/* Google SVG */}
                     <img
                         src="https://www.svgrepo.com/show/475656/google-color.svg"
                         alt="Google"
@@ -38,12 +37,13 @@ export default function SocialLogin() {
                     <span>Google</span>
                 </button>
 
+                {/* Apple (disabled) */}
                 <button
-                    onClick={handleAppleLogin}
-                    className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50 transition cursor-pointer"
+                    disabled
+                    className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-md opacity-50 cursor-not-allowed"
                 >
                     <Apple size={18} />
-                    <span>Apple</span>
+                    <span>Apple (Coming Soon)</span>
                 </button>
             </div>
         </div>

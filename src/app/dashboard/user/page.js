@@ -32,9 +32,9 @@ const CATEGORY_CONFIG = {
   random: { label: "Random", icon: RefreshCw, color: "bg-gray-100 text-gray-700" },
 };
 
-export default function Dashboard() {
+export default function UserDashboard() {
   const router = useRouter();
-  const { user, accessToken } = useAuthStore();
+  const { user } = useAuthStore(); // 👈 Removed accessToken
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("random");
   const [dailyQuote, setDailyQuote] = useState(null);
@@ -78,7 +78,10 @@ export default function Dashboard() {
   const fetchDailyQuote = async () => {
     try {
       const response = await api.get("/quotes/random");
-      setDailyQuote(response.data.data);
+      console.log("Daily quote response:", response.data);
+      // Handle different response structures
+      const quoteData = response.data?.data || response.data;
+      setDailyQuote(quoteData);
     } catch (error) {
       console.error("Error fetching daily quote:", error);
       setDailyQuote({
@@ -93,16 +96,19 @@ export default function Dashboard() {
   const fetchWeeklyQuotes = async () => {
     try {
       const response = await api.get("/scan/history?limit=7");
-      const scans = response.data.data || [];
+      console.log("Weekly quotes response:", response.data);
+
+      // Handle different response structures
+      const scans = response.data?.data || response.data || [];
       const quotes = scans.map(scan => ({
-        text: scan.quote?.text || "No quote available",
-        category: scan.category,
-        date: scan.createdAt,
+        text: scan.quote?.text || scan.text || "No quote available",
+        category: scan.category || "general",
+        date: scan.createdAt || scan.date,
       }));
       setWeeklyQuotes(quotes);
     } catch (error) {
       console.error("Error fetching weekly quotes:", error);
-      // Set fallback data if needed
+      setWeeklyQuotes([]);
     }
   };
 
@@ -115,18 +121,23 @@ export default function Dashboard() {
         api.get("/scan/history").catch(() => ({ data: { data: [] } })),
       ]);
 
-      const orders = ordersRes.data?.data || [];
-      const favorites = favoritesRes.data?.data || [];
-      const scans = scansRes.data?.data || [];
+      console.log("Orders response:", ordersRes.data);
+      console.log("Favorites response:", favoritesRes.data);
+      console.log("Scans response:", scansRes.data);
+
+      // Handle different response structures
+      const orders = ordersRes.data?.data || ordersRes.data || [];
+      const favorites = favoritesRes.data?.data || favoritesRes.data || [];
+      const scans = scansRes.data?.data || scansRes.data || [];
 
       setStats({
-        totalOrders: orders.length,
-        totalFavorites: favorites.length,
-        totalScans: scans.length,
+        totalOrders: Array.isArray(orders) ? orders.length : 0,
+        totalFavorites: Array.isArray(favorites) ? favorites.length : 0,
+        totalScans: Array.isArray(scans) ? scans.length : 0,
         subscriptionType: user?.subscriptionType || "free",
       });
 
-      setRecentOrders(orders.slice(0, 3));
+      setRecentOrders(Array.isArray(orders) ? orders.slice(0, 3) : []);
     } catch (error) {
       console.error("Error fetching stats:", error);
     }
@@ -137,45 +148,62 @@ export default function Dashboard() {
     setSelectedCategory(categoryId);
     try {
       const response = await api.post("/scan/unlock/demo", { category: categoryId });
-      const result = response.data.data;
+      const result = response.data?.data || response.data;
       toast.success(`New quote from ${CATEGORY_CONFIG[categoryId]?.label || categoryId} category!`);
-      // You can update daily quote with new one if needed
+
+      // Optionally update daily quote with the new one
+      if (result?.quote) {
+        setDailyQuote(result.quote);
+      }
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to get quote");
     }
   };
 
-  // Initial data load
+  // Initial data load - UPDATED: now checks for user instead of accessToken
   useEffect(() => {
+    console.log("User from store:", user); // Debug log
+
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([
-        fetchDailyQuote(),
-        fetchWeeklyQuotes(),
-        fetchStats(),
-      ]);
-      setLoading(false);
+      try {
+        await Promise.all([
+          fetchDailyQuote(),
+          fetchWeeklyQuotes(),
+          fetchStats(),
+        ]);
+      } catch (error) {
+        console.error("Error loading dashboard data:", error);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    if (accessToken) {
+    if (user) {
+      console.log("User found, loading dashboard data...");
       loadData();
     } else {
+      console.log("No user found");
       setLoading(false);
     }
-  }, [accessToken]);
+  }, [user]); // 👈 Now depends on user instead of accessToken
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
-    return new Date(dateString).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
+    try {
+      return new Date(dateString).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch (error) {
+      return "Invalid date";
+    }
   };
 
   const getCategoryDisplay = (category) => {
-    const config = CATEGORY_CONFIG[category];
-    if (!config) return category;
+    const config = CATEGORY_CONFIG[category?.toLowerCase()];
+    if (!config) return null;
     const Icon = config.icon;
     return (
       <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${config.color}`}>
@@ -209,7 +237,7 @@ export default function Dashboard() {
               <p className="text-sm text-gray-500">Welcome back to your dashboard</p>
             </div>
             <div className="text-left lg:text-right text-sm text-gray-500">
-              <div className="flex items-center gap-1 justify-end">
+              <div className="flex items-center gap-1 lg:justify-end">
                 <Calendar size={14} />
                 {currentDate}
               </div>
@@ -218,13 +246,13 @@ export default function Dashboard() {
         </div>
 
         {/* Daily Quote */}
-        <div className="bg-white rounded-lg p-4 lg:p-6 mb-4 lg:mb-6 border border-gray-200 hover:shadow-md transition">
+        <div className="bg-white rounded-lg p-4 lg:p-6 mb-4 lg:mb-6 border border-gray-200 hover:shadow-md transition-all duration-300 hover:scale-[1.01]">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-semibold text-gray-900 text-sm lg:text-base flex items-center gap-2">
               <Sparkles size={16} className="text-orange-500" />
               Your Daily Quote
             </h2>
-            {dailyQuote && getCategoryDisplay(dailyQuote.category)}
+            {dailyQuote?.category && getCategoryDisplay(dailyQuote.category)}
           </div>
           <p className="text-sm lg:text-base text-gray-700 italic mb-2">
             "{dailyQuote?.text || "Loading..."}"
@@ -247,9 +275,9 @@ export default function Dashboard() {
                 <button
                   key={cat.id}
                   onClick={() => handleCategorySelect(cat.id)}
-                  className={`cursor-pointer text-sm px-3 lg:px-4 py-1.5 rounded-full flex items-center gap-1.5 transition-all ${selectedCategory === cat.id
-                      ? "bg-gray-800 text-white shadow-md"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  className={`cursor-pointer text-sm px-3 lg:px-4 py-1.5 rounded-full flex items-center gap-1.5 transition-all duration-200 ${selectedCategory === cat.id
+                      ? "bg-gray-800 text-white shadow-md scale-105"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:scale-105"
                     }`}
                 >
                   <Icon size={14} />
@@ -281,10 +309,10 @@ export default function Dashboard() {
           ) : (
             <div className="space-y-3">
               {weeklyQuotes.map((quote, index) => (
-                <div key={index} className="p-3 bg-gray-50 rounded-lg border border-gray-100">
+                <div key={index} className="p-3 bg-gray-50 rounded-lg border border-gray-100 hover:shadow-sm transition-all duration-200">
                   <div className="flex items-start justify-between gap-2">
                     <p className="text-sm text-gray-700 italic flex-1">
-                      "{quote.text.substring(0, 100)}..."
+                      "{quote.text?.substring(0, 100)}..."
                     </p>
                     <div className="flex flex-col items-end gap-1">
                       {getCategoryDisplay(quote.category)}
@@ -304,11 +332,11 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           <button
             onClick={() => router.push("/account/orders")}
-            className="bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-all hover:shadow-md cursor-pointer group"
+            className="bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-all duration-300 hover:shadow-md hover:scale-[1.02] active:scale-95 cursor-pointer group"
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-500">Total Orders</span>
-              <Package size={20} className="text-gray-400 group-hover:text-blue-500 transition" />
+              <Package size={20} className="text-gray-400 group-hover:text-blue-500 transition-colors duration-300" />
             </div>
             <div className="text-2xl font-bold text-gray-900">{stats.totalOrders}</div>
             <p className="text-xs text-gray-400 mt-1">Click to view all</p>
@@ -316,11 +344,11 @@ export default function Dashboard() {
 
           <button
             onClick={() => router.push("/favorites")}
-            className="bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-all hover:shadow-md cursor-pointer group"
+            className="bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-all duration-300 hover:shadow-md hover:scale-[1.02] active:scale-95 cursor-pointer group"
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-500">Favorites</span>
-              <Heart size={20} className="text-gray-400 group-hover:text-pink-500 transition" />
+              <Heart size={20} className="text-gray-400 group-hover:text-pink-500 transition-colors duration-300" />
             </div>
             <div className="text-2xl font-bold text-gray-900">{stats.totalFavorites}</div>
             <p className="text-xs text-gray-400 mt-1">Your favorite products</p>
@@ -328,11 +356,11 @@ export default function Dashboard() {
 
           <button
             onClick={() => router.push("/scan/history")}
-            className="bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-all hover:shadow-md cursor-pointer group"
+            className="bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-all duration-300 hover:shadow-md hover:scale-[1.02] active:scale-95 cursor-pointer group"
           >
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-500">Total Scans</span>
-              <QrCode size={20} className="text-gray-400 group-hover:text-purple-500 transition" />
+              <QrCode size={20} className="text-gray-400 group-hover:text-purple-500 transition-colors duration-300" />
             </div>
             <div className="text-2xl font-bold text-gray-900">{stats.totalScans}</div>
             <p className="text-xs text-gray-400 mt-1">QR & NFC scans</p>
@@ -348,7 +376,7 @@ export default function Dashboard() {
             </h2>
             <button
               onClick={() => router.push("/account/orders")}
-              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 cursor-pointer"
+              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors duration-200 cursor-pointer"
             >
               View All
               <Eye size={14} />
@@ -361,7 +389,7 @@ export default function Dashboard() {
               <p>No orders yet</p>
               <button
                 onClick={() => router.push("/shop")}
-                className="mt-3 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 cursor-pointer"
+                className="mt-3 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-800 transition-colors duration-200 cursor-pointer"
               >
                 Start Shopping
                 <ShoppingBag size={14} />
@@ -383,7 +411,7 @@ export default function Dashboard() {
                   </thead>
                   <tbody className="divide-y divide-gray-100">
                     {recentOrders.map((order) => (
-                      <tr key={order._id} className="hover:bg-gray-50 transition">
+                      <tr key={order._id} className="hover:bg-gray-50 transition-colors duration-200">
                         <td className="p-4">
                           <span className="font-mono text-sm text-gray-900">
                             #{order._id?.slice(-8).toUpperCase()}
@@ -403,7 +431,7 @@ export default function Dashboard() {
                               ? "bg-green-100 text-green-700"
                               : "bg-yellow-100 text-yellow-700"
                             }`}>
-                            {order.fulfillmentStatus}
+                            {order.fulfillmentStatus || "pending"}
                           </span>
                         </td>
                       </tr>
@@ -452,12 +480,12 @@ export default function Dashboard() {
                               ? "bg-green-100 text-green-700"
                               : "bg-yellow-100 text-yellow-700"
                             }`}>
-                            {order.fulfillmentStatus}
+                            {order.fulfillmentStatus || "pending"}
                           </span>
                         </div>
                         <button
                           onClick={() => router.push(`/account/orders/${order._id}`)}
-                          className="w-full mt-2 py-2 text-center text-sm text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition cursor-pointer"
+                          className="w-full mt-2 py-2 text-center text-sm text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition-all duration-200 cursor-pointer"
                         >
                           View Details
                         </button>
@@ -474,10 +502,10 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button
             onClick={() => router.push("/shop")}
-            className="bg-white rounded-lg p-4 lg:p-6 border border-gray-200 hover:border-gray-300 transition-all hover:shadow-md active:scale-[0.98] cursor-pointer group"
+            className="bg-white rounded-lg p-4 lg:p-6 border border-gray-200 hover:border-gray-300 transition-all duration-300 hover:shadow-md hover:scale-[1.02] active:scale-95 cursor-pointer group"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-gray-200 transition">
+              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-gray-200 transition-colors duration-300">
                 <ShoppingBag size={24} className="text-gray-600" />
               </div>
               <div className="text-left">
@@ -489,10 +517,10 @@ export default function Dashboard() {
 
           <button
             onClick={() => router.push("/account/settings")}
-            className="bg-white rounded-lg p-4 lg:p-6 border border-gray-200 hover:border-gray-300 transition-all hover:shadow-md active:scale-[0.98] cursor-pointer group"
+            className="bg-white rounded-lg p-4 lg:p-6 border border-gray-200 hover:border-gray-300 transition-all duration-300 hover:shadow-md hover:scale-[1.02] active:scale-95 cursor-pointer group"
           >
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-gray-200 transition">
+              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-gray-200 transition-colors duration-300">
                 <Settings size={24} className="text-gray-600" />
               </div>
               <div className="text-left">

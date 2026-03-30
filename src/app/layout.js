@@ -1,4 +1,4 @@
-import AuthProvider from "@/components/providers/AuthProvider";
+import AuthProvider from "@/components/auth/AuthProvider";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import Footer from "../shared/Footer";
 import Header from "../shared/Header";

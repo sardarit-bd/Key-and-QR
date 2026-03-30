@@ -1,184 +1,154 @@
-import api from "@/lib/api";
+// store/authStore.js
+"use client";
+
+import { authService } from "@/services/auth.service";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
-export const useAuthStore = create(
-  persist(
-    (set, get) => ({
-      user: null,
-      accessToken: null,
-      isLoading: false,
-      isInitialized: false,
-      error: null,
+export const useAuthStore = create((set, get) => ({
+  user: null,
+  loading: false,
+  isInitialized: false,
+  error: null,
 
-      setAccessToken: (token) => set({ accessToken: token }),
+  initializeAuth: async () => {
+    if (get().isInitialized) return;
 
-      register: async (userData) => {
-        set({ isLoading: true, error: null });
-        try {
-          const response = await api.post("/auth/register", userData);
-          const { accessToken, user } = response.data.data;
-          set({ accessToken, user, isLoading: false, error: null });
-          return user;
-        } catch (error) {
-          set({
-            isLoading: false,
-            error: error.response?.data?.message || "Registration failed",
-          });
-          return null;
-        }
-      },
+    set({ loading: true, error: null });
 
-      login: async (credentials) => {
-        set({ isLoading: true, error: null });
-        try {
-          const response = await api.post("/auth/login", credentials);
-          const { accessToken, user } = response.data.data;
-          set({ accessToken, user, isLoading: false, error: null });
-          return user;
-        } catch (error) {
-          set({
-            isLoading: false,
-            error: error.response?.data?.message || "Login failed",
-          });
-          return null;
-        }
-      },
+    try {
+      const res = await authService.getMe();
+      console.log("Initialize auth response:", res);
 
-      logout: async () => {
-        set({ isLoading: true });
-        try {
-          await api.post("/auth/logout");
-        } catch (error) {
-          console.error("Logout error:", error);
-        } finally {
-          set({
-            user: null,
-            accessToken: null,
-            isLoading: false,
-            isInitialized: true,
-            error: null,
-          });
-        }
-      },
+      set({
+        user: res.data,
+        loading: false,
+        isInitialized: true,
+        error: null,
+      });
+    } catch (error) {
+      console.error("Initialize auth error:", error);
+      set({
+        user: null,
+        loading: false,
+        isInitialized: true,
+        error: null,
+      });
+    }
+  },
 
-      initAuth: async () => {
-        if (get().isInitialized) return;
+  register: async (payload) => {
+    set({ loading: true, error: null });
 
-        const token = get().accessToken;
+    try {
+      const res = await authService.register(payload);
 
-        // token নেই — refresh token দিয়ে try করো
-        if (!token) {
-          try {
-            const refreshResponse = await api.post("/auth/refresh-token", {});
-            const { accessToken } = refreshResponse.data.data;
-            set({ accessToken });
+      set({
+        user: res.data?.user || res.data,
+        loading: false,
+        error: null,
+        isInitialized: true,
+      });
 
-            const meResponse = await api.get("/auth/me");
-            set({
-              user: meResponse.data.data,
-              isLoading: false,
-              isInitialized: true,
-              error: null,
-            });
-          } catch {
-            set({ isInitialized: true, isLoading: false });
-          }
-          return;
-        }
+      return { success: true, user: res.data?.user || res.data };
+    } catch (error) {
+      const message = error.response?.data?.message || "Registration failed";
+      set({ loading: false, error: message });
+      return { success: false, error: message };
+    }
+  },
 
-        // token আছে — /me দিয়ে user fetch করো
-        set({ isLoading: true });
-        try {
-          const response = await api.get("/auth/me");
-          set({
-            user: response.data.data,
-            isLoading: false,
-            isInitialized: true,
-            error: null,
-          });
-        } catch {
-          // access token expire — refresh দিয়ে try করো
-          try {
-            const refreshResponse = await api.post("/auth/refresh-token", {});
-            const { accessToken } = refreshResponse.data.data;
-            set({ accessToken });
+  login: async (payload) => {
+    set({ loading: true, error: null });
 
-            const meResponse = await api.get("/auth/me");
-            set({
-              user: meResponse.data.data,
-              isLoading: false,
-              isInitialized: true,
-              error: null,
-            });
-          } catch {
-            set({
-              user: null,
-              accessToken: null,
-              isLoading: false,
-              isInitialized: true,
-              error: null,
-            });
-          }
-        }
-      },
+    try {
+      const res = await authService.login(payload);
 
-      forgotPassword: async (email) => {
-        set({ isLoading: true, error: null });
-        try {
-          await api.post("/auth/forgot-password", { email });
-          set({ isLoading: false });
-          return true;
-        } catch (error) {
-          set({
-            isLoading: false,
-            error:
-              error.response?.data?.message || "Failed to send reset email",
-          });
-          return false;
-        }
-      },
+      set({
+        user: res.data?.user || res.data,
+        loading: false,
+        error: null,
+        isInitialized: true,
+      });
 
-      resetPassword: async (token, newPassword) => {
-        set({ isLoading: true, error: null });
-        try {
-          await api.post("/auth/reset-password", { token, newPassword });
-          set({ isLoading: false });
-          return true;
-        } catch (error) {
-          set({
-            isLoading: false,
-            error: error.response?.data?.message || "Failed to reset password",
-          });
-          return false;
-        }
-      },
+      return { success: true, user: res.data?.user || res.data };
+    } catch (error) {
+      const message = error.response?.data?.message || "Login failed";
+      set({ loading: false, error: message });
+      return { success: false, error: message };
+    }
+  },
 
-      changePassword: async (oldPassword, newPassword) => {
-        set({ isLoading: true, error: null });
-        try {
-          await api.post("/auth/change-password", { oldPassword, newPassword });
-          set({ isLoading: false });
-          return true;
-        } catch (error) {
-          set({
-            isLoading: false,
-            error: error.response?.data?.message || "Failed to change password",
-          });
-          return false;
-        }
-      },
+  fetchMe: async () => {
+    try {
+      const res = await authService.getMe();
+      set({
+        user: res.data,
+        isInitialized: true,
+        error: null,
+      });
+      return res.data;
+    } catch (error) {
+      set({
+        user: null,
+        isInitialized: true,
+      });
+      return null;
+    }
+  },
 
-      clearError: () => set({ error: null }),
-    }),
-    {
-      name: "auth-storage",
-      partialize: (state) => ({
-        accessToken: state.accessToken,
-        user: state.user,
-      }),
-    },
-  ),
-);
+  logout: async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      // ignore logout api error
+    } finally {
+      set({
+        user: null,
+        isInitialized: true,
+        error: null,
+      });
+    }
+  },
 
-export const authStore = useAuthStore;
+  forgotPassword: async (email) => {
+    set({ loading: true, error: null });
+
+    try {
+      const res = await authService.forgotPassword({ email });
+      set({ loading: false });
+      return { success: true, message: res.message };
+    } catch (error) {
+      const message = error.response?.data?.message || "Failed to send reset email";
+      set({ loading: false, error: message });
+      return { success: false, error: message };
+    }
+  },
+
+  resetPassword: async (token, newPassword) => {
+    set({ loading: true, error: null });
+
+    try {
+      const res = await authService.resetPassword({ token, newPassword });
+      set({ loading: false });
+      return { success: true, message: res.message };
+    } catch (error) {
+      const message = error.response?.data?.message || "Password reset failed";
+      set({ loading: false, error: message });
+      return { success: false, error: message };
+    }
+  },
+
+  changePassword: async (oldPassword, newPassword) => {
+    set({ loading: true, error: null });
+
+    try {
+      const res = await authService.changePassword({ oldPassword, newPassword });
+      set({ loading: false });
+      return { success: true, message: res.message };
+    } catch (error) {
+      const message = error.response?.data?.message || "Password change failed";
+      set({ loading: false, error: message });
+      return { success: false, error: message };
+    }
+  },
+}));

@@ -7,7 +7,11 @@ import { useEffect } from "react";
 
 export default function AuthSuccess() {
     const router = useRouter();
-    const { user, isInitialized } = useAuthStore();
+    const { user, isInitialized, initializeAuth } = useAuthStore();
+
+    useEffect(() => {
+        initializeAuth();
+    }, [initializeAuth]);
 
     useEffect(() => {
         if (isInitialized && user) {

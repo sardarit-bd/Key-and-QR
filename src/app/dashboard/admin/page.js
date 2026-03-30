@@ -25,60 +25,22 @@ export default function AdminDashboard() {
     fetchDashboardData();
   }, []);
 
-  // const fetchDashboardData = async () => {
-  //   try {
-  //     setLoading(true);
-
-  //     // Fetch products count
-  //     const productsRes = await api.get("/products", { params: { limit: 1 } });
-
-  //     // Fetch tags
-  //     const tagsRes = await api.get("/tags");
-  //     const tags = tagsRes.data.data.data || [];
-
-  //     // Fetch orders
-  //     const ordersRes = await api.get("/orders/admin/all");
-  //     const orders = ordersRes.data.data || [];
-
-  //     // Calculate stats
-  //     const totalRevenue = orders
-  //       .filter(o => o.paymentStatus === "paid")
-  //       .reduce((sum, o) => sum + (o.product?.price || 0), 0);
-
-  //     setStats({
-  //       totalProducts: productsRes.data.meta?.total || 0,
-  //       totalTags: tags.length,
-  //       totalOrders: orders.length,
-  //       totalRevenue: totalRevenue,
-  //       activeTags: tags.filter(t => t.isActivated).length,
-  //       pendingTags: tags.filter(t => !t.isActivated && t.isActive).length,
-  //     });
-
-  //     setRecentOrders(orders.slice(0, 5));
-  //     setRecentTags(tags.slice(0, 5));
-
-  //   } catch (error) {
-  //     console.error("Error fetching dashboard data:", error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
-
   const fetchDashboardData = async () => {
     try {
       setLoading(true);
 
-      const startTime = Date.now(); // ⏱️ start
-
-      // API calls
+      // Fetch products count
       const productsRes = await api.get("/products", { params: { limit: 1 } });
-      const tagsRes = await api.get("/tags");
-      const ordersRes = await api.get("/orders/admin/all");
 
+      // Fetch tags
+      const tagsRes = await api.get("/tags");
       const tags = tagsRes.data.data.data || [];
+
+      // Fetch orders
+      const ordersRes = await api.get("/orders/admin/all");
       const orders = ordersRes.data.data || [];
 
+      // Calculate stats
       const totalRevenue = orders
         .filter(o => o.paymentStatus === "paid")
         .reduce((sum, o) => sum + (o.product?.price || 0), 0);
@@ -95,22 +57,60 @@ export default function AdminDashboard() {
       setRecentOrders(orders.slice(0, 5));
       setRecentTags(tags.slice(0, 5));
 
-      // 🔥 MINIMUM LOADING TIME (IMPORTANT)
-      const minTime = 10000; // 10 sec
-      const elapsed = Date.now() - startTime;
-
-      if (elapsed < minTime) {
-        await new Promise(resolve =>
-          setTimeout(resolve, minTime - elapsed)
-        );
-      }
-
     } catch (error) {
       console.error("Error fetching dashboard data:", error);
     } finally {
       setLoading(false);
     }
   };
+
+
+  // const fetchDashboardData = async () => {
+  //   try {
+  //     setLoading(true);
+
+  //     const startTime = Date.now(); // ⏱️ start
+
+  //     // API calls
+  //     const productsRes = await api.get("/products", { params: { limit: 1 } });
+  //     const tagsRes = await api.get("/tags");
+  //     const ordersRes = await api.get("/orders/admin/all");
+
+  //     const tags = tagsRes.data.data.data || [];
+  //     const orders = ordersRes.data.data || [];
+
+  //     const totalRevenue = orders
+  //       .filter(o => o.paymentStatus === "paid")
+  //       .reduce((sum, o) => sum + (o.product?.price || 0), 0);
+
+  //     setStats({
+  //       totalProducts: productsRes.data.meta?.total || 0,
+  //       totalTags: tags.length,
+  //       totalOrders: orders.length,
+  //       totalRevenue: totalRevenue,
+  //       activeTags: tags.filter(t => t.isActivated).length,
+  //       pendingTags: tags.filter(t => !t.isActivated && t.isActive).length,
+  //     });
+
+  //     setRecentOrders(orders.slice(0, 5));
+  //     setRecentTags(tags.slice(0, 5));
+
+  //     // 🔥 MINIMUM LOADING TIME (IMPORTANT)
+  //     const minTime = 10000; // 10 sec
+  //     const elapsed = Date.now() - startTime;
+
+  //     if (elapsed < minTime) {
+  //       await new Promise(resolve =>
+  //         setTimeout(resolve, minTime - elapsed)
+  //       );
+  //     }
+
+  //   } catch (error) {
+  //     console.error("Error fetching dashboard data:", error);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
 
   const formatDate = (dateString) => {
