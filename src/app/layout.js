@@ -1,4 +1,4 @@
-import AuthProvider from "@/components/AuthWrapper/AuthProvider";
+import AuthProvider from "@/components/auth/AuthProvider";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import Footer from "../shared/Footer";
 import Header from "../shared/Header";
@@ -24,7 +24,11 @@ const inter = Inter({
 
 export const metadata = {
   title: "QKey - Your Gateway to Digital Solutions",
-  description: "Discover QKey, your ultimate destination for cutting-edge digital solutions. Explore our innovative products and services designed to elevate your business in the digital age.",
+  description:
+    "Discover QKey, your ultimate destination for cutting-edge digital solutions. Explore our innovative products and services designed to elevate your business in the digital age.",
+  icons: {
+    icon: "/favicon.jpg",
+  },
 };
 
 export default function RootLayout({ children }) {

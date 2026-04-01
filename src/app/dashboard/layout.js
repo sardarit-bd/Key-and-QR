@@ -1,9 +1,8 @@
 'use client'
 
-
-
 import { useAuthStore } from '@/store/authStore';
-import { CircleDotDashed, CreditCard, Heart, House, LogOut, Menu, Package, QrCode, ShoppingBag, X } from 'lucide-react';
+import { Clock, CreditCard, Heart, House, LayoutDashboard, LogOut, Mail, Menu, Package, QrCode, Quote, Send, ShoppingBag, Tag, User, X } from 'lucide-react';
+import { FaGoogle } from 'react-icons/fa'; // ← react-icons থেকে Google icon
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -16,53 +15,69 @@ export default function DashboardLayout({ children }) {
     const pathname = usePathname();
     const router = useRouter();
 
-
-
     /********************* menu item for admin **************************/
     const menuItemsforAdmin = [
-        { icon: Package, label: 'Dashboard', active: true, link: "/dashboard/admin" },
+        { icon: LayoutDashboard, label: 'Dashboard', active: true, link: "/dashboard/admin" },
         { icon: Package, label: 'Add Products', active: true, link: "/dashboard/admin/products" },
+        { icon: Tag, label: 'Add Tags', active: true, link: "/dashboard/admin/tags" },
+        { icon: Quote, label: 'Add Quotes', active: true, link: "/dashboard/admin/quotes" },
         { icon: ShoppingBag, label: 'All Orders', active: false, link: "/dashboard/admin/orders" },
-        { icon: CircleDotDashed, label: 'Pending Quotes', active: false, link: "/dashboard/admin/pending" },
+        { icon: Clock, label: 'Pending Quotes', active: false, link: "/dashboard/admin/pending" },
         { icon: QrCode, label: 'Scan History', active: false, link: "/dashboard/admin/qr-history" },
         { icon: CreditCard, label: 'Subscription', active: false, link: "/dashboard/admin/subscription" },
+        { icon: User, label: 'My Profile', active: false, link: "/dashboard/admin/profile" },
     ];
-
-
-
-
-
-
 
     /********************* menu item for user **************************/
     const menuItemsforUser = [
         { icon: House, label: 'Home', active: true, link: "/dashboard/user" },
-        { icon: Package, label: 'My Quote', active: true, link: "/dashboard/user/myquotes" },
+        { icon: Quote, label: 'My Quote', active: true, link: "/dashboard/user/myquotes" },
+        { icon: Send, label: 'Submit Quote', active: true, link: "/dashboard/user/submit-quote" },
         { icon: Heart, label: 'Favorites', active: false, link: "/dashboard/user/favorites" },
+        { icon: ShoppingBag, label: 'Orders', active: false, link: "/dashboard/user/orders" },
         { icon: CreditCard, label: 'Subscription', active: false, link: "/dashboard/user/subscription" },
+        { icon: User, label: 'Profile', active: false, link: "/dashboard/user/profile" },
     ];
-
-
 
     const orders = [
         { id: 'ORD-001', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
         { id: 'ORD-002', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
     ];
 
-
-
     const RoleDesider = user?.role === "admin" ? menuItemsforAdmin : menuItemsforUser;
 
+    // Get user initials for avatar
+    const getUserInitials = () => {
+        if (!user?.name) return "U";
+        return user.name
+            .split(" ")
+            .map(word => word[0])
+            .join("")
+            .toUpperCase()
+            .slice(0, 2);
+    };
 
+    // Get provider icon
+    const getProviderIcon = () => {
+        if (user?.provider === "google") {
+            return <FaGoogle size={12} className="text-blue-500" />;
+        }
+        return <Mail size={12} className="text-gray-500" />;
+    };
+
+    // Get provider text
+    const getProviderText = () => {
+        if (user?.provider === "google") {
+            return "Google";
+        }
+        return "Email";
+    };
 
     //handle logout function is here
     const handleLogout = () => {
         logout();
         router.push("/login");
     }
-
-
-
 
     return (
         <div className="flex min-h-screen bg-gray-50">
@@ -86,16 +101,45 @@ export default function DashboardLayout({ children }) {
             <aside className="hidden sticky h-screen top-14 lg:block w-64 bg-white border-r border-gray-200 p-6">
                 {/* Profile Section */}
                 <div className="flex flex-col items-center mb-8">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 mb-4 overflow-hidden">
-                        <img
-                            src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop"
-                            alt="Profile"
-                            className="w-full h-full object-cover"
-                        />
+
+                    {/* Gradient Border Wrapper */}
+                    <div className="p-[2px] rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
+
+                        {/* Inner circle */}
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 overflow-hidden flex items-center justify-center">
+
+                            {user?.profileImage?.url ? (
+                                <img
+                                    src={user.profileImage.url}
+                                    alt={user.name}
+                                    className="w-full h-full object-cover rounded-full"
+                                />
+                            ) : (
+                                <span className="text-white text-2xl font-bold">
+                                    {getUserInitials()}
+                                </span>
+                            )}
+                        </div>
                     </div>
-                    <h3 className="font-semibold text-gray-900">{user?.name}</h3>
-                    <p className="text-sm text-gray-500">{user?.email}</p>
-                    <p className="text-xs bg-green-100 text-green-700 w-fit px-3 py-1 rounded-full">{user?.role}</p>
+
+                    <h3 className="font-semibold text-gray-900 capitalize">
+                        {user?.name}
+                    </h3>
+
+                    <p className="text-sm text-gray-500">
+                        {user?.email}
+                    </p>
+
+                    <div className="flex items-center gap-1 mt-1">
+                        {getProviderIcon()}
+                        <p className="text-xs text-gray-400">
+                            {getProviderText()} account
+                        </p>
+                    </div>
+
+                    <p className="text-xs bg-green-100 text-green-700 w-fit px-3 py-1 rounded-full mt-2">
+                        {user?.role === "admin" ? "Administrator" : "User"}
+                    </p>
                 </div>
 
                 {/* Navigation */}
@@ -113,7 +157,10 @@ export default function DashboardLayout({ children }) {
                             <span>{item.label}</span>
                         </Link>
                     ))}
-                    <button onClick={() => { handleLogout() }} className="bg-gray-900 text-white absolute bottom-20 w-[200px] flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-gray-600 hover:bg-gray-700 transition-colors mt-4">
+                    <button
+                        onClick={handleLogout}
+                        className="bg-gray-900 text-white absolute bottom-20 w-[200px] flex items-center gap-3 px-4 py-3 rounded-lg text-sm hover:bg-gray-800 hover:translate-x-1 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 ease-in-out cursor-pointer"
+                    >
                         <LogOut size={18} />
                         <span>Log Out</span>
                     </button>
@@ -127,17 +174,29 @@ export default function DashboardLayout({ children }) {
             >
                 <div className="mb-6 pt-12">
                     <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 overflow-hidden">
-                            <img
-                                src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop"
-                                alt="Profile"
-                                className="w-full h-full object-cover"
-                            />
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 overflow-hidden flex items-center justify-center">
+                            {user?.profileImage?.url ? (
+                                <img
+                                    src={user.profileImage.url}
+                                    alt={user.name}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <span className="text-white text-base font-bold">
+                                    {getUserInitials()}
+                                </span>
+                            )}
                         </div>
                         <div>
-                            <h3 className="font-semibold text-gray-900">{user?.name}</h3>
+                            <h3 className="font-semibold text-gray-900 capitalize">{user?.name}</h3>
                             <p className="text-xs text-gray-500">{user?.email}</p>
-                            <p className="text-xs bg-green-100 text-green-700 w-fit px-3 py-1 rounded-full">{user?.role}</p>
+                            <div className="flex items-center gap-1 mt-0.5">
+                                {getProviderIcon()}
+                                <p className="text-xs text-gray-400">{getProviderText()}</p>
+                            </div>
+                            <p className="text-xs bg-green-100 text-green-700 w-fit px-2 py-0.5 rounded-full mt-1">
+                                {user?.role === "admin" ? "Admin" : "User"}
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -158,8 +217,8 @@ export default function DashboardLayout({ children }) {
                         </Link>
                     ))}
                     <button
-                        onClick={() => { handleLogout() }}
-                        className="bg-gray-900 text-white absolute bottom-5 w-[200px] flex items-center gap-3 px-4 py-3 rounded-lg text-sm text-gray-600 hover:bg-gray-700 transition-colors mt-4"
+                        onClick={handleLogout}
+                        className="bg-gray-900 text-white absolute bottom-5 w-[200px] flex items-center gap-3 px-4 py-3 rounded-lg text-sm hover:bg-gray-800 transition-colors mt-4 cursor-pointer"
                     >
                         <LogOut size={18} />
                         <span>Log Out</span>
@@ -167,9 +226,9 @@ export default function DashboardLayout({ children }) {
                 </nav>
             </aside>
 
-            {
-                children
-            }
+            <main className="flex-1 w-full">
+                {children}
+            </main>
         </div>
     );
 }

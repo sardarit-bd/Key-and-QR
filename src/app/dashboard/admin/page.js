@@ -1,267 +1,355 @@
-'use client'
+"use client";
 
-import api from '@/services/api';
-import { useAuthStore } from '@/store/authStore';
-import { ChevronDown, ChevronUp, Heart, Package, QrCode, ShoppingBag } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import api from "@/lib/api";
+import QrLoadingScreen from "@/shared/QrLoadingScreen";
+import { useAuthStore } from "@/store/authStore";
+import { DollarSign, Eye, Mail, Package, QrCode, Tag, TrendingUp } from "lucide-react";
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { FaGoogle } from "react-icons/fa";
 
-export default function Dashboard() {
+export default function AdminDashboard() {
   const { user } = useAuthStore();
-  const [expandedOrder, setExpandedOrder] = useState(null);
   const [stats, setStats] = useState({
+    totalProducts: 0,
+    totalTags: 0,
     totalOrders: 0,
-    totalFavorites: 0,
-    totalScans: 0
+    totalRevenue: 0,
+    activeTags: 0,
+    pendingTags: 0,
   });
   const [recentOrders, setRecentOrders] = useState([]);
+  const [recentTags, setRecentTags] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [greeting, setGreeting] = useState('');
 
-  // Greeting based on time
-  useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Good Morning');
-    else if (hour < 18) setGreeting('Good Afternoon');
-    else setGreeting('Good Evening');
-  }, []);
-
-  // Fetch dashboard data from backend
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setLoading(true);
-
-        // Fetch user's orders
-        // const ordersResponse = await api.get('/orders/my-orders');
-        const orders = ordersResponse.data.data || [];
-        setRecentOrders(orders.slice(0, 5)); // Show only 5 recent orders
-
-        // Fetch user's favorites
-        const favoritesResponse = await api.get('/favorites');
-        const favorites = favoritesResponse.data.data || [];
-
-        // Fetch user's scan history
-        const scansResponse = await api.get('/qr-history');
-        const scans = scansResponse.data.data || [];
-
-        setStats({
-          totalOrders: orders.length,
-          totalFavorites: favorites.length,
-          totalScans: scans.length
-        });
-
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-      } finally {
-        setLoading(false);
-      }
+  // Get provider icon and text
+  const getProviderInfo = () => {
+    if (user?.provider === "google") {
+      return {
+        icon: <FaGoogle size={14} className="text-blue-500" />,
+        text: "Google",
+        bgColor: "bg-blue-50",
+        textColor: "text-blue-600"
+      };
+    }
+    return {
+      icon: <Mail size={14} className="text-gray-500" />,
+      text: "Email",
+      bgColor: "bg-gray-50",
+      textColor: "text-gray-600"
     };
+  };
 
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!user?.name) return "A";
+    return user.name
+      .split(" ")
+      .map(word => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  useEffect(() => {
     fetchDashboardData();
   }, []);
 
-  // Format date
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit'
-    }).replace(/\//g, '/');
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch products count
+      const productsRes = await api.get("/products", { params: { limit: 1 } });
+
+      // Fetch tags
+      const tagsRes = await api.get("/tags");
+      const tags = tagsRes.data.data.data || [];
+
+      // Fetch orders
+      const ordersRes = await api.get("/orders/admin/all");
+      const orders = ordersRes.data.data || [];
+
+      // Calculate stats
+      const totalRevenue = orders
+        .filter(o => o.paymentStatus === "paid")
+        .reduce((sum, o) => sum + (o.product?.price || 0), 0);
+
+      setStats({
+        totalProducts: productsRes.data.meta?.total || 0,
+        totalTags: tags.length,
+        totalOrders: orders.length,
+        totalRevenue: totalRevenue,
+        activeTags: tags.filter(t => t.isActivated).length,
+        pendingTags: tags.filter(t => !t.isActivated && t.isActive).length,
+      });
+
+      setRecentOrders(orders.slice(0, 5));
+      setRecentTags(tags.slice(0, 5));
+
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  // Get current date
-  const currentDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long',
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).replace(/(\d+)\/(\d+)\/(\d+)/, '$1/$2/$3');
+  const formatDate = (dateString) => {
+    if (!dateString) return "N/A";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+    });
+  };
+
+  const formatPrice = (price) => {
+    return `$${Number(price).toFixed(2)}`;
+  };
+
+  const statsCards = [
+    {
+      title: "Total Products",
+      value: stats.totalProducts,
+      icon: Package,
+      color: "bg-blue-500",
+      link: "/dashboard/admin/products",
+    },
+    {
+      title: "Total Tags",
+      value: stats.totalTags,
+      icon: Tag,
+      color: "bg-purple-500",
+      link: "/dashboard/admin/tags",
+    },
+    {
+      title: "Total Orders",
+      value: stats.totalOrders,
+      icon: DollarSign,
+      color: "bg-green-500",
+      link: "/dashboard/admin/orders",
+    },
+    {
+      title: "Total Revenue",
+      value: `$${stats.totalRevenue.toFixed(2)}`,
+      icon: TrendingUp,
+      color: "bg-orange-500",
+      link: "/dashboard/admin/orders",
+    },
+  ];
+
+  if (loading) {
+    return <QrLoadingScreen duration={5000} />;
+  }
+
+  const providerInfo = getProviderInfo();
 
   return (
-    <main className="flex-1 w-full">
-      <div className="p-4 lg:p-8">
-        {/* Header with User Name */}
-        <div className="mb-6 lg:mb-8">
-          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-2">
-            <div>
-              <h1 className="text-xl lg:text-2xl font-semibold text-gray-900">
-                {greeting}, <span className="text-gray-900">{user?.name?.split(' ')[0] || 'User'}!</span>
-              </h1>
-              <p className="text-sm text-gray-500">Welcome back to your dashboard</p>
-            </div>
-            <div className="text-left lg:text-right text-sm text-gray-500">
-              <div>{new Date().toLocaleDateString('en-US', { weekday: 'long' })}</div>
-              <div>{formatDate(new Date())}</div>
+    <div className="flex-1 w-full p-4 lg:p-8">
+      {/* Header with Provider Info */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
+              Welcome back, {user?.name?.split(" ")[0] || "Admin"}!
+            </h1>
+            <div className="flex items-center gap-2 mt-1">
             </div>
           </div>
         </div>
+        <p className="text-gray-500 mt-3">Here's what's happening with your store today.</p>
+      </div>
 
-        {/* Stats Grid - Backend Data */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 mb-6 lg:mb-8">
-          <div className="bg-white rounded-lg p-4 lg:p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">Total Orders</span>
-              <Package size={20} className="text-gray-400" />
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
+        {statsCards.map((card, index) => (
+          <Link key={index} href={card.link} className="block">
+            <div className="bg-white rounded-lg p-4 lg:p-6 border border-gray-200 hover:shadow-md transition-all cursor-pointer group">
+              <div className="flex items-center justify-between mb-3">
+                <div className={`${card.color} p-2 rounded-lg text-white`}>
+                  <card.icon size={20} />
+                </div>
+                <TrendingUp size={16} className="text-gray-300 group-hover:text-gray-400" />
+              </div>
+              <p className="text-sm text-gray-500 mb-1">{card.title}</p>
+              <p className="text-2xl lg:text-3xl font-bold text-gray-900">{card.value}</p>
             </div>
-            <div className="text-2xl lg:text-3xl font-bold text-gray-900">
-              {loading ? (
-                <div className="h-8 w-16 bg-gray-200 animate-pulse rounded"></div>
-              ) : (
-                stats.totalOrders
-              )}
-            </div>
-          </div>
+          </Link>
+        ))}
+      </div>
 
-          <div className="bg-white rounded-lg p-4 lg:p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">Favorites</span>
-              <Heart size={20} className="text-gray-400" />
-            </div>
-            <div className="text-2xl lg:text-3xl font-bold text-gray-900">
-              {loading ? (
-                <div className="h-8 w-16 bg-gray-200 animate-pulse rounded"></div>
-              ) : (
-                stats.totalFavorites
-              )}
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg p-4 lg:p-6 border border-gray-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">Scans</span>
-              <QrCode size={20} className="text-gray-400" />
-            </div>
-            <div className="text-2xl lg:text-3xl font-bold text-gray-900">
-              {loading ? (
-                <div className="h-8 w-16 bg-gray-200 animate-pulse rounded"></div>
-              ) : (
-                stats.totalScans
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Orders - Backend Data */}
-        <div className="bg-white rounded-lg border border-gray-200 mb-4 lg:mb-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Recent Orders */}
+        <div className="bg-white rounded-lg border border-gray-200">
           <div className="flex items-center justify-between p-4 lg:p-6 border-b border-gray-200">
-            <h2 className="font-semibold text-gray-900">Recent Orders</h2>
-            <button className="px-3 lg:px-4 py-2 bg-gray-900 text-white text-xs lg:text-sm rounded-lg hover:bg-gray-800 transition-colors">
-              View All
-            </button>
+            <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+              <Package size={18} />
+              Recent Orders
+            </h2>
+            <Link
+              href="/dashboard/admin/orders"
+              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+            >
+              View All <Eye size={14} />
+            </Link>
           </div>
 
-          {loading ? (
-            // Loading Skeleton
-            <div className="p-4 space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="h-12 bg-gray-200 animate-pulse rounded"></div>
-              ))}
-            </div>
-          ) : recentOrders.length === 0 ? (
-            // No Orders
-            <div className="p-8 text-center text-gray-500">
-              <ShoppingBag size={40} className="mx-auto mb-3 text-gray-300" />
-              <p>No orders yet</p>
-            </div>
-          ) : (
-            <>
-              {/* Desktop Table View */}
-              <div className="hidden lg:block overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-200">
-                      <th className="text-left p-4 text-sm font-medium text-gray-600">Order ID</th>
-                      <th className="text-left p-4 text-sm font-medium text-gray-600">Date</th>
-                      <th className="text-left p-4 text-sm font-medium text-gray-600">Items</th>
-                      <th className="text-left p-4 text-sm font-medium text-gray-600">Total</th>
-                      <th className="text-left p-4 text-sm font-medium text-gray-600">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentOrders.map((order, index) => (
-                      <tr key={order._id || index} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                        <td className="p-4 text-sm text-gray-900">{order.orderId || `ORD-${String(index + 1).padStart(3, '0')}`}</td>
-                        <td className="p-4 text-sm text-gray-600">{formatDate(order.createdAt)}</td>
-                        <td className="p-4 text-sm text-gray-600">
-                          {order.items?.length || 1} {order.items?.length === 1 ? 'item' : 'items'}
-                        </td>
-                        <td className="p-4 text-sm text-gray-900 font-medium">
-                          ${order.totalAmount?.toFixed(2) || '0.00'}
-                        </td>
-                        <td className="p-4">
-                          <span className={`text-xs px-3 py-1 rounded-full ${order.status?.toLowerCase() === 'delivered'
-                            ? 'bg-green-50 text-green-700'
-                            : order.status?.toLowerCase() === 'pending'
-                              ? 'bg-yellow-50 text-yellow-700'
-                              : 'bg-blue-50 text-blue-700'
-                            }`}>
-                            {order.status || 'Pending'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+          <div className="divide-y divide-gray-100">
+            {recentOrders.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <Package size={40} className="mx-auto mb-3 text-gray-300" />
+                <p>No orders yet</p>
               </div>
-
-              {/* Mobile Card View */}
-              <div className="lg:hidden divide-y divide-gray-100">
-                {recentOrders.map((order, index) => (
-                  <div key={order._id || index} className="p-4">
-                    <div
-                      className="flex items-center justify-between cursor-pointer"
-                      onClick={() => setExpandedOrder(expandedOrder === index ? null : index)}
-                    >
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="font-semibold text-gray-900 text-sm">
-                            {order.orderId || `ORD-${String(index + 1).padStart(3, '0')}`}
-                          </span>
-                          {expandedOrder === index ? (
-                            <ChevronUp size={20} className="text-gray-400" />
-                          ) : (
-                            <ChevronDown size={20} className="text-gray-400" />
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-600 mb-1">
-                          {order.items?.length || 1} items
-                        </div>
-                      </div>
+            ) : (
+              recentOrders.map((order) => (
+                <div key={order._id} className="p-4 hover:bg-gray-50 transition">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-mono text-sm font-medium text-gray-900">
+                        #{order._id?.slice(-8).toUpperCase()}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {order.user?.name || order.user?.email || "Guest"}
+                      </p>
                     </div>
-
-                    {expandedOrder === index && (
-                      <div className="mt-3 pt-3 border-t border-gray-100 space-y-2 animate-fadeIn">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-500">Date:</span>
-                          <span className="text-gray-900">{formatDate(order.createdAt)}</span>
-                        </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-500">Total:</span>
-                          <span className="text-gray-900 font-medium">
-                            ${order.totalAmount?.toFixed(2) || '0.00'}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-sm items-center">
-                          <span className="text-gray-500">Status:</span>
-                          <span className={`text-xs px-3 py-1 rounded-full ${order.status?.toLowerCase() === 'delivered'
-                            ? 'bg-green-50 text-green-700'
-                            : order.status?.toLowerCase() === 'pending'
-                              ? 'bg-yellow-50 text-yellow-700'
-                              : 'bg-blue-50 text-blue-700'
-                            }`}>
-                            {order.status || 'Pending'}
-                          </span>
-                        </div>
-                      </div>
-                    )}
+                    <div className="text-right">
+                      <p className="font-semibold text-gray-900">
+                        {formatPrice(order.product?.price || 0)}
+                      </p>
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${order.paymentStatus === "paid"
+                        ? "bg-green-50 text-green-700"
+                        : "bg-yellow-50 text-yellow-700"
+                        }`}>
+                        {order.paymentStatus === "paid" ? "Paid" : "Pending"}
+                      </span>
+                    </div>
                   </div>
-                ))}
+                  <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
+                    <span>{formatDate(order.createdAt)}</span>
+                    <span>{order.product?.name || "Product"}</span>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Recent Tags */}
+        <div className="bg-white rounded-lg border border-gray-200">
+          <div className="flex items-center justify-between p-4 lg:p-6 border-b border-gray-200">
+            <h2 className="font-semibold text-gray-900 flex items-center gap-2">
+              <QrCode size={18} />
+              Recent Tags
+            </h2>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-400">
+                {stats.activeTags} activated / {stats.pendingTags} pending
+              </span>
+              <Link
+                href="/dashboard/admin/tags"
+                className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+              >
+                Manage <Eye size={14} />
+              </Link>
+            </div>
+          </div>
+
+          <div className="divide-y divide-gray-100">
+            {recentTags.length === 0 ? (
+              <div className="p-8 text-center text-gray-500">
+                <Tag size={40} className="mx-auto mb-3 text-gray-300" />
+                <p>No tags created yet</p>
+                <Link
+                  href="/dashboard/admin/tags"
+                  className="inline-block mt-3 text-sm text-blue-600 hover:text-blue-800"
+                >
+                  Create your first tag →
+                </Link>
               </div>
-            </>
-          )}
+            ) : (
+              recentTags.map((tag) => (
+                <div key={tag._id} className="p-4 hover:bg-gray-50 transition">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="font-mono text-sm font-semibold text-gray-900">
+                        {tag.tagCode}
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {tag.owner?.name || tag.owner?.email || "Unassigned"}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <span className={`text-xs px-2 py-0.5 rounded-full ${tag.isActivated
+                        ? "bg-green-50 text-green-700"
+                        : tag.isActive
+                          ? "bg-yellow-50 text-yellow-700"
+                          : "bg-red-50 text-red-700"
+                        }`}>
+                        {tag.isActivated
+                          ? "Activated"
+                          : tag.isActive
+                            ? "Pending"
+                            : "Disabled"}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
+                    <span>Created: {formatDate(tag.createdAt)}</span>
+                    <Link
+                      href={`/t/${tag.tagCode}`}
+                      target="_blank"
+                      className="text-blue-500 hover:text-blue-700"
+                    >
+                      View →
+                    </Link>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
-    </main>
+
+      {/* Admin Quick Actions */}
+      <div className="mt-8 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-6 border border-gray-200">
+        <h3 className="font-semibold text-gray-900 mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <Link
+            href="/dashboard/admin/products/add"
+            className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:shadow-md transition text-sm"
+          >
+            <Package size={16} />
+            Add Product
+          </Link>
+          <Link
+            href="/dashboard/admin/tags/add"
+            className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:shadow-md transition text-sm"
+          >
+            <QrCode size={16} />
+            Generate Tags
+          </Link>
+          <Link
+            href="/dashboard/admin/quotes/add"
+            className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:shadow-md transition text-sm"
+          >
+            <Tag size={16} />
+            Add Quote
+          </Link>
+          <Link
+            href="/dashboard/admin/orders"
+            className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:shadow-md transition text-sm"
+          >
+            <DollarSign size={16} />
+            View Orders
+          </Link>
+          <Link
+            href="/dashboard/admin/pending"
+            className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:shadow-md transition text-sm"
+          >
+            <Eye size={16} />
+            Pending Quotes
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }

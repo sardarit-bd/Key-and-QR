@@ -1,5 +1,6 @@
 "use client";
 
+import SocialLogin from "@/components/auth/SocialLogin";
 import { useAuthStore } from "@/store/authStore";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -25,13 +26,11 @@ export default function SignUpPage() {
         e.preventDefault();
         setError("");
 
-        // Validate passwords match
         if (password !== confirmPassword) {
             setError("Passwords do not match");
             return;
         }
 
-        // Validate password length
         if (password.length < 6) {
             setError("Password must be at least 6 characters");
             return;
@@ -102,6 +101,11 @@ export default function SignUpPage() {
                         {loading ? "Creating Account..." : "Sign Up"}
                     </button>
                 </form>
+
+                {/* Social Login */}
+                <div className="mt-6">
+                    <SocialLogin />
+                </div>
 
                 <p className="text-center pt-3 text-gray-500">
                     Already have an account?{" "}

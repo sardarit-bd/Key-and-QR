@@ -6,6 +6,24 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import Pagination from "./PaginationDemo";
 
+// Stock Status Component
+const StockStatus = ({ stock }) => {
+    if (stock <= 0) {
+        return (
+            <div className="absolute top-2 right-2 bg-red-600 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg animate-pulse">
+                Out of Stock
+            </div>
+        );
+    } else if (stock <= 2) {
+        return (
+            <div className="absolute top-2 right-2 bg-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg">
+                Only {stock} {stock === 1 ? 'keychain' : 'keychains'} left
+            </div>
+        );
+    }
+    return null;
+};
+
 export default function ShopGrid() {
     const { products, fetchProducts, loading } = useProductStore();
     const [page, setPage] = useState(1);
@@ -93,17 +111,20 @@ export default function ShopGrid() {
                                 {paginated.map((product) => (
                                     <div
                                         key={product._id}
-                                        className="bg-gray-100 rounded-md overflow-hidden"
+                                        className="bg-gray-100 rounded-md overflow-hidden relative"
                                     >
+                                        {/* Stock Status Badge */}
+                                        <StockStatus stock={product.stock} />
+
                                         <Link href={`/shop/${product._id}`}>
                                             <Image
-                                                src={product.image?.url || product.image || "/placeholder.png"}
+                                                src={product.image?.url || product.image || "/placeholder.jpg"}
                                                 alt={product.name}
                                                 width={400}
                                                 height={400}
                                                 className="w-full h-56 object-cover"
                                                 onError={(e) => {
-                                                    e.target.src = "/placeholder.png";
+                                                    e.target.src = "/placeholder.jpg";
                                                 }}
                                             />
                                         </Link>
@@ -117,9 +138,16 @@ export default function ShopGrid() {
                                             <p className="text-gray-500 text-sm line-clamp-2 mb-2">
                                                 {product.description}
                                             </p>
-                                            <p className="text-gray-900 font-semibold mt-1 mb-2">
-                                                ${product.price}
-                                            </p>
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-gray-900 font-semibold mt-1 mb-2">
+                                                    ${product.price}
+                                                </p>
+                                                {product.stock > 0 && (
+                                                    <span className="text-xs text-gray-500">
+                                                        {product.stock} in stock
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -130,17 +158,20 @@ export default function ShopGrid() {
                                 {paginated.map((product) => (
                                     <div
                                         key={product._id}
-                                        className="flex bg-gray-50 shadow-sm hover:shadow-md transition overflow-hidden"
+                                        className="flex bg-gray-50 shadow-sm hover:shadow-md transition overflow-hidden relative"
                                     >
+                                        {/* Stock Status Badge */}
+                                        <StockStatus stock={product.stock} />
+
                                         <Link href={`/shop/${product._id}`}>
                                             <Image
-                                                src={product.image?.url || product.image || "/placeholder.png"}
+                                                src={product.image?.url || product.image || "/placeholder.jpg"}
                                                 alt={product.name}
                                                 width={200}
                                                 height={200}
                                                 className="w-44 h-44 object-cover"
                                                 onError={(e) => {
-                                                    e.target.src = "/placeholder.png";
+                                                    e.target.src = "/placeholder.jpg";
                                                 }}
                                             />
                                         </Link>
@@ -156,9 +187,16 @@ export default function ShopGrid() {
                                                 {product.description}
                                             </p>
 
-                                            <p className="text-gray-900 font-semibold text-lg">
-                                                ${product.price}
-                                            </p>
+                                            <div className="flex items-center justify-between">
+                                                <p className="text-gray-900 font-semibold text-lg">
+                                                    ${product.price}
+                                                </p>
+                                                {product.stock > 0 && (
+                                                    <span className="text-sm text-gray-500">
+                                                        Stock: {product.stock}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                 ))}

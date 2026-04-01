@@ -1,6 +1,6 @@
 "use client";
 
-import api from "@/services/api";
+import api from "@/lib/api";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -322,7 +322,7 @@ export default function EditProductPage() {
                             </div>
                         </div>
 
-                        {/* Brand and Stock */}
+                        {/* Brand and Stock with Visual Feedback */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -338,9 +338,10 @@ export default function EditProductPage() {
                                 />
                             </div>
 
+                            {/* Stock Field with Visual Feedback */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                                    Stock
+                                    Stock Quantity *
                                 </label>
                                 <input
                                     type="number"
@@ -348,9 +349,29 @@ export default function EditProductPage() {
                                     value={formData.stock}
                                     onChange={handleChange}
                                     min="0"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
+                                    className={`w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 ${formData.stock <= 0
+                                        ? 'border-red-300 bg-red-50'
+                                        : formData.stock <= 2
+                                            ? 'border-orange-300 bg-orange-50'
+                                            : 'border-gray-300'
+                                        }`}
                                     placeholder="10"
                                 />
+                                {formData.stock <= 0 && (
+                                    <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                                        <span>⚠️</span> Product will show as <span className="font-semibold">"Out of Stock"</span>
+                                    </p>
+                                )}
+                                {formData.stock > 0 && formData.stock <= 2 && (
+                                    <p className="text-xs text-orange-600 mt-1 flex items-center gap-1">
+                                        <span>⚠️</span> Only {formData.stock} left - <span className="font-semibold">"Limited stock"</span> message will appear
+                                    </p>
+                                )}
+                                {formData.stock > 2 && (
+                                    <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
+                                        <span>✓</span> In stock - Normal display
+                                    </p>
+                                )}
                             </div>
                         </div>
 
@@ -446,7 +467,7 @@ export default function EditProductPage() {
                                     <button
                                         type="button"
                                         onClick={handleReplaceGallery}
-                                        className="text-sm text-red-600 hover:text-red-700"
+                                        className="text-sm text-red-600 hover:text-red-700 cursor-pointer"
                                     >
                                         Replace All
                                     </button>

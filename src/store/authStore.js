@@ -1,137 +1,165 @@
-import api from "@/services/api";
+"use client";
+
+import { authService } from "@/services/auth.service";
 import { create } from "zustand";
 
 export const useAuthStore = create((set, get) => ({
-    user: null,
-    loading: false,
-    error: null,
+  user: null,
+  loading: false,
+  isInitialized: false,
+  error: null,
 
-    // Register User
-    register: async (userData) => {
-        set({ loading: true, error: null });
-        try {
-            const response = await api.post("/auth/register", userData);
-            const { accessToken, user } = response.data.data;
+  initializeAuth: async () => {
+    if (get().isInitialized) return;
 
-            localStorage.setItem("accessToken", accessToken);
-            set({ user, loading: false, error: null });
+    set({ loading: true, error: null });
 
-            return user;
-        } catch (error) {
-            const message = error.response?.data?.message || "Registration failed";
-            set({ error: message, loading: false });
-            return null;
-        }
-    },
+    try {
+      const res = await authService.getMe();
+      console.log("Initialize auth response:", res);
 
-    // Login User
-    login: async (credentials) => {
-        set({ loading: true, error: null });
-        try {
-            const response = await api.post("/auth/login", credentials);
-            const { accessToken, user } = response.data.data;
+      set({
+        user: res.data,
+        loading: false,
+        isInitialized: true,
+        error: null,
+      });
+    } catch (error) {
+      console.error("Initialize auth error:", error);
+      set({
+        user: null,
+        loading: false,
+        isInitialized: true,
+        error: null,
+      });
+    }
+  },
 
-            localStorage.setItem("accessToken", accessToken);
+  register: async (payload) => {
+    set({ loading: true, error: null });
 
-            // **FIXED: Cookies properly set**
-            // authToken cookie
-            document.cookie = `authToken=${accessToken}; path=/; max-age=86400; SameSite=Strict`;
+    try {
+      const res = await authService.register(payload);
 
-            // role cookie - IMPORTANT for middleware
-            document.cookie = `role=${user.role}; path=/; max-age=86400; SameSite=Strict`;
+      set({
+        user: res.data?.user || res.data,
+        loading: false,
+        error: null,
+        isInitialized: true,
+      });
 
-            console.log("Cookies set:", document.cookie); // Debug log
+      return { success: true, user: res.data?.user || res.data };
+    } catch (error) {
+      const message = error.response?.data?.message || "Registration failed";
+      set({ loading: false, error: message });
+      return { success: false, error: message };
+    }
+  },
 
-            set({ user, loading: false, error: null });
+  login: async (payload) => {
+    set({ loading: true, error: null });
 
-            return user;
-        } catch (error) {
-            const message = error.response?.data?.message || "Login failed";
-            set({ error: message, loading: false });
-            return null;
-        }
-    },
+    try {
+      const res = await authService.login(payload);
 
-    // Get Current User (Me)
-    getMe: async () => {
-        set({ loading: true });
-        try {
-            const response = await api.get("/auth/me");
-            const user = response.data.data;
+      set({
+        user: res.data?.user || res.data,
+        loading: false,
+        error: null,
+        isInitialized: true,
+      });
 
-            set({ user, loading: false });
-            return user;
-        } catch (error) {
-            set({ user: null, loading: false });
-            return null;
-        }
-    },
+      return { success: true, user: res.data?.user || res.data };
+    } catch (error) {
+      const message = error.response?.data?.message || "Login failed";
+      set({ loading: false, error: message });
+      return { success: false, error: message };
+    }
+  },
 
-    // Forgot Password
-    forgotPassword: async (email) => {
-        set({ loading: true, error: null });
-        try {
-            await api.post("/auth/forgot-password", { email });
-            set({ loading: false, error: null });
-            return true;
-        } catch (error) {
-            const message = error.response?.data?.message || "Something went wrong";
-            set({ error: message, loading: false });
-            return false;
-        }
-    },
+  fetchMe: async () => {
+    try {
+      const res = await authService.getMe();
+      set({
+        user: res.data,
+        isInitialized: true,
+        error: null,
+      });
+      return res.data;
+    } catch (error) {
+      set({
+        user: null,
+        isInitialized: true,
+      });
+      return null;
+    }
+  },
 
-    // Reset Password
-    resetPassword: async (token, newPassword) => {
-        set({ loading: true, error: null });
-        try {
-            await api.post("/auth/reset-password", { token, newPassword });
-            set({ loading: false, error: null });
-            return true;
-        } catch (error) {
-            const message = error.response?.data?.message || "Password reset failed";
-            set({ error: message, loading: false });
-            return false;
-        }
-    },
+  updateUser: (updatedUserData) => {
+    set((state) => ({
+      user: state.user ? { ...state.user, ...updatedUserData } : null,
+    }));
+  },
 
-    // Change Password
-    changePassword: async (oldPassword, newPassword) => {
-        set({ loading: true, error: null });
-        try {
-            await api.post("/auth/change-password", { oldPassword, newPassword });
-            set({ loading: false, error: null });
-            return true;
-        } catch (error) {
-            const message = error.response?.data?.message || "Password change failed";
-            set({ error: message, loading: false });
-            return false;
-        }
-    },
+  updateUserPartial: (updates) => {
+    set((state) => ({
+      user: state.user ? { ...state.user, ...updates } : null,
+    }));
+  },
 
-    // Logout
-    logout: async () => {
-        set({ loading: true });
-        try {
-            await api.post("/auth/logout");
-        } catch (error) {
-            console.error("Logout error:", error);
-        } finally {
-            localStorage.removeItem("accessToken");
+  logout: async () => {
+    try {
+      await authService.logout();
+    } catch (error) {
+      // ignore logout api error
+    } finally {
+      set({
+        user: null,
+        isInitialized: true,
+        error: null,
+      });
+    }
+  },
 
-            // Clear cookies
-            document.cookie = "authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict";
-            document.cookie = "role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Strict";
+  forgotPassword: async (email) => {
+    set({ loading: true, error: null });
 
-            set({ user: null, loading: false });
-        }
-    },
+    try {
+      const res = await authService.forgotPassword({ email });
+      set({ loading: false });
+      return { success: true, message: res.message };
+    } catch (error) {
+      const message = error.response?.data?.message || "Failed to send reset email";
+      set({ loading: false, error: message });
+      return { success: false, error: message };
+    }
+  },
 
-    // Check Auth Status on App Load
-    checkAuth: async () => {
-        const token = localStorage.getItem("accessToken");
-        if (token) {
-            await get().getMe();
-        }
-    },
+  resetPassword: async (token, newPassword) => {
+    set({ loading: true, error: null });
+
+    try {
+      const res = await authService.resetPassword({ token, newPassword });
+      set({ loading: false });
+      return { success: true, message: res.message };
+    } catch (error) {
+      const message = error.response?.data?.message || "Password reset failed";
+      set({ loading: false, error: message });
+      return { success: false, error: message };
+    }
+  },
+
+  changePassword: async (oldPassword, newPassword) => {
+    set({ loading: true, error: null });
+
+    try {
+      const res = await authService.changePassword({ oldPassword, newPassword });
+      set({ loading: false });
+      return { success: true, message: res.message };
+    } catch (error) {
+      const message = error.response?.data?.message || "Password change failed";
+      set({ loading: false, error: message });
+      return { success: false, error: message };
+    }
+  },
 }));
