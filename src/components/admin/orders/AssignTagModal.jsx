@@ -1,3 +1,6 @@
+import { useAuthStore } from "@/store/authStore";
+import { Mail } from "lucide-react";
+import { FaGoogle } from "react-icons/fa";
 
 export default function AssignTagModal({
     isOpen,
@@ -9,19 +12,38 @@ export default function AssignTagModal({
     onAssign,
     assigning
 }) {
+    const { user } = useAuthStore();
+
+    const getProviderInfo = () => {
+        if (user?.provider === "google") {
+            return { icon: <FaGoogle size={12} className="text-blue-500" />, text: "Google" };
+        }
+        return { icon: <Mail size={12} className="text-gray-500" />, text: "Email" };
+    };
+
+    const providerInfo = getProviderInfo();
+
     if (!isOpen || !order) return null;
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl max-w-md w-full shadow-xl">
                 <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900">Assign Tag</h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                        Order: #{order._id?.slice(-8).toUpperCase()}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                        Customer: {order.user?.name || order.user?.email}
-                    </p>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900">Assign Tag</h3>
+                            <p className="text-sm text-gray-500 mt-1">
+                                Order: #{order._id?.slice(-8).toUpperCase()}
+                            </p>
+                            <p className="text-sm text-gray-500">
+                                Customer: {order.user?.name || order.user?.email}
+                            </p>
+                        </div>
+                        <div className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs">
+                            {providerInfo.icon}
+                            <span className="text-gray-600">{providerInfo.text} Admin</span>
+                        </div>
+                    </div>
                 </div>
                 <div className="p-6">
                     <label className="block text-sm font-medium text-gray-700 mb-2">

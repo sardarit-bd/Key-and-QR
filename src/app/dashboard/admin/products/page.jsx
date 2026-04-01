@@ -1,11 +1,14 @@
 "use client";
 
 import api from "@/lib/api";
-import { Archive, Edit, Plus, RotateCcw, Search, Trash2 } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
+import { Archive, Edit, Mail, Plus, RotateCcw, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { FaGoogle } from "react-icons/fa";
 
 export default function ProductsPage() {
+  const { user } = useAuthStore();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -19,6 +22,20 @@ export default function ProductsPage() {
   const [viewTrash, setViewTrash] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [restoreModal, setRestoreModal] = useState({ show: false, id: null });
+
+  // Get provider info for admin badge
+  const getProviderInfo = () => {
+    if (user?.provider === "google") {
+      return {
+        icon: <FaGoogle size={12} className="text-blue-500" />,
+        text: "Google"
+      };
+    }
+    return {
+      icon: <Mail size={12} className="text-gray-500" />,
+      text: "Email"
+    };
+  };
 
   // Fetch products
   useEffect(() => {
@@ -78,18 +95,13 @@ export default function ProductsPage() {
     }
   };
 
-  // Filter products based on search (though we already do on backend)
-  const filteredProducts = products.filter(
-    (product) =>
-      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      product.category.toLowerCase().includes(searchTerm.toLowerCase()),
-  );
+  const providerInfo = getProviderInfo();
 
   return (
     <div className="flex-1 w-full p-4 lg:p-8">
-      {/* Header */}
+      {/* Header with Admin Info */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 flex-wrap">
           <h1 className="text-2xl font-semibold text-gray-900">
             {viewTrash ? "Trash" : "Products"}
           </h1>
@@ -103,6 +115,12 @@ export default function ProductsPage() {
             <Archive size={16} />
             {viewTrash ? "View Products" : "View Trash"}
           </button>
+
+          {/* Admin Provider Badge */}
+          <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs">
+            {providerInfo.icon}
+            <span className="text-gray-600">{providerInfo.text} Admin</span>
+          </div>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-3">
@@ -144,7 +162,7 @@ export default function ProductsPage() {
             <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin"></div>
             <p className="mt-2 text-gray-500">Loading products...</p>
           </div>
-        ) : filteredProducts.length === 0 ? (
+        ) : products.length === 0 ? (
           <div className="p-8 text-center">
             <p className="text-gray-500">
               {viewTrash ? "Trash is empty" : "No products found"}
@@ -155,28 +173,16 @@ export default function ProductsPage() {
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left p-4 text-sm font-medium text-gray-600">
-                    Image
-                  </th>
-                  <th className="text-left p-4 text-sm font-medium text-gray-600">
-                    Name
-                  </th>
-                  <th className="text-left p-4 text-sm font-medium text-gray-600">
-                    Category
-                  </th>
-                  <th className="text-left p-4 text-sm font-medium text-gray-600">
-                    Price
-                  </th>
-                  <th className="text-left p-4 text-sm font-medium text-gray-600">
-                    Stock
-                  </th>
-                  <th className="text-left p-4 text-sm font-medium text-gray-600">
-                    Actions
-                  </th>
+                  <th className="text-left p-4 text-sm font-medium text-gray-600">Image</th>
+                  <th className="text-left p-4 text-sm font-medium text-gray-600">Name</th>
+                  <th className="text-left p-4 text-sm font-medium text-gray-600">Category</th>
+                  <th className="text-left p-4 text-sm font-medium text-gray-600">Price</th>
+                  <th className="text-left p-4 text-sm font-medium text-gray-600">Stock</th>
+                  <th className="text-left p-4 text-sm font-medium text-gray-600">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {filteredProducts.map((product) => (
+                {products.map((product) => (
                   <tr key={product._id} className="hover:bg-gray-50 transition">
                     <td className="p-4">
                       {product.image?.url ? (
@@ -185,8 +191,7 @@ export default function ProductsPage() {
                           alt={product.name}
                           className="w-12 h-12 object-cover rounded-lg"
                           onError={(e) => {
-                            e.target.src =
-                              "https://via.placeholder.com/48?text=No+Image";
+                            e.target.src = "https://placehold.co/400x400/e2e8f0/1e293b?text=No+Image";
                           }}
                         />
                       ) : (
@@ -196,34 +201,29 @@ export default function ProductsPage() {
                       )}
                     </td>
                     <td className="p-4">
-                      <div className="font-medium text-gray-900">
-                        {product.name}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {product.brand}
-                      </div>
+                      <div className="font-medium text-gray-900">{product.name}</div>
+                      <div className="text-xs text-gray-500">{product.brand}</div>
                       {product.deletedAt && (
                         <div className="text-xs text-red-500 mt-1">
-                          Deleted:{" "}
-                          {new Date(product.deletedAt).toLocaleDateString()}
+                          Deleted: {new Date(product.deletedAt).toLocaleDateString()}
                         </div>
                       )}
                     </td>
-                    <td className="p-4 text-sm text-gray-600">
-                      {product.category}
-                    </td>
-                    <td className="p-4 text-sm font-medium text-gray-900">
-                      ${product.price}
-                    </td>
+                    <td className="p-4 text-sm text-gray-600">{product.category}</td>
+                    <td className="p-4 text-sm font-medium text-gray-900">${product.price}</td>
                     <td className="p-4">
                       <span
                         className={`text-xs px-2 py-1 rounded-full ${product.stock > 0
-                            ? "bg-green-50 text-green-700"
+                            ? product.stock <= 2
+                              ? "bg-orange-50 text-orange-700"
+                              : "bg-green-50 text-green-700"
                             : "bg-red-50 text-red-700"
                           }`}
                       >
                         {product.stock > 0
-                          ? `${product.stock} in stock`
+                          ? product.stock <= 2
+                            ? `Only ${product.stock} left`
+                            : `${product.stock} in stock`
                           : "Out of stock"}
                       </span>
                     </td>
@@ -231,9 +231,7 @@ export default function ProductsPage() {
                       {viewTrash ? (
                         <div className="flex items-center gap-2">
                           <button
-                            onClick={() =>
-                              setRestoreModal({ show: true, id: product._id })
-                            }
+                            onClick={() => setRestoreModal({ show: true, id: product._id })}
                             className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
                             title="Restore product"
                           >
@@ -291,17 +289,17 @@ export default function ProductsPage() {
           <button
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
             disabled={currentPage === 1}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1 border rounded disabled:opacity-50 hover:bg-gray-50 transition"
           >
             Previous
           </button>
-          <span className="px-3 py-1">
+          <span className="px-3 py-1 text-sm text-gray-600">
             Page {currentPage} of {totalPages}
           </span>
           <button
             onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
             disabled={currentPage === totalPages}
-            className="px-3 py-1 border rounded disabled:opacity-50"
+            className="px-3 py-1 border rounded disabled:opacity-50 hover:bg-gray-50 transition"
           >
             Next
           </button>
@@ -313,39 +311,28 @@ export default function ProductsPage() {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              {deleteModal.type === "permanent"
-                ? "Permanently Delete Product"
-                : "Move to Trash"}
+              {deleteModal.type === "permanent" ? "Permanently Delete Product" : "Move to Trash"}
             </h3>
             <p className="text-gray-600 mb-6">
               {deleteModal.type === "permanent"
                 ? "Are you sure you want to permanently delete this product? This action cannot be undone and will remove all images from Cloudinary."
                 : "Are you sure you want to move this product to trash? You can restore it later from the trash."}
             </p>
-
             <div className="flex justify-end gap-3">
               <button
-                onClick={() =>
-                  setDeleteModal({ show: false, id: null, type: null })
-                }
+                onClick={() => setDeleteModal({ show: false, id: null, type: null })}
                 className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
               >
                 Cancel
               </button>
               <button
-                onClick={
-                  deleteModal.type === "permanent"
-                    ? handlePermanentDelete
-                    : handleSoftDelete
-                }
+                onClick={deleteModal.type === "permanent" ? handlePermanentDelete : handleSoftDelete}
                 className={`px-4 py-2 text-white rounded-lg transition ${deleteModal.type === "permanent"
                     ? "bg-red-600 hover:bg-red-700"
                     : "bg-orange-600 hover:bg-orange-700"
                   }`}
               >
-                {deleteModal.type === "permanent"
-                  ? "Permanently Delete"
-                  : "Move to Trash"}
+                {deleteModal.type === "permanent" ? "Permanently Delete" : "Move to Trash"}
               </button>
             </div>
           </div>
@@ -356,14 +343,10 @@ export default function ProductsPage() {
       {restoreModal.show && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Restore Product
-            </h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Restore Product</h3>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to restore this product? It will appear in
-              the main products list again.
+              Are you sure you want to restore this product? It will appear in the main products list again.
             </p>
-
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setRestoreModal({ show: false, id: null })}

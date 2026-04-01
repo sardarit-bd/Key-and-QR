@@ -4,20 +4,17 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
-import {
-    Tag,
-    Plus,
-} from "lucide-react";
+import { Tag, Plus, Mail } from "lucide-react";
+import { FaGoogle } from "react-icons/fa";
 import QRCodeModal from "@/components/admin/tags/QRCodeModal";
 import CreateTagModal from "@/components/admin/tags/CreateTagModal";
 import TagsTable from "@/components/admin/tags/TagsTable";
 import TagFilters from "@/components/admin/tags/TagFilters";
 import StatsCards from "@/components/admin/tags/StatsCards";
 
-
 export default function AdminTagsPage() {
     const router = useRouter();
-    const { user, accessToken } = useAuthStore();
+    const { user, isInitialized } = useAuthStore();
     const [tags, setTags] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -32,23 +29,33 @@ export default function AdminTagsPage() {
     const [totalTags, setTotalTags] = useState(0);
     const itemsPerPage = 10;
 
+    // Get provider info
+    const getProviderInfo = () => {
+        if (user?.provider === "google") {
+            return { icon: <FaGoogle size={14} className="text-blue-500" />, text: "Google" };
+        }
+        return { icon: <Mail size={14} className="text-gray-500" />, text: "Email" };
+    };
+
+    const providerInfo = getProviderInfo();
+
     // Check admin access
     useEffect(() => {
-        if (!accessToken) {
+        if (!isInitialized) return;
+
+        if (!user) {
             router.push("/login");
             return;
         }
-        if (user?.role !== "admin") {
+
+        if (user.role !== "admin") {
             router.push("/");
-            return;
         }
-    }, [accessToken, user, router]);
+    }, [user, isInitialized, router]);
 
     const fetchTags = async () => {
         try {
             setLoading(true);
-
-            // Build query params
             const params = new URLSearchParams();
             params.append("page", currentPage);
             params.append("limit", itemsPerPage);
@@ -57,7 +64,6 @@ export default function AdminTagsPage() {
                 params.append("search", searchTerm);
             }
 
-            // Map filter status to API params
             if (filterStatus === "active") {
                 params.append("isActivated", "true");
             } else if (filterStatus === "pending") {
@@ -108,36 +114,30 @@ export default function AdminTagsPage() {
         });
     };
 
-    // Effect for paginated data
     useEffect(() => {
         fetchTags();
     }, [currentPage, searchTerm, filterStatus]);
 
-    // Effect for stats
     useEffect(() => {
         loadStats();
     }, []);
 
-    // Handle page change
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
             setCurrentPage(newPage);
         }
     };
 
-    // Handle refresh (refresh both table and stats)
     const handleRefresh = () => {
         fetchTags();
         loadStats();
     };
 
-    // Handle search (reset to page 1)
     const handleSearch = (term) => {
         setSearchTerm(term);
         setCurrentPage(1);
     };
 
-    // Handle filter change (reset to page 1)
     const handleFilterChange = (status) => {
         setFilterStatus(status);
         setCurrentPage(1);
@@ -159,14 +159,20 @@ export default function AdminTagsPage() {
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">
             <div className="w-full">
-                {/* Header */}
+                {/* Header with Provider Info */}
                 <div className="mb-8">
                     <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                         <div>
-                            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
-                                <Tag className="w-8 h-8" />
-                                Admin Tags
-                            </h1>
+                            <div className="flex items-center gap-2 mb-1">
+                                <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center gap-2">
+                                    <Tag className="w-8 h-8" />
+                                    Admin Tags
+                                </h1>
+                                <div className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs">
+                                    {providerInfo.icon}
+                                    <span className="text-gray-600">{providerInfo.text} Admin</span>
+                                </div>
+                            </div>
                             <p className="text-gray-600 mt-1">
                                 Manage all NFC/QR tags for physical keychains
                                 {totalTags > 0 && <span className="ml-2 text-sm">({totalTags} total tags)</span>}
@@ -183,7 +189,7 @@ export default function AdminTagsPage() {
                 </div>
 
                 {/* Stats Cards */}
-                <StatsCards stats={stats} tags={[]} />
+                <StatsCards stats={stats} tags={[]} providerInfo={providerInfo} />
 
                 {/* Filters */}
                 <TagFilters

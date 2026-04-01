@@ -1,4 +1,6 @@
-import { Calendar, ExternalLink, QrCode, User, Power, PowerOff, ChevronLeft, ChevronRight } from "lucide-react";
+// components/admin/tags/TagsTable.js
+import { Calendar, ExternalLink, QrCode, User, Power, PowerOff, ChevronLeft, ChevronRight, Mail } from "lucide-react";
+import { FaGoogle } from "react-icons/fa";
 import Link from "next/link";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
@@ -25,6 +27,15 @@ export default function TagsTable({
             month: "short",
             day: "numeric",
         });
+    };
+
+    // Get owner provider icon
+    const getOwnerProviderIcon = (owner) => {
+        if (!owner) return null;
+        if (owner.provider === "google") {
+            return <FaGoogle size={10} className="text-blue-500 ml-1" />;
+        }
+        return <Mail size={10} className="text-gray-400 ml-1" />;
     };
 
     // Toggle active/inactive status
@@ -105,6 +116,7 @@ export default function TagsTable({
                                             <span className="text-sm text-gray-600">
                                                 {tag.owner.name || tag.owner.email}
                                             </span>
+                                            {getOwnerProviderIcon(tag.owner)}
                                         </div>
                                     ) : (
                                         <span className="text-sm text-gray-400">Unassigned</span>
@@ -115,8 +127,8 @@ export default function TagsTable({
                                 <td className="px-6 py-4">
                                     <div className="flex items-center gap-2">
                                         <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${tag.isActive
-                                                ? "bg-green-100 text-green-800"
-                                                : "bg-red-100 text-red-800"
+                                            ? "bg-green-100 text-green-800"
+                                            : "bg-red-100 text-red-800"
                                             }`}>
                                             {tag.isActive ? <Power size={10} /> : <PowerOff size={10} />}
                                             {tag.isActive ? "Active" : "Inactive"}
@@ -136,8 +148,8 @@ export default function TagsTable({
                                         onChange={(e) => handleSubscriptionChange(tag._id, e.target.value)}
                                         disabled={subscriptionUpdating === tag._id}
                                         className={`text-xs px-2 py-1 rounded-full border-0 focus:ring-2 cursor-pointer ${tag.subscriptionType === "subscriber"
-                                                ? "bg-purple-100 text-purple-800"
-                                                : "bg-gray-100 text-gray-600"
+                                            ? "bg-purple-100 text-purple-800"
+                                            : "bg-gray-100 text-gray-600"
                                             }`}
                                     >
                                         <option value="free">Free</option>
@@ -192,8 +204,8 @@ export default function TagsTable({
                                             onClick={() => handleToggleActive(tag)}
                                             disabled={updating === tag._id}
                                             className={`p-1.5 rounded transition cursor-pointer ${tag.isActive
-                                                    ? "text-red-600 hover:bg-red-50"
-                                                    : "text-green-600 hover:bg-green-50"
+                                                ? "text-red-600 hover:bg-red-50"
+                                                : "text-green-600 hover:bg-green-50"
                                                 }`}
                                             title={tag.isActive ? "Disable Tag" : "Enable Tag"}
                                         >
@@ -224,8 +236,8 @@ export default function TagsTable({
                             onClick={() => onPageChange(currentPage - 1)}
                             disabled={currentPage === 1}
                             className={`px-3 py-1 rounded-lg text-sm flex items-center gap-1 transition ${currentPage === 1
-                                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                    : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                                 }`}
                         >
                             <ChevronLeft size={14} />
@@ -235,8 +247,8 @@ export default function TagsTable({
                             onClick={() => onPageChange(currentPage + 1)}
                             disabled={currentPage === totalPages}
                             className={`px-3 py-1 rounded-lg text-sm flex items-center gap-1 transition ${currentPage === totalPages
-                                    ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-                                    : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                                ? "bg-gray-100 text-gray-400 cursor-not-allowed"
+                                : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                                 }`}
                         >
                             Next

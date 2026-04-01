@@ -1,7 +1,7 @@
-// app/dashboard/admin/tags/components/StatsCards.jsx
-import { AlertCircle, Check, DollarSign, Shield, Tag, Users } from "lucide-react";
+import { AlertCircle, Check, DollarSign, Mail, Shield, Tag, Users } from "lucide-react";
+import { FaGoogle } from "react-icons/fa";
 
-export default function StatsCards({ stats, tags }) {
+export default function StatsCards({ stats, tags, providerInfo }) {
     // Calculate additional stats from tags array
     const subscriberCount = tags?.filter(t => t.subscriptionType === "subscriber").length || 0;
     const freeCount = tags?.filter(t => t.subscriptionType === "free").length || 0;

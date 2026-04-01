@@ -39,16 +39,16 @@ export default function LoginPage() {
     e.preventDefault();
     setError("");
 
-    const userData = await login({ email, password });
+    const result = await login({ email, password });
 
-    if (userData) {
-      if (userData.role === "admin") {
+    if (result?.success) {
+      if (result.user?.role === "admin") {
         window.location.href = "/dashboard/admin";
       } else {
         window.location.href = "/dashboard/user";
       }
     } else {
-      setError(storeError || "Invalid email or password!");
+      setError(result?.error || "Invalid email or password!");
     }
   };
 

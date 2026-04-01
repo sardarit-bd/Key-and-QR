@@ -1,10 +1,22 @@
-import { Check, Copy, Download, ExternalLink, X } from "lucide-react";
+import { Check, Copy, Download, ExternalLink, X, Mail } from "lucide-react";
+import { FaGoogle } from "react-icons/fa";
 import Link from "next/link";
 import { QRCodeCanvas } from "qrcode.react";
 import { useState } from "react";
+import { useAuthStore } from "@/store/authStore";
 
 export default function QRCodeModal({ isOpen, onClose, tag }) {
+    const { user } = useAuthStore();
     const [copied, setCopied] = useState(false);
+
+    const getProviderInfo = () => {
+        if (user?.provider === "google") {
+            return { icon: <FaGoogle size={12} className="text-blue-500" />, text: "Google" };
+        }
+        return { icon: <Mail size={12} className="text-gray-500" />, text: "Email" };
+    };
+
+    const providerInfo = getProviderInfo();
 
     const handleCopyUrl = (url) => {
         navigator.clipboard.writeText(url);
@@ -31,7 +43,13 @@ export default function QRCodeModal({ isOpen, onClose, tag }) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg max-w-md w-full">
                 <div className="flex justify-between items-center p-6 border-b border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-900">QR Code</h2>
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-semibold text-gray-900">QR Code</h2>
+                        <div className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs">
+                            {providerInfo.icon}
+                            <span className="text-gray-500">{providerInfo.text} Admin</span>
+                        </div>
+                    </div>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 cursor-pointer">
                         <X size={24} />
                     </button>

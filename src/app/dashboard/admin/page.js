@@ -3,9 +3,10 @@
 import api from "@/lib/api";
 import QrLoadingScreen from "@/shared/QrLoadingScreen";
 import { useAuthStore } from "@/store/authStore";
-import { DollarSign, Eye, Package, QrCode, Tag, TrendingUp } from "lucide-react";
+import { DollarSign, Eye, Mail, Package, QrCode, Tag, TrendingUp } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { FaGoogle } from "react-icons/fa";
 
 export default function AdminDashboard() {
   const { user } = useAuthStore();
@@ -20,6 +21,35 @@ export default function AdminDashboard() {
   const [recentOrders, setRecentOrders] = useState([]);
   const [recentTags, setRecentTags] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Get provider icon and text
+  const getProviderInfo = () => {
+    if (user?.provider === "google") {
+      return {
+        icon: <FaGoogle size={14} className="text-blue-500" />,
+        text: "Google",
+        bgColor: "bg-blue-50",
+        textColor: "text-blue-600"
+      };
+    }
+    return {
+      icon: <Mail size={14} className="text-gray-500" />,
+      text: "Email",
+      bgColor: "bg-gray-50",
+      textColor: "text-gray-600"
+    };
+  };
+
+  // Get user initials for avatar
+  const getUserInitials = () => {
+    if (!user?.name) return "A";
+    return user.name
+      .split(" ")
+      .map(word => word[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
 
   useEffect(() => {
     fetchDashboardData();
@@ -63,55 +93,6 @@ export default function AdminDashboard() {
       setLoading(false);
     }
   };
-
-
-  // const fetchDashboardData = async () => {
-  //   try {
-  //     setLoading(true);
-
-  //     const startTime = Date.now(); // ⏱️ start
-
-  //     // API calls
-  //     const productsRes = await api.get("/products", { params: { limit: 1 } });
-  //     const tagsRes = await api.get("/tags");
-  //     const ordersRes = await api.get("/orders/admin/all");
-
-  //     const tags = tagsRes.data.data.data || [];
-  //     const orders = ordersRes.data.data || [];
-
-  //     const totalRevenue = orders
-  //       .filter(o => o.paymentStatus === "paid")
-  //       .reduce((sum, o) => sum + (o.product?.price || 0), 0);
-
-  //     setStats({
-  //       totalProducts: productsRes.data.meta?.total || 0,
-  //       totalTags: tags.length,
-  //       totalOrders: orders.length,
-  //       totalRevenue: totalRevenue,
-  //       activeTags: tags.filter(t => t.isActivated).length,
-  //       pendingTags: tags.filter(t => !t.isActivated && t.isActive).length,
-  //     });
-
-  //     setRecentOrders(orders.slice(0, 5));
-  //     setRecentTags(tags.slice(0, 5));
-
-  //     // 🔥 MINIMUM LOADING TIME (IMPORTANT)
-  //     const minTime = 10000; // 10 sec
-  //     const elapsed = Date.now() - startTime;
-
-  //     if (elapsed < minTime) {
-  //       await new Promise(resolve =>
-  //         setTimeout(resolve, minTime - elapsed)
-  //       );
-  //     }
-
-  //   } catch (error) {
-  //     console.error("Error fetching dashboard data:", error);
-  //   } finally {
-  //     setLoading(false);
-  //   }
-  // };
-
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -157,21 +138,25 @@ export default function AdminDashboard() {
   ];
 
   if (loading) {
-    return (
-      <QrLoadingScreen
-        duration={5000}
-      />
-    );
+    return <QrLoadingScreen duration={5000} />;
   }
+
+  const providerInfo = getProviderInfo();
 
   return (
     <div className="flex-1 w-full p-4 lg:p-8">
-      {/* Header */}
+      {/* Header with Provider Info */}
       <div className="mb-8">
-        <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
-          Welcome back, {user?.name?.split(" ")[0] || "Admin"}!
-        </h1>
-        <p className="text-gray-500 mt-1">Here's what's happening with your store today.</p>
+        <div className="flex items-center gap-3 flex-wrap">
+          <div>
+            <h1 className="text-2xl lg:text-3xl font-bold text-gray-900">
+              Welcome back, {user?.name?.split(" ")[0] || "Admin"}!
+            </h1>
+            <div className="flex items-center gap-2 mt-1">
+            </div>
+          </div>
+        </div>
+        <p className="text-gray-500 mt-3">Here's what's happening with your store today.</p>
       </div>
 
       {/* Stats Grid */}
@@ -234,7 +219,7 @@ export default function AdminDashboard() {
                         ? "bg-green-50 text-green-700"
                         : "bg-yellow-50 text-yellow-700"
                         }`}>
-                        {order.paymentStatus}
+                        {order.paymentStatus === "paid" ? "Paid" : "Pending"}
                       </span>
                     </div>
                   </div>
@@ -299,7 +284,11 @@ export default function AdminDashboard() {
                           ? "bg-yellow-50 text-yellow-700"
                           : "bg-red-50 text-red-700"
                         }`}>
-                        {tag.isActivated ? "Activated" : tag.isActive ? "Pending" : "Disabled"}
+                        {tag.isActivated
+                          ? "Activated"
+                          : tag.isActive
+                            ? "Pending"
+                            : "Disabled"}
                       </span>
                     </div>
                   </div>
@@ -317,6 +306,48 @@ export default function AdminDashboard() {
               ))
             )}
           </div>
+        </div>
+      </div>
+
+      {/* Admin Quick Actions */}
+      <div className="mt-8 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-6 border border-gray-200">
+        <h3 className="font-semibold text-gray-900 mb-4">Quick Actions</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          <Link
+            href="/dashboard/admin/products/add"
+            className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:shadow-md transition text-sm"
+          >
+            <Package size={16} />
+            Add Product
+          </Link>
+          <Link
+            href="/dashboard/admin/tags/add"
+            className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:shadow-md transition text-sm"
+          >
+            <QrCode size={16} />
+            Generate Tags
+          </Link>
+          <Link
+            href="/dashboard/admin/quotes/add"
+            className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:shadow-md transition text-sm"
+          >
+            <Tag size={16} />
+            Add Quote
+          </Link>
+          <Link
+            href="/dashboard/admin/orders"
+            className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:shadow-md transition text-sm"
+          >
+            <DollarSign size={16} />
+            View Orders
+          </Link>
+          <Link
+            href="/dashboard/admin/pending"
+            className="flex items-center gap-2 px-4 py-2 bg-white rounded-lg border border-gray-200 hover:shadow-md transition text-sm"
+          >
+            <Eye size={16} />
+            Pending Quotes
+          </Link>
         </div>
       </div>
     </div>

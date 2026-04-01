@@ -1,11 +1,24 @@
-import { CheckCircle, Package, Truck, Undo2, XCircle } from "lucide-react";
+// components/admin/orders/ProcessReturnModal.js
+import { useAuthStore } from "@/store/authStore";
+import { CheckCircle, Mail, Package, Truck, Undo2, XCircle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
+import { FaGoogle } from "react-icons/fa";
 
 export default function ProcessReturnModal({ isOpen, onClose, order, onConfirm, onCompleteReturn, processing }) {
     const [action, setAction] = useState("approve");
     const [trackingNumber, setTrackingNumber] = useState("");
     const [rejectReason, setRejectReason] = useState("");
+    const { user } = useAuthStore();
+
+    const getProviderInfo = () => {
+        if (user?.provider === "google") {
+            return { icon: <FaGoogle size={12} className="text-blue-500" />, text: "Google" };
+        }
+        return { icon: <Mail size={12} className="text-gray-500" />, text: "Email" };
+    };
+
+    const providerInfo = getProviderInfo();
 
     if (!isOpen || !order) return null;
 
@@ -23,11 +36,17 @@ export default function ProcessReturnModal({ isOpen, onClose, order, onConfirm, 
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl max-w-md w-full shadow-xl">
                 <div className="p-6 border-b border-gray-200">
-                    <div className="flex items-center gap-2">
-                        <Undo2 size={24} className="text-orange-500" />
-                        <h3 className="text-lg font-semibold text-gray-900">
-                            {isReturnShipped ? "Complete Return" : "Process Return Request"}
-                        </h3>
+                    <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <Undo2 size={24} className="text-orange-500" />
+                            <h3 className="text-lg font-semibold text-gray-900">
+                                {isReturnShipped ? "Complete Return" : "Process Return Request"}
+                            </h3>
+                        </div>
+                        <div className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs">
+                            {providerInfo.icon}
+                            <span className="text-gray-600">{providerInfo.text} Admin</span>
+                        </div>
                     </div>
                     <p className="text-sm text-gray-500 mt-1">
                         Order: #{order._id?.slice(-8).toUpperCase()}
@@ -51,8 +70,8 @@ export default function ProcessReturnModal({ isOpen, onClose, order, onConfirm, 
                             <button
                                 onClick={() => setAction("approve")}
                                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition ${action === "approve"
-                                        ? "border-green-500 bg-green-50 text-green-700"
-                                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                                    ? "border-green-500 bg-green-50 text-green-700"
+                                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
                                     }`}
                             >
                                 <CheckCircle size={18} />
@@ -61,8 +80,8 @@ export default function ProcessReturnModal({ isOpen, onClose, order, onConfirm, 
                             <button
                                 onClick={() => setAction("reject")}
                                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition ${action === "reject"
-                                        ? "border-red-500 bg-red-50 text-red-700"
-                                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                                    ? "border-red-500 bg-red-50 text-red-700"
+                                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
                                     }`}
                             >
                                 <XCircle size={18} />
@@ -142,8 +161,8 @@ export default function ProcessReturnModal({ isOpen, onClose, order, onConfirm, 
                             onClick={handleSubmit}
                             disabled={processing || (action === "reject" && !rejectReason.trim())}
                             className={`px-4 py-2 text-white rounded-lg transition disabled:opacity-50 ${action === "approve"
-                                    ? "bg-green-600 hover:bg-green-700"
-                                    : "bg-red-600 hover:bg-red-700"
+                                ? "bg-green-600 hover:bg-green-700"
+                                : "bg-red-600 hover:bg-red-700"
                                 }`}
                         >
                             {processing ? "Processing..." : action === "approve" ? "Approve Return" : "Reject Request"}

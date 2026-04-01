@@ -1,4 +1,7 @@
 import api from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
+import { Mail } from "lucide-react";
+import { FaGoogle } from "react-icons/fa";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 
@@ -11,10 +14,20 @@ const CATEGORIES = [
 ];
 
 export default function CreateQuoteModal({ isOpen, onClose, onSuccess }) {
+    const { user } = useAuthStore();
     const [text, setText] = useState("");
     const [category, setCategory] = useState("motivation");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+
+    const getProviderInfo = () => {
+        if (user?.provider === "google") {
+            return { icon: <FaGoogle size={12} className="text-blue-500" />, text: "Google" };
+        }
+        return { icon: <Mail size={12} className="text-gray-500" />, text: "Email" };
+    };
+
+    const providerInfo = getProviderInfo();
 
     const handleSubmit = async () => {
         if (!text.trim()) {
@@ -50,8 +63,16 @@ export default function CreateQuoteModal({ isOpen, onClose, onSuccess }) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl max-w-2xl w-full shadow-xl">
                 <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900">Create New Quote</h3>
-                    <p className="text-sm text-gray-500 mt-1">Add a new inspirational quote</p>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h3 className="text-lg font-semibold text-gray-900">Create New Quote</h3>
+                            <p className="text-sm text-gray-500 mt-1">Add a new inspirational quote</p>
+                        </div>
+                        <div className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs">
+                            {providerInfo.icon}
+                            <span className="text-gray-600">{providerInfo.text} Admin</span>
+                        </div>
+                    </div>
                 </div>
                 <div className="p-6 space-y-4">
                     <div>

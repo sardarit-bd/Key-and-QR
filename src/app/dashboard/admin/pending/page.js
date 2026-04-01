@@ -40,7 +40,7 @@ const CATEGORY_LABELS = {
 };
 // Main Page
 export default function PendingQuotesPage() {
-    const { accessToken } = useAuthStore();
+    const { user, isInitialized } = useAuthStore();
     const [quotes, setQuotes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -141,10 +141,12 @@ export default function PendingQuotesPage() {
     }, [currentPage]);
 
     useEffect(() => {
-        if (accessToken) {
+        if (!isInitialized) return;
+
+        if (user?.role === "admin") {
             fetchPendingQuotes();
         }
-    }, [accessToken]);
+    }, [user, isInitialized]);
 
     const formatDate = (date) => {
         if (!date) return "N/A";

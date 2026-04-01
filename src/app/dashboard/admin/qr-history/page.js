@@ -71,7 +71,7 @@ const formatRelativeTime = (date) => {
 };
 
 export default function ScanHistoryPage() {
-    const { accessToken } = useAuthStore();
+    const { user, isInitialized } = useAuthStore();
     const [scans, setScans] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -143,11 +143,13 @@ export default function ScanHistoryPage() {
     }, [currentPage]);
 
     useEffect(() => {
-        if (accessToken) {
+        if (!isInitialized) return;
+
+        if (user) {
             fetchScanHistory();
             fetchScanStats();
         }
-    }, [accessToken]);
+    }, [user, isInitialized]);
 
     if (loading && currentPage === 1 && scans.length === 0) {
         return (
@@ -193,13 +195,13 @@ export default function ScanHistoryPage() {
                             View all your QR code scan history and unlocked messages
                         </p>
                     </div>
-                    <button
+                    {/* <button
                         onClick={handleRefresh}
                         className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                     >
                         <RefreshCw size={18} />
                         Refresh
-                    </button>
+                    </button> */}
                 </div>
             </div>
 

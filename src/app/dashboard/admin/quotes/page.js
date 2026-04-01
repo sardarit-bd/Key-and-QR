@@ -11,6 +11,7 @@ import {
     Edit,
     Eye,
     Filter,
+    Mail,
     Plus,
     Power,
     PowerOff,
@@ -19,6 +20,7 @@ import {
     Search,
     Trash2
 } from "lucide-react";
+import { FaGoogle } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 
@@ -32,7 +34,7 @@ const CATEGORIES = [
 ];
 
 export default function QuotesManagementPage() {
-    const { accessToken } = useAuthStore();
+    const { user, accessToken } = useAuthStore();
     const [quotes, setQuotes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -56,6 +58,16 @@ export default function QuotesManagementPage() {
         inactive: 0,
         byCategory: {}
     });
+
+    // Get provider info
+    const getProviderInfo = () => {
+        if (user?.provider === "google") {
+            return { icon: <FaGoogle size={14} className="text-blue-500" />, text: "Google" };
+        }
+        return { icon: <Mail size={14} className="text-gray-500" />, text: "Email" };
+    };
+
+    const providerInfo = getProviderInfo();
 
     const fetchQuotes = async () => {
         try {
@@ -109,7 +121,7 @@ export default function QuotesManagementPage() {
             const response = await api.patch(`/quotes/${id}/toggle`);
             toast.success(`Quote ${response.data.data.isActive ? "activated" : "deactivated"}`);
             fetchQuotes();
-            // fetchStats();
+            fetchStats();
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to toggle quote status");
         }
@@ -122,7 +134,7 @@ export default function QuotesManagementPage() {
             setShowDeleteModal(false);
             setSelectedQuote(null);
             fetchQuotes();
-            // fetchStats();
+            fetchStats();
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to delete quote");
         }
@@ -133,7 +145,7 @@ export default function QuotesManagementPage() {
         setSelectedCategory("all");
         setCurrentPage(1);
         fetchQuotes();
-        // fetchStats();
+        fetchStats();
     };
 
     const handlePageChange = (newPage) => {
@@ -166,7 +178,7 @@ export default function QuotesManagementPage() {
     useEffect(() => {
         if (accessToken) {
             fetchQuotes();
-            // fetchStats();
+            fetchStats();
         }
     }, [accessToken]);
 
@@ -192,14 +204,20 @@ export default function QuotesManagementPage() {
 
     return (
         <div className="flex-1 w-full p-4 lg:p-8">
-            {/* Header */}
+            {/* Header with Provider Info */}
             <div className="mb-6">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                     <div>
-                        <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
-                            <Quote size={24} />
-                            Quotes Management
-                        </h1>
+                        <div className="flex items-center gap-2 mb-1">
+                            <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
+                                <Quote size={24} />
+                                Quotes Management
+                            </h1>
+                            <div className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs">
+                                {providerInfo.icon}
+                                <span className="text-gray-600">{providerInfo.text} Admin</span>
+                            </div>
+                        </div>
                         <p className="text-gray-500 mt-1">
                             Manage inspirational quotes for user scans
                         </p>
@@ -276,7 +294,7 @@ export default function QuotesManagementPage() {
                             className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
                         />
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 flex-wrap">
                         <button
                             onClick={() => setSelectedCategory("all")}
                             className={`px-4 py-2 rounded-lg text-sm transition ${selectedCategory === "all"
@@ -499,7 +517,7 @@ export default function QuotesManagementPage() {
                 onClose={() => setShowCreateModal(false)}
                 onSuccess={() => {
                     fetchQuotes();
-                    // fetchStats();
+                    fetchStats();
                 }}
             />
 
@@ -512,7 +530,7 @@ export default function QuotesManagementPage() {
                 quote={selectedQuote}
                 onSuccess={() => {
                     fetchQuotes();
-                    // fetchStats();
+                    fetchStats();
                 }}
                 CATEGORIES={CATEGORIES}
             />

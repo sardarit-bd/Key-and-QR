@@ -4,7 +4,8 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useAuthStore } from "@/store/authStore";
-import { Package, RefreshCw, XCircle } from "lucide-react";
+import { Package, RefreshCw, XCircle, Mail } from "lucide-react";
+import { FaGoogle } from "react-icons/fa";
 import OrderDetailsModal from "@/components/admin/orders/OrderDetailsModal";
 import AssignTagModal from "@/components/admin/orders/AssignTagModal";
 import OrderMobileCard from "@/components/admin/orders/OrderMobileCard";
@@ -40,7 +41,17 @@ export default function AdminOrdersPage() {
     const [totalOrders, setTotalOrders] = useState(0);
     const itemsPerPage = 10;
 
-    const { user, accessToken } = useAuthStore();
+    const { user, isInitialized } = useAuthStore();
+
+    // Get provider info
+    const getProviderInfo = () => {
+        if (user?.provider === "google") {
+            return { icon: <FaGoogle size={14} className="text-blue-500" />, text: "Google" };
+        }
+        return { icon: <Mail size={14} className="text-gray-500" />, text: "Email" };
+    };
+
+    const providerInfo = getProviderInfo();
 
     // Stats state
     const [stats, setStats] = useState({
@@ -62,7 +73,7 @@ export default function AdminOrdersPage() {
             setLoading(true);
             setError(null);
 
-            if (!accessToken) {
+            if (!user) {
                 setError("Please login to view orders");
                 toast.error("Please login to view orders");
                 return;
@@ -83,9 +94,7 @@ export default function AdminOrdersPage() {
             const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/orders/admin/all?${params.toString()}`;
 
             const response = await axios.get(endpoint, {
-                headers: {
-                    Authorization: `Bearer ${accessToken}`,
-                },
+                withCredentials: true,
             });
 
             setOrders(response.data?.data || []);
@@ -176,11 +185,9 @@ export default function AdminOrdersPage() {
     };
 
     const handleUpdateStatus = async (orderId, newStatus) => {
-        // Get current order to check status
         const currentOrder = orders.find(o => o._id === orderId);
         const currentStatus = currentOrder?.fulfillmentStatus;
 
-        // Check if trying to go backwards
         const statusOrder = ["pending", "assigned", "shipped", "delivered"];
         const currentIndex = statusOrder.indexOf(currentStatus);
         const newIndex = statusOrder.indexOf(newStatus);
@@ -197,7 +204,7 @@ export default function AdminOrdersPage() {
         setStatusUpdateOrder(orderId);
 
         try {
-            const response = await axios.patch(
+            await axios.patch(
                 `${process.env.NEXT_PUBLIC_API_URL}/orders/${orderId}`,
                 { fulfillmentStatus: newStatus },
                 { headers: { Authorization: `Bearer ${accessToken}` } }
@@ -207,44 +214,28 @@ export default function AdminOrdersPage() {
             fetchOrders();
             fetchStats();
         } catch (err) {
-            console.error("Status update error:", err.response?.data);
-
-            // Extract and show user-friendly error message
             let errorMessage = "Failed to update status";
 
             if (err.response?.status === 400) {
                 errorMessage = err.response?.data?.message || "Invalid status transition";
 
-                // Add specific messages based on error
                 if (errorMessage.includes("tag first")) {
                     errorMessage = "Cannot mark as assigned: Please assign a tag to this order first.";
                 } else if (errorMessage.includes("paid before shipping")) {
                     errorMessage = "Cannot mark as shipped: Order payment is not confirmed yet.";
-                } else if (errorMessage.includes("Invalid status transition")) {
-                    errorMessage = `Cannot change from "${currentStatus}" to "${newStatus}". Status must follow: Pending → Assigned → Shipped → Delivered`;
                 }
             } else if (err.response?.status === 401) {
                 errorMessage = "Session expired. Please login again.";
-                setTimeout(() => {
-                    window.location.href = "/login";
-                }, 2000);
-            } else if (err.response?.status === 403) {
-                errorMessage = "You are not authorized to update orders.";
-            } else {
-                errorMessage = err.response?.data?.message || "Failed to update status";
+                setTimeout(() => window.location.href = "/login", 2000);
             }
 
-            toast.error(errorMessage, {
-                duration: 5000,
-                icon: '❌'
-            });
+            toast.error(errorMessage, { duration: 5000, icon: '❌' });
         } finally {
             setUpdatingStatus(false);
             setStatusUpdateOrder(null);
         }
     };
 
-    // 🆕 Cancel order
     const handleCancelOrder = async (orderId, reason) => {
         setProcessingAction(true);
         try {
@@ -264,7 +255,6 @@ export default function AdminOrdersPage() {
         }
     };
 
-    // 🆕 Process refund (approve/reject)
     const handleProcessRefund = async (orderId, approve, rejectReason = null) => {
         setProcessingAction(true);
         try {
@@ -284,7 +274,6 @@ export default function AdminOrdersPage() {
         }
     };
 
-    // 🆕 Process return
     const handleProcessReturn = async (orderId, approve, trackingNumber = null, rejectReason = null) => {
         setProcessingAction(true);
         try {
@@ -304,7 +293,6 @@ export default function AdminOrdersPage() {
         }
     };
 
-    // 🆕 Complete return
     const handleCompleteReturn = async (orderId) => {
         setProcessingAction(true);
         try {
@@ -323,7 +311,6 @@ export default function AdminOrdersPage() {
         }
     };
 
-    // Handle refresh
     const handleRefresh = () => {
         setSearchTerm("");
         setFilterStatus("all");
@@ -332,14 +319,12 @@ export default function AdminOrdersPage() {
         fetchStats();
     };
 
-    // Handle page change
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
             setCurrentPage(newPage);
         }
     };
 
-    // Handle search with debounce
     useEffect(() => {
         const timer = setTimeout(() => {
             if (currentPage === 1) {
@@ -351,24 +336,23 @@ export default function AdminOrdersPage() {
         return () => clearTimeout(timer);
     }, [searchTerm]);
 
-    // Handle filter change
     useEffect(() => {
         setCurrentPage(1);
         fetchOrders();
     }, [filterStatus]);
 
-    // Fetch on page change
     useEffect(() => {
         fetchOrders();
     }, [currentPage]);
 
-    // Initial fetch
     useEffect(() => {
-        if (accessToken) {
+        if (!isInitialized) return;
+
+        if (user?.role === "admin") {
             fetchOrders();
             fetchStats();
         }
-    }, [accessToken]);
+    }, [user, isInitialized]);
 
     if (loading && currentPage === 1 && orders.length === 0) {
         return (
@@ -400,9 +384,15 @@ export default function AdminOrdersPage() {
 
     return (
         <div className="flex-1 w-full p-4 lg:p-8">
-            {/* Header */}
+            {/* Header with Provider Info */}
             <div className="mb-6">
-                <h1 className="text-2xl font-semibold text-gray-900">Orders Management</h1>
+                <div className="flex items-center gap-2 mb-1">
+                    <h1 className="text-2xl font-semibold text-gray-900">Orders Management</h1>
+                    <div className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs">
+                        {providerInfo.icon}
+                        <span className="text-gray-600">{providerInfo.text} Admin</span>
+                    </div>
+                </div>
                 <p className="text-gray-500 mt-1">Manage and track all customer orders</p>
             </div>
 
@@ -446,7 +436,6 @@ export default function AdminOrdersPage() {
                     processingAction={processingAction}
                 />
 
-                {/* Pagination */}
                 {totalPages > 1 && (
                     <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
                         <div className="text-sm text-gray-500">
@@ -500,7 +489,6 @@ export default function AdminOrdersPage() {
                             />
                         ))}
 
-                        {/* Pagination for mobile */}
                         {totalPages > 1 && (
                             <div className="flex items-center justify-between px-4 py-3 border-t border-gray-200 bg-gray-50">
                                 <div className="text-xs text-gray-500">

@@ -1,14 +1,28 @@
+// components/admin/tags/CreateTagModal.js
 import { useState } from "react";
-import { X, Sparkles, Edit, Copy, Check, DollarSign } from "lucide-react";
+import { X, Sparkles, Edit, Copy, Check, DollarSign, Mail } from "lucide-react";
+import { FaGoogle } from "react-icons/fa";
 import api from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
 
 export default function CreateTagModal({ isOpen, onClose, onSuccess }) {
+    const { user } = useAuthStore();
     const [tagCode, setTagCode] = useState("");
     const [subscriptionType, setSubscriptionType] = useState("free");
     const [creating, setCreating] = useState(false);
     const [error, setError] = useState("");
     const [mode, setMode] = useState("auto");
     const [copied, setCopied] = useState(false);
+
+    // Get provider info
+    const getProviderInfo = () => {
+        if (user?.provider === "google") {
+            return { icon: <FaGoogle size={12} className="text-blue-500" />, text: "Google" };
+        }
+        return { icon: <Mail size={12} className="text-gray-500" />, text: "Email" };
+    };
+
+    const providerInfo = getProviderInfo();
 
     const generateTagCode = () => {
         const prefixes = ["TAG", "KEY", "NFC", "QR", "TAGID"];
@@ -82,7 +96,13 @@ export default function CreateTagModal({ isOpen, onClose, onSuccess }) {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg max-w-md w-full shadow-xl">
                 <div className="flex justify-between items-center p-6 border-b border-gray-200">
-                    <h2 className="text-xl font-semibold text-gray-900">Create New Tag</h2>
+                    <div className="flex items-center gap-2">
+                        <h2 className="text-xl font-semibold text-gray-900">Create New Tag</h2>
+                        <div className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs">
+                            {providerInfo.icon}
+                            <span className="text-gray-500">{providerInfo.text} Admin</span>
+                        </div>
+                    </div>
                     <button onClick={onClose} className="text-gray-400 hover:text-gray-600 cursor-pointer">
                         <X size={24} />
                     </button>
@@ -98,8 +118,8 @@ export default function CreateTagModal({ isOpen, onClose, onSuccess }) {
                                 setError("");
                             }}
                             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition cursor-pointer ${mode === "auto"
-                                    ? "bg-black text-white shadow"
-                                    : "text-gray-600 hover:bg-gray-200"
+                                ? "bg-black text-white shadow"
+                                : "text-gray-600 hover:bg-gray-200"
                                 }`}
                         >
                             <Sparkles size={16} />
@@ -112,8 +132,8 @@ export default function CreateTagModal({ isOpen, onClose, onSuccess }) {
                                 setError("");
                             }}
                             className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition cursor-pointer ${mode === "manual"
-                                    ? "bg-black text-white shadow"
-                                    : "text-gray-600 hover:bg-gray-200"
+                                ? "bg-black text-white shadow"
+                                : "text-gray-600 hover:bg-gray-200"
                                 }`}
                         >
                             <Edit size={16} />
@@ -131,8 +151,8 @@ export default function CreateTagModal({ isOpen, onClose, onSuccess }) {
                                 type="button"
                                 onClick={() => setSubscriptionType("free")}
                                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition ${subscriptionType === "free"
-                                        ? "border-gray-900 bg-gray-900 text-white"
-                                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                                    ? "border-gray-900 bg-gray-900 text-white"
+                                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                                     }`}
                             >
                                 Free
@@ -141,8 +161,8 @@ export default function CreateTagModal({ isOpen, onClose, onSuccess }) {
                                 type="button"
                                 onClick={() => setSubscriptionType("subscriber")}
                                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg border transition ${subscriptionType === "subscriber"
-                                        ? "border-purple-600 bg-purple-600 text-white"
-                                        : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                                    ? "border-purple-600 bg-purple-600 text-white"
+                                    : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
                                     }`}
                             >
                                 <DollarSign size={14} />
