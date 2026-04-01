@@ -1,7 +1,8 @@
-import Checkout from "@/components/Checkout"
-import Banner from "@/shared/Banner"
+import Checkout from "@/components/Checkout";
+import Banner from "@/shared/Banner";
+import { Suspense } from "react";
 
-export default function page() {
+export default function Page() {
     return (
         <section className="bg-white">
             <Banner
@@ -15,7 +16,9 @@ export default function page() {
                 ]}
             />
 
-            <Checkout />
+            <Suspense fallback={<div className="py-20 text-center">Loading checkout...</div>}>
+                <Checkout />
+            </Suspense>
         </section>
-    )
+    );
 }
