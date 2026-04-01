@@ -198,7 +198,7 @@ export default function DashboardFavorites() {
                             {totalFavorites} {totalFavorites === 1 ? "item" : "items"} saved
                         </p>
                     </div>
-                    {favorites.length > 0 && (
+                    {/* {favorites.length > 0 && (
                         <button
                             onClick={fetchFavorites}
                             disabled={loading}
@@ -207,7 +207,7 @@ export default function DashboardFavorites() {
                             <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
                             Refresh
                         </button>
-                    )}
+                    )} */}
                 </div>
             </div>
 
@@ -268,16 +268,11 @@ export default function DashboardFavorites() {
                                     </div>
                                 </>
                             ) : quote ? (
-                                // IF QUOTE
-                                <Link href={`/quote/${quote._id}`} className="block p-6 text-center hover:bg-gray-50 transition-colors">
+                                <div className="block p-6 text-center hover:bg-gray-50 transition-colors">
                                     <Quote size={30} className="text-gray-300 mx-auto mb-3" />
                                     <p className="text-gray-800 italic line-clamp-3">"{quote.text}"</p>
                                     <p className="text-xs text-gray-500 mt-2">— {quote.author || "InspireTag"}</p>
-
-                                    <div className="mt-3 text-xs text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        Click to view full quote
-                                    </div>
-                                </Link>
+                                </div>
                             ) : null}
                         </div>
                     );
@@ -315,11 +310,11 @@ export default function DashboardFavorites() {
             )}
 
             {/* Loading More Indicator */}
-            {loading && favorites.length > 0 && (
+            {/* {loading && favorites.length > 0 && (
                 <div className="flex justify-center mt-8">
                     <RefreshCw size={24} className="animate-spin text-gray-400" />
                 </div>
-            )}
+            )} */}
         </div>
     );
 }

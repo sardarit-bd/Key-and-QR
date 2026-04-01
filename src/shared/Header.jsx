@@ -109,8 +109,14 @@ export default function Header() {
                         {user ? (
                             <div className="relative group">
                                 {/* Avatar - User initials or icon */}
-                                <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center cursor-pointer">
-                                    {user?.name ? (
+                                <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center cursor-pointer overflow-hidden">
+                                    {user?.profileImage?.url ? (
+                                        <img
+                                            src={user.profileImage.url}
+                                            alt={user?.name || "User"}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : user?.name ? (
                                         <span className="text-white text-sm font-semibold">
                                             {getUserInitials()}
                                         </span>
@@ -125,8 +131,14 @@ export default function Header() {
                                     {/* User Info Section */}
                                     <div className="px-4 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-100">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center">
-                                                {user?.name ? (
+                                            <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center overflow-hidden">
+                                                {user?.profileImage?.url ? (
+                                                    <img
+                                                        src={user.profileImage.url}
+                                                        alt={user?.name || "User"}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : user?.name ? (
                                                     <span className="text-white text-base font-semibold">
                                                         {getUserInitials()}
                                                     </span>
@@ -281,10 +293,18 @@ export default function Header() {
                             {/* Mobile User Info */}
                             <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl mt-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center">
-                                        <span className="text-white text-base font-semibold">
-                                            {getUserInitials()}
-                                        </span>
+                                    <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center overflow-hidden">
+                                        {user?.profileImage?.url ? (
+                                            <img
+                                                src={user.profileImage.url}
+                                                alt={user?.name || "User"}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        ) : (
+                                            <span className="text-white text-base font-semibold">
+                                                {getUserInitials()}
+                                            </span>
+                                        )}
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 flex-wrap">

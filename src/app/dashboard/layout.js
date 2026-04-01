@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuthStore } from '@/store/authStore';
-import { Camera, CircleDotDashed, CreditCard, Heart, House, LogOut, Mail, Menu, Package, QrCode, ShoppingBag, X } from 'lucide-react';
+import { Clock, CreditCard, Heart, House, LayoutDashboard, LogOut, Mail, Menu, Package, QrCode, Quote, Send, ShoppingBag, Tag, User, X } from 'lucide-react';
 import { FaGoogle } from 'react-icons/fa'; // ← react-icons থেকে Google icon
 
 import Link from 'next/link';
@@ -17,25 +17,26 @@ export default function DashboardLayout({ children }) {
 
     /********************* menu item for admin **************************/
     const menuItemsforAdmin = [
-        { icon: Package, label: 'Dashboard', active: true, link: "/dashboard/admin" },
+        { icon: LayoutDashboard, label: 'Dashboard', active: true, link: "/dashboard/admin" },
         { icon: Package, label: 'Add Products', active: true, link: "/dashboard/admin/products" },
-        { icon: Package, label: 'Add Tags', active: true, link: "/dashboard/admin/tags" },
-        { icon: Package, label: 'Add Quotes', active: true, link: "/dashboard/admin/quotes" },
+        { icon: Tag, label: 'Add Tags', active: true, link: "/dashboard/admin/tags" },
+        { icon: Quote, label: 'Add Quotes', active: true, link: "/dashboard/admin/quotes" },
         { icon: ShoppingBag, label: 'All Orders', active: false, link: "/dashboard/admin/orders" },
-        { icon: CircleDotDashed, label: 'Pending Quotes', active: false, link: "/dashboard/admin/pending" },
+        { icon: Clock, label: 'Pending Quotes', active: false, link: "/dashboard/admin/pending" },
         { icon: QrCode, label: 'Scan History', active: false, link: "/dashboard/admin/qr-history" },
         { icon: CreditCard, label: 'Subscription', active: false, link: "/dashboard/admin/subscription" },
-        { icon: Camera, label: 'My Profile', active: false, link: "/dashboard/admin/profile" },
+        { icon: User, label: 'My Profile', active: false, link: "/dashboard/admin/profile" },
     ];
 
     /********************* menu item for user **************************/
     const menuItemsforUser = [
         { icon: House, label: 'Home', active: true, link: "/dashboard/user" },
-        { icon: Package, label: 'My Quote', active: true, link: "/dashboard/user/myquotes" },
-        { icon: Package, label: 'Submit Quote', active: true, link: "/dashboard/user/submit-quote" },
+        { icon: Quote, label: 'My Quote', active: true, link: "/dashboard/user/myquotes" },
+        { icon: Send, label: 'Submit Quote', active: true, link: "/dashboard/user/submit-quote" },
         { icon: Heart, label: 'Favorites', active: false, link: "/dashboard/user/favorites" },
-        { icon: Heart, label: 'Orders', active: false, link: "/dashboard/user/orders" },
+        { icon: ShoppingBag, label: 'Orders', active: false, link: "/dashboard/user/orders" },
         { icon: CreditCard, label: 'Subscription', active: false, link: "/dashboard/user/subscription" },
+        { icon: User, label: 'Profile', active: false, link: "/dashboard/user/profile" },
     ];
 
     const orders = [
@@ -100,27 +101,44 @@ export default function DashboardLayout({ children }) {
             <aside className="hidden sticky h-screen top-14 lg:block w-64 bg-white border-r border-gray-200 p-6">
                 {/* Profile Section */}
                 <div className="flex flex-col items-center mb-8">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 mb-4 overflow-hidden flex items-center justify-center">
-                        {user?.profileImage?.url ? (
-                            <img
-                                src={user.profileImage.url}
-                                alt={user.name}
-                                className="w-full h-full object-cover"
-                            />
-                        ) : (
-                            <span className="text-white text-2xl font-bold">
-                                {getUserInitials()}
-                            </span>
-                        )}
+
+                    {/* Gradient Border Wrapper */}
+                    <div className="p-[2px] rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
+
+                        {/* Inner circle */}
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 overflow-hidden flex items-center justify-center">
+
+                            {user?.profileImage?.url ? (
+                                <img
+                                    src={user.profileImage.url}
+                                    alt={user.name}
+                                    className="w-full h-full object-cover rounded-full"
+                                />
+                            ) : (
+                                <span className="text-white text-2xl font-bold">
+                                    {getUserInitials()}
+                                </span>
+                            )}
+                        </div>
                     </div>
-                    <h3 className="font-semibold text-gray-900 capitalize">{user?.name}</h3>
-                    <p className="text-sm text-gray-500">{user?.email}</p>
+
+                    <h3 className="font-semibold text-gray-900 capitalize">
+                        {user?.name}
+                    </h3>
+
+                    <p className="text-sm text-gray-500">
+                        {user?.email}
+                    </p>
+
                     <div className="flex items-center gap-1 mt-1">
                         {getProviderIcon()}
-                        <p className="text-xs text-gray-400">{getProviderText()} account</p>
+                        <p className="text-xs text-gray-400">
+                            {getProviderText()} account
+                        </p>
                     </div>
+
                     <p className="text-xs bg-green-100 text-green-700 w-fit px-3 py-1 rounded-full mt-2">
-                        {user?.role === "admin" ? "Administrator" : "Member"}
+                        {user?.role === "admin" ? "Administrator" : "User"}
                     </p>
                 </div>
 

@@ -149,7 +149,7 @@ export default function SubmitQuotePage() {
     }
 
     return (
-        <div className="min-h-screen py-8 px-4 bg-gradient-to-br from-purple-50 to-pink-50">
+        <div className="min-h-screen py-8 px-4">
             <div className="max-w-4xl mx-auto">
                 {/* Back Button */}
                 {/* <button

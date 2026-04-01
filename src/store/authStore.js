@@ -1,4 +1,3 @@
-// store/authStore.js
 "use client";
 
 import { authService } from "@/services/auth.service";
@@ -94,6 +93,18 @@ export const useAuthStore = create((set, get) => ({
       });
       return null;
     }
+  },
+
+  updateUser: (updatedUserData) => {
+    set((state) => ({
+      user: state.user ? { ...state.user, ...updatedUserData } : null,
+    }));
+  },
+
+  updateUserPartial: (updates) => {
+    set((state) => ({
+      user: state.user ? { ...state.user, ...updates } : null,
+    }));
   },
 
   logout: async () => {
