@@ -15,7 +15,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FaGoogle } from "react-icons/fa"; // ← react-icons থেকে Google icon
+import { FaGoogle } from "react-icons/fa";
 
 
 export default function Header() {

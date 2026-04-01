@@ -10,7 +10,6 @@ import {
     Clock,
     CreditCard,
     Gift,
-    MessageSquare,
     Package,
     Tag,
     Truck,
@@ -359,22 +358,6 @@ export default function OrderDetailsPage() {
                             </div>
                         </div>
                     </div>
-
-                    {/* Need Help */}
-                    {/* <div className="bg-gray-50 rounded-lg p-6 transition-all duration-300 hover:shadow-md">
-                        <h2 className="text-lg font-semibold text-gray-900 mb-4">Need Help?</h2>
-                        <p className="text-sm text-gray-600 mb-3">
-                            Having issues with your order? Contact our support team.
-                        </p>
-                        <Link
-                            href="/contact"
-                            className="inline-flex items-center gap-2 text-sm text-blue-600 hover:text-blue-700 transition-all duration-200 group"
-                        >
-                            <MessageSquare className="w-4 h-4" />
-                            Contact Support
-                            <ArrowLeft className="w-3 h-3 rotate-180 group-hover:translate-x-0.5 transition-transform" />
-                        </Link>
-                    </div> */}
                 </div>
             </div>
         </div>
