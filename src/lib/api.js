@@ -16,17 +16,17 @@ let hasRedirectedToLogin = false;
 
 const processQueue = (error) => {
   failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve();
-    }
+    if (error) prom.reject(error);
+    else prom.resolve();
   });
   failedQueue = [];
 };
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    hasRedirectedToLogin = false;
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
 

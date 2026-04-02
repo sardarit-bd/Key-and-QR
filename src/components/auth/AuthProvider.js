@@ -9,10 +9,12 @@ export default function AuthProvider({ children }) {
   const [isClient, setIsClient] = useState(false);
   const pathname = usePathname();
 
-  const isAuthPage =
+  const isPublicAuthPage =
     pathname === "/login" ||
     pathname === "/signup" ||
-    pathname?.startsWith("/auth/callback");
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password" ||
+    pathname === "/callback";
 
   useEffect(() => {
     setIsClient(true);
@@ -20,25 +22,19 @@ export default function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!isClient) return;
-    if (isAuthPage) return;
+    if (isPublicAuthPage) return;
+    if (isInitialized || loading) return;
 
-    if (!isInitialized && !loading) {
-      initializeAuth();
-    }
-  }, [initializeAuth, isInitialized, loading, isClient, isAuthPage]);
+    initializeAuth();
+  }, [
+    isClient,
+    isPublicAuthPage,
+    isInitialized,
+    loading,
+    initializeAuth,
+  ]);
 
   if (!isClient) return null;
-
-  if (!isAuthPage && !isInitialized && loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   return <>{children}</>;
 }

@@ -4,40 +4,42 @@ import { useAuthStore } from "@/store/authStore";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 
-export default function AuthCallbackPage() {
+export default function CallbackPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const fetchMe = useAuthStore((state) => state.fetchMe);
 
     useEffect(() => {
-        const handleAuthCallback = async () => {
+        const handleCallback = async () => {
             const success = searchParams.get("success");
 
-            if (success === "true") {
-                try {
-                    const user = await fetchMe();
-
-                    if (user?.role === "admin") {
-                        router.replace("/dashboard/admin");
-                    } else {
-                        router.replace("/dashboard/user");
-                    }
-                } catch (error) {
-                    router.replace("/login?error=auth_callback_failed");
-                }
-            } else {
+            if (success !== "true") {
                 router.replace("/login");
+                return;
+            }
+
+            const user = await fetchMe();
+
+            if (!user) {
+                router.replace("/login?error=session_not_found");
+                return;
+            }
+
+            if (user.role === "admin") {
+                router.replace("/dashboard/admin");
+            } else {
+                router.replace("/dashboard/user");
             }
         };
 
-        handleAuthCallback();
+        handleCallback();
     }, [fetchMe, router, searchParams]);
 
     return (
         <div className="min-h-screen flex items-center justify-center">
             <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
-                <p className="text-gray-600">Signing you in...</p>
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-black mx-auto mb-4" />
+                <p>Signing you in...</p>
             </div>
         </div>
     );
