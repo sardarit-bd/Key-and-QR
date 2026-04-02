@@ -1,7 +1,7 @@
 "use client";
 
-import { authService } from "@/services/auth.service";
 import { create } from "zustand";
+import api from "@/lib/api";
 
 export const useAuthStore = create((set, get) => ({
   user: null,
@@ -15,37 +15,45 @@ export const useAuthStore = create((set, get) => ({
     set({ loading: true, error: null });
 
     try {
-      const res = await authService.getMe();
-      console.log("Initialize auth response:", res);
+      const response = await api.get("/auth/me");
+      const user = response.data?.data;
 
       set({
-        user: res.data,
+        user: user,
         loading: false,
         isInitialized: true,
         error: null,
       });
+
+      console.log("✅ Auth initialized successfully");
+      return user;
     } catch (error) {
-      console.error("Initialize auth error:", error);
+      console.error("❌ Initialize auth error:", error);
       set({
         user: null,
         loading: false,
         isInitialized: true,
         error: null,
       });
+      return null;
     }
   },
 
   register: async (payload) => {
     set({ loading: true, error: null });
+
     try {
-      const res = await authService.register(payload);
-      const data = res.data;
+      const response = await api.post("/auth/register", payload);
+      const { user } = response.data?.data || {};
 
-      if (data?.accessToken) localStorage.setItem("accessToken", data.accessToken);
-      if (data?.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
+      set({
+        user: user,
+        loading: false,
+        error: null,
+        isInitialized: true
+      });
 
-      set({ user: data?.user || data, loading: false, error: null, isInitialized: true });
-      return { success: true, user: data?.user || data };
+      return { success: true, user };
     } catch (error) {
       const message = error.response?.data?.message || "Registration failed";
       set({ loading: false, error: message });
@@ -55,15 +63,19 @@ export const useAuthStore = create((set, get) => ({
 
   login: async (payload) => {
     set({ loading: true, error: null });
+
     try {
-      const res = await authService.login(payload);
-      const data = res.data;
+      const response = await api.post("/auth/login", payload);
+      const { user } = response.data?.data || {};
 
-      if (data?.accessToken) localStorage.setItem("accessToken", data.accessToken);
-      if (data?.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
+      set({
+        user: user,
+        loading: false,
+        error: null,
+        isInitialized: true
+      });
 
-      set({ user: data?.user || data, loading: false, error: null, isInitialized: true });
-      return { success: true, user: data?.user || data };
+      return { success: true, user };
     } catch (error) {
       const message = error.response?.data?.message || "Login failed";
       set({ loading: false, error: message });
@@ -73,17 +85,22 @@ export const useAuthStore = create((set, get) => ({
 
   fetchMe: async () => {
     try {
-      const res = await authService.getMe();
+      const response = await api.get("/auth/me");
+      const user = response.data?.data;
+
       set({
-        user: res.data,
+        user: user,
         isInitialized: true,
         error: null,
       });
-      return res.data;
+
+      return user;
     } catch (error) {
+      console.error("Fetch me error:", error);
       set({
         user: null,
         isInitialized: true,
+        error: null,
       });
       return null;
     }
@@ -102,13 +119,24 @@ export const useAuthStore = create((set, get) => ({
   },
 
   logout: async () => {
+    set({ loading: true });
+
     try {
-      await authService.logout();
-    } catch (error) { }
-    finally {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("refreshToken");
-      set({ user: null, isInitialized: true, error: null });
+      await api.post("/auth/logout");
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      set({
+        user: null,
+        isInitialized: true,
+        error: null,
+        loading: false
+      });
+
+      // Redirect to home page
+      if (typeof window !== "undefined") {
+        window.location.href = "/";
+      }
     }
   },
 
@@ -116,9 +144,9 @@ export const useAuthStore = create((set, get) => ({
     set({ loading: true, error: null });
 
     try {
-      const res = await authService.forgotPassword({ email });
+      const response = await api.post("/auth/forgot-password", { email });
       set({ loading: false });
-      return { success: true, message: res.message };
+      return { success: true, message: response.data?.message || "Reset email sent" };
     } catch (error) {
       const message = error.response?.data?.message || "Failed to send reset email";
       set({ loading: false, error: message });
@@ -130,9 +158,9 @@ export const useAuthStore = create((set, get) => ({
     set({ loading: true, error: null });
 
     try {
-      const res = await authService.resetPassword({ token, newPassword });
+      const response = await api.post("/auth/reset-password", { token, newPassword });
       set({ loading: false });
-      return { success: true, message: res.message };
+      return { success: true, message: response.data?.message || "Password reset successfully" };
     } catch (error) {
       const message = error.response?.data?.message || "Password reset failed";
       set({ loading: false, error: message });
@@ -144,13 +172,26 @@ export const useAuthStore = create((set, get) => ({
     set({ loading: true, error: null });
 
     try {
-      const res = await authService.changePassword({ oldPassword, newPassword });
+      const response = await api.post("/auth/change-password", { oldPassword, newPassword });
       set({ loading: false });
-      return { success: true, message: res.message };
+      return { success: true, message: response.data?.message || "Password changed successfully" };
     } catch (error) {
       const message = error.response?.data?.message || "Password change failed";
       set({ loading: false, error: message });
       return { success: false, error: message };
     }
+  },
+
+  // Helper methods
+  isAuthenticated: () => {
+    return !!get().user;
+  },
+
+  isAdmin: () => {
+    return get().user?.role === "admin";
+  },
+
+  getUser: () => {
+    return get().user;
   },
 }));
