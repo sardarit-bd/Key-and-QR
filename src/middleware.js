@@ -1,50 +1,57 @@
 import { NextResponse } from "next/server";
 
-const publicRoutes = [
-  "/",
-  "/login",
-  "/signup",
-  "/forgot-password",
-  "/reset-password",
-  "/shop",
-  "/subscription",
-];
+export function middleware(request) {
+  const path = request.nextUrl.pathname;
 
-const protectedRoutes = ["/dashboard", "/profile", "/checkout"];
-const adminRoutes = ["/dashboard/admin"];
+  const refreshToken = request.cookies.get("refreshToken")?.value;
+  const role = request.cookies.get("userRole")?.value;
 
-export default function middleware(req) {
-  const path = req.nextUrl.pathname;
+  const isPublicPath =
+    path === "/" ||
+    path === "/login" ||
+    path === "/signup" ||
+    path === "/forgot-password" ||
+    path === "/reset-password" ||
+    path === "/shop" ||
+    path === "/subscription";
 
-  const refreshToken = req.cookies.get("refreshToken")?.value;
+  const isDashboardPath = path.startsWith("/dashboard");
+  const isProfilePath = path.startsWith("/profile");
+  const isCheckoutPath = path.startsWith("/checkout");
+  const isAdminPath = path.startsWith("/dashboard/admin");
 
-  const role = req.cookies.get("userRole")?.value;
+  const isProtectedPath =
+    isDashboardPath || isProfilePath || isCheckoutPath;
 
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    path.startsWith(route),
-  );
-  const isAdminRoute = adminRoutes.some((route) => path.startsWith(route));
-
-  // Protected route check
-  if (isProtectedRoute && !refreshToken) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  // Admin route check
-  if (isAdminRoute && role !== "admin") {
-    return NextResponse.redirect(new URL("/", req.url));
-  }
-
-  if (refreshToken && (path === "/login" || path === "/signup")) {
+  // Logged in user trying to access login/signup
+  if ((path === "/login" || path === "/signup") && refreshToken) {
     if (role === "admin") {
-      return NextResponse.redirect(new URL("/dashboard/admin", req.url));
+      return NextResponse.redirect(new URL("/dashboard/admin", request.url));
     }
-    return NextResponse.redirect(new URL("/dashboard/user", req.url));
+    return NextResponse.redirect(new URL("/dashboard/user", request.url));
+  }
+
+  // Protected route without login
+  if (isProtectedPath && !refreshToken) {
+    return NextResponse.redirect(new URL("/login", request.url));
+  }
+
+  // Admin route protection
+  if (isAdminPath && refreshToken && role !== "admin") {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  matcher: [
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+    "/dashboard/:path*",
+    "/profile/:path*",
+    "/checkout/:path*",
+  ],
 };

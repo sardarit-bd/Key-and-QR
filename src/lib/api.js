@@ -23,6 +23,9 @@ api.interceptors.response.use(
         await api.post("/auth/refresh-token");
         return api(originalRequest);
       } catch (refreshError) {
+        if (typeof window !== "undefined") {
+          window.location.href = "/login";
+        }
         return Promise.reject(refreshError);
       }
     }

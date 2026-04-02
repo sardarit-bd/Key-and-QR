@@ -1,4 +1,3 @@
-// components/admin/tags/TagsTable.js
 import { Calendar, ExternalLink, QrCode, User, Power, PowerOff, ChevronLeft, ChevronRight, Mail } from "lucide-react";
 import { FaGoogle } from "react-icons/fa";
 import Link from "next/link";
