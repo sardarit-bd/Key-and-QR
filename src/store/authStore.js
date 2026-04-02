@@ -37,18 +37,15 @@ export const useAuthStore = create((set, get) => ({
 
   register: async (payload) => {
     set({ loading: true, error: null });
-
     try {
       const res = await authService.register(payload);
+      const data = res.data;
 
-      set({
-        user: res.data?.user || res.data,
-        loading: false,
-        error: null,
-        isInitialized: true,
-      });
+      if (data?.accessToken) localStorage.setItem("accessToken", data.accessToken);
+      if (data?.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
 
-      return { success: true, user: res.data?.user || res.data };
+      set({ user: data?.user || data, loading: false, error: null, isInitialized: true });
+      return { success: true, user: data?.user || data };
     } catch (error) {
       const message = error.response?.data?.message || "Registration failed";
       set({ loading: false, error: message });
@@ -58,18 +55,15 @@ export const useAuthStore = create((set, get) => ({
 
   login: async (payload) => {
     set({ loading: true, error: null });
-
     try {
       const res = await authService.login(payload);
+      const data = res.data;
 
-      set({
-        user: res.data?.user || res.data,
-        loading: false,
-        error: null,
-        isInitialized: true,
-      });
+      if (data?.accessToken) localStorage.setItem("accessToken", data.accessToken);
+      if (data?.refreshToken) localStorage.setItem("refreshToken", data.refreshToken);
 
-      return { success: true, user: res.data?.user || res.data };
+      set({ user: data?.user || data, loading: false, error: null, isInitialized: true });
+      return { success: true, user: data?.user || data };
     } catch (error) {
       const message = error.response?.data?.message || "Login failed";
       set({ loading: false, error: message });
@@ -110,14 +104,11 @@ export const useAuthStore = create((set, get) => ({
   logout: async () => {
     try {
       await authService.logout();
-    } catch (error) {
-      // ignore logout api error
-    } finally {
-      set({
-        user: null,
-        isInitialized: true,
-        error: null,
-      });
+    } catch (error) { }
+    finally {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      set({ user: null, isInitialized: true, error: null });
     }
   },
 
