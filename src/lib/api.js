@@ -1,49 +1,72 @@
 import axios from "axios";
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+
 const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: API_URL,
   withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
 
-api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+let isRefreshing = false;
+let failedQueue = [];
+let hasRedirectedToLogin = false;
+
+const processQueue = (error) => {
+  failedQueue.forEach((prom) => {
+    if (error) {
+      prom.reject(error);
+    } else {
+      prom.resolve();
     }
-  }
-  return config;
-});
+  });
+  failedQueue = [];
+};
 
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
 
-    if (
-      error.response?.status === 401 &&
-      !originalRequest._retry &&
-      !originalRequest.url?.includes("/auth/refresh-token") &&
-      !originalRequest.url?.includes("/auth/login") &&
-      !originalRequest.url?.includes("/auth/register")
-    ) {
+    if (!error.response) {
+      return Promise.reject(error);
+    }
+
+    const is401 = error.response.status === 401;
+    const isRefreshCall = originalRequest?.url?.includes("/auth/refresh-token");
+    const isLoginCall = originalRequest?.url?.includes("/auth/login");
+    const isRegisterCall = originalRequest?.url?.includes("/auth/register");
+    const isMeCall = originalRequest?.url?.includes("/auth/me");
+
+    if (is401 && !originalRequest._retry && !isRefreshCall && !isLoginCall && !isRegisterCall) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        })
+          .then(() => api(originalRequest))
+          .catch((err) => Promise.reject(err));
+      }
+
       originalRequest._retry = true;
+      isRefreshing = true;
 
       try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        const res = await api.post("/auth/refresh-token", { refreshToken });
-        const newToken = res.data?.data?.accessToken;
-        if (newToken) {
-          localStorage.setItem("accessToken", newToken);
-        }
+        await api.post("/auth/refresh-token");
+        processQueue(null);
         return api(originalRequest);
       } catch (refreshError) {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        if (typeof window !== "undefined") {
-          window.location.href = "/login";
+        processQueue(refreshError);
+
+        if (typeof window !== "undefined" && !hasRedirectedToLogin && !isMeCall) {
+          hasRedirectedToLogin = true;
+          window.location.replace("/login?session=expired");
         }
+
         return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
       }
     }
 
