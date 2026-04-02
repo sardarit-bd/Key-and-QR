@@ -36,7 +36,9 @@ export default function QRCodeModal({ isOpen, onClose, tag }) {
 
     if (!isOpen || !tag) return null;
 
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+    const baseUrl =
+        process.env.NEXT_PUBLIC_FRONTEND_URL || window.location.origin;
+
     const url = `${baseUrl}/t/${tag.tagCode}`;
 
     return (
