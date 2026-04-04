@@ -312,7 +312,7 @@ export default function AdminDashboard() {
       </div>
 
       {/* Admin Quick Actions */}
-      <div className="mt-8 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-6 border border-gray-200">
+      {/* <div className="mt-8 bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-6 border border-gray-200">
         <h3 className="font-semibold text-gray-900 mb-4">Quick Actions</h3>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           <Link
@@ -351,7 +351,7 @@ export default function AdminDashboard() {
             Pending Quotes
           </Link>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 }
