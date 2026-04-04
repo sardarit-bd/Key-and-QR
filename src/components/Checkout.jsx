@@ -18,7 +18,7 @@ export default function Checkout() {
 
     const { user } = useAuthStore();
     const cart = useCartStore((state) => state.cart);
-    const clearCart = useCartStore((state) => state.clearCart);
+    // const clearCart = useCartStore((state) => state.clearCart);
 
     const [loading, setLoading] = useState(false);
     const [pageLoading, setPageLoading] = useState(false);
@@ -93,6 +93,18 @@ export default function Checkout() {
         return cart;
     }, [orderId, existingOrder, cart]);
 
+    const firstItem = checkoutItems?.[0];
+
+    useEffect(() => {
+        if (!orderId && firstItem) {
+            setFormData((prev) => ({
+                ...prev,
+                purchaseType: firstItem.purchaseType || "self",
+                giftMessage: firstItem.giftMessage || "",
+            }));
+        }
+    }, [orderId, firstItem]);
+
     const subtotal = checkoutItems.reduce((sum, item) => sum + item.price * item.qty, 0);
     const shippingCost = 0;
     const total = subtotal + shippingCost;
@@ -137,22 +149,22 @@ export default function Checkout() {
                 response = await orderService.createCheckout({ orderId });
             } else {
                 // New order from cart
-                const firstItem = cart[0];
+                // const firstItem = cart[0];
 
                 const orderPayload = {
                     productId: firstItem.id,
                     quantity: firstItem.qty,
-                    purchaseType: formData.purchaseType,
-                    giftMessage: formData.giftMessage || null,
+                    purchaseType: firstItem.purchaseType || formData.purchaseType || "self",
+                    giftMessage:
+                        (firstItem.purchaseType || formData.purchaseType) === "gift"
+                            ? firstItem.giftMessage || formData.giftMessage || null
+                            : null,
                 };
 
                 response = await orderService.createCheckout(orderPayload);
             }
 
             if (response.data?.url) {
-                if (!orderId) {
-                    clearCart();
-                }
                 window.location.href = response.data.url;
                 return;
             }

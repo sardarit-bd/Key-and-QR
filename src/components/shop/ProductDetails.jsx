@@ -47,7 +47,7 @@ export default function ProductDetails() {
     // State declarations
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [selectedOption, setSelectedOption] = useState('gift');
+    const [selectedOption, setSelectedOption] = useState("self");
     const [customMessage, setCustomMessage] = useState('');
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState("");
@@ -92,7 +92,7 @@ export default function ProductDetails() {
     useEffect(() => {
         if (product) {
             const galleryImages = [];
-            
+
             // Add main image first
             if (product.image?.url) {
                 galleryImages.push({
@@ -101,7 +101,7 @@ export default function ProductDetails() {
                     index: 0
                 });
             }
-            
+
             // Add gallery images
             if (product.gallery && product.gallery.length > 0) {
                 product.gallery.forEach((img, idx) => {
@@ -114,7 +114,7 @@ export default function ProductDetails() {
                     }
                 });
             }
-            
+
             // If no images at all, use placeholder
             if (galleryImages.length === 0) {
                 galleryImages.push({
@@ -123,7 +123,7 @@ export default function ProductDetails() {
                     index: 0
                 });
             }
-            
+
             // Set selected image to MAIN image (first in array)
             setSelectedImage(galleryImages[0].url);
             setIsMainImageSelected(true);
@@ -141,14 +141,17 @@ export default function ProductDetails() {
         if (!product || product.stock <= 0) return;
 
         const qtyToAdd = Math.min(quantity, product.stock);
-        for (let i = 0; i < qtyToAdd; i++) {
-            addToCart({
-                id: product._id,
-                name: product.name,
-                price: product.price,
-                img: selectedImage,
-            });
-        }
+
+        addToCart({
+            id: product._id,
+            name: product.name,
+            price: product.price,
+            img: selectedImage,
+            qty: qtyToAdd,
+            purchaseType: selectedOption === "gift" ? "gift" : "self",
+            giftMessage:
+                selectedOption === "gift" ? customMessage?.trim() || null : null,
+        });
     };
 
     const checkFavoriteStatus = async (productId) => {
@@ -207,15 +210,17 @@ export default function ProductDetails() {
 
         const qtyToAdd = Math.min(quantity, product.stock);
 
-        for (let i = 0; i < qtyToAdd; i++) {
-            addToCart({
-                id: product._id,
-                name: product.name,
-                price: product.price,
-                img: selectedImage,
-                qty: 1
-            });
-        }
+        addToCart({
+            id: product._id,
+            name: product.name,
+            price: product.price,
+            img: selectedImage,
+            qty: qtyToAdd,
+            purchaseType: selectedOption === "gift" ? "gift" : "self",
+            giftMessage:
+                selectedOption === "gift" ? customMessage?.trim() || null : null,
+        });
+
         router.push("/checkout");
     };
 
@@ -267,7 +272,7 @@ export default function ProductDetails() {
     // Build gallery array for thumbnails with main image info
     const getGalleryImages = () => {
         const images = [];
-        
+
         // Add main image with flag
         if (product.image?.url) {
             images.push({
@@ -276,7 +281,7 @@ export default function ProductDetails() {
                 label: "Main Image"
             });
         }
-        
+
         // Add gallery images
         if (product.gallery && product.gallery.length > 0) {
             product.gallery.forEach((img, idx) => {
@@ -289,7 +294,7 @@ export default function ProductDetails() {
                 }
             });
         }
-        
+
         // If no images, add placeholder
         if (images.length === 0) {
             images.push({
@@ -298,10 +303,10 @@ export default function ProductDetails() {
                 label: "Placeholder"
             });
         }
-        
+
         return images;
     };
-    
+
     const gallery = getGalleryImages();
     const mainImage = gallery.find(img => img.isMain);
     const hasMultipleImages = gallery.length > 1;
@@ -320,7 +325,7 @@ export default function ProductDetails() {
                                 </span>
                             </div>
                         )}
-                        
+
                         {/* Main Image Badge - shows when main image is displayed */}
                         {isMainImageSelected && (
                             <div className="absolute top-4 left-4 z-10 bg-black/75 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 backdrop-blur-sm">
@@ -328,7 +333,7 @@ export default function ProductDetails() {
                                 <span className="text-sm font-medium">Main Image</span>
                             </div>
                         )}
-                        
+
                         <Image
                             src={selectedImage || "/placeholder.png"}
                             alt={product.name || "Product"}
@@ -353,17 +358,15 @@ export default function ProductDetails() {
                                     <button
                                         key={index}
                                         onClick={() => handleThumbnailClick(img.url, img.isMain)}
-                                        className={`relative group transition-all duration-200 ${
-                                            selectedImage === img.url 
-                                                ? "ring-2 ring-offset-2 ring-black scale-105" 
-                                                : "hover:scale-105"
-                                        }`}
+                                        className={`relative group transition-all duration-200 ${selectedImage === img.url
+                                            ? "ring-2 ring-offset-2 ring-black scale-105"
+                                            : "hover:scale-105"
+                                            }`}
                                     >
-                                        <div className={`relative border-2 rounded-lg overflow-hidden ${
-                                            selectedImage === img.url 
-                                                ? "border-black" 
-                                                : "border-transparent group-hover:border-gray-300"
-                                        }`}>
+                                        <div className={`relative border-2 rounded-lg overflow-hidden ${selectedImage === img.url
+                                            ? "border-black"
+                                            : "border-transparent group-hover:border-gray-300"
+                                            }`}>
                                             <Image
                                                 src={img.url || "/placeholder.png"}
                                                 alt={`${img.label}`}
@@ -373,7 +376,7 @@ export default function ProductDetails() {
                                                 onError={handleImageError}
                                                 unoptimized={true}
                                             />
-                                            
+
                                             {/* Main Image Badge on Thumbnail */}
                                             {img.isMain && (
                                                 <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-[10px] font-medium py-1 text-center flex items-center justify-center gap-1">
@@ -381,7 +384,7 @@ export default function ProductDetails() {
                                                     <span>MAIN</span>
                                                 </div>
                                             )}
-                                            
+
                                             {/* Selection Overlay */}
                                             {selectedImage === img.url && (
                                                 <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
@@ -396,7 +399,7 @@ export default function ProductDetails() {
                             </div>
                         </div>
                     )}
-                    
+
                     {/* Single Image Info */}
                     {!hasMultipleImages && (
                         <div className="mt-4 text-center">
@@ -406,7 +409,7 @@ export default function ProductDetails() {
                             </div>
                         </div>
                     )}
-                    
+
                     {/* Image Counter */}
                     {hasMultipleImages && (
                         <div className="mt-3 text-center">
@@ -447,21 +450,21 @@ export default function ProductDetails() {
                         <div className="space-y-4">
                             {/* Option 1: Purchase for yourself */}
                             <button
-                                onClick={() => setSelectedOption('yourself')}
-                                className={`w-full text-left p-5 rounded-xl border-2 transition-all ${
-                                    selectedOption === 'yourself'
+                                onClick={() => setSelectedOption('self')}
+                                className={`w-full text-left p-5 rounded-xl border-2 transition-all ${selectedOption === 'self'
                                         ? 'border-gray-900 bg-gray-50'
                                         : 'border-gray-200 bg-white hover:border-gray-300'
-                                }`}
+                                    }`}
                             >
                                 <div className="flex items-start gap-4">
                                     <div className="flex-shrink-0 mt-0.5">
-                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                                            selectedOption === 'yourself'
-                                                ? 'border-gray-900'
-                                                : 'border-gray-300'
-                                        }`}>
-                                            {selectedOption === 'yourself' && (
+                                        <div
+                                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${selectedOption === 'self'
+                                                    ? 'border-gray-900'
+                                                    : 'border-gray-300'
+                                                }`}
+                                        >
+                                            {selectedOption === 'self' && (
                                                 <div className="w-2.5 h-2.5 rounded-full bg-gray-900"></div>
                                             )}
                                         </div>
@@ -481,19 +484,17 @@ export default function ProductDetails() {
                             {/* Option 2: Purchase for Gift */}
                             <button
                                 onClick={() => setSelectedOption('gift')}
-                                className={`w-full text-left p-5 rounded-xl border-2 transition-all ${
-                                    selectedOption === 'gift'
-                                        ? 'border-gray-900 bg-gray-900'
-                                        : 'border-gray-200 bg-white hover:border-gray-300'
-                                }`}
+                                className={`w-full text-left p-5 rounded-xl border-2 transition-all ${selectedOption === 'gift'
+                                    ? 'border-gray-900 bg-gray-900'
+                                    : 'border-gray-200 bg-white hover:border-gray-300'
+                                    }`}
                             >
                                 <div className="flex items-start gap-4">
                                     <div className="flex-shrink-0 mt-0.5">
-                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${
-                                            selectedOption === 'gift'
-                                                ? 'border-white'
-                                                : 'border-gray-300'
-                                        }`}>
+                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${selectedOption === 'gift'
+                                            ? 'border-white'
+                                            : 'border-gray-300'
+                                            }`}>
                                             {selectedOption === 'gift' && (
                                                 <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
                                             )}
@@ -501,14 +502,12 @@ export default function ProductDetails() {
                                     </div>
 
                                     <div className="flex-1">
-                                        <h3 className={`font-semibold mb-1 ${
-                                            selectedOption === 'gift' ? 'text-white' : 'text-gray-900'
-                                        }`}>
+                                        <h3 className={`font-semibold mb-1 ${selectedOption === 'gift' ? 'text-white' : 'text-gray-900'
+                                            }`}>
                                             Purchase for Gift
                                         </h3>
-                                        <p className={`text-sm ${
-                                            selectedOption === 'gift' ? 'text-gray-300' : 'text-gray-500'
-                                        }`}>
+                                        <p className={`text-sm ${selectedOption === 'gift' ? 'text-gray-300' : 'text-gray-500'
+                                            }`}>
                                             Personalize with your own words
                                         </p>
                                     </div>
@@ -553,11 +552,10 @@ export default function ProductDetails() {
                         <button
                             onClick={handleAdd}
                             disabled={product.stock <= 0}
-                            className={`px-6 py-3 border rounded-md transition flex-1 md:flex-none cursor-pointer ${
-                                product.stock <= 0
-                                    ? 'border-gray-300 bg-gray-100 text-gray-500 cursor-not-allowed'
-                                    : 'border-gray-700 hover:bg-gray-700 hover:text-white'
-                            }`}
+                            className={`px-6 py-3 border rounded-md transition flex-1 md:flex-none cursor-pointer ${product.stock <= 0
+                                ? 'border-gray-300 bg-gray-100 text-gray-500 cursor-not-allowed'
+                                : 'border-gray-700 hover:bg-gray-700 hover:text-white'
+                                }`}
                         >
                             {product.stock <= 0 ? 'Out of Stock' : 'Add to Cart'}
                         </button>
@@ -565,11 +563,10 @@ export default function ProductDetails() {
                         <button
                             onClick={handleFavorite}
                             disabled={isSaving}
-                            className={`px-4 py-3 border rounded-md flex items-center gap-2 transition cursor-pointer ${
-                                isFavorite
-                                    ? "bg-red-500 text-white border-red-500"
-                                    : "border-gray-700 hover:bg-gray-700 hover:text-white"
-                            }`}
+                            className={`px-4 py-3 border rounded-md flex items-center gap-2 transition cursor-pointer ${isFavorite
+                                ? "bg-red-500 text-white border-red-500"
+                                : "border-gray-700 hover:bg-gray-700 hover:text-white"
+                                }`}
                         >
                             <Heart size={18} className={isFavorite ? "fill-white" : ""} />
                             {isFavorite ? "Saved" : "Save"}
@@ -577,11 +574,10 @@ export default function ProductDetails() {
 
                         <button
                             onClick={handleBuyNow}
-                            className={`px-6 py-3 rounded-md transition flex-1 md:flex-none text-center cursor-pointer ${
-                                product.stock <= 0
-                                    ? 'bg-gray-400 text-white cursor-not-allowed pointer-events-none'
-                                    : 'bg-gray-700 text-white hover:bg-gray-800'
-                            }`}
+                            className={`px-6 py-3 rounded-md transition flex-1 md:flex-none text-center cursor-pointer ${product.stock <= 0
+                                ? 'bg-gray-400 text-white cursor-not-allowed pointer-events-none'
+                                : 'bg-gray-700 text-white hover:bg-gray-800'
+                                }`}
                         >
                             Buy it Now
                         </button>
