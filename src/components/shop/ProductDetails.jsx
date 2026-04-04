@@ -4,7 +4,7 @@ import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
 import { useProductStore } from "@/store/productStore";
-import { AlertCircle, BadgeCheck, Heart, Minus, Plus, Zap } from "lucide-react";
+import { AlertCircle, BadgeCheck, Heart, Minus, Plus, Star, Zap } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -47,11 +47,12 @@ export default function ProductDetails() {
     // State declarations
     const [product, setProduct] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [selectedOption, setSelectedOption] = useState('gift');
+    const [selectedOption, setSelectedOption] = useState("self");
     const [customMessage, setCustomMessage] = useState('');
     const [quantity, setQuantity] = useState(1);
     const [selectedImage, setSelectedImage] = useState("");
     const [imageError, setImageError] = useState(false);
+    const [isMainImageSelected, setIsMainImageSelected] = useState(true);
 
     const { accessToken } = useAuthStore();
 
@@ -68,12 +69,10 @@ export default function ProductDetails() {
             setLoading(true);
 
             try {
-                // If products not loaded yet, fetch them
                 if (products.length === 0) {
                     await fetchProducts();
                 }
 
-                // Find product by id
                 const found = getProductById(id);
                 setProduct(found || null);
             } catch (error) {
@@ -91,13 +90,43 @@ export default function ProductDetails() {
 
     // Set selected image when product loads
     useEffect(() => {
-        if (product && product.image) {
-            const gallery = product.gallery?.length
-                ? product.gallery.map(img => img.url).filter(Boolean)
-                : [product.image?.url].filter(Boolean);
+        if (product) {
+            const galleryImages = [];
 
-            setSelectedImage(gallery[0] || "/placeholder.png");
-            setImageError(false);
+            // Add main image first
+            if (product.image?.url) {
+                galleryImages.push({
+                    url: product.image.url,
+                    isMain: true,
+                    index: 0
+                });
+            }
+
+            // Add gallery images
+            if (product.gallery && product.gallery.length > 0) {
+                product.gallery.forEach((img, idx) => {
+                    if (img?.url) {
+                        galleryImages.push({
+                            url: img.url,
+                            isMain: false,
+                            index: idx + 1
+                        });
+                    }
+                });
+            }
+
+            // If no images at all, use placeholder
+            if (galleryImages.length === 0) {
+                galleryImages.push({
+                    url: "/placeholder.png",
+                    isMain: true,
+                    index: 0
+                });
+            }
+
+            // Set selected image to MAIN image (first in array)
+            setSelectedImage(galleryImages[0].url);
+            setIsMainImageSelected(true);
         }
     }, [product]);
 
@@ -112,14 +141,17 @@ export default function ProductDetails() {
         if (!product || product.stock <= 0) return;
 
         const qtyToAdd = Math.min(quantity, product.stock);
-        for (let i = 0; i < qtyToAdd; i++) {
-            addToCart({
-                id: product._id,
-                name: product.name,
-                price: product.price,
-                img: selectedImage,
-            });
-        }
+
+        addToCart({
+            id: product._id,
+            name: product.name,
+            price: product.price,
+            img: selectedImage,
+            qty: qtyToAdd,
+            purchaseType: selectedOption === "gift" ? "gift" : "self",
+            giftMessage:
+                selectedOption === "gift" ? customMessage?.trim() || null : null,
+        });
     };
 
     const checkFavoriteStatus = async (productId) => {
@@ -178,15 +210,17 @@ export default function ProductDetails() {
 
         const qtyToAdd = Math.min(quantity, product.stock);
 
-        for (let i = 0; i < qtyToAdd; i++) {
-            addToCart({
-                id: product._id,
-                name: product.name,
-                price: product.price,
-                img: selectedImage,
-                qty: 1
-            });
-        }
+        addToCart({
+            id: product._id,
+            name: product.name,
+            price: product.price,
+            img: selectedImage,
+            qty: qtyToAdd,
+            purchaseType: selectedOption === "gift" ? "gift" : "self",
+            giftMessage:
+                selectedOption === "gift" ? customMessage?.trim() || null : null,
+        });
+
         router.push("/checkout");
     };
 
@@ -196,7 +230,12 @@ export default function ProductDetails() {
         setImageError(true);
     };
 
-    // ========== CONDITIONAL RETURNS (AFTER ALL HOOKS) ==========
+    const handleThumbnailClick = (imageUrl, isMain) => {
+        setSelectedImage(imageUrl);
+        setIsMainImageSelected(isMain);
+    };
+
+    // ========== CONDITIONAL RETURNS ==========
 
     // Loading state
     if (loading || storeLoading) {
@@ -230,19 +269,55 @@ export default function ProductDetails() {
         );
     }
 
-    // Gallery images - safety check
-    const gallery = product.gallery?.length
-        ? product.gallery.map(img => img.url).filter(Boolean)
-        : product.image?.url
-            ? [product.image.url]
-            : ["/placeholder.png"];
+    // Build gallery array for thumbnails with main image info
+    const getGalleryImages = () => {
+        const images = [];
+
+        // Add main image with flag
+        if (product.image?.url) {
+            images.push({
+                url: product.image.url,
+                isMain: true,
+                label: "Main Image"
+            });
+        }
+
+        // Add gallery images
+        if (product.gallery && product.gallery.length > 0) {
+            product.gallery.forEach((img, idx) => {
+                if (img?.url) {
+                    images.push({
+                        url: img.url,
+                        isMain: false,
+                        label: `Gallery ${idx + 1}`
+                    });
+                }
+            });
+        }
+
+        // If no images, add placeholder
+        if (images.length === 0) {
+            images.push({
+                url: "/placeholder.png",
+                isMain: true,
+                label: "Placeholder"
+            });
+        }
+
+        return images;
+    };
+
+    const gallery = getGalleryImages();
+    const mainImage = gallery.find(img => img.isMain);
+    const hasMultipleImages = gallery.length > 1;
 
     return (
         <section className="bg-white text-black py-16">
             <div className="max-w-7xl px-4 mx-auto grid grid-cols-1 lg:grid-cols-2 gap-10">
                 {/* LEFT: IMAGE GALLERY */}
                 <div>
-                    <div className="w-full rounded-xl overflow-hidden shadow-sm mb-2 relative">
+                    {/* Main Display Area */}
+                    <div className="relative w-full rounded-xl overflow-hidden shadow-lg mb-2 bg-gray-100">
                         {product.stock <= 0 && (
                             <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-10">
                                 <span className="bg-red-600 text-white text-xl font-bold px-6 py-3 rounded-lg transform -rotate-12">
@@ -250,37 +325,97 @@ export default function ProductDetails() {
                                 </span>
                             </div>
                         )}
+
+                        {/* Main Image Badge - shows when main image is displayed */}
+                        {isMainImageSelected && (
+                            <div className="absolute top-4 left-4 z-10 bg-black/75 text-white px-3 py-1.5 rounded-lg flex items-center gap-2 backdrop-blur-sm">
+                                <Star size={16} className="fill-yellow-400 text-yellow-400" />
+                                <span className="text-sm font-medium">Main Image</span>
+                            </div>
+                        )}
+
                         <Image
                             src={selectedImage || "/placeholder.png"}
                             alt={product.name || "Product"}
                             width={600}
                             height={600}
-                            className="w-full h-auto object-cover rounded-xl"
+                            className="w-full h-auto object-cover rounded-xl transition-all duration-300"
                             onError={handleImageError}
                             unoptimized={true}
+                            priority
                         />
                     </div>
 
-                    {gallery.length > 1 && (
-                        <div className="flex gap-3">
-                            {gallery.map((img, index) => (
-                                <button
-                                    key={index}
-                                    onClick={() => setSelectedImage(img)}
-                                    className={`border-2 rounded-lg overflow-hidden cursor-pointer ${selectedImage === img ? "border-black" : "border-transparent"
-                                        }`}
-                                >
-                                    <Image
-                                        src={img || "/placeholder.png"}
-                                        alt={`Thumbnail ${index}`}
-                                        width={80}
-                                        height={80}
-                                        className="object-cover hover:opacity-80 transition"
-                                        onError={handleImageError}
-                                        unoptimized={true}
-                                    />
-                                </button>
-                            ))}
+                    {/* Thumbnails with Main Image Indicator */}
+                    {hasMultipleImages && (
+                        <div className="mt-4">
+                            <p className="text-sm text-gray-500 mb-3 flex items-center gap-2">
+                                <span>Product Images</span>
+                                <span className="text-xs text-gray-400">({gallery.length} images)</span>
+                            </p>
+                            <div className="flex gap-3 flex-wrap">
+                                {gallery.map((img, index) => (
+                                    <button
+                                        key={index}
+                                        onClick={() => handleThumbnailClick(img.url, img.isMain)}
+                                        className={`relative group transition-all duration-200 ${selectedImage === img.url
+                                            ? "ring-2 ring-offset-2 ring-black scale-105"
+                                            : "hover:scale-105"
+                                            }`}
+                                    >
+                                        <div className={`relative border-2 rounded-lg overflow-hidden ${selectedImage === img.url
+                                            ? "border-black"
+                                            : "border-transparent group-hover:border-gray-300"
+                                            }`}>
+                                            <Image
+                                                src={img.url || "/placeholder.png"}
+                                                alt={`${img.label}`}
+                                                width={80}
+                                                height={80}
+                                                className="object-cover w-20 h-20 transition"
+                                                onError={handleImageError}
+                                                unoptimized={true}
+                                            />
+
+                                            {/* Main Image Badge on Thumbnail */}
+                                            {img.isMain && (
+                                                <div className="absolute bottom-0 left-0 right-0 bg-black/70 text-white text-[10px] font-medium py-1 text-center flex items-center justify-center gap-1">
+                                                    <Star size={10} className="fill-yellow-400 text-yellow-400" />
+                                                    <span>MAIN</span>
+                                                </div>
+                                            )}
+
+                                            {/* Selection Overlay */}
+                                            {selectedImage === img.url && (
+                                                <div className="absolute inset-0 bg-black/10 flex items-center justify-center">
+                                                    <div className="bg-black/80 text-white text-xs px-2 py-1 rounded-full">
+                                                        Selected
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Single Image Info */}
+                    {!hasMultipleImages && (
+                        <div className="mt-4 text-center">
+                            <div className="inline-flex items-center gap-2 bg-gray-100 px-3 py-1.5 rounded-lg">
+                                <Star size={14} className="fill-yellow-400 text-yellow-400" />
+                                <span className="text-sm text-gray-600">Single Image</span>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Image Counter */}
+                    {hasMultipleImages && (
+                        <div className="mt-3 text-center">
+                            <p className="text-xs text-gray-400">
+                                Showing {gallery.findIndex(img => img.url === selectedImage) + 1} of {gallery.length} images
+                            </p>
                         </div>
                     )}
                 </div>
@@ -315,19 +450,21 @@ export default function ProductDetails() {
                         <div className="space-y-4">
                             {/* Option 1: Purchase for yourself */}
                             <button
-                                onClick={() => setSelectedOption('yourself')}
-                                className={`w-full text-left p-5 rounded-xl border-2 transition-all ${selectedOption === 'yourself'
-                                    ? 'border-gray-900 bg-gray-50'
-                                    : 'border-gray-200 bg-white hover:border-gray-300'
+                                onClick={() => setSelectedOption('self')}
+                                className={`w-full text-left p-5 rounded-xl border-2 transition-all ${selectedOption === 'self'
+                                        ? 'border-gray-900 bg-gray-50'
+                                        : 'border-gray-200 bg-white hover:border-gray-300'
                                     }`}
                             >
                                 <div className="flex items-start gap-4">
                                     <div className="flex-shrink-0 mt-0.5">
-                                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${selectedOption === 'yourself'
-                                            ? 'border-gray-900'
-                                            : 'border-gray-300'
-                                            }`}>
-                                            {selectedOption === 'yourself' && (
+                                        <div
+                                            className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-all ${selectedOption === 'self'
+                                                    ? 'border-gray-900'
+                                                    : 'border-gray-300'
+                                                }`}
+                                        >
+                                            {selectedOption === 'self' && (
                                                 <div className="w-2.5 h-2.5 rounded-full bg-gray-900"></div>
                                             )}
                                         </div>
@@ -393,7 +530,7 @@ export default function ProductDetails() {
                     </div>
 
                     {/* Quantity + Buttons */}
-                    <div className="flex items-center gap-4 mt-1">
+                    <div className="flex flex-wrap items-center gap-4 mt-1">
                         <div className="flex items-center border border-gray-300 py-1 rounded-md p-2">
                             <button
                                 onClick={() => setQuantity((q) => Math.max(1, q - 1))}
@@ -402,7 +539,7 @@ export default function ProductDetails() {
                             >
                                 <Minus size={16} />
                             </button>
-                            <span className="px-4 py-2">{quantity}</span>
+                            <span className="px-4 py-2 min-w-[50px] text-center">{quantity}</span>
                             <button
                                 onClick={() => setQuantity((q) => Math.min(product.stock, q + 1))}
                                 disabled={quantity >= product.stock || product.stock <= 0}
@@ -427,11 +564,11 @@ export default function ProductDetails() {
                             onClick={handleFavorite}
                             disabled={isSaving}
                             className={`px-4 py-3 border rounded-md flex items-center gap-2 transition cursor-pointer ${isFavorite
-                                ? "bg-red-500 text-white"
+                                ? "bg-red-500 text-white border-red-500"
                                 : "border-gray-700 hover:bg-gray-700 hover:text-white"
                                 }`}
                         >
-                            <Heart size={18} />
+                            <Heart size={18} className={isFavorite ? "fill-white" : ""} />
                             {isFavorite ? "Saved" : "Save"}
                         </button>
 
@@ -448,13 +585,13 @@ export default function ProductDetails() {
 
                     {product.stock <= 2 && product.stock > 0 && (
                         <p className="flex items-center gap-1 text-orange-600 text-sm font-medium animate-pulse">
-                            <Zap /> Hurry! Only {product.stock} {product.stock === 1 ? 'item' : 'items'} left in stock
+                            <Zap size={16} /> Hurry! Only {product.stock} {product.stock === 1 ? 'item' : 'items'} left in stock
                         </p>
                     )}
                 </div>
             </div>
 
-            {/* Related Products - only show if product exists */}
+            {/* Related Products */}
             {product && <RelatedProducts currentProductId={product._id} />}
         </section>
     );

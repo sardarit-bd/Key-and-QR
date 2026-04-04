@@ -4,6 +4,7 @@ import ApproveModal from "@/components/admin/pending-quotes/ApproveModal";
 import DeleteModal from "@/components/admin/pending-quotes/DeleteModal";
 import RejectModal from "@/components/admin/pending-quotes/RejectModal";
 import api from "@/lib/api";
+import Loader from "@/shared/Loader";
 import { useAuthStore } from "@/store/authStore";
 import {
     CheckCircle,
@@ -158,14 +159,7 @@ export default function PendingQuotesPage() {
     };
 
     if (loading && currentPage === 1 && quotes.length === 0) {
-        return (
-            <div className="flex-1 w-full p-8 flex items-center justify-center min-h-[400px]">
-                <div className="text-center">
-                    <RefreshCw size={40} className="animate-spin text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Loading pending quotes...</p>
-                </div>
-            </div>
-        );
+        return <Loader text="QKey" size={50} fullScreen />;
     }
 
     return (

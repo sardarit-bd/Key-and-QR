@@ -15,6 +15,7 @@ import OrderStatsCards from "@/components/admin/orders/OrderStatsCards";
 import CancelOrderModal from "@/components/admin/orders/CancelOrderModal";
 import ProcessRefundModal from "@/components/admin/orders/ProcessRefundModal";
 import ProcessReturnModal from "@/components/admin/orders/ProcessReturnModal";
+import Loader from "@/shared/Loader";
 
 export default function AdminOrdersPage() {
     const [orders, setOrders] = useState([]);
@@ -288,14 +289,7 @@ export default function AdminOrdersPage() {
     }, [user, isInitialized]);
 
     if (loading && currentPage === 1 && orders.length === 0) {
-        return (
-            <div className="flex-1 w-full p-8 flex items-center justify-center min-h-[400px]">
-                <div className="text-center">
-                    <RefreshCw size={40} className="animate-spin text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Loading orders...</p>
-                </div>
-            </div>
-        );
+        return <Loader text="QKey" size={50} fullScreen />;
     }
 
     if (error) {

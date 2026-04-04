@@ -30,10 +30,8 @@ export default function SuccessPage() {
         try {
             const response = await orderService.getOrderStatus(orderId);
             const orderData = response.data;
-
             setOrder(orderData);
 
-            // ✅ ONLY clear cart if payment success
             if (orderData?.paymentStatus === "paid") {
                 clearCart();
             }
@@ -70,7 +68,7 @@ export default function SuccessPage() {
 
     return (
         <div className="max-w-7xl mx-auto py-32 px-4 text-center">
-            <div className="bg-white border rounded-lg p-8 max-w-2xl mx-auto shadow-sm">
+            <div className="bg-white border border-gray-300 rounded-lg p-8 max-w-2xl mx-auto shadow-sm">
 
                 {/* Icon */}
                 <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 

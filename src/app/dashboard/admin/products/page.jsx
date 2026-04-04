@@ -1,6 +1,7 @@
 "use client";
 
 import api from "@/lib/api";
+import Loader from "@/shared/Loader";
 import { useAuthStore } from "@/store/authStore";
 import { Archive, Edit, Mail, Plus, RotateCcw, Search, Trash2 } from "lucide-react";
 import Link from "next/link";
@@ -97,6 +98,10 @@ export default function ProductsPage() {
 
   const providerInfo = getProviderInfo();
 
+  if (loading) {
+    return <Loader text="Qkey" size={50} fullScreen />;
+  }
+
   return (
     <div className="flex-1 w-full p-4 lg:p-8">
       {/* Header with Admin Info */}
@@ -108,8 +113,8 @@ export default function ProductsPage() {
           <button
             onClick={() => setViewTrash(!viewTrash)}
             className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm transition ${viewTrash
-                ? "bg-gray-900 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+              ? "bg-gray-900 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
               }`}
           >
             <Archive size={16} />
@@ -157,12 +162,7 @@ export default function ProductsPage() {
 
       {/* Products Table */}
       <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        {loading ? (
-          <div className="p-8 text-center">
-            <div className="inline-block w-8 h-8 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin"></div>
-            <p className="mt-2 text-gray-500">Loading products...</p>
-          </div>
-        ) : products.length === 0 ? (
+        {products.length === 0 ? (
           <div className="p-8 text-center">
             <p className="text-gray-500">
               {viewTrash ? "Trash is empty" : "No products found"}
@@ -214,10 +214,10 @@ export default function ProductsPage() {
                     <td className="p-4">
                       <span
                         className={`text-xs px-2 py-1 rounded-full ${product.stock > 0
-                            ? product.stock <= 2
-                              ? "bg-orange-50 text-orange-700"
-                              : "bg-green-50 text-green-700"
-                            : "bg-red-50 text-red-700"
+                          ? product.stock <= 2
+                            ? "bg-orange-50 text-orange-700"
+                            : "bg-green-50 text-green-700"
+                          : "bg-red-50 text-red-700"
                           }`}
                       >
                         {product.stock > 0
@@ -328,8 +328,8 @@ export default function ProductsPage() {
               <button
                 onClick={deleteModal.type === "permanent" ? handlePermanentDelete : handleSoftDelete}
                 className={`px-4 py-2 text-white rounded-lg transition ${deleteModal.type === "permanent"
-                    ? "bg-red-600 hover:bg-red-700"
-                    : "bg-orange-600 hover:bg-orange-700"
+                  ? "bg-red-600 hover:bg-red-700"
+                  : "bg-orange-600 hover:bg-orange-700"
                   }`}
               >
                 {deleteModal.type === "permanent" ? "Permanently Delete" : "Move to Trash"}

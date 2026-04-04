@@ -11,6 +11,7 @@ import CreateTagModal from "@/components/admin/tags/CreateTagModal";
 import TagsTable from "@/components/admin/tags/TagsTable";
 import TagFilters from "@/components/admin/tags/TagFilters";
 import StatsCards from "@/components/admin/tags/StatsCards";
+import Loader from "@/shared/Loader";
 
 export default function AdminTagsPage() {
     const router = useRouter();
@@ -144,16 +145,7 @@ export default function AdminTagsPage() {
     };
 
     if (loading && currentPage === 1 && tags.length === 0) {
-        return (
-            <div className="min-h-screen bg-gray-50 p-8">
-                <div className="flex justify-center items-center h-64">
-                    <div className="text-center">
-                        <div className="w-12 h-12 border-4 border-gray-200 border-t-black rounded-full animate-spin mx-auto"></div>
-                        <p className="mt-4 text-gray-600">Loading tags...</p>
-                    </div>
-                </div>
-            </div>
-        );
+        return <Loader text="QKey" size={50} fullScreen />;
     }
 
     return (
