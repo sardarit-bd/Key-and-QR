@@ -23,6 +23,7 @@ import {
 import { FaGoogle } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import Loader from "@/shared/Loader";
 
 // Category options
 const CATEGORIES = [
@@ -192,14 +193,7 @@ export default function QuotesManagementPage() {
     };
 
     if (loading && currentPage === 1 && quotes.length === 0) {
-        return (
-            <div className="flex-1 w-full p-8 flex items-center justify-center min-h-[400px]">
-                <div className="text-center">
-                    <RefreshCw size={40} className="animate-spin text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Loading quotes...</p>
-                </div>
-            </div>
-        );
+        return <Loader text="QKey" size={50} fullScreen />;
     }
 
     return (

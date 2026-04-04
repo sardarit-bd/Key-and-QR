@@ -1,6 +1,7 @@
 "use client";
 
 import api from "@/lib/api";
+import Loader from "@/shared/Loader";
 import QrLoadingScreen from "@/shared/QrLoadingScreen";
 import { useAuthStore } from "@/store/authStore";
 import { DollarSign, Eye, Mail, Package, QrCode, Tag, TrendingUp } from "lucide-react";
@@ -59,6 +60,7 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
 
+      // await new Promise((resolve) => setTimeout(resolve, 10000));
       // Fetch products count
       const productsRes = await api.get("/products", { params: { limit: 1 } });
 
@@ -138,7 +140,7 @@ export default function AdminDashboard() {
   ];
 
   if (loading) {
-    return <QrLoadingScreen duration={5000} />;
+    return <Loader text="Qkey" size={50} fullScreen />;
   }
 
   const providerInfo = getProviderInfo();
