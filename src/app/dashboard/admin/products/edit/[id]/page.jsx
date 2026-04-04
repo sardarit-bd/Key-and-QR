@@ -169,10 +169,8 @@ export default function EditProductPage() {
                 throw new Error("Please enter a valid price");
             }
 
-            // FormData তৈরি করুন
             const formDataToSend = new FormData();
 
-            // Text fields যোগ করুন
             formDataToSend.append("name", formData.name);
             formDataToSend.append("price", Number(formData.price));
             formDataToSend.append("category", formData.category);
@@ -576,7 +574,7 @@ export default function EditProductPage() {
                             <button
                                 type="submit"
                                 disabled={loading}
-                                className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2"
+                                className="px-6 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition disabled:bg-gray-400 disabled:cursor-not-allowed flex items-center gap-2 cursor-pointer"
                             >
                                 {loading ? (
                                     <>
@@ -591,7 +589,7 @@ export default function EditProductPage() {
                                 )}
                             </button>
                         </div>
-                    </div>
+                    </div> 
                 </form>
             </div>
         </div>

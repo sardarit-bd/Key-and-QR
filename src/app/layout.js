@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Inter } from "next/font/google";
 import Footer from "../shared/Footer";
 import Header from "../shared/Header";
 import "./globals.css";
+import ConditionalFooter from "@/shared/ConditionalFooter";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -40,7 +41,7 @@ export default function RootLayout({ children }) {
         <AuthProvider>
           <Header />
           {children}
-          <Footer />
+          <ConditionalFooter />
         </AuthProvider>
       </body>
     </html>

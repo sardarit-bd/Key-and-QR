@@ -110,11 +110,16 @@ export default function OrderDetailsPage() {
         return `$${Number(price).toFixed(2)}`;
     };
 
+    // const calculateTotal = () => {
+    //     if (!order?.product?.price) return 0;
+    //     const subtotal = order.product.price;
+    //     const tax = subtotal * 0.0875;
+    //     return subtotal + tax;
+    // };
+
     const calculateTotal = () => {
         if (!order?.product?.price) return 0;
-        const subtotal = order.product.price;
-        const tax = subtotal * 0.0875;
-        return subtotal + tax;
+        return order.product.price * (order.quantity || 1);
     };
 
     if (loading) {
@@ -292,16 +297,18 @@ export default function OrderDetailsPage() {
                         <div className="space-y-3">
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-600">Subtotal</span>
-                                <span className="font-medium">{formatPrice(order.product?.price || 0)}</span>
+                                <span className="font-medium">
+                                    {formatPrice((order.product?.price || 0) * (order.quantity || 1))}
+                                </span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-600">Shipping</span>
                                 <span className="text-green-600 font-medium">Free</span>
                             </div>
-                            <div className="flex justify-between text-sm">
+                            {/* <div className="flex justify-between text-sm">
                                 <span className="text-gray-600">Tax (8.75%)</span>
                                 <span className="font-medium">{formatPrice((order.product?.price || 0) * 0.0875)}</span>
-                            </div>
+                            </div> */}
                             <div className="border-t pt-3 mt-3">
                                 <div className="flex justify-between font-bold">
                                     <span>Total</span>

@@ -141,6 +141,7 @@ export default function Checkout() {
 
                 const orderPayload = {
                     productId: firstItem.id,
+                    quantity: firstItem.qty,
                     purchaseType: formData.purchaseType,
                     giftMessage: formData.giftMessage || null,
                 };
