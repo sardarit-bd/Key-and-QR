@@ -10,6 +10,7 @@ import UnlockScreen from "@/components/scan/UnlockScreen";
 import MessageDisplay from "@/components/scan/MessageDisplay";
 import LimitReachedScreen from "@/components/scan/LimitReachedScreen";
 import { toast } from "react-hot-toast";
+import Loader from "@/shared/Loader";
 
 export default function TagPage() {
     const { tagCode } = useParams();
@@ -169,8 +170,12 @@ export default function TagPage() {
     }, [accessToken, authLoading, tagStatus]);
 
     // Loading state
+    // if (loading) {
+    //     return <LoadingScreen message="Opening your InspireTag..." />;
+    // }
+
     if (loading) {
-        return <LoadingScreen message="Opening your InspireTag..." />;
+        return <Loader text="Qkey" size={50} fullScreen />;
     }
 
     // Error state
