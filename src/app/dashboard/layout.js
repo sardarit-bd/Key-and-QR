@@ -1,47 +1,65 @@
 'use client'
 
 import { useAuthStore } from '@/store/authStore';
-import { Clock, CreditCard, Heart, House, LayoutDashboard, LogOut, Mail, Menu, Package, QrCode, Quote, Send, ShoppingBag, Tag, User, X } from 'lucide-react';
-import { FaGoogle } from 'react-icons/fa'; // ← react-icons থেকে Google icon
+import { Clock, CreditCard, Heart, Home, House, LayoutDashboard, LogOut, Mail, Menu, Package, QrCode, Quote, Send, ShoppingBag, Tag, User, X } from 'lucide-react';
+import { FaGoogle } from 'react-icons/fa';
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function DashboardLayout({ children }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-    const [expandedOrder, setExpandedOrder] = useState(null);
     const { user, logout } = useAuthStore();
     const pathname = usePathname();
     const router = useRouter();
 
+    // মোবাইল চেক করার জন্য
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 1024);
+        };
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
+    // স্ক্রল বন্ধ করার জন্য
+    useEffect(() => {
+        if (isSidebarOpen) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = 'unset';
+        }
+        return () => {
+            document.body.style.overflow = 'unset';
+        };
+    }, [isSidebarOpen]);
+
     /********************* menu item for admin **************************/
     const menuItemsforAdmin = [
-        { icon: LayoutDashboard, label: 'Dashboard', active: true, link: "/dashboard/admin" },
-        { icon: Package, label: 'Add Products', active: true, link: "/dashboard/admin/products" },
-        { icon: Tag, label: 'Add Tags', active: true, link: "/dashboard/admin/tags" },
-        { icon: Quote, label: 'Add Quotes', active: true, link: "/dashboard/admin/quotes" },
-        { icon: ShoppingBag, label: 'All Orders', active: false, link: "/dashboard/admin/orders" },
-        { icon: Clock, label: 'Pending Quotes', active: false, link: "/dashboard/admin/pending" },
-        { icon: QrCode, label: 'Scan History', active: false, link: "/dashboard/admin/qr-history" },
-        { icon: CreditCard, label: 'Subscription', active: false, link: "/dashboard/admin/subscription" },
-        { icon: User, label: 'My Profile', active: false, link: "/dashboard/admin/profile" },
+        { icon: LayoutDashboard, label: 'Dashboard', link: "/dashboard/admin" },
+        { icon: Package, label: 'Products', link: "/dashboard/admin/products" },
+        { icon: Tag, label: 'Tags', link: "/dashboard/admin/tags" },
+        { icon: Quote, label: 'Quotes', link: "/dashboard/admin/quotes" },
+        { icon: ShoppingBag, label: 'All Orders', link: "/dashboard/admin/orders" },
+        { icon: Clock, label: 'Pending Quotes', link: "/dashboard/admin/pending" },
+        { icon: QrCode, label: 'Scan History', link: "/dashboard/admin/qr-history" },
+        { icon: CreditCard, label: 'Subscription', link: "/dashboard/admin/subscription" },
+        { icon: User, label: 'My Profile', link: "/dashboard/admin/profile" },
     ];
 
     /********************* menu item for user **************************/
     const menuItemsforUser = [
-        { icon: House, label: 'Home', active: true, link: "/dashboard/user" },
-        { icon: Quote, label: 'My Quote', active: true, link: "/dashboard/user/myquotes" },
-        { icon: Send, label: 'Submit Quote', active: true, link: "/dashboard/user/submit-quote" },
-        { icon: Heart, label: 'Favorites', active: false, link: "/dashboard/user/favorites" },
-        { icon: ShoppingBag, label: 'Orders', active: false, link: "/dashboard/user/orders" },
-        { icon: CreditCard, label: 'Subscription', active: false, link: "/dashboard/user/subscription" },
-        { icon: User, label: 'Profile', active: false, link: "/dashboard/user/profile" },
-    ];
-
-    const orders = [
-        { id: 'ORD-001', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
-        { id: 'ORD-002', date: '11/10/2025', item: 'Digital Keychain', amount: '$32.032', status: 'Delivered' },
+        { icon: House, label: 'Dashboard', link: "/dashboard/user" },
+        { icon: Quote, label: 'My Quote', link: "/dashboard/user/myquotes" },
+        { icon: Send, label: 'Submit Quote', link: "/dashboard/user/submit-quote" },
+        { icon: Heart, label: 'Favorites', link: "/dashboard/user/favorites" },
+        { icon: ShoppingBag, label: 'Orders', link: "/dashboard/user/orders" },
+        { icon: CreditCard, label: 'Subscription', link: "/dashboard/user/subscription" },
+        { icon: User, label: 'Profile', link: "/dashboard/user/profile" },
     ];
 
     const RoleDesider = user?.role === "admin" ? menuItemsforAdmin : menuItemsforUser;
@@ -73,41 +91,153 @@ export default function DashboardLayout({ children }) {
         return "Email";
     };
 
-    //handle logout function is here
+    //handle logout function
     const handleLogout = () => {
         logout();
         router.push("/login");
-    }
+    };
+
+    const goToHome = () => {
+        router.push("/");
+    };
 
     return (
         <div className="flex min-h-screen bg-gray-50">
-            {/* Mobile Menu Button */}
-            <button
-                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-                className="lg:hidden fixed top-2 right-4 w-fit md:left-4 z-50 p-2"
-            >
-                {isSidebarOpen ? <X size={26} className='cursor-pointer' /> : <Menu size={26} className='cursor-pointer' />}
-            </button>
+            {/* Mobile Header with Menu Button */}
+            {isMobile && (
+                <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shadow-sm">
+                    <button
+                        onClick={() => setIsSidebarOpen(true)}
+                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                        aria-label="Open menu"
+                    >
+                        <Menu size={24} className="text-gray-700" />
+                    </button>
+                    <h1 className="text-sm font-semibold text-gray-900">
+                        {user?.role === "admin" ? "Admin Panel" : "Dashboard"}
+                    </h1>
+                    <button
+                        onClick={goToHome}
+                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                        aria-label="Go to home"
+                    >
+                        <Home size={20} className="text-blue-600" />
+                    </button>
+                </div>
+            )}
 
-            {/* Overlay for mobile */}
+            {/* Mobile Sidebar Overlay */}
             {isSidebarOpen && (
                 <div
-                    className="lg:hidden fixed inset-0 bg-black opacity-40 z-30"
+                    className="lg:hidden fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
                     onClick={() => setIsSidebarOpen(false)}
                 />
             )}
 
-            {/* Sidebar - Desktop Only */}
-            <aside className="hidden sticky h-screen top-14 lg:block w-64 bg-white border-r border-gray-200 p-6">
+            {/* Mobile Sidebar */}
+            <aside
+                className={`lg:hidden fixed inset-y-0 left-0 z-50 w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${
+                    isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                }`}
+            >
+                {/* Sidebar Header with Close Button */}
+                <div className="flex items-center justify-between p-4 border-b border-gray-200">
+                    <h2 className="text-lg font-semibold text-gray-900">Menu</h2>
+                    <button
+                        onClick={() => setIsSidebarOpen(false)}
+                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                        aria-label="Close menu"
+                    >
+                        <X size={22} className="text-gray-600" />
+                    </button>
+                </div>
+
+                {/* Profile Section */}
+                <div className="p-4 border-b border-gray-200">
+                    <div className="flex items-center gap-3">
+                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 overflow-hidden flex items-center justify-center flex-shrink-0">
+                            {user?.profileImage?.url ? (
+                                <img
+                                    src={user.profileImage.url}
+                                    alt={user.name}
+                                    className="w-full h-full object-cover"
+                                />
+                            ) : (
+                                <span className="text-white text-lg font-bold">
+                                    {getUserInitials()}
+                                </span>
+                            )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-gray-900 capitalize truncate">
+                                {user?.name}
+                            </h3>
+                            <p className="text-xs text-gray-500 truncate">
+                                {user?.email}
+                            </p>
+                            <div className="flex items-center gap-1 mt-0.5">
+                                {getProviderIcon()}
+                                <p className="text-xs text-gray-400">{getProviderText()}</p>
+                            </div>
+                            <p className="text-xs bg-green-100 text-green-700 w-fit px-2 py-0.5 rounded-full mt-1">
+                                {user?.role === "admin" ? "Administrator" : "User"}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Navigation Menu */}
+                <nav className="flex-1 p-4 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 280px)' }}>
+                    {/* Home Button */}
+                    <button
+                        onClick={() => {
+                            goToHome();
+                            setIsSidebarOpen(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors text-blue-600 hover:bg-blue-50 mb-3 border border-blue-200 cursor-pointer"
+                    >
+                        <Home size={18} />
+                        <span>Go to Homepage</span>
+                    </button>
+
+                    <div className="border-t border-gray-200 my-2"></div>
+
+                    {/* Dashboard Menu Items */}
+                    {RoleDesider?.map((item, index) => (
+                        <Link
+                            href={item.link}
+                            key={index}
+                            onClick={() => setIsSidebarOpen(false)}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors cursor-pointer ${
+                                item.link === pathname 
+                                    ? 'bg-gray-200 text-gray-900 font-medium' 
+                                    : 'text-gray-600 hover:bg-gray-100'
+                            }`}
+                        >
+                            <item.icon size={18} />
+                            <span>{item.label}</span>
+                        </Link>
+                    ))}
+                </nav>
+
+                {/* Logout Button */}
+                <div className="p-4 border-t border-gray-200">
+                    <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors text-red-600 hover:bg-red-50 border border-red-200 cursor-pointer"
+                    >
+                        <LogOut size={18} />
+                        <span>Log Out</span>
+                    </button>
+                </div>
+            </aside>
+
+            {/* Desktop Sidebar */}
+            <aside className="hidden lg:block sticky top-0 h-screen w-64 bg-white border-r border-gray-200 p-6 overflow-y-auto">
                 {/* Profile Section */}
                 <div className="flex flex-col items-center mb-8">
-
-                    {/* Gradient Border Wrapper */}
                     <div className="p-[2px] rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
-
-                        {/* Inner circle */}
                         <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 overflow-hidden flex items-center justify-center">
-
                             {user?.profileImage?.url ? (
                                 <img
                                     src={user.profileImage.url}
@@ -122,11 +252,11 @@ export default function DashboardLayout({ children }) {
                         </div>
                     </div>
 
-                    <h3 className="font-semibold text-gray-900 capitalize">
+                    <h3 className="font-semibold text-gray-900 capitalize text-center">
                         {user?.name}
                     </h3>
 
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 text-center break-all">
                         {user?.email}
                     </p>
 
@@ -148,86 +278,33 @@ export default function DashboardLayout({ children }) {
                         <Link
                             href={item.link}
                             key={index}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${item.link === pathname
-                                ? 'bg-gray-300'
-                                : 'text-gray-600 hover:bg-gray-100'
-                                }`}
+                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${
+                                item.link === pathname
+                                    ? 'bg-gray-200 text-gray-900 font-medium'
+                                    : 'text-gray-600 hover:bg-gray-100'
+                            }`}
                         >
                             <item.icon size={18} />
                             <span>{item.label}</span>
                         </Link>
                     ))}
-                    <button
-                        onClick={handleLogout}
-                        className="bg-gray-900 text-white absolute bottom-20 w-[200px] flex items-center gap-3 px-4 py-3 rounded-lg text-sm hover:bg-gray-800 hover:translate-x-1 focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-all duration-200 ease-in-out cursor-pointer"
-                    >
-                        <LogOut size={18} />
-                        <span>Log Out</span>
-                    </button>
                 </nav>
+
+                {/* Logout Button - Desktop */}
+                <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors text-red-600 hover:bg-red-50 border border-red-200 mt-6 cursor-pointer"
+                >
+                    <LogOut size={18} />
+                    <span>Log Out</span>
+                </button>
             </aside>
 
-            {/* Mobile Sidebar */}
-            <aside
-                className={`lg:hidden fixed inset-y-0 left-0 z-40 w-64 bg-white border-r border-gray-200 p-6 transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-                    }`}
-            >
-                <div className="mb-6 pt-12">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 overflow-hidden flex items-center justify-center">
-                            {user?.profileImage?.url ? (
-                                <img
-                                    src={user.profileImage.url}
-                                    alt={user.name}
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <span className="text-white text-base font-bold">
-                                    {getUserInitials()}
-                                </span>
-                            )}
-                        </div>
-                        <div>
-                            <h3 className="font-semibold text-gray-900 capitalize">{user?.name}</h3>
-                            <p className="text-xs text-gray-500">{user?.email}</p>
-                            <div className="flex items-center gap-1 mt-0.5">
-                                {getProviderIcon()}
-                                <p className="text-xs text-gray-400">{getProviderText()}</p>
-                            </div>
-                            <p className="text-xs bg-green-100 text-green-700 w-fit px-2 py-0.5 rounded-full mt-1">
-                                {user?.role === "admin" ? "Admin" : "User"}
-                            </p>
-                        </div>
-                    </div>
+            {/* Main Content */}
+            <main className={`flex-1 w-full ${isMobile ? 'mt-14' : ''}`}>
+                <div className="p-4 lg:p-8">
+                    {children}
                 </div>
-
-                <nav className="space-y-1">
-                    {RoleDesider?.map((item, index) => (
-                        <Link
-                            href={item?.link}
-                            key={index}
-                            onClick={() => setIsSidebarOpen(false)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${item.link === pathname
-                                ? 'bg-gray-300'
-                                : 'text-gray-600 hover:bg-gray-100'
-                                }`}
-                        >
-                            <item.icon size={18} />
-                            <span>{item.label}</span>
-                        </Link>
-                    ))}
-                    <button
-                        onClick={handleLogout}
-                        className="bg-gray-900 text-white absolute bottom-5 w-[200px] flex items-center gap-3 px-4 py-3 rounded-lg text-sm hover:bg-gray-800 transition-colors mt-4 cursor-pointer"
-                    >
-                        <LogOut size={18} />
-                        <span>Log Out</span>
-                    </button>
-                </nav>
-            </aside>
-
-            <main className="flex-1 w-full">
-                {children}
             </main>
         </div>
     );

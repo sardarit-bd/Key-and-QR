@@ -296,13 +296,13 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex items-center justify-between mt-2 text-xs text-gray-400">
                     <span>Created: {formatDate(tag.createdAt)}</span>
-                    <Link
+                    {/* <Link
                       href={`/t/${tag.tagCode}`}
                       target="_blank"
                       className="text-blue-500 hover:text-blue-700"
                     >
                       View →
-                    </Link>
+                    </Link> */}
                   </div>
                 </div>
               ))

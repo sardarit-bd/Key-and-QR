@@ -358,7 +358,7 @@ export default function OrdersPage() {
                                             {formatDate(order.createdAt)}
                                         </p>
                                     </div>
-                                    <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(order.fulfillmentStatus)}`}>
+                                    <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full capitalize ${getStatusColor(order.fulfillmentStatus)}`}>
                                         {getStatusIcon(order.fulfillmentStatus)}
                                         {order.fulfillmentStatus}
                                     </span>
