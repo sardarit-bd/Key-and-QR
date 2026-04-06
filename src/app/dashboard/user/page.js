@@ -427,7 +427,7 @@ export default function UserDashboard() {
                           ${order.product?.price?.toFixed(2) || "0.00"}
                         </td>
                         <td className="p-4">
-                          <span className={`inline-flex items-center text-xs px-2 py-1 rounded-full ${order.fulfillmentStatus === "delivered"
+                          <span className={`inline-flex items-center text-xs px-2 py-1 rounded-full capitalize ${order.fulfillmentStatus === "delivered"
                               ? "bg-green-100 text-green-700"
                               : "bg-yellow-100 text-yellow-700"
                             }`}>
