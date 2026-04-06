@@ -11,6 +11,7 @@ import MessageDisplay from "@/components/scan/MessageDisplay";
 import LimitReachedScreen from "@/components/scan/LimitReachedScreen";
 import { toast } from "react-hot-toast";
 import Loader from "@/shared/Loader";
+import { CgProfile } from "react-icons/cg";
 
 export default function TagPage() {
     const { tagCode } = useParams();
@@ -39,12 +40,13 @@ export default function TagPage() {
             });
 
             const data = response.data.data;
+
             setTagData(data);
             setTagStatus(data.status);
 
             // If tag is activated and user is logged in, proceed to unlock
             if (data.status === "READY_FOR_UNLOCK" && accessToken) {
-                await checkAndUnlock();
+                await checkAndUnlock(data);
             }
         } catch (err) {
             console.error("Error resolving tag:", err);
@@ -56,16 +58,15 @@ export default function TagPage() {
     };
 
     // Step 2: Check if user can unlock (for activated tags)
-    const checkAndUnlock = async () => {
+    const checkAndUnlock = async (resolvedTagData = tagData) => {
         if (!accessToken) return;
 
         try {
             setLoading(true);
 
             // For subscribers, show category selector first
-            if (tagData?.subscriptionType === "subscriber") {
+            if (resolvedTagData?.subscriptionType === "subscriber") {
                 setShowCategorySelector(true);
-                setLoading(false);
                 return;
             }
 
@@ -164,10 +165,10 @@ export default function TagPage() {
 
     // When user logs in, re-check unlock
     useEffect(() => {
-        if (!authLoading && accessToken && tagStatus === "READY_FOR_UNLOCK") {
-            checkAndUnlock();
+        if (!authLoading && accessToken && tagStatus === "READY_FOR_UNLOCK" && tagData) {
+            checkAndUnlock(tagData);
         }
-    }, [accessToken, authLoading, tagStatus]);
+    }, [accessToken, authLoading, tagStatus, tagData]);
 
     // Loading state
     // if (loading) {
@@ -229,6 +230,33 @@ export default function TagPage() {
         );
     }
 
+    if (tagStatus === "READY_FOR_UNLOCK" && !accessToken) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+                <div className="text-center max-w-md">
+                    <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <CgProfile  size={45} className="text-blue-400"/>
+                    </div>
+
+                    <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                        Login Required
+                    </h2>
+
+                    <p className="text-gray-600 mb-4">
+                        Please login to unlock your message.
+                    </p>
+
+                    <button
+                        onClick={() => router.push(`/login?redirect=/t/${tagCode}`)}
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer"
+                    >
+                        Login to Continue
+                    </button>
+                </div>
+            </div>
+        );
+    }
+
     // Show category selector for subscribers
     if (showCategorySelector && tagData?.subscriptionType === "subscriber") {
         return (
@@ -263,5 +291,5 @@ export default function TagPage() {
     }
 
     // Default loading fallback
-    return <LoadingScreen message="Preparing your message..." />;
+    return <Loader text="Preparing your message..." />;
 }
