@@ -42,10 +42,12 @@ export default function LoginPage() {
     const result = await login({ email, password });
 
     if (result?.success) {
+      await useAuthStore.getState().fetchMe();
+
       if (result.user?.role === "admin") {
-        window.location.href = "/dashboard/admin";
+        router.replace("/dashboard/admin");
       } else {
-        window.location.href = "/dashboard/user";
+        router.replace("/dashboard/user");
       }
     } else {
       setError(result?.error || "Invalid email or password!");

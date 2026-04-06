@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api/v1";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 const api = axios.create({
   baseURL: API_URL,
@@ -40,7 +40,13 @@ api.interceptors.response.use(
     const isRegisterCall = originalRequest?.url?.includes("/auth/register");
     const isMeCall = originalRequest?.url?.includes("/auth/me");
 
-    if (is401 && !originalRequest._retry && !isRefreshCall && !isLoginCall && !isRegisterCall) {
+    if (
+      is401 &&
+      !originalRequest._retry &&
+      !isRefreshCall &&
+      !isLoginCall &&
+      !isRegisterCall
+    ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -59,7 +65,11 @@ api.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError);
 
-        if (typeof window !== "undefined" && !hasRedirectedToLogin && !isMeCall) {
+        if (
+          typeof window !== "undefined" &&
+          !hasRedirectedToLogin &&
+          !isMeCall
+        ) {
           hasRedirectedToLogin = true;
           window.location.replace("/login?session=expired");
         }
