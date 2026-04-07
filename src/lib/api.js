@@ -1,7 +1,14 @@
 import axios from "axios";
 
+const getBaseURL = () => {
+  if (process.env.NODE_ENV === 'production') {
+    return process.env.NEXT_PUBLIC_API_URL || 'https://key-and-qr-backend.vercel.app/api/v1';
+  }
+  return '/api';
+};
+
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: getBaseURL(),
   withCredentials: true,
   headers: {
     "Content-Type": "application/json",
