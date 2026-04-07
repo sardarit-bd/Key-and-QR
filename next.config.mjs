@@ -1,11 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-
   async rewrites() {
     return [
       {
-        source: "/api/:path*",
-        destination: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/:path*`,
+        source: "/api/auth/:path((?!google$|google/callback$).*)",
+        destination: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/auth/:path`,
+      },
+      {
+        source: "/api/:path((?!auth/).*)",
+        destination: `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/v1/:path`,
       },
     ];
   },
@@ -13,32 +16,32 @@ const nextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'image-url.com',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "image-url.com",
+        port: "",
+        pathname: "/**",
       },
       {
-        protocol: 'https',
-        hostname: 'yourcdn.com',
-        port: '',
-        pathname: '/**',
+        protocol: "https",
+        hostname: "yourcdn.com",
+        port: "",
+        pathname: "/**",
       },
       {
-        protocol: 'http',
-        hostname: 'localhost',
-        port: '5000',
-        pathname: '/**',
+        protocol: "http",
+        hostname: "localhost",
+        port: "5000",
+        pathname: "/**",
       },
       {
-        protocol: 'https',
-        hostname: '**',
+        protocol: "https",
+        hostname: "**",
       },
     ],
   },
 
   allowedDevOrigins: [
-    "nonextensional-donita-drinkably.ngrok-free.dev"
+    "nonextensional-donita-drinkably.ngrok-free.dev",
   ],
 
   reactCompiler: true,
