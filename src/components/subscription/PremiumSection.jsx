@@ -13,6 +13,7 @@ import {
 import { FiAlertCircle } from "react-icons/fi";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
+import { TiTickOutline } from "react-icons/ti";
 
 export default function PremiumSection({ selectedCategory }) {
   const router = useRouter();
@@ -186,7 +187,7 @@ export default function PremiumSection({ selectedCategory }) {
               "Priority customer support",
             ].map((item, i) => (
               <li key={i} className="flex items-start gap-3 text-gray-700">
-                <FaCheck size={16} className="text-purple-500 flex-shrink-0 mt-0.5" />
+                <TiTickOutline size={25} className="text-green-500 flex-shrink-0 mt-0.5" />
                 <span className="text-sm">{item}</span>
               </li>
             ))}

@@ -18,10 +18,21 @@ export default function LoginPage() {
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const errorParam = urlParams.get("error");
-    if (errorParam) {
-      setError(errorParam === "google_auth_failed"
-        ? "Google login failed. Please try again."
-        : "Apple login failed. Please try again.");
+
+    if (!errorParam) return;
+
+    switch (errorParam) {
+      case "google_auth_failed":
+        setError("Google login failed. Please try again.");
+        break;
+      case "social_login_failed":
+        setError("Social login failed. Please try again.");
+        break;
+      case "apple_auth_failed":
+        setError("Apple login failed. Please try again.");
+        break;
+      default:
+        setError("Login failed. Please try again.");
     }
   }, []);
 
@@ -56,7 +67,7 @@ export default function LoginPage() {
 
   return (
     <div className="p-3">
-      <div className="max-w-md mx-auto my-36 p-6 border border-gray-400 rounded-xl shadow-sm bg-white">
+      <div className="max-w-md mx-auto my-36 p-6 border border-gray-300 rounded-xl shadow-sm bg-white">
         <h2 className="text-2xl text-center font-semibold mb-4">Sign In</h2>
 
         {error && (
@@ -67,7 +78,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin}>
           <input
-            className="w-full border border-gray-400 px-4 py-2 rounded-md mb-3 focus:outline-gray-400"
+            className="w-full border border-gray-300 px-4 py-2 rounded-md mb-3 focus:outline-gray-400"
             placeholder="Email"
             type="email"
             value={email}
@@ -77,7 +88,7 @@ export default function LoginPage() {
 
           <input
             type="password"
-            className="w-full border border-gray-400 px-4 py-2 rounded-md mb-4 focus:outline-gray-400"
+            className="w-full border border-gray-300 px-4 py-2 rounded-md mb-4 focus:outline-gray-400"
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
