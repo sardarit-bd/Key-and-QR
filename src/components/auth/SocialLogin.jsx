@@ -3,11 +3,9 @@
 import { Apple } from "lucide-react";
 
 export default function SocialLogin() {
-    const backendUrl =
-        process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000";
 
     const handleGoogleLogin = () => {
-        window.location.href = `${backendUrl}/api/v1/auth/google`;
+        window.location.href = "/api/auth/google";
     };
 
     return (
@@ -37,7 +35,7 @@ export default function SocialLogin() {
                     <span>Google</span>
                 </button>
 
-                {/* Apple (disabled) */}
+                {/* Apple */}
                 <button
                     disabled
                     className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-md opacity-50 cursor-not-allowed"
