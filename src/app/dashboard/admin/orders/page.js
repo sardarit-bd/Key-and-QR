@@ -114,10 +114,43 @@ export default function AdminOrdersPage() {
     const fetchAvailableTags = async () => {
         try {
             const response = await api.get("/tags?limit=100");
-            const unusedTags = response.data.data.filter(tag => !tag.isActivated && !tag.owner);
+
+            let tags = [];
+
+            if (response.data && typeof response.data === 'object') {
+                if (response.data.data && Array.isArray(response.data.data)) {
+                    tags = response.data.data;
+                }
+                else if (response.data.data?.data && Array.isArray(response.data.data.data)) {
+                    tags = response.data.data.data;
+                }
+                else if (response.data.tags && Array.isArray(response.data.tags)) {
+                    tags = response.data.tags;
+                }
+                else if (Array.isArray(response.data)) {
+                    tags = response.data;
+                }
+                else if (response.data.result && Array.isArray(response.data.result)) {
+                    tags = response.data.result;
+                }
+            }
+
+            if (!Array.isArray(tags)) {
+                console.error("Tags is not an array:", tags);
+                setAvailableTags([]);
+                return;
+            }
+
+            const unusedTags = tags.filter(tag => {
+                return tag && !tag.owner && tag.isActive === true;
+            });
+
             setAvailableTags(unusedTags);
+
         } catch (err) {
+            console.error("Fetch available tags error:", err);
             toast.error("Failed to fetch available tags");
+            setAvailableTags([]);
         }
     };
 

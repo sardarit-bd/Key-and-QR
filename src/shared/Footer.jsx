@@ -42,7 +42,6 @@ export default function Footer() {
                         </div>
                     </div>
 
-                    {/* باقی কোড একই থাকবে */}
                     <div>
                         <h4 className="text-white font-semibold mb-4">Products</h4>
                         <ul className="space-y-2 text-sm">
@@ -84,7 +83,7 @@ export default function Footer() {
                 </div>
 
                 <div className="border-t border-gray-700 pt-6 flex flex-col md:flex-row justify-between text-sm text-gray-400">
-                    <p>All Rights Reserved © 2025</p>
+                    <p>All Rights Reserved © {new Date().getFullYear()}</p>
                     <div className="flex space-x-4 mt-3 md:mt-0">
                         <Link href="#">Terms & Conditions</Link>
                         <span>|</span>
