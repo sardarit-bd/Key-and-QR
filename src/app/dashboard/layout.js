@@ -7,6 +7,7 @@ import { FaGoogle } from 'react-icons/fa';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
+import { BsQrCodeScan } from 'react-icons/bs';
 
 export default function DashboardLayout({ children }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -14,7 +15,6 @@ export default function DashboardLayout({ children }) {
     const pathname = usePathname();
     const router = useRouter();
 
-    // মোবাইল চেক করার জন্য
     const [isMobile, setIsMobile] = useState(false);
 
     useEffect(() => {
@@ -26,7 +26,6 @@ export default function DashboardLayout({ children }) {
         return () => window.removeEventListener('resize', checkMobile);
     }, []);
 
-    // স্ক্রল বন্ধ করার জন্য
     useEffect(() => {
         if (isSidebarOpen) {
             document.body.style.overflow = 'hidden';
@@ -54,6 +53,7 @@ export default function DashboardLayout({ children }) {
     /********************* menu item for user **************************/
     const menuItemsforUser = [
         { icon: House, label: 'Dashboard', link: "/dashboard/user" },
+        { icon: BsQrCodeScan, label: 'Scan History', link: "/dashboard/user/scan-history" },
         { icon: Quote, label: 'My Quote', link: "/dashboard/user/myquotes" },
         { icon: Send, label: 'Submit Quote', link: "/dashboard/user/submit-quote" },
         { icon: Heart, label: 'Favorites', link: "/dashboard/user/favorites" },

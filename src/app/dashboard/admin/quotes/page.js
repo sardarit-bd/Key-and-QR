@@ -291,7 +291,7 @@ export default function QuotesManagementPage() {
                     <div className="flex gap-2 flex-wrap">
                         <button
                             onClick={() => setSelectedCategory("all")}
-                            className={`px-4 py-2 rounded-lg text-sm transition ${selectedCategory === "all"
+                            className={`px-4 py-2 rounded-lg text-sm transition cursor-pointer ${selectedCategory === "all"
                                 ? "bg-gray-900 text-white"
                                 : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                 }`}
@@ -302,7 +302,7 @@ export default function QuotesManagementPage() {
                             <button
                                 key={cat.value}
                                 onClick={() => setSelectedCategory(cat.value)}
-                                className={`px-4 py-2 rounded-lg text-sm transition ${selectedCategory === cat.value
+                                className={`px-4 py-2 rounded-lg text-sm transition cursor-pointer ${selectedCategory === cat.value
                                     ? cat.color.replace("text-", "bg-").replace("100", "500") + " text-white"
                                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                     }`}
@@ -313,7 +313,7 @@ export default function QuotesManagementPage() {
                     </div>
                     <button
                         onClick={handleRefresh}
-                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
                         title="Refresh"
                     >
                         <RefreshCw size={18} />

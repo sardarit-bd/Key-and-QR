@@ -12,6 +12,7 @@ import LimitReachedScreen from "@/components/scan/LimitReachedScreen";
 import { toast } from "react-hot-toast";
 import Loader from "@/shared/Loader";
 import { CgProfile } from "react-icons/cg";
+import { Calendar, Sparkles } from "lucide-react";
 
 export default function TagPage() {
     const { tagCode } = useParams();
@@ -26,6 +27,27 @@ export default function TagPage() {
     const [error, setError] = useState(null);
     const [showCategorySelector, setShowCategorySelector] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState("");
+    const [lastUnlock, setLastUnlock] = useState(null); // 🆕 Last unlock state
+
+    // 🆕 Fetch last unlock info
+    const fetchLastUnlock = async () => {
+        if (!tagCode) return;
+        
+        try {
+            const response = await api.get(`/scan/last/${tagCode}`, {
+                headers: {
+                    "ngrok-skip-browser-warning": "true",
+                },
+            });
+            
+            if (response.data?.data) {
+                setLastUnlock(response.data.data);
+            }
+        } catch (error) {
+            console.error("Error fetching last unlock:", error);
+            // Don't show error toast for this, it's not critical
+        }
+    };
 
     // Step 1: Resolve tag status on page load
     const resolveTag = async () => {
@@ -103,6 +125,8 @@ export default function TagPage() {
             if (result.status === "SUCCESS") {
                 // Show message
                 setShowCategorySelector(false);
+                // Refresh last unlock after successful unlock
+                await fetchLastUnlock();
             } else if (result.status === "ALREADY_SCANNED_TODAY") {
                 toast(result.data.message, { icon: "🔄" });
                 setUnlockResult(result);
@@ -160,6 +184,7 @@ export default function TagPage() {
     useEffect(() => {
         if (tagCode) {
             resolveTag();
+            fetchLastUnlock(); // 🆕 Fetch last unlock on page load
         }
     }, [tagCode]);
 
@@ -169,11 +194,6 @@ export default function TagPage() {
             checkAndUnlock(tagData);
         }
     }, [accessToken, authLoading, tagStatus, tagData]);
-
-    // Loading state
-    // if (loading) {
-    //     return <LoadingScreen message="Opening your InspireTag..." />;
-    // }
 
     if (loading) {
         return <Loader text="Qkey" size={50} fullScreen />;
@@ -193,7 +213,7 @@ export default function TagPage() {
                     <p className="text-gray-600 mb-4">{error}</p>
                     <button
                         onClick={() => window.location.reload()}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                        className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition"
                     >
                         Try Again
                     </button>
@@ -235,7 +255,7 @@ export default function TagPage() {
             <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
                 <div className="text-center max-w-md">
                     <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <CgProfile  size={45} className="text-blue-400"/>
+                        <CgProfile size={45} className="text-blue-400"/>
                     </div>
 
                     <h2 className="text-xl font-semibold text-gray-900 mb-2">
@@ -248,7 +268,7 @@ export default function TagPage() {
 
                     <button
                         onClick={() => router.push(`/login?redirect=/t/${tagCode}`)}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition cursor-pointer"
+                        className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
                     >
                         Login to Continue
                     </button>
@@ -279,14 +299,68 @@ export default function TagPage() {
         }
 
         return (
-            <MessageDisplay
-                message={unlockResult.data?.quote}
-                category={unlockResult.data?.category}
-                isPersonalMessage={unlockResult.data?.isPersonalMessage}
-                remaining={unlockResult.data?.remaining}
-                dailyLimit={unlockResult.data?.dailyLimit}
-                isAlreadyScanned={unlockResult.status === "ALREADY_SCANNED_TODAY"}
-            />
+            <>
+                <MessageDisplay
+                    message={unlockResult.data?.quote}
+                    category={unlockResult.data?.category}
+                    isPersonalMessage={unlockResult.data?.isPersonalMessage}
+                    remaining={unlockResult.data?.remaining}
+                    dailyLimit={unlockResult.data?.dailyLimit}
+                    isAlreadyScanned={unlockResult.status === "ALREADY_SCANNED_TODAY"}
+                />
+                
+                {/* 🆕 Show last unlock info if available and not already scanned today */}
+                {lastUnlock && unlockResult.status !== "ALREADY_SCANNED_TODAY" && (
+                    <div className="max-w-md mx-auto mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
+                        <div className="flex items-center gap-2 mb-2">
+                            <Calendar size={14} className="text-gray-500" />
+                            <span className="text-xs text-gray-500 uppercase tracking-wide">Previous Message</span>
+                        </div>
+                        <p className="text-sm text-gray-700 italic line-clamp-2">
+                            "{lastUnlock.quote}"
+                        </p>
+                        <p className="text-xs text-gray-400 mt-2">
+                            {new Date(lastUnlock.scannedAt).toLocaleDateString()}
+                        </p>
+                    </div>
+                )}
+            </>
+        );
+    }
+
+    // 🆕 Show last unlock info when no unlock result yet (before scanning)
+    if (lastUnlock && !unlockResult && !showCategorySelector) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
+                <div className="max-w-md w-full">
+                    {/* Last Unlock Card */}
+                    <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm mb-6">
+                        <div className="flex items-center gap-2 mb-4">
+                            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                                <Calendar size={16} className="text-gray-600" />
+                            </div>
+                            <span className="text-sm font-medium text-gray-700">Your Last Message</span>
+                        </div>
+                        
+                        <p className="text-gray-800 italic text-center py-4 border-y border-gray-100">
+                            "{lastUnlock.quote}"
+                        </p>
+                        
+                        <p className="text-xs text-gray-400 text-center mt-4">
+                            {new Date(lastUnlock.scannedAt).toLocaleString()}
+                        </p>
+                    </div>
+
+                    {/* Scan Button */}
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="w-full py-4 bg-gray-900 text-white rounded-xl font-medium hover:bg-gray-800 transition flex items-center justify-center gap-2"
+                    >
+                        <Sparkles size={18} />
+                        Scan for Today's Quote
+                    </button>
+                </div>
+            </div>
         );
     }
 
