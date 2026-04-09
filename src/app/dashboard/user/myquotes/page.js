@@ -1,6 +1,7 @@
 "use client";
 
 import api from "@/lib/api";
+import Loader from "@/shared/Loader";
 import { useAuthStore } from "@/store/authStore";
 import {
     ArrowRight,
@@ -32,7 +33,7 @@ const CATEGORIES = [
 
 export default function QuotePage() {
     const router = useRouter();
-    const { user } = useAuthStore(); // 👈 Removed accessToken
+    const { user } = useAuthStore();
 
     const [loading, setLoading] = useState(true);
     const [quote, setQuote] = useState(null);
@@ -99,7 +100,7 @@ export default function QuotePage() {
 
     // Check if quote is in favorites
     const checkFavoriteStatus = async (quoteId) => {
-        if (!user || quoteId === "fallback") { // 👈 Check user instead of accessToken
+        if (!user || quoteId === "fallback") {
             setSavedToFavorites(false);
             setFavoriteId(null);
             return;
@@ -127,7 +128,7 @@ export default function QuotePage() {
 
     // Save quote to favorites
     const handleSaveToFavorites = async () => {
-        if (!user) { // 👈 Check user instead of accessToken
+        if (!user) {
             toast.error("Please login to save favorites");
             setTimeout(() => {
                 router.push(`/login?redirect=/quote`);
@@ -243,14 +244,7 @@ export default function QuotePage() {
     }, []);
 
     if (loading && !quote) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-[#F4F5F7]">
-                <div className="text-center">
-                    <RefreshCw size={48} className="animate-spin text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Loading your inspiration...</p>
-                </div>
-            </div>
-        );
+        return <Loader text="Qkey..." size={50} fullScreen />;
     }
 
     const currentCategory = CATEGORIES.find(c => c.id === selectedCategory) || CATEGORIES[0];
@@ -293,8 +287,8 @@ export default function QuotePage() {
                             onClick={handleSaveToFavorites}
                             disabled={isSaving}
                             className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg transition-all duration-300 hover:shadow-md hover:scale-[1.02] active:scale-[0.98] cursor-pointer ${savedToFavorites
-                                    ? "bg-red-500 text-white hover:bg-red-600"
-                                    : "bg-gray-900 text-white hover:bg-gray-800"
+                                ? "bg-red-500 text-white hover:bg-red-600"
+                                : "bg-gray-900 text-white hover:bg-gray-800"
                                 } disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto`}
                         >
                             {savedToFavorites ? (
@@ -345,8 +339,8 @@ export default function QuotePage() {
                                     onClick={() => handleCategoryChange(cat.id)}
                                     disabled={loading}
                                     className={`cursor-pointer text-sm px-3 md:px-4 py-2 rounded-full flex items-center gap-1.5 transition-all duration-300 ${isSelected
-                                            ? "bg-gray-800 text-white shadow-md scale-105"
-                                            : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:scale-105"
+                                        ? "bg-gray-800 text-white shadow-md scale-105"
+                                        : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:scale-105"
                                         } disabled:opacity-50 disabled:cursor-not-allowed`}
                                 >
                                     <Icon size={14} />

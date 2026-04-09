@@ -1,6 +1,7 @@
 "use client";
 
 import api from "@/lib/api";
+import Loader from "@/shared/Loader";
 import { useAuthStore } from "@/store/authStore";
 import {
     AlertCircle,
@@ -295,14 +296,7 @@ export default function UserProfilePage() {
     };
 
     if (!user) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <div className="text-center">
-                    <Loader2 size={48} className="animate-spin text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Loading profile...</p>
-                </div>
-            </div>
-        );
+        return <Loader text="Qkey..." size={50} fullScreen />;
     }
 
     return (

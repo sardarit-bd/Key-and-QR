@@ -3,14 +3,15 @@
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 import { useSubscriptionStore } from "@/store/subscriptionStore";
-import { 
-    Crown, Calendar, DollarSign, CreditCard, 
+import {
+    Crown, Calendar, DollarSign, CreditCard,
     AlertCircle, Loader2, XCircle, Settings,
     Shield, ExternalLink
 } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 import api from "@/lib/api";
+import Loader from "@/shared/Loader";
 
 export default function UserSubscriptionsPage() {
     const { user } = useAuthStore();
@@ -43,21 +44,17 @@ export default function UserSubscriptionsPage() {
     const activeSubscriptions = mySubscriptions.filter(
         sub => sub.status === "active" || sub.status === "trialing"
     );
-    
+
     const pendingCancellations = mySubscriptions.filter(
         sub => sub.status === "active" && sub.cancelAtPeriodEnd === true
     );
-    
+
     const cancelledSubscriptions = mySubscriptions.filter(
         sub => sub.status === "canceled"
     );
 
     if (loading && mySubscriptions.length === 0) {
-        return (
-            <div className="flex-1 w-full p-8 flex items-center justify-center min-h-[400px]">
-                <Loader2 size={40} className="animate-spin text-gray-600" />
-            </div>
-        );
+        return <Loader text="Qkey..." size={50} fullScreen />;
     }
 
     return (
@@ -71,7 +68,7 @@ export default function UserSubscriptionsPage() {
                         </h1>
                         <p className="text-gray-600">Manage your premium subscriptions securely</p>
                     </div>
-                    
+
                     {/* Security Notice - Black & White */}
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-xs text-gray-700">
                         <Shield size={14} />

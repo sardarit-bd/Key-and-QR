@@ -196,7 +196,7 @@ export default function AdminDashboard() {
 
   const handleYearChange = (newYear) => {
     setSelectedYear(newYear);
-    setSelectedMonth(currentMonthName); // Reset to current month when year changes
+    setSelectedMonth(currentMonthName);
   };
 
   const handleMonthClick = (monthName) => {
@@ -311,7 +311,7 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Stats Grid - Now showing actual values */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6 mb-8">
         {statsCards.map((card, index) => (
           <Link key={index} href={card.link} className="block group">
@@ -375,7 +375,7 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* Modern Charts Section */}
+      {/* Modern Charts Section - Fixed Height for ResponsiveContainer */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Modern Sales Chart */}
         <div className="bg-white rounded-2xl border border-gray-100 p-4 lg:p-6 shadow-sm hover:shadow-md transition-shadow">
@@ -394,7 +394,8 @@ export default function AdminDashboard() {
               <span className="text-xs text-gray-500">Sales ($)</span>
             </div>
           </div>
-          <div className="h-80">
+          {/* Fixed: Added explicit height for ResponsiveContainer */}
+          <div style={{ height: '350px', width: '100%', minHeight: '350px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={salesData}>
                 <defs>
@@ -456,7 +457,8 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
-          <div className="h-80">
+          {/* Fixed: Added explicit height for ResponsiveContainer */}
+          <div style={{ height: '350px', width: '100%', minHeight: '350px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={ordersData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
@@ -504,15 +506,16 @@ export default function AdminDashboard() {
               ))}
             </div>
           </div>
-          <div className="h-80 flex items-center justify-center">
+          {/* Fixed: Added explicit height for ResponsiveContainer */}
+          <div style={{ height: '400px', width: '100%', minHeight: '400px' }}>
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
                   data={orderStatusData}
                   cx="50%"
                   cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
+                  innerRadius={80}
+                  outerRadius={130}
                   paddingAngle={3}
                   dataKey="value"
                   label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
@@ -607,9 +610,9 @@ export default function AdminDashboard() {
               Recent Tags
             </h2>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400">
+              {/* <span className="text-xs text-gray-400">
                 {stats.activeTags} activated / {stats.pendingTags} pending
-              </span>
+              </span> */}
               <Link
                 href="/dashboard/admin/tags"
                 className="text-sm text-purple-600 hover:text-purple-700 flex items-center gap-1"

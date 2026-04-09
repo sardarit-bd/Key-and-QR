@@ -1,6 +1,7 @@
 "use client";
 
 import api from "@/lib/api";
+import Loader from "@/shared/Loader";
 import { useAuthStore } from "@/store/authStore";
 import {
     ChevronLeft,
@@ -138,14 +139,7 @@ export default function DashboardFavorites() {
     }
 
     if (loading && currentPage === 1 && favorites.length === 0) {
-        return (
-            <div className="flex-1 w-full p-8 flex items-center justify-center min-h-[400px]">
-                <div className="text-center">
-                    <RefreshCw size={40} className="animate-spin text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-500">Loading favorites...</p>
-                </div>
-            </div>
-        );
+        return <Loader text="Qkey..." size={50} fullScreen />;
     }
 
     if (error) {

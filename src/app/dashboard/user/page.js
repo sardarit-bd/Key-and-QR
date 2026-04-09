@@ -1,6 +1,7 @@
 "use client";
 
 import api from "@/lib/api";
+import Loader from "@/shared/Loader";
 import { useAuthStore } from "@/store/authStore";
 import {
   Calendar,
@@ -34,7 +35,7 @@ const CATEGORY_CONFIG = {
 
 export default function UserDashboard() {
   const router = useRouter();
-  const { user } = useAuthStore(); // 👈 Removed accessToken
+  const { user } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("random");
   const [dailyQuote, setDailyQuote] = useState(null);
@@ -186,7 +187,7 @@ export default function UserDashboard() {
       console.log("No user found");
       setLoading(false);
     }
-  }, [user]); // 👈 Now depends on user instead of accessToken
+  }, [user]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -214,14 +215,7 @@ export default function UserDashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="flex-1 w-full p-8 flex items-center justify-center min-h-[400px]">
-        <div className="text-center">
-          <RefreshCw size={40} className="animate-spin text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">Loading dashboard...</p>
-        </div>
-      </div>
-    );
+    return <Loader text="Qkey..." size={50} fullScreen />;
   }
 
   return (
@@ -276,8 +270,8 @@ export default function UserDashboard() {
                   key={cat.id}
                   onClick={() => handleCategorySelect(cat.id)}
                   className={`cursor-pointer text-sm px-3 lg:px-4 py-1.5 rounded-full flex items-center gap-1.5 transition-all duration-200 ${selectedCategory === cat.id
-                      ? "bg-gray-800 text-white shadow-md scale-105"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:scale-105"
+                    ? "bg-gray-800 text-white shadow-md scale-105"
+                    : "bg-gray-100 text-gray-600 hover:bg-gray-200 hover:scale-105"
                     }`}
                 >
                   <Icon size={14} />
@@ -428,8 +422,8 @@ export default function UserDashboard() {
                         </td>
                         <td className="p-4">
                           <span className={`inline-flex items-center text-xs px-2 py-1 rounded-full capitalize ${order.fulfillmentStatus === "delivered"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-yellow-100 text-yellow-700"
                             }`}>
                             {order.fulfillmentStatus || "pending"}
                           </span>
@@ -477,8 +471,8 @@ export default function UserDashboard() {
                         <div className="flex justify-between text-sm">
                           <span className="text-gray-500">Status:</span>
                           <span className={`text-xs px-2 py-0.5 rounded-full capitalize ${order.fulfillmentStatus === "delivered"
-                              ? "bg-green-100 text-green-700"
-                              : "bg-yellow-100 text-yellow-700"
+                            ? "bg-green-100 text-green-700"
+                            : "bg-yellow-100 text-yellow-700"
                             }`}>
                             {order.fulfillmentStatus || "pending"}
                           </span>
