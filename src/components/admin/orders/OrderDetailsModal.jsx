@@ -91,7 +91,7 @@ export default function OrderDetailsModal({
                                 Order ID: {order._id}
                             </p>
                         </div>
-                        <button onClick={onClose} className="text-gray-400 hover:text-gray-600">
+                        <button onClick={onClose} className="text-gray-400 hover:text-gray-600 cursor-pointer">
                             <XCircle size={20} />
                         </button>
                     </div>
@@ -108,7 +108,7 @@ export default function OrderDetailsModal({
                                 order.paymentStatus === "refunded" ? "Refunded" :
                                     "Pending"}
                         </span>
-                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm ${getFulfillmentStatusBadge(order.fulfillmentStatus)}`}>
+                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm capitalize ${getFulfillmentStatusBadge(order.fulfillmentStatus)}`}>
                             {getFulfillmentStatusIcon(order.fulfillmentStatus)}
                             Fulfillment: {order.fulfillmentStatus}
                         </span>
@@ -279,7 +279,7 @@ export default function OrderDetailsModal({
                                     onClose();
                                     onCancelOrder(order);
                                 }}
-                                className="inline-flex items-center gap-2 px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition"
+                                className="inline-flex items-center gap-2 px-3 py-1.5 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition cursor-pointer"
                                 disabled={processingAction}
                             >
                                 <Ban size={14} />
@@ -334,7 +334,7 @@ export default function OrderDetailsModal({
                 <div className="p-6 border-t border-gray-200 flex justify-end sticky bottom-0 bg-white">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                        className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition cursor-pointer"
                     >
                         Close
                     </button>

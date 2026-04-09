@@ -382,7 +382,7 @@ export default function QuotesManagementPage() {
                                                 <div className="flex items-center gap-2">
                                                     <button
                                                         onClick={() => handleToggleActive(quote._id)}
-                                                        className="p-1.5 hover:bg-gray-100 rounded-lg transition group"
+                                                        className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"
                                                         title={quote.isActive ? "Deactivate" : "Activate"}
                                                     >
                                                         {quote.isActive ? (
@@ -396,7 +396,7 @@ export default function QuotesManagementPage() {
                                                             setSelectedQuote(quote);
                                                             setShowEditModal(true);
                                                         }}
-                                                        className="p-1.5 hover:bg-gray-100 rounded-lg transition group"
+                                                        className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"
                                                         title="Edit"
                                                     >
                                                         <Edit size={16} className="text-gray-500 group-hover:text-blue-600" />
@@ -406,7 +406,7 @@ export default function QuotesManagementPage() {
                                                             setSelectedQuote(quote);
                                                             setShowDeleteModal(true);
                                                         }}
-                                                        className="p-1.5 hover:bg-gray-100 rounded-lg transition group"
+                                                        className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"
                                                         title="Delete"
                                                     >
                                                         <Trash2 size={16} className="text-gray-500 group-hover:text-red-600" />
@@ -440,7 +440,7 @@ export default function QuotesManagementPage() {
                                         <div className="flex items-center gap-2">
                                             <button
                                                 onClick={() => handleToggleActive(quote._id)}
-                                                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                                                className="p-2 hover:bg-gray-100 rounded-lg transition cursor-pointer"
                                             >
                                                 {quote.isActive ? (
                                                     <PowerOff size={16} className="text-red-500" />
@@ -453,7 +453,7 @@ export default function QuotesManagementPage() {
                                                     setSelectedQuote(quote);
                                                     setShowEditModal(true);
                                                 }}
-                                                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                                                className="p-2 hover:bg-gray-100 rounded-lg transition cursor-pointer"
                                             >
                                                 <Edit size={16} className="text-blue-600" />
                                             </button>
@@ -462,7 +462,7 @@ export default function QuotesManagementPage() {
                                                     setSelectedQuote(quote);
                                                     setShowDeleteModal(true);
                                                 }}
-                                                className="p-2 hover:bg-gray-100 rounded-lg transition"
+                                                className="p-2 hover:bg-gray-100 rounded-lg transition cursor-pointer"
                                             >
                                                 <Trash2 size={16} className="text-red-600" />
                                             </button>

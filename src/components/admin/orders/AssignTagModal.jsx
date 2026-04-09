@@ -1,3 +1,4 @@
+import CustomSelect from "@/shared/CustomSelect";
 import { useAuthStore } from "@/store/authStore";
 import { Mail } from "lucide-react";
 import { FaGoogle } from "react-icons/fa";
@@ -23,6 +24,12 @@ export default function AssignTagModal({
 
     const providerInfo = getProviderInfo();
 
+    // Convert tags to options format for CustomSelect
+    const tagOptions = availableTags.map(tag => ({
+        value: tag._id,
+        label: tag.tagCode
+    }));
+
     if (!isOpen || !order) return null;
 
     return (
@@ -45,22 +52,18 @@ export default function AssignTagModal({
                         </div>
                     </div>
                 </div>
+                
                 <div className="p-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Select Available Tag
-                    </label>
-                    <select
+                    <CustomSelect
+                        label="Select Available Tag"
+                        options={tagOptions}
                         value={selectedTag}
-                        onChange={(e) => setSelectedTag(e.target.value)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    >
-                        <option value="">Choose a tag...</option>
-                        {availableTags.map((tag) => (
-                            <option key={tag._id} value={tag._id}>
-                                {tag.tagCode}
-                            </option>
-                        ))}
-                    </select>
+                        onChange={setSelectedTag}
+                        placeholder="Choose a tag..."
+                        searchable={true}
+                        clearable={true}
+                    />
+                    
                     {availableTags.length === 0 && (
                         <div className="mt-3 p-3 bg-yellow-50 rounded-lg">
                             <p className="text-sm text-yellow-700">
@@ -69,17 +72,19 @@ export default function AssignTagModal({
                         </div>
                     )}
                 </div>
+                
                 <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
                     <button
                         onClick={onClose}
-                        className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition"
+                        className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition cursor-pointer"
+                        disabled={assigning}
                     >
                         Cancel
                     </button>
                     <button
                         onClick={onAssign}
                         disabled={assigning || !selectedTag}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                         {assigning ? "Assigning..." : "Assign Tag"}
                     </button>

@@ -358,7 +358,7 @@ export default function ProductDetails() {
                                     <button
                                         key={index}
                                         onClick={() => handleThumbnailClick(img.url, img.isMain)}
-                                        className={`relative group transition-all duration-200 ${selectedImage === img.url
+                                        className={`relative group transition-all duration-200 cursor-pointer ${selectedImage === img.url
                                             ? "ring-2 ring-offset-2 ring-black scale-105"
                                             : "hover:scale-105"
                                             }`}
@@ -451,7 +451,7 @@ export default function ProductDetails() {
                             {/* Option 1: Purchase for yourself */}
                             <button
                                 onClick={() => setSelectedOption('self')}
-                                className={`w-full text-left p-5 rounded-xl border-2 transition-all ${selectedOption === 'self'
+                                className={`w-full text-left p-5 rounded-xl border-2 transition-all cursor-pointer ${selectedOption === 'self'
                                         ? 'border-gray-900 bg-gray-50'
                                         : 'border-gray-200 bg-white hover:border-gray-300'
                                     }`}
@@ -484,7 +484,7 @@ export default function ProductDetails() {
                             {/* Option 2: Purchase for Gift */}
                             <button
                                 onClick={() => setSelectedOption('gift')}
-                                className={`w-full text-left p-5 rounded-xl border-2 transition-all ${selectedOption === 'gift'
+                                className={`w-full text-left p-5 rounded-xl border-2 transition-all cursor-pointer ${selectedOption === 'gift'
                                     ? 'border-gray-900 bg-gray-900'
                                     : 'border-gray-200 bg-white hover:border-gray-300'
                                     }`}

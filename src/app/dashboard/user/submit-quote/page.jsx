@@ -1,6 +1,7 @@
 "use client";
 
 import api from "@/lib/api";
+import Loader from "@/shared/Loader";
 import { useAuthStore } from "@/store/authStore";
 import {
     AlertCircle,
@@ -117,15 +118,10 @@ export default function SubmitQuotePage() {
 
     // Loading state
     if (authLoading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
-                <div className="text-center">
-                    <Loader2 size={48} className="animate-spin text-purple-500 mx-auto mb-4" />
-                    <p className="text-gray-500">Loading...</p>
-                </div>
-            </div>
-        );
+        return <Loader text="Qkey..." size={50} fullScreen />;
     }
+
+
 
     // Not logged in - UPDATED to check user instead of accessToken
     if (!user && !authLoading) {

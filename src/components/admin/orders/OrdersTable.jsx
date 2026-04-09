@@ -1,8 +1,11 @@
+import { useState, useRef, useEffect } from "react";
 import {
     Calendar, Clock, CreditCard, Eye, Gift, Package,
     RefreshCw, Tag, User, XCircle, Ban, Undo2,
-    Truck, CheckCircle, RotateCcw, AlertCircle, Info
+    Truck, CheckCircle, RotateCcw, AlertCircle, Info,
+    ChevronDown, Check
 } from "lucide-react";
+import { FulfillmentStatusSelect } from "./FulfillmentStatus";
 
 const getPaymentStatusBadge = (status) => {
     const styles = {
@@ -14,41 +17,6 @@ const getPaymentStatusBadge = (status) => {
     return styles[status] || "bg-gray-100 text-gray-700";
 };
 
-const getFulfillmentStatusBadge = (status) => {
-    const styles = {
-        delivered: "bg-green-100 text-green-700",
-        shipped: "bg-blue-100 text-blue-700",
-        assigned: "bg-purple-100 text-purple-700",
-        pending: "bg-yellow-100 text-yellow-700",
-        cancelled: "bg-red-100 text-red-700",
-        returned: "bg-orange-100 text-orange-700"
-    };
-    return styles[status] || "bg-gray-100 text-gray-700";
-};
-
-const getFulfillmentStatusIcon = (status) => {
-    switch (status) {
-        case "delivered": return <CheckCircle size={12} className="inline mr-1" />;
-        case "shipped": return <Truck size={12} className="inline mr-1" />;
-        case "assigned": return <Tag size={12} className="inline mr-1" />;
-        case "cancelled": return <Ban size={12} className="inline mr-1" />;
-        case "returned": return <Undo2 size={12} className="inline mr-1" />;
-        default: return <Clock size={12} className="inline mr-1" />;
-    }
-};
-
-// 🆕 Get next allowed status options
-const getNextAllowedStatuses = (currentStatus) => {
-    const flow = {
-        pending: ["assigned", "cancelled"],
-        assigned: ["shipped", "cancelled"],
-        shipped: ["delivered", "returned"],
-        delivered: ["returned"],
-        cancelled: [],
-        returned: []
-    };
-    return flow[currentStatus] || [];
-};
 
 const formatDate = (date) => {
     if (!date) return "N/A";
@@ -76,6 +44,10 @@ const canReturn = (order) => {
         order.returnStatus === "none";
 };
 
+// ========== CUSTOM FULFILLMENT STATUS SELECTOR ==========
+
+
+// ========== MAIN ORDERS TABLE ==========
 export default function OrdersTable({
     orders,
     onAssignTag,
@@ -129,8 +101,7 @@ export default function OrdersTable({
                 <tbody className="divide-y divide-gray-200">
                     {orders.map((order) => {
                         const currentStatus = order.fulfillmentStatus;
-                        const nextStatuses = getNextAllowedStatuses(currentStatus);
-                        const isStatusLocked = currentStatus === "cancelled" || currentStatus === "returned";
+                        const isUpdating = updatingStatus && statusUpdateOrder === order._id;
 
                         return (
                             <tr key={order._id} className="hover:bg-gray-50 transition">
@@ -157,7 +128,7 @@ export default function OrdersTable({
                                     <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${order.purchaseType === "gift"
                                         ? "bg-purple-100 text-purple-700"
                                         : "bg-gray-100 text-gray-600"
-                                        }`}>
+                                    }`}>
                                         {order.purchaseType === "gift" ? <Gift size={10} /> : <User size={10} />}
                                         {order.purchaseType === "gift" ? "Gift" : "Self"}
                                     </span>
@@ -188,43 +159,15 @@ export default function OrdersTable({
                                 </td>
                                 <td className="p-4">
                                     <div className="relative">
-                                        {isStatusLocked ? (
-                                            <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${getFulfillmentStatusBadge(currentStatus)}`}>
-                                                {getFulfillmentStatusIcon(currentStatus)}
-                                                {currentStatus}
-                                            </span>
-                                        ) : (
-                                            <select
-                                                value={currentStatus}
-                                                onChange={(e) => onUpdateStatus(order._id, e.target.value)}
-                                                disabled={updatingStatus && statusUpdateOrder === order._id}
-                                                className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full border-0 focus:ring-2 cursor-pointer ${getFulfillmentStatusBadge(currentStatus)}`}
-                                            >
-                                                <option value="pending" disabled={currentStatus !== "pending"}>
-                                                    Pending {currentStatus !== "pending" && "🔒"}
-                                                </option>
-                                                <option value="assigned" disabled={!nextStatuses.includes("assigned")}>
-                                                    Assigned {!nextStatuses.includes("assigned") && "🔒"}
-                                                </option>
-                                                <option value="shipped" disabled={!nextStatuses.includes("shipped")}>
-                                                    Shipped {!nextStatuses.includes("shipped") && "🔒"}
-                                                </option>
-                                                <option value="delivered" disabled={!nextStatuses.includes("delivered")}>
-                                                    Delivered {!nextStatuses.includes("delivered") && "🔒"}
-                                                </option>
-                                            </select>
-                                        )}
-                                        {updatingStatus && statusUpdateOrder === order._id && (
-                                            <RefreshCw size={12} className="inline ml-2 animate-spin" />
-                                        )}
-
-                                        {/* 🆕 Status flow hint */}
-                                        {!isStatusLocked && nextStatuses.length === 0 && currentStatus !== "delivered" && (
-                                            <div className="absolute top-full left-0 mt-1 hidden group-hover:block">
-                                                <div className="bg-yellow-100 text-yellow-800 text-xs rounded px-2 py-1 whitespace-nowrap">
-                                                    ⚠️ No further status updates available
-                                                </div>
-                                            </div>
+                                        <FulfillmentStatusSelect
+                                            currentStatus={currentStatus}
+                                            orderId={order._id}
+                                            onUpdateStatus={onUpdateStatus}
+                                            isUpdating={isUpdating}
+                                        />
+                                        
+                                        {isUpdating && (
+                                            <RefreshCw size={12} className="inline ml-2 animate-spin text-gray-400" />
                                         )}
 
                                         {order.returnStatus === "requested" && (
@@ -254,7 +197,7 @@ export default function OrdersTable({
                                         {!order.assignedTag && order.fulfillmentStatus !== "cancelled" && order.fulfillmentStatus !== "returned" && (
                                             <button
                                                 onClick={() => onAssignTag(order)}
-                                                className="p-1.5 hover:bg-gray-100 rounded-lg transition group"
+                                                className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"
                                                 title="Assign Tag"
                                                 disabled={processingAction}
                                             >
@@ -265,7 +208,7 @@ export default function OrdersTable({
                                         {canCancel(order.fulfillmentStatus) && (
                                             <button
                                                 onClick={() => onCancelOrder(order)}
-                                                className="p-1.5 hover:bg-gray-100 rounded-lg transition group"
+                                                className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"
                                                 title="Cancel Order"
                                                 disabled={processingAction}
                                             >
@@ -276,7 +219,7 @@ export default function OrdersTable({
                                         {canRefund(order) && (
                                             <button
                                                 onClick={() => onProcessRefund(order)}
-                                                className="p-1.5 hover:bg-gray-100 rounded-lg transition group"
+                                                className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"
                                                 title="Process Refund"
                                                 disabled={processingAction}
                                             >
@@ -287,7 +230,7 @@ export default function OrdersTable({
                                         {canReturn(order) && (
                                             <button
                                                 onClick={() => onProcessReturn(order)}
-                                                className="p-1.5 hover:bg-gray-100 rounded-lg transition group"
+                                                className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"
                                                 title="Process Return"
                                                 disabled={processingAction}
                                             >
@@ -298,7 +241,7 @@ export default function OrdersTable({
                                         {order.returnStatus === "shipped" && (
                                             <button
                                                 onClick={() => onCompleteReturn(order._id)}
-                                                className="p-1.5 hover:bg-gray-100 rounded-lg transition group"
+                                                className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"
                                                 title="Complete Return"
                                                 disabled={processingAction}
                                             >
@@ -308,7 +251,7 @@ export default function OrdersTable({
 
                                         <button
                                             onClick={() => onViewDetails(order)}
-                                            className="p-1.5 hover:bg-gray-100 rounded-lg transition group"
+                                            className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"
                                             title="View Details"
                                         >
                                             <Eye size={16} className="text-gray-500 group-hover:text-blue-600" />
