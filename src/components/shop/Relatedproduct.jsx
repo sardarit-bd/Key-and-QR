@@ -21,7 +21,7 @@ export default function RelatedProducts({ currentProductId }) {
                 title: p.name,
                 desc: p.description?.substring(0, 50) + "...",
                 price: p.price,
-                oldPrice: Math.round(p.price * 1.4), // Example old price
+                // oldPrice: Math.round(p.price * 1.4), // Example old price
                 img: p.image?.url || "/placeholder.png"
             }));
 
@@ -76,7 +76,7 @@ export default function RelatedProducts({ currentProductId }) {
                                 <span className="text-black font-semibold">
                                     ${item.price}
                                 </span>
-                                <span className="line-through text-gray-400">${item.oldPrice}</span>
+                                {/* <span className="line-through text-gray-400">${item.oldPrice}</span> */}
                             </div>
                         </div>
                     </div>

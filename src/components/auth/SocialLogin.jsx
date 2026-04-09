@@ -21,7 +21,7 @@ export default function SocialLogin() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 gap-3">
                 {/* Google */}
                 <button
                     onClick={handleGoogleLogin}
@@ -36,13 +36,13 @@ export default function SocialLogin() {
                 </button>
 
                 {/* Apple */}
-                <button
+                {/* <button
                     disabled
                     className="flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 rounded-md opacity-50 cursor-not-allowed"
                 >
                     <Apple size={18} />
                     <span>Apple (Coming Soon)</span>
-                </button>
+                </button> */}
             </div>
         </div>
     );
