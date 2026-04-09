@@ -33,7 +33,7 @@ export default function OrderFilters({
                         <button
                             key={option.value}
                             onClick={() => setFilterStatus(option.value)}
-                            className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm transition ${filterStatus === option.value
+                            className={`inline-flex items-center gap-1 px-3 py-2 rounded-lg text-sm transition cursor-pointer ${filterStatus === option.value
                                     ? `${option.color} text-white`
                                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                 }`}
@@ -45,7 +45,7 @@ export default function OrderFilters({
                 </div>
                 <button
                     onClick={onRefresh}
-                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
                     title="Refresh"
                 >
                     <RefreshCw size={18} />
