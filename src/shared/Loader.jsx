@@ -3,7 +3,7 @@
 import React from "react";
 import styled from "styled-components";
 
-const Loader = ({ text = "Qkey", size = 50, fullScreen = true }) => {
+const Loader = ({ text = "Qkey...", size = 50, fullScreen = true }) => {
   return (
     <StyledWrapper $size={size} $fullScreen={fullScreen}>
       <p className="loader">

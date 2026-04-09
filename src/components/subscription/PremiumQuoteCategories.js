@@ -23,18 +23,22 @@ export default function PremiumQuoteCategories({
 
         <div className="flex items-center gap-3 justify-center flex-wrap mb-3">
           {quoteCategories.map((item, index) => (
-            <span
+            <button
               onClick={() => setSelectedCategory(item.value)}
               key={index}
-              className={`${
-                selectedCategory === item.value
-                  ? "bg-gray-800 text-white"
-                  : ""
-              } text-md bg-gray-100 px-2 lg:px-3 py-1 rounded-full text-gray-600 flex items-center gap-2 hover:bg-gray-800 hover:text-white border border-gray-200 cursor-pointer`}
+              className={`
+                text-md px-2 lg:px-3 py-1 rounded-full 
+                flex items-center gap-2 border border-gray-200 
+                transition-all duration-200 cursor-pointer
+                ${selectedCategory === item.value 
+                  ? "bg-gray-800 text-white" 
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-800 hover:text-white"
+                }
+              `}
             >
               {item.icon}
               {item.label}
-            </span>
+            </button>
           ))}
         </div>
       </div>
