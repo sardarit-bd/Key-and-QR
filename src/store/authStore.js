@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import api from "@/lib/api";
+import api, { clearAccessToken, setAccessToken } from "@/lib/api";
 
 export const useAuthStore = create((set, get) => ({
   user: null,
@@ -10,33 +10,31 @@ export const useAuthStore = create((set, get) => ({
   error: null,
 
   initializeAuth: async () => {
-    if (get().loading || get().isInitialized) return;
+    if (get().isInitialized) return;
 
-    set({ loading: true, error: null });
+    set({ loading: true });
 
     try {
-      const response = await api.get("/auth/me");
-      const user = response.data?.data ?? null;
+      // ✅ Try to refresh token on app load
+      const response = await api.post("/auth/refresh-token");
+      const accessToken = response.data?.data?.accessToken;
 
-      set({
-        user,
-        loading: false,
-        isInitialized: true,
-        error: null,
-      });
+      if (accessToken) {
+        setAccessToken(accessToken);
 
-      return user;
+        // ✅ Fetch user data
+        const userResponse = await api.get("/auth/me");
+        const user = userResponse.data?.data;
+        set({ user, isInitialized: true, loading: false });
+      } else {
+        set({ isInitialized: true, loading: false });
+      }
     } catch (error) {
-      set({
-        user: null,
-        loading: false,
-        isInitialized: true,
-        error: null,
-      });
-
-      return null;
+      console.error("Init auth error:", error);
+      set({ isInitialized: true, loading: false });
     }
   },
+
 
   fetchMe: async () => {
     try {
@@ -93,20 +91,10 @@ export const useAuthStore = create((set, get) => ({
 
     try {
       const response = await api.post("/auth/login", payload);
-      const user = response.data?.data?.user ?? null;
+      const { user, accessToken } = response.data?.data || {};
 
-      console.log('Login response:', {
-        status: response.status,
-        user: user?.email,
-        headers: response.headers,
-      });
-
-      // ✅ Check if cookies were set
-      const cookies = document.cookie;
-      console.log('Cookies after login:', cookies);
-
-      if (!cookies.includes('accessToken')) {
-        console.warn('⚠️ No accessToken cookie found!');
+      if (accessToken) {
+        setAccessToken(accessToken);
       }
 
       set({
@@ -118,14 +106,8 @@ export const useAuthStore = create((set, get) => ({
 
       return { success: true, user };
     } catch (error) {
-      console.error('Login error:', error);
       const message = error.response?.data?.message || "Login failed";
-
-      set({
-        loading: false,
-        error: message,
-      });
-
+      set({ loading: false, error: message });
       return { success: false, error: message };
     }
   },
@@ -138,6 +120,7 @@ export const useAuthStore = create((set, get) => ({
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
+      clearAccessToken();
       set({
         user: null,
         isInitialized: true,
@@ -146,7 +129,7 @@ export const useAuthStore = create((set, get) => ({
       });
 
       if (typeof window !== "undefined") {
-        window.location.replace("/login");
+        window.location.href = "/login";
       }
     }
   },
