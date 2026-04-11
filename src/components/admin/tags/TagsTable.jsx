@@ -234,7 +234,7 @@ export default function TagsTable({
                         <button
                             onClick={() => onPageChange(currentPage - 1)}
                             disabled={currentPage === 1}
-                            className={`px-3 py-1 rounded-lg text-sm flex items-center gap-1 transition ${currentPage === 1
+                            className={`px-3 py-1 rounded-lg text-sm flex items-center gap-1 transition cursor-pointer ${currentPage === 1
                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                                 : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                                 }`}
@@ -245,7 +245,7 @@ export default function TagsTable({
                         <button
                             onClick={() => onPageChange(currentPage + 1)}
                             disabled={currentPage === totalPages}
-                            className={`px-3 py-1 rounded-lg text-sm flex items-center gap-1 transition ${currentPage === totalPages
+                            className={`px-3 py-1 rounded-lg text-sm flex items-center gap-1 transition cursor-pointer ${currentPage === totalPages
                                 ? "bg-gray-100 text-gray-400 cursor-not-allowed"
                                 : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
                                 }`}

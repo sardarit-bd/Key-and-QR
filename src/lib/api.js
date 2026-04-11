@@ -15,24 +15,32 @@ const api = axios.create({
   },
 });
 
-let isRefreshing = false;
-let failedQueue = [];
-let hasRedirectedToLogin = false;
-
-const processQueue = (error) => {
-  failedQueue.forEach((prom) => {
-    if (error) prom.reject(error);
-    else prom.resolve();
+api.interceptors.request.use((config) => {
+  console.log('🚀 Request:', {
+    url: config.url,
+    method: config.method,
+    baseURL: config.baseURL,
+    withCredentials: config.withCredentials,
   });
-  failedQueue = [];
-};
+  return config;
+});
 
 api.interceptors.response.use(
   (response) => {
-    hasRedirectedToLogin = false;
+    console.log('✅ Response:', {
+      url: response.config.url,
+      status: response.status,
+      headers: response.headers,
+    });
     return response;
   },
   async (error) => {
+    console.log('❌ Error:', {
+      url: error.config?.url,
+      status: error.response?.status,
+      message: error.message,
+    });
+    
     const originalRequest = error.config;
 
     if (!error.response) {
@@ -45,12 +53,14 @@ api.interceptors.response.use(
     const isRegisterCall = originalRequest?.url?.includes("/auth/register");
     const isMeCall = originalRequest?.url?.includes("/auth/me");
 
+    if (isLoginCall || isRegisterCall) {
+      return Promise.reject(error);
+    }
+
     if (
       is401 &&
       !originalRequest._retry &&
-      !isRefreshCall &&
-      !isLoginCall &&
-      !isRegisterCall
+      !isRefreshCall
     ) {
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
@@ -69,12 +79,14 @@ api.interceptors.response.use(
         return api(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError);
+        
+        document.cookie.split(";").forEach((c) => {
+          document.cookie = c
+            .replace(/^ +/, "")
+            .replace(/=.*/, "=;expires=" + new Date().toUTCString() + ";path=/");
+        });
 
-        if (
-          typeof window !== "undefined" &&
-          !hasRedirectedToLogin &&
-          !isMeCall
-        ) {
+        if (typeof window !== "undefined" && !hasRedirectedToLogin && !isMeCall) {
           hasRedirectedToLogin = true;
           window.location.replace("/login?session=expired");
         }
@@ -88,5 +100,17 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
+
+let isRefreshing = false;
+let failedQueue = [];
+let hasRedirectedToLogin = false;
+
+const processQueue = (error) => {
+  failedQueue.forEach((prom) => {
+    if (error) prom.reject(error);
+    else prom.resolve();
+  });
+  failedQueue = [];
+};
 
 export default api;
