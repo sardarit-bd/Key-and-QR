@@ -1,11 +1,8 @@
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
-  const backendUrl = process.env.BACKEND_URL;
-  const incomingUrl = new URL(req.url);
+  const backendUrl = process.env.BACKEND_URL || 'https://key-and-qr-backend.vercel.app';
+  const redirectUrl = `${backendUrl}/api/v1/auth/google`;
   
-  // Directly redirect to backend — backend itself will redirect back to frontend
-  const backendCallbackUrl = `${backendUrl}/api/v1/auth/google/callback${incomingUrl.search}`;
-  
-  return NextResponse.redirect(backendCallbackUrl);
+  return NextResponse.redirect(redirectUrl);
 }
