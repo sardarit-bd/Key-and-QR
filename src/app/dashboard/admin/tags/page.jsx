@@ -145,7 +145,7 @@ export default function AdminTagsPage() {
     };
 
     if (loading && currentPage === 1 && tags.length === 0) {
-        return <Loader text="QKey" size={50} fullScreen />;
+        return <Loader text="QKey..." size={50} fullScreen />;
     }
 
     return (

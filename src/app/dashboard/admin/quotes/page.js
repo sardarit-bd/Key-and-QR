@@ -193,7 +193,7 @@ export default function QuotesManagementPage() {
     };
 
     if (loading && currentPage === 1 && quotes.length === 0) {
-        return <Loader text="QKey" size={50} fullScreen />;
+        return <Loader text="QKey..." size={50} fullScreen />;
     }
 
     return (

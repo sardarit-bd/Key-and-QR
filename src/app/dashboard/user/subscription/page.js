@@ -103,7 +103,7 @@ export default function UserSubscriptionsPage() {
                     <button
                         onClick={handleManageSubscription}
                         disabled={loadingPortal}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50 shadow-sm"
+                        className="inline-flex items-center gap-2 px-5 py-2.5 bg-black text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50 shadow-sm cursor-pointer"
                     >
                         {loadingPortal ? (
                             <>

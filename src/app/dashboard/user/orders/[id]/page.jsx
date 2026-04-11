@@ -1,6 +1,7 @@
 "use client";
 
 import { orderService } from "@/services/order.service";
+import Loader from "@/shared/Loader";
 import { useAuthStore } from "@/store/authStore";
 import {
     AlertCircle,
@@ -123,16 +124,7 @@ export default function OrderDetailsPage() {
     };
 
     if (loading) {
-        return (
-            <div className="max-w-7xl mx-auto py-16 px-4">
-                <div className="flex justify-center items-center min-h-[400px]">
-                    <div className="text-center">
-                        <div className="w-16 h-16 border-4 border-gray-200 border-t-black rounded-full animate-spin mx-auto"></div>
-                        <p className="mt-4 text-gray-600">Loading order details...</p>
-                    </div>
-                </div>
-            </div>
-        );
+        return <Loader text="Qkey..." size={50} fullScreen />;
     }
 
     if (error || !order) {

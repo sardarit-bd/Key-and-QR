@@ -161,7 +161,7 @@ export default function PremiumSection({ selectedCategory }) {
             </p>
             <button
               onClick={() => router.push("/dashboard/user/subscription")}
-              className="w-full rounded-lg bg-gray-900 text-white py-3 font-medium hover:bg-gray-800 transition"
+              className="w-full rounded-lg bg-gray-900 text-white py-3 font-medium hover:bg-gray-800 transition cursor-pointer"
             >
               Manage Subscription
             </button>

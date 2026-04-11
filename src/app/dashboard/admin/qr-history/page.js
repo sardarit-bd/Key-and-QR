@@ -153,7 +153,7 @@ export default function ScanHistoryPage() {
     }, [user, isInitialized]);
 
     if (loading && currentPage === 1 && scans.length === 0) {
-       return <Loader text="QKey" size={50} fullScreen />;
+       return <Loader text="QKey..." size={50} fullScreen />;
     }
 
     if (error) {

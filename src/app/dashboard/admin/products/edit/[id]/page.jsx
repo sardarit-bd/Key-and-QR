@@ -1,6 +1,7 @@
 "use client";
 
 import api from "@/lib/api";
+import Loader from "@/shared/Loader";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -226,14 +227,7 @@ export default function EditProductPage() {
     }, [mainImagePreview, galleryPreviews]);
 
     if (fetchLoading) {
-        return (
-            <div className="flex-1 w-full p-4 lg:p-8 flex items-center justify-center">
-                <div className="text-center">
-                    <div className="w-16 h-16 border-4 border-gray-200 border-t-gray-900 rounded-full animate-spin mx-auto"></div>
-                    <p className="mt-4 text-gray-600">Loading product...</p>
-                </div>
-            </div>
-        );
+        return <Loader text="Qkey..." size={50} fullScreen />;
     }
 
     return (
@@ -589,7 +583,7 @@ export default function EditProductPage() {
                                 )}
                             </button>
                         </div>
-                    </div> 
+                    </div>
                 </form>
             </div>
         </div>
