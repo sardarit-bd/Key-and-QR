@@ -322,7 +322,7 @@ export default function AdminOrdersPage() {
     }, [user, isInitialized]);
 
     if (loading && currentPage === 1 && orders.length === 0) {
-        return <Loader text="QKey" size={50} fullScreen />;
+        return <Loader text="QKey..." size={50} fullScreen />;
     }
 
     if (error) {

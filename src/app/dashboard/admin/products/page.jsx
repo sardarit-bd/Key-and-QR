@@ -99,7 +99,7 @@ export default function ProductsPage() {
   const providerInfo = getProviderInfo();
 
   if (loading) {
-    return <Loader text="Qkey" size={50} fullScreen />;
+    return <Loader text="Qkey..." size={50} fullScreen />;
   }
 
   return (

@@ -2,13 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useAuthStore } from "@/store/authStore";
-import { 
-  QrCode, 
-  Calendar, 
-  Sparkles, 
-  TrendingUp, 
+import {
+  QrCode,
+  Calendar,
+  Sparkles,
+  TrendingUp,
   Eye,
-  ChevronLeft, 
+  ChevronLeft,
   ChevronRight,
   Loader2,
   Tag,
@@ -22,6 +22,7 @@ import {
 import Link from "next/link";
 import api from "@/lib/api";
 import toast from "react-hot-toast";
+import Loader from "@/shared/Loader";
 
 export default function UserScanHistoryPage() {
   const { user } = useAuthStore();
@@ -65,7 +66,7 @@ export default function UserScanHistoryPage() {
       const params = new URLSearchParams();
       params.append("page", currentPage);
       params.append("limit", itemsPerPage);
-      
+
       const response = await api.get(`/scan/history?${params.toString()}`);
       setScans(response.data?.data || []);
       setTotalPages(response.data?.meta?.totalPage || 1);
@@ -114,11 +115,7 @@ export default function UserScanHistoryPage() {
   };
 
   if (loading && scans.length === 0) {
-    return (
-      <div className="flex-1 w-full p-8 flex items-center justify-center min-h-[400px]">
-        <Loader2 size={40} className="animate-spin text-gray-400" />
-      </div>
-    );
+    return <Loader text="Qkey..." size={50} fullScreen />;
   }
 
   return (
@@ -143,7 +140,7 @@ export default function UserScanHistoryPage() {
           </div>
           <p className="text-2xl font-bold text-gray-900">{stats.totalScans}</p>
         </div>
-        
+
         <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-gray-500">Today's Scans</span>
@@ -151,7 +148,7 @@ export default function UserScanHistoryPage() {
           </div>
           <p className="text-2xl font-bold text-gray-900">{stats.todayScans}</p>
         </div>
-        
+
         <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-gray-500">Unique Tags</span>
@@ -159,7 +156,7 @@ export default function UserScanHistoryPage() {
           </div>
           <p className="text-2xl font-bold text-gray-900">{stats.uniqueTags}</p>
         </div>
-        
+
         <div className="bg-gray-50 rounded-xl p-4 border border-gray-200">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs text-gray-500">Avg Daily</span>
