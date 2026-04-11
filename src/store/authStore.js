@@ -95,6 +95,20 @@ export const useAuthStore = create((set, get) => ({
       const response = await api.post("/auth/login", payload);
       const user = response.data?.data?.user ?? null;
 
+      console.log('Login response:', {
+        status: response.status,
+        user: user?.email,
+        headers: response.headers,
+      });
+
+      // ✅ Check if cookies were set
+      const cookies = document.cookie;
+      console.log('Cookies after login:', cookies);
+
+      if (!cookies.includes('accessToken')) {
+        console.warn('⚠️ No accessToken cookie found!');
+      }
+
       set({
         user,
         loading: false,
@@ -104,6 +118,7 @@ export const useAuthStore = create((set, get) => ({
 
       return { success: true, user };
     } catch (error) {
+      console.error('Login error:', error);
       const message = error.response?.data?.message || "Login failed";
 
       set({
