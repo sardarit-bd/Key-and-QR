@@ -1,3 +1,4 @@
+// app/dashboard/user/orders/page.js
 "use client";
 
 import { orderService } from "@/services/order.service";
@@ -25,7 +26,7 @@ import { toast } from "react-hot-toast";
 
 export default function OrdersPage() {
     const router = useRouter();
-    const { user } = useAuthStore(); // 👈 Using user instead of accessToken
+    const { user } = useAuthStore();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -46,7 +47,6 @@ export default function OrdersPage() {
             const response = await orderService.getUserOrders();
             console.log("Orders response:", response.data);
 
-            // Handle different response structures
             const ordersData = response.data?.data || response.data || [];
             setOrders(Array.isArray(ordersData) ? ordersData : []);
         } catch (error) {
@@ -118,6 +118,23 @@ export default function OrdersPage() {
 
     const formatPrice = (price) => {
         return `$${Number(price).toFixed(2)}`;
+    };
+
+    // ✅ Get order quantity (from order.quantity or default to 1)
+    const getOrderQuantity = (order) => {
+        return order.quantity || 1;
+    };
+
+    // ✅ Calculate total amount for a single order
+    const getOrderTotal = (order) => {
+        const price = order.product?.price || 0;
+        const quantity = getOrderQuantity(order);
+        return price * quantity;
+    };
+
+    // ✅ Calculate total spent across all orders
+    const getTotalSpent = () => {
+        return orders.reduce((sum, order) => sum + getOrderTotal(order), 0);
     };
 
     if (loading) {
@@ -200,6 +217,12 @@ export default function OrdersPage() {
                                     </th>
                                     <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
                                         <div className="flex items-center gap-1">
+                                            <Package className="w-4 h-4" />
+                                            Qty
+                                        </div>
+                                    </th>
+                                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">
+                                        <div className="flex items-center gap-1">
                                             <DollarSign className="w-4 h-4" />
                                             Amount
                                         </div>
@@ -225,181 +248,188 @@ export default function OrdersPage() {
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-200">
-                                {orders.map((order) => (
-                                    <tr key={order._id} className="hover:bg-gray-50 transition-colors duration-200">
-                                        {/* Order ID */}
-                                        <td className="px-6 py-4">
-                                            <span className="font-mono text-sm text-gray-900">
-                                                #{order._id?.slice(-8).toUpperCase()}
-                                            </span>
-                                        </td>
-
-                                        {/* Product */}
-                                        <td className="px-6 py-4">
-                                            <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                                                    <Image
-                                                        src={order.product?.image?.url || "/placeholder.png"}
-                                                        alt={order.product?.name || "Product"}
-                                                        width={40}
-                                                        height={40}
-                                                        className="w-full h-full object-cover"
-                                                        onError={(e) => {
-                                                            e.target.src = "/placeholder.png";
-                                                        }}
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <p className="font-medium text-gray-900 text-sm line-clamp-1">
-                                                        {order.product?.name || "Product"}
-                                                    </p>
-                                                    <p className="text-xs text-gray-500">
-                                                        Qty: 1
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </td>
-
-                                        {/* Date */}
-                                        <td className="px-6 py-4">
-                                            <p className="text-sm text-gray-600">
-                                                {formatDate(order.createdAt)}
-                                            </p>
-                                        </td>
-
-                                        {/* Amount */}
-                                        <td className="px-6 py-4">
-                                            <p className="text-sm font-semibold text-gray-900">
-                                                {formatPrice(order.product?.price || 0)}
-                                            </p>
-                                        </td>
-
-                                        {/* Status */}
-                                        <td className="px-6 py-4">
-                                            <span
-                                                className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                                                    order.fulfillmentStatus
-                                                )}`}
-                                            >
-                                                {getStatusIcon(order.fulfillmentStatus)}
-                                                {order.fulfillmentStatus === "assigned" && "Assigned"}
-                                                {order.fulfillmentStatus === "pending" && "Pending"}
-                                                {order.fulfillmentStatus === "shipped" && "Shipped"}
-                                                {order.fulfillmentStatus === "delivered" && "Delivered"}
-                                                {!["assigned", "pending", "shipped", "delivered"].includes(order.fulfillmentStatus) &&
-                                                    order.fulfillmentStatus?.toUpperCase()}
-                                            </span>
-                                        </td>
-
-                                        {/* Payment */}
-                                        <td className="px-6 py-4">
-                                            {getPaymentBadge(order.paymentStatus)}
-                                        </td>
-
-                                        {/* Tag */}
-                                        <td className="px-6 py-4">
-                                            {order.assignedTag ? (
-                                                <span className="inline-flex items-center gap-1 text-xs font-mono bg-blue-50 text-blue-700 px-2 py-1 rounded">
-                                                    <Tag className="w-3 h-3" />
-                                                    {typeof order.assignedTag === "object"
-                                                        ? order.assignedTag.tagCode || order.assignedTag._id?.slice(-6)
-                                                        : order.assignedTag}
+                                {orders.map((order) => {
+                                    const quantity = getOrderQuantity(order);
+                                    const totalAmount = getOrderTotal(order);
+                                    
+                                    return (
+                                        <tr key={order._id} className="hover:bg-gray-50 transition-colors duration-200">
+                                            <td className="px-6 py-4">
+                                                <span className="font-mono text-sm text-gray-900">
+                                                    #{order._id?.slice(-8).toUpperCase()}
                                                 </span>
-                                            ) : (
-                                                <span className="text-xs text-gray-400">Not assigned</span>
-                                            )}
-                                        </td>
-
-                                        {/* Actions */}
-                                        <td className="px-6 py-4">
-                                            <div className="flex gap-2">
-                                                <Link
-                                                    href={`/dashboard/user/orders/${order._id}`}
-                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-all duration-200 hover:scale-[1.02]"
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-10 h-10 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                                                        <Image
+                                                            src={order.product?.image?.url || "/placeholder.png"}
+                                                            alt={order.product?.name || "Product"}
+                                                            width={40}
+                                                            height={40}
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => {
+                                                                e.target.src = "/placeholder.png";
+                                                            }}
+                                                        />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-medium text-gray-900 text-sm line-clamp-1">
+                                                            {order.product?.name || "Product"}
+                                                        </p>
+                                                        <p className="text-xs text-gray-500">
+                                                            ${order.product?.price || 0} each
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                             </td>
+                                            <td className="px-6 py-4">
+                                                <p className="text-sm text-gray-600">
+                                                    {formatDate(order.createdAt)}
+                                                </p>
+                                             </td>
+                                            <td className="px-6 py-4">
+                                                <p className="text-sm font-semibold text-gray-900">
+                                                    {quantity}
+                                                </p>
+                                             </td>
+                                            <td className="px-6 py-4">
+                                                <p className="text-sm font-semibold text-gray-900">
+                                                    {formatPrice(totalAmount)}
+                                                </p>
+                                             </td>
+                                            <td className="px-6 py-4">
+                                                <span
+                                                    className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
+                                                        order.fulfillmentStatus
+                                                    )}`}
                                                 >
-                                                    <Eye className="w-3 h-3" />
-                                                    View
-                                                </Link>
-                                                {order.paymentStatus === "pending" && (
-                                                    <Link
-                                                        href={`/checkout?orderId=${order._id}`}
-                                                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-black rounded-md hover:bg-gray-900 transition-all duration-200 hover:scale-[1.02]"
-                                                    >
-                                                        Pay
-                                                        <ArrowRight className="w-3 h-3" />
-                                                    </Link>
+                                                    {getStatusIcon(order.fulfillmentStatus)}
+                                                    {order.fulfillmentStatus === "assigned" && "Assigned"}
+                                                    {order.fulfillmentStatus === "pending" && "Pending"}
+                                                    {order.fulfillmentStatus === "shipped" && "Shipped"}
+                                                    {order.fulfillmentStatus === "delivered" && "Delivered"}
+                                                    {!["assigned", "pending", "shipped", "delivered"].includes(order.fulfillmentStatus) &&
+                                                        order.fulfillmentStatus?.toUpperCase()}
+                                                </span>
+                                             </td>
+                                            <td className="px-6 py-4">
+                                                {getPaymentBadge(order.paymentStatus)}
+                                             </td>
+                                            <td className="px-6 py-4">
+                                                {order.assignedTag ? (
+                                                    <span className="inline-flex items-center gap-1 text-xs font-mono bg-blue-50 text-blue-700 px-2 py-1 rounded">
+                                                        <Tag className="w-3 h-3" />
+                                                        {typeof order.assignedTag === "object"
+                                                            ? order.assignedTag.tagCode || order.assignedTag._id?.slice(-6)
+                                                            : order.assignedTag}
+                                                    </span>
+                                                ) : (
+                                                    <span className="text-xs text-gray-400">Not assigned</span>
                                                 )}
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
+                                             </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex gap-2">
+                                                    <Link
+                                                        href={`/dashboard/user/orders/${order._id}`}
+                                                        className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-all duration-200 hover:scale-[1.02]"
+                                                    >
+                                                        <Eye className="w-3 h-3" />
+                                                        View
+                                                    </Link>
+                                                    {order.paymentStatus === "pending" && (
+                                                        <Link
+                                                            href={`/checkout?orderId=${order._id}`}
+                                                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-black rounded-md hover:bg-gray-900 transition-all duration-200 hover:scale-[1.02]"
+                                                        >
+                                                            Pay
+                                                            <ArrowRight className="w-3 h-3" />
+                                                        </Link>
+                                                    )}
+                                                </div>
+                                             </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
-                        </table>
+                         </table>
                     </div>
 
                     {/* Mobile Card View */}
                     <div className="lg:hidden divide-y divide-gray-200">
-                        {orders.map((order) => (
-                            <div key={order._id} className="p-4 hover:bg-gray-50 transition-colors">
-                                <div className="flex items-start justify-between mb-3">
-                                    <div>
-                                        <span className="font-mono text-sm font-semibold text-gray-900">
-                                            #{order._id?.slice(-8).toUpperCase()}
+                        {orders.map((order) => {
+                            const quantity = getOrderQuantity(order);
+                            const totalAmount = getOrderTotal(order);
+                            
+                            return (
+                                <div key={order._id} className="p-4 hover:bg-gray-50 transition-colors">
+                                    <div className="flex items-start justify-between mb-3">
+                                        <div>
+                                            <span className="font-mono text-sm font-semibold text-gray-900">
+                                                #{order._id?.slice(-8).toUpperCase()}
+                                            </span>
+                                            <p className="text-xs text-gray-500 mt-1">
+                                                {formatDate(order.createdAt)}
+                                            </p>
+                                        </div>
+                                        <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full capitalize ${getStatusColor(order.fulfillmentStatus)}`}>
+                                            {getStatusIcon(order.fulfillmentStatus)}
+                                            {order.fulfillmentStatus}
                                         </span>
-                                        <p className="text-xs text-gray-500 mt-1">
-                                            {formatDate(order.createdAt)}
-                                        </p>
                                     </div>
-                                    <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full capitalize ${getStatusColor(order.fulfillmentStatus)}`}>
-                                        {getStatusIcon(order.fulfillmentStatus)}
-                                        {order.fulfillmentStatus}
-                                    </span>
-                                </div>
 
-                                <div className="flex gap-3 mt-3">
-                                    <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
-                                        <Image
-                                            src={order.product?.image?.url || "/placeholder.png"}
-                                            alt={order.product?.name || "Product"}
-                                            width={64}
-                                            height={64}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    </div>
-                                    <div className="flex-1">
-                                        <h3 className="font-semibold text-gray-900 line-clamp-2">
-                                            {order.product?.name}
-                                        </h3>
-                                        <p className="text-sm font-bold text-gray-900 mt-1">
-                                            {formatPrice(order.product?.price || 0)}
-                                        </p>
-                                        <div className="flex items-center gap-2 mt-2">
-                                            <span className="text-xs text-gray-500">Qty: 1</span>
-                                            {order.assignedTag && (
-                                                <span className="text-xs text-blue-600">Tag assigned</span>
-                                            )}
+                                    <div className="flex gap-3 mt-3">
+                                        <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                                            <Image
+                                                src={order.product?.image?.url || "/placeholder.png"}
+                                                alt={order.product?.name || "Product"}
+                                                width={64}
+                                                height={64}
+                                                className="w-full h-full object-cover"
+                                            />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="font-semibold text-gray-900 line-clamp-2">
+                                                {order.product?.name}
+                                            </h3>
+                                            <p className="text-sm text-gray-500 mt-1">
+                                                ${order.product?.price || 0} each
+                                            </p>
+                                            <div className="flex items-center justify-between mt-2">
+                                                <span className="text-sm font-semibold text-gray-900">
+                                                    Qty: {quantity}
+                                                </span>
+                                                <span className="text-sm font-bold text-gray-900">
+                                                    {formatPrice(totalAmount)}
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2 mt-2">
+                                                {order.assignedTag && (
+                                                    <span className="text-xs text-blue-600">Tag assigned</span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
-                                    <Link
-                                        href={`/dashboard/user/orders/${order._id}`}
-                                        className="flex-1 text-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
-                                    >
-                                        View Details
-                                    </Link>
-                                    {order.paymentStatus === "pending" && (
+                                    <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
                                         <Link
-                                            href={`/checkout?orderId=${order._id}`}
-                                            className="flex-1 text-center px-3 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-900 transition"
+                                            href={`/dashboard/user/orders/${order._id}`}
+                                            className="flex-1 text-center px-3 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
                                         >
-                                            Pay Now
+                                            View Details
                                         </Link>
-                                    )}
+                                        {order.paymentStatus === "pending" && (
+                                            <Link
+                                                href={`/checkout?orderId=${order._id}`}
+                                                className="flex-1 text-center px-3 py-2 text-sm font-medium text-white bg-black rounded-lg hover:bg-gray-900 transition"
+                                            >
+                                                Pay Now
+                                            </Link>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            );
+                        })}
                     </div>
 
                     {/* Order Summary Footer */}
@@ -413,7 +443,7 @@ export default function OrdersPage() {
                                 <DollarSign className="w-4 h-4" />
                                 Total Spent:{" "}
                                 <span className="font-semibold text-gray-900">
-                                    {formatPrice(orders.reduce((sum, order) => sum + (order.product?.price || 0), 0))}
+                                    {formatPrice(getTotalSpent())}
                                 </span>
                             </p>
                         </div>

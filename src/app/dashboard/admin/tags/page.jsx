@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/store/authStore";
 import api from "@/lib/api";
@@ -12,10 +12,12 @@ import TagsTable from "@/components/admin/tags/TagsTable";
 import TagFilters from "@/components/admin/tags/TagFilters";
 import StatsCards from "@/components/admin/tags/StatsCards";
 import Loader from "@/shared/Loader";
+import useAuthInit from "@/hooks/useAuthInit";
 
 export default function AdminTagsPage() {
+    useAuthInit();
     const router = useRouter();
-    const { user, isInitialized } = useAuthStore();
+    const { user, isInitialized, isAuthenticated, isAdmin } = useAuthStore();
     const [tags, setTags] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -24,10 +26,16 @@ export default function AdminTagsPage() {
     const [selectedTag, setSelectedTag] = useState(null);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
-
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalTags, setTotalTags] = useState(0);
+    const [stats, setStats] = useState({
+        total: 0,
+        activated: 0,
+        pending: 0,
+        disabled: 0,
+    });
+    
     const itemsPerPage = 10;
 
     // Get provider info
@@ -40,7 +48,6 @@ export default function AdminTagsPage() {
 
     const providerInfo = getProviderInfo();
 
-    // Check admin access
     useEffect(() => {
         if (!isInitialized) return;
 
@@ -51,12 +58,17 @@ export default function AdminTagsPage() {
 
         if (user.role !== "admin") {
             router.push("/");
+            return;
         }
     }, [user, isInitialized, router]);
 
-    const fetchTags = async () => {
+    const fetchTags = useCallback(async () => {
+        if (!user || user.role !== "admin") return;
+        
         try {
             setLoading(true);
+            setError("");
+            
             const params = new URLSearchParams();
             params.append("page", currentPage);
             params.append("limit", itemsPerPage);
@@ -75,75 +87,91 @@ export default function AdminTagsPage() {
             }
 
             const response = await api.get(`/tags?${params.toString()}`);
-
-            setTags(response.data.data.data || []);
-            setTotalPages(response.data.data.meta?.totalPage || 1);
-            setTotalTags(response.data.data.meta?.total || 0);
-            setError("");
+            
+            // Handle response structure safely
+            const responseData = response.data?.data?.data || response.data?.data || [];
+            const responseMeta = response.data?.data?.meta || response.data?.meta || {};
+            
+            setTags(responseData);
+            setTotalPages(responseMeta.totalPage || 1);
+            setTotalTags(responseMeta.total || 0);
         } catch (error) {
             console.error("Error fetching tags:", error);
-            setError(error.response?.data?.message || "Failed to load tags");
+            
+            if (error.response?.status === 401) {
+                setError("Session expired. Please login again.");
+            } else {
+                setError(error.response?.data?.message || "Failed to load tags");
+            }
         } finally {
             setLoading(false);
         }
-    };
+    }, [currentPage, searchTerm, filterStatus, user]);
 
-    const fetchAllTagsForStats = async () => {
+    const loadStats = useCallback(async () => {
+        if (!user || user.role !== "admin") return;
+        
         try {
             const response = await api.get("/tags?limit=1000");
-            return response.data.data.data || [];
+            const allTags = response.data?.data?.data || response.data?.data || [];
+            
+            setStats({
+                total: allTags.length,
+                activated: allTags.filter(t => t.isActivated).length,
+                pending: allTags.filter(t => !t.isActivated && t.isActive).length,
+                disabled: allTags.filter(t => !t.isActive).length,
+            });
         } catch (error) {
             console.error("Error fetching stats:", error);
-            return [];
         }
-    };
-
-    const [stats, setStats] = useState({
-        total: 0,
-        activated: 0,
-        pending: 0,
-        disabled: 0,
-    });
-
-    const loadStats = async () => {
-        const allTags = await fetchAllTagsForStats();
-        setStats({
-            total: allTags.length,
-            activated: allTags.filter(t => t.isActivated).length,
-            pending: allTags.filter(t => !t.isActivated && t.isActive).length,
-            disabled: allTags.filter(t => !t.isActive).length,
-        });
-    };
+    }, [user]);
 
     useEffect(() => {
-        fetchTags();
-    }, [currentPage, searchTerm, filterStatus]);
+        if (user && user.role === "admin") {
+            fetchTags();
+        }
+    }, [fetchTags, user]);
 
     useEffect(() => {
-        loadStats();
-    }, []);
+        if (user && user.role === "admin") {
+            loadStats();
+        }
+    }, [loadStats, user]);
 
+    // Handle page change
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
             setCurrentPage(newPage);
         }
     };
 
+    // Handle refresh
     const handleRefresh = () => {
         fetchTags();
         loadStats();
     };
 
+    // Handle search
     const handleSearch = (term) => {
         setSearchTerm(term);
         setCurrentPage(1);
     };
 
+    // Handle filter change
     const handleFilterChange = (status) => {
         setFilterStatus(status);
         setCurrentPage(1);
     };
 
+    if (!isInitialized) {
+        return <Loader text="QKey..." size={50} fullScreen />;
+    }
+
+    if (user && user.role !== "admin") {
+        return null;
+    }
+
+    // Loading state for tags
     if (loading && currentPage === 1 && tags.length === 0) {
         return <Loader text="QKey..." size={50} fullScreen />;
     }
@@ -192,9 +220,16 @@ export default function AdminTagsPage() {
                     onRefresh={handleRefresh}
                 />
 
+                {/* Error Message */}
                 {error && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-red-600">
                         {error}
+                        <button 
+                            onClick={handleRefresh}
+                            className="ml-4 text-sm underline hover:no-underline"
+                        >
+                            Try Again
+                        </button>
                     </div>
                 )}
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from "zustand";
-import api, { clearAccessToken, setAccessToken } from "@/lib/api";
+import api from "@/lib/api";
 
 export const useAuthStore = create((set, get) => ({
   user: null,
@@ -11,18 +11,12 @@ export const useAuthStore = create((set, get) => ({
 
   initializeAuth: async () => {
     if (get().isInitialized) return;
-
     set({ loading: true });
 
     try {
-      // ✅ Try to refresh token on app load
       const response = await api.post("/auth/refresh-token");
-      const accessToken = response.data?.data?.accessToken;
 
-      if (accessToken) {
-        setAccessToken(accessToken);
-
-        // ✅ Fetch user data
+      if (response.data?.success) {
         const userResponse = await api.get("/auth/me");
         const user = userResponse.data?.data;
         set({ user, isInitialized: true, loading: false });
@@ -35,26 +29,14 @@ export const useAuthStore = create((set, get) => ({
     }
   },
 
-
   fetchMe: async () => {
     try {
       const response = await api.get("/auth/me");
       const user = response.data?.data ?? null;
-
-      set({
-        user,
-        isInitialized: true,
-        error: null,
-      });
-
+      set({ user, isInitialized: true, error: null });
       return user;
     } catch (error) {
-      set({
-        user: null,
-        isInitialized: true,
-        error: null,
-      });
-
+      set({ user: null, isInitialized: true, error: null });
       return null;
     }
   },
@@ -76,12 +58,7 @@ export const useAuthStore = create((set, get) => ({
       return { success: true, user };
     } catch (error) {
       const message = error.response?.data?.message || "Registration failed";
-
-      set({
-        loading: false,
-        error: message,
-      });
-
+      set({ loading: false, error: message });
       return { success: false, error: message };
     }
   },
@@ -91,11 +68,7 @@ export const useAuthStore = create((set, get) => ({
 
     try {
       const response = await api.post("/auth/login", payload);
-      const { user, accessToken } = response.data?.data || {};
-
-      if (accessToken) {
-        setAccessToken(accessToken);
-      }
+      const user = response.data?.data?.user;
 
       set({
         user,
@@ -120,7 +93,6 @@ export const useAuthStore = create((set, get) => ({
     } catch (error) {
       console.error("Logout error:", error);
     } finally {
-      clearAccessToken();
       set({
         user: null,
         isInitialized: true,
@@ -139,22 +111,14 @@ export const useAuthStore = create((set, get) => ({
 
     try {
       const response = await api.post("/auth/forgot-password", { email });
-
       set({ loading: false });
-
       return {
         success: true,
         message: response.data?.message || "Reset email sent",
       };
     } catch (error) {
-      const message =
-        error.response?.data?.message || "Failed to send reset email";
-
-      set({
-        loading: false,
-        error: message,
-      });
-
+      const message = error.response?.data?.message || "Failed to send reset email";
+      set({ loading: false, error: message });
       return { success: false, error: message };
     }
   },
@@ -163,26 +127,15 @@ export const useAuthStore = create((set, get) => ({
     set({ loading: true, error: null });
 
     try {
-      const response = await api.post("/auth/reset-password", {
-        token,
-        newPassword,
-      });
-
+      const response = await api.post("/auth/reset-password", { token, newPassword });
       set({ loading: false });
-
       return {
         success: true,
         message: response.data?.message || "Password reset successfully",
       };
     } catch (error) {
-      const message =
-        error.response?.data?.message || "Password reset failed";
-
-      set({
-        loading: false,
-        error: message,
-      });
-
+      const message = error.response?.data?.message || "Password reset failed";
+      set({ loading: false, error: message });
       return { success: false, error: message };
     }
   },
@@ -191,26 +144,15 @@ export const useAuthStore = create((set, get) => ({
     set({ loading: true, error: null });
 
     try {
-      const response = await api.post("/auth/change-password", {
-        oldPassword,
-        newPassword,
-      });
-
+      const response = await api.post("/auth/change-password", { oldPassword, newPassword });
       set({ loading: false });
-
       return {
         success: true,
         message: response.data?.message || "Password changed successfully",
       };
     } catch (error) {
-      const message =
-        error.response?.data?.message || "Password change failed";
-
-      set({
-        loading: false,
-        error: message,
-      });
-
+      const message = error.response?.data?.message || "Password change failed";
+      set({ loading: false, error: message });
       return { success: false, error: message };
     }
   },

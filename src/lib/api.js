@@ -15,7 +15,22 @@ const api = axios.create({
   },
 });
 
-let accessToken = null;
+const getCookie = (name) => {
+  if (typeof document === 'undefined') return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(';').shift();
+  return null;
+};
+
+api.interceptors.request.use((config) => {
+  const token = getCookie('accessToken');
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -30,15 +45,6 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// ✅ Request interceptor - access token attach করে
-api.interceptors.request.use((config) => {
-  if (accessToken) {
-    config.headers.Authorization = `Bearer ${accessToken}`;
-  }
-  return config;
-});
-
-// ✅ Response interceptor - token refresh handles
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -59,7 +65,6 @@ api.interceptors.response.use(
     
     if (is401 && !originalRequest._retry && !isRefreshCall) {
       if (isRefreshing) {
-        // ✅ Queue the request while refreshing
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
@@ -78,19 +83,16 @@ api.interceptors.response.use(
         const newAccessToken = response.data?.data?.accessToken;
         
         if (newAccessToken) {
-          accessToken = newAccessToken;
-          processQueue(null, accessToken);
-          
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          processQueue(null, newAccessToken);
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return api(originalRequest);
         } else {
           throw new Error("No access token returned");
         }
       } catch (refreshError) {
         processQueue(refreshError, null);
-        accessToken = null;
         
-        // ✅ Redirect to login
+        // Clear cookies and redirect to login
         if (typeof window !== "undefined") {
           window.location.href = "/login?session=expired";
         }
@@ -103,16 +105,5 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-// ✅ Helper functions for token management
-export const setAccessToken = (token) => {
-  accessToken = token;
-};
-
-export const getAccessToken = () => accessToken;
-
-export const clearAccessToken = () => {
-  accessToken = null;
-};
 
 export default api;

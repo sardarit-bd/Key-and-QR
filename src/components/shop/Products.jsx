@@ -40,22 +40,6 @@ export default function ShopGrid() {
         fetchProducts();
     }, [fetchProducts]);
 
-    // Loading state
-    // if (loading && products.length === 0) {
-    //     return (
-    //         <section className="bg-white text-black py-16 px-4">
-    //             <div className="max-w-7xl mx-auto">
-    //                 <div className="flex justify-center items-center min-h-[400px]">
-    //                     <div className="text-center">
-    //                         <div className="w-16 h-16 border-4 border-gray-200 border-t-black rounded-full animate-spin mx-auto"></div>
-    //                         <p className="mt-4 text-gray-600">Loading products...</p>
-    //                     </div>
-    //                 </div>
-    //             </div>
-    //         </section>
-    //     );
-    // }
-
     if (loading && products.length === 0) {
         return <Loader text="Qkey..." size={50} fullScreen />;
     }

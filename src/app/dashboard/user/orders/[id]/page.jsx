@@ -14,7 +14,11 @@ import {
     Package,
     Tag,
     Truck,
-    User
+    User,
+    Edit2,
+    Save,
+    X,
+    MapPin
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
@@ -25,10 +29,22 @@ import { toast } from "react-hot-toast";
 export default function OrderDetailsPage() {
     const { id } = useParams();
     const router = useRouter();
-    const { user } = useAuthStore(); // 👈 Using user instead of accessToken
+    const { user } = useAuthStore();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+
+    // Edit address state
+    const [isEditingAddress, setIsEditingAddress] = useState(false);
+    const [updatingAddress, setUpdatingAddress] = useState(false);
+    const [editFormData, setEditFormData] = useState({
+        fullName: "",
+        phone: "",
+        address: "",
+        city: "",
+        postalCode: "",
+        country: ""
+    });
 
     useEffect(() => {
         if (!user) {
@@ -48,9 +64,20 @@ export default function OrderDetailsPage() {
             const response = await orderService.getOrderStatus(id);
             console.log("Order details response:", response.data);
 
-            // Handle different response structures
             const orderData = response.data?.data || response.data;
             setOrder(orderData);
+
+            // Initialize edit form with current shipping address
+            if (orderData?.shippingAddress) {
+                setEditFormData({
+                    fullName: orderData.shippingAddress.fullName || orderData.user?.name || "",
+                    phone: orderData.shippingAddress.phone || "",
+                    address: orderData.shippingAddress.address || "",
+                    city: orderData.shippingAddress.city || "",
+                    postalCode: orderData.shippingAddress.postalCode || "",
+                    country: orderData.shippingAddress.country || ""
+                });
+            }
         } catch (error) {
             console.error("Error fetching order:", error);
             const errorMessage = error.response?.data?.message || "Order not found or you don't have permission to view it";
@@ -61,31 +88,98 @@ export default function OrderDetailsPage() {
         }
     };
 
+    // Check if user can edit address (only before shipping)
+    const canEditAddress = () => {
+        const uneditableStatuses = ["shipped", "delivered", "cancelled", "returned"];
+        return !uneditableStatuses.includes(order?.fulfillmentStatus);
+    };
+
+    // Handle edit form input change
+    const handleEditInputChange = (e) => {
+        const { name, value } = e.target;
+        setEditFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    //  Save updated shipping address
+    const handleSaveAddress = async () => {
+        if (!editFormData.address || !editFormData.city || !editFormData.country) {
+            toast.error("Please fill in address, city, and country");
+            return;
+        }
+
+        setUpdatingAddress(true);
+        try {
+            const response = await orderService.updateOrderAddress(id, {
+                shippingAddress: editFormData
+            });
+
+            if (response.success === true) {
+                toast.success(response.message || "Shipping address updated successfully!");
+
+                setOrder(prev => ({
+                    ...prev,
+                    shippingAddress: { ...editFormData }
+                }));
+
+                setIsEditingAddress(false);
+
+                fetchOrderDetails().catch(console.error);
+            } else {
+                toast.error(response.message || "Failed to update address");
+            }
+        } catch (error) {
+            console.error("Error updating address:", error);
+            toast.error(error.response?.data?.message || "Failed to update shipping address");
+        } finally {
+            setUpdatingAddress(false);
+        }
+    };
+
+    // Cancel editing
+    const cancelEditing = () => {
+        setIsEditingAddress(false);
+        // Reset form to original order data
+        if (order?.shippingAddress) {
+            setEditFormData({
+                fullName: order.shippingAddress.fullName || order.user?.name || "",
+                phone: order.shippingAddress.phone || "",
+                address: order.shippingAddress.address || "",
+                city: order.shippingAddress.city || "",
+                postalCode: order.shippingAddress.postalCode || "",
+                country: order.shippingAddress.country || ""
+            });
+        }
+    };
+
     const getStatusConfig = (status) => {
         const configs = {
             pending: {
                 icon: Clock,
                 color: "bg-yellow-100 text-yellow-800",
                 label: "Pending",
-                description: "Your order is being processed"
+                description: "Your order is being processed",
+                canEdit: true
             },
             assigned: {
                 icon: Package,
                 color: "bg-blue-100 text-blue-800",
                 label: "Assigned",
-                description: "Your tag has been assigned"
+                description: "Your tag has been assigned",
+                canEdit: true
             },
             shipped: {
                 icon: Truck,
                 color: "bg-purple-100 text-purple-800",
                 label: "Shipped",
-                description: "Your order is on the way"
+                description: "Your order is on the way",
+                canEdit: false
             },
             delivered: {
                 icon: CheckCircle,
                 color: "bg-green-100 text-green-800",
                 label: "Delivered",
-                description: "Your order has been delivered"
+                description: "Your order has been delivered",
+                canEdit: false
             }
         };
         return configs[status] || configs.pending;
@@ -111,16 +205,18 @@ export default function OrderDetailsPage() {
         return `$${Number(price).toFixed(2)}`;
     };
 
-    // const calculateTotal = () => {
-    //     if (!order?.product?.price) return 0;
-    //     const subtotal = order.product.price;
-    //     const tax = subtotal * 0.0875;
-    //     return subtotal + tax;
-    // };
+    const getOrderQuantity = () => {
+        return order?.quantity || 1;
+    };
 
     const calculateTotal = () => {
         if (!order?.product?.price) return 0;
-        return order.product.price * (order.quantity || 1);
+        return order.product.price * getOrderQuantity();
+    };
+
+    const getSubtotal = () => {
+        if (!order?.product?.price) return 0;
+        return order.product.price * getOrderQuantity();
     };
 
     if (loading) {
@@ -147,6 +243,10 @@ export default function OrderDetailsPage() {
 
     const StatusConfig = getStatusConfig(order.fulfillmentStatus);
     const StatusIcon = StatusConfig.icon;
+    const quantity = getOrderQuantity();
+    const subtotal = getSubtotal();
+    const total = calculateTotal();
+    const canEdit = canEditAddress();
 
     return (
         <div className="py-16 px-4 md:px-8">
@@ -167,6 +267,14 @@ export default function OrderDetailsPage() {
                             Order ID: #{order._id?.slice(-12).toUpperCase()}
                         </p>
                     </div>
+                    {canEdit && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2">
+                            <p className="text-sm text-yellow-700 flex items-center gap-1">
+                                <Edit2 size={14} />
+                                You can edit shipping address before shipment
+                            </p>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -184,7 +292,6 @@ export default function OrderDetailsPage() {
                         </div>
                         <p className="text-gray-600">{StatusConfig.description}</p>
 
-                        {/* Status Timeline */}
                         <div className="mt-6">
                             <div className="relative">
                                 <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200"></div>
@@ -251,7 +358,7 @@ export default function OrderDetailsPage() {
                                     </div>
                                     <div>
                                         <p className="text-gray-500">Quantity</p>
-                                        <p className="font-semibold text-gray-900">1</p>
+                                        <p className="font-semibold text-gray-900">{quantity}</p>
                                     </div>
                                     <div>
                                         <p className="text-gray-500">Category</p>
@@ -278,6 +385,151 @@ export default function OrderDetailsPage() {
                             </div>
                         </div>
                     )}
+
+                    {/* ✅ Shipping Address Section with Edit Feature */}
+                    <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-300">
+                        <div className="flex items-center justify-between mb-4">
+                            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                                <MapPin className="w-5 h-5" />
+                                Shipping Address
+                            </h2>
+                            {canEdit && !isEditingAddress && (
+                                <button
+                                    onClick={() => setIsEditingAddress(true)}
+                                    className="inline-flex items-center gap-1 px-3 py-1 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition cursor-pointer border border-blue-100"
+                                >
+                                    <Edit2 size={14} />
+                                    Edit
+                                </button>
+                            )}
+                        </div>
+
+                        {isEditingAddress ? (
+                            // Edit Mode
+                            <div className="space-y-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name *</label>
+                                        <input
+                                            type="text"
+                                            name="fullName"
+                                            value={editFormData.fullName}
+                                            onChange={handleEditInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:border-transparent focus:outline-none focus:ring-gray-400"
+                                            placeholder="Full name"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                                        <input
+                                            type="tel"
+                                            name="phone"
+                                            value={editFormData.phone}
+                                            onChange={handleEditInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:border-transparent focus:outline-none focus:ring-gray-400"
+                                            placeholder="Phone number"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700 mb-1">Address *</label>
+                                    <input
+                                        type="text"
+                                        name="address"
+                                        value={editFormData.address}
+                                        onChange={handleEditInputChange}
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:border-transparent focus:outline-none focus:ring-gray-400"
+                                        placeholder="Street address"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">City *</label>
+                                        <input
+                                            type="text"
+                                            name="city"
+                                            value={editFormData.city}
+                                            onChange={handleEditInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:border-transparent focus:outline-none focus:ring-gray-400"
+                                            placeholder="City"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Postal Code</label>
+                                        <input
+                                            type="text"
+                                            name="postalCode"
+                                            value={editFormData.postalCode}
+                                            onChange={handleEditInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:border-transparent focus:outline-none focus:ring-gray-400"
+                                            placeholder="Postal code"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-sm font-medium text-gray-700 mb-1">Country *</label>
+                                        <input
+                                            type="text"
+                                            name="country"
+                                            value={editFormData.country}
+                                            onChange={handleEditInputChange}
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:border-transparent focus:outline-none focus:ring-gray-400"
+                                            placeholder="Country"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 pt-2">
+                                    <button
+                                        onClick={handleSaveAddress}
+                                        disabled={updatingAddress}
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 cursor-pointer"
+                                    >
+                                        {updatingAddress ? (
+                                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin cursor-pointer" />
+                                        ) : (
+                                            <Save size={16} />
+                                        )}
+                                        Save Changes
+                                    </button>
+                                    <button
+                                        onClick={cancelEditing}
+                                        className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition cursor-pointer"
+                                    >
+                                        <X size={16} />
+                                        Cancel
+                                    </button>
+                                </div>
+                                <p className="text-xs text-gray-500">* Required fields. Address can only be changed before shipping.</p>
+                            </div>
+                        ) : (
+                            // View Mode
+                            <div className="space-y-2 text-sm">
+                                {order.shippingAddress?.fullName && (
+                                    <p><span className="text-gray-500">Name:</span> {order.shippingAddress.fullName}</p>
+                                )}
+                                {order.shippingAddress?.phone && (
+                                    <p><span className="text-gray-500">Phone:</span> {order.shippingAddress.phone}</p>
+                                )}
+                                {order.shippingAddress?.address && (
+                                    <p><span className="text-gray-500">Address:</span> {order.shippingAddress.address}</p>
+                                )}
+                                {order.shippingAddress?.city && (
+                                    <p><span className="text-gray-500">City:</span> {order.shippingAddress.city}</p>
+                                )}
+                                {order.shippingAddress?.postalCode && (
+                                    <p><span className="text-gray-500">Postal Code:</span> {order.shippingAddress.postalCode}</p>
+                                )}
+                                {order.shippingAddress?.country && (
+                                    <p><span className="text-gray-500">Country:</span> {order.shippingAddress.country}</p>
+                                )}
+                                {!order.shippingAddress?.address && (
+                                    <p className="text-gray-500">No shipping address provided</p>
+                                )}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 {/* Sidebar - Right Side */}
@@ -289,22 +541,16 @@ export default function OrderDetailsPage() {
                         <div className="space-y-3">
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-600">Subtotal</span>
-                                <span className="font-medium">
-                                    {formatPrice((order.product?.price || 0) * (order.quantity || 1))}
-                                </span>
+                                <span className="font-medium">{formatPrice(subtotal)}</span>
                             </div>
                             <div className="flex justify-between text-sm">
                                 <span className="text-gray-600">Shipping</span>
                                 <span className="text-green-600 font-medium">Free</span>
                             </div>
-                            {/* <div className="flex justify-between text-sm">
-                                <span className="text-gray-600">Tax (8.75%)</span>
-                                <span className="font-medium">{formatPrice((order.product?.price || 0) * 0.0875)}</span>
-                            </div> */}
                             <div className="border-t pt-3 mt-3">
                                 <div className="flex justify-between font-bold">
                                     <span>Total</span>
-                                    <span className="text-xl">{formatPrice(calculateTotal())}</span>
+                                    <span className="text-xl">{formatPrice(total)}</span>
                                 </div>
                             </div>
                         </div>
@@ -355,6 +601,17 @@ export default function OrderDetailsPage() {
                                 </p>
                                 <p className="font-medium text-gray-900">Stripe (Card)</p>
                             </div>
+                            {order.assignedTag && (
+                                <div>
+                                    <p className="text-gray-500 flex items-center gap-1">
+                                        <Tag className="w-3 h-3" />
+                                        Assigned Tag
+                                    </p>
+                                    <p className="font-medium text-gray-900 font-mono">
+                                        {typeof order.assignedTag === "object" ? order.assignedTag.tagCode : order.assignedTag}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

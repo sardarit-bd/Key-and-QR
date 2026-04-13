@@ -1,3 +1,4 @@
+// app/layout.js
 import AuthProvider from "@/components/auth/AuthProvider";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import Footer from "../shared/Footer";
@@ -35,8 +36,10 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
+      {/* ✅ suppressHydrationWarning যোগ করুন body তে */}
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} font-sans antialiased bg-white text-black`}
+        suppressHydrationWarning={true}
       >
         <AuthProvider>
           <Header />
