@@ -27,25 +27,20 @@ export default function TagPage() {
     const [error, setError] = useState(null);
     const [showCategorySelector, setShowCategorySelector] = useState(false);
     const [selectedCategory, setSelectedCategory] = useState("");
-    const [lastUnlock, setLastUnlock] = useState(null); // 🆕 Last unlock state
+    const [lastUnlock, setLastUnlock] = useState(null);
 
-    // 🆕 Fetch last unlock info
+    // Fetch last unlock info
     const fetchLastUnlock = async () => {
         if (!tagCode) return;
         
         try {
-            const response = await api.get(`/scan/last/${tagCode}`, {
-                headers: {
-                    "ngrok-skip-browser-warning": "true",
-                },
-            });
+            const response = await api.get(`/scan/last/${tagCode}`);
             
             if (response.data?.data) {
                 setLastUnlock(response.data.data);
             }
         } catch (error) {
             console.error("Error fetching last unlock:", error);
-            // Don't show error toast for this, it's not critical
         }
     };
 
@@ -55,11 +50,7 @@ export default function TagPage() {
             setLoading(true);
             setError(null);
 
-            const response = await api.get(`/tags/resolve/${tagCode}`, {
-                headers: {
-                    "ngrok-skip-browser-warning": "true",
-                },
-            });
+            const response = await api.get(`/tags/resolve/${tagCode}`);
 
             const data = response.data.data;
 
@@ -108,15 +99,7 @@ export default function TagPage() {
             setLoading(true);
 
             const payload = category ? { category } : {};
-            const response = await api.post(
-                `/scan/unlock/${tagCode}`,
-                payload,
-                {
-                    headers: {
-                        "ngrok-skip-browser-warning": "true",
-                    },
-                }
-            );
+            const response = await api.post(`/scan/unlock/${tagCode}`, payload);
 
             const result = response.data.data;
             setUnlockResult(result);
@@ -158,15 +141,7 @@ export default function TagPage() {
 
         try {
             setLoading(true);
-            const response = await api.post(
-                `/tags/activate/${tagCode}`,
-                {},
-                {
-                    headers: {
-                        "ngrok-skip-browser-warning": "true",
-                    },
-                }
-            );
+            const response = await api.post(`/tags/activate/${tagCode}`, {});
 
             toast.success("Tag activated successfully!");
             // Re-resolve tag status
@@ -184,7 +159,7 @@ export default function TagPage() {
     useEffect(() => {
         if (tagCode) {
             resolveTag();
-            fetchLastUnlock(); // 🆕 Fetch last unlock on page load
+            fetchLastUnlock();
         }
     }, [tagCode]);
 
@@ -309,7 +284,7 @@ export default function TagPage() {
                     isAlreadyScanned={unlockResult.status === "ALREADY_SCANNED_TODAY"}
                 />
                 
-                {/* 🆕 Show last unlock info if available and not already scanned today */}
+                {/* Show last unlock info if available and not already scanned today */}
                 {lastUnlock && unlockResult.status !== "ALREADY_SCANNED_TODAY" && (
                     <div className="max-w-md mx-auto mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
                         <div className="flex items-center gap-2 mb-2">
@@ -328,7 +303,7 @@ export default function TagPage() {
         );
     }
 
-    // 🆕 Show last unlock info when no unlock result yet (before scanning)
+    // Show last unlock info when no unlock result yet (before scanning)
     if (lastUnlock && !unlockResult && !showCategorySelector) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
