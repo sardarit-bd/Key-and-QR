@@ -3,15 +3,22 @@
 import { useAuthStore } from "@/store/authStore";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
+import Loader from "@/shared/Loader";
 
 export default function CallbackPage() {
     const router = useRouter();
     const searchParams = useSearchParams();
-    const fetchMe = useAuthStore((state) => state.fetchMe);
+    const { fetchMe, isInitialized } = useAuthStore();
 
     useEffect(() => {
         const handleCallback = async () => {
             const success = searchParams.get("success");
+            const error = searchParams.get("error");
+
+            if (error) {
+                router.replace(`/login?error=${error}`);
+                return;
+            }
 
             if (success !== "true") {
                 router.replace("/login");
@@ -37,10 +44,7 @@ export default function CallbackPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-black mx-auto mb-4" />
-                <p>Signing you in...</p>
-            </div>
+            {/* <Loader text="Qkey..." size={40} fullScreen={false} /> */}
         </div>
     );
 }

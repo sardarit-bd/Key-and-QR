@@ -6,6 +6,10 @@ import {
     ChevronDown, Check
 } from "lucide-react";
 import { FulfillmentStatusSelect } from "./FulfillmentStatus";
+import { createPortal } from "react-dom";
+import { TableTooltip } from "./TableTooltip";
+
+
 
 const getPaymentStatusBadge = (status) => {
     const styles = {
@@ -16,7 +20,6 @@ const getPaymentStatusBadge = (status) => {
     };
     return styles[status] || "bg-gray-100 text-gray-700";
 };
-
 
 const formatDate = (date) => {
     if (!date) return "N/A";
@@ -44,10 +47,6 @@ const canReturn = (order) => {
         order.returnStatus === "none";
 };
 
-// ========== CUSTOM FULFILLMENT STATUS SELECTOR ==========
-
-
-// ========== MAIN ORDERS TABLE ==========
 export default function OrdersTable({
     orders,
     onAssignTag,
@@ -71,8 +70,8 @@ export default function OrdersTable({
     }
 
     return (
-        <div className="overflow-x-auto">
-            <table className="w-full">
+        <div className="overflow-x-auto relative">
+            <table className="w-full min-w-[800px]">
                 <thead className="bg-gray-50 border-b border-gray-200">
                     <tr>
                         <th className="text-left p-4 text-sm font-semibold text-gray-600">Order ID</th>
@@ -84,14 +83,9 @@ export default function OrdersTable({
                         <th className="text-left p-4 text-sm font-semibold text-gray-600">
                             <div className="flex items-center gap-1">
                                 Fulfillment
-                                <div className="relative group">
-                                    <Info size={12} className="text-gray-400 cursor-help" />
-                                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 hidden group-hover:block z-10">
-                                        <div className="bg-gray-800 text-white text-xs rounded-lg p-2 whitespace-nowrap">
-                                            Status flow: Pending → Assigned → Shipped → Delivered
-                                        </div>
-                                    </div>
-                                </div>
+                                <TableTooltip content="Status flow: Pending → Assigned → Shipped → Delivered">
+                                    <Info size={12} className="text-gray-600 hover:text-gray-600 transition-colors cursor-pointer" />
+                                </TableTooltip>
                             </div>
                         </th>
                         <th className="text-left p-4 text-sm font-semibold text-gray-600">Created</th>
@@ -102,6 +96,7 @@ export default function OrdersTable({
                     {orders.map((order) => {
                         const currentStatus = order.fulfillmentStatus;
                         const isUpdating = updatingStatus && statusUpdateOrder === order._id;
+                        const hasTag = !!order.assignedTag;
 
                         return (
                             <tr key={order._id} className="hover:bg-gray-50 transition">
@@ -113,15 +108,15 @@ export default function OrdersTable({
                                 <td className="p-4">
                                     <div>
                                         <p className="text-sm font-medium text-gray-900">{order.user?.name || "Guest"}</p>
-                                        <p className="text-xs text-gray-500">{order.user?.email}</p>
+                                        <p className="text-xs text-gray-500 break-all max-w-[200px]">{order.user?.email}</p>
                                     </div>
                                 </td>
                                 <td className="p-4">
                                     <div className="flex items-center gap-2">
                                         {order.product?.image?.url && (
-                                            <img src={order.product.image.url} alt="" className="w-8 h-8 rounded object-cover" />
+                                            <img src={order.product.image.url} alt="" className="w-8 h-8 rounded object-cover hidden sm:block" />
                                         )}
-                                        <span className="text-sm text-gray-600">{order.product?.name}</span>
+                                        <span className="text-sm text-gray-600 max-w-[200px] truncate">{order.product?.name}</span>
                                     </div>
                                 </td>
                                 <td className="p-4">
@@ -130,23 +125,25 @@ export default function OrdersTable({
                                         : "bg-gray-100 text-gray-600"
                                     }`}>
                                         {order.purchaseType === "gift" ? <Gift size={10} /> : <User size={10} />}
-                                        {order.purchaseType === "gift" ? "Gift" : "Self"}
+                                        <span className="hidden sm:inline">{order.purchaseType === "gift" ? "Gift" : "Self"}</span>
                                     </span>
                                 </td>
                                 <td className="p-4">
-                                    <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${getPaymentStatusBadge(order.paymentStatus)}`}>
-                                        {order.paymentStatus === "paid" ? <CreditCard size={10} /> :
-                                            order.paymentStatus === "refunded" ? <RotateCcw size={10} /> :
-                                                <Clock size={10} />}
-                                        {order.paymentStatus === "paid" ? "Paid" :
-                                            order.paymentStatus === "refunded" ? "Refunded" :
-                                                "Pending"}
-                                    </span>
-                                    {order.refundStatus === "requested" && (
-                                        <span className="ml-1 text-xs bg-orange-100 text-orange-700 px-1 py-0.5 rounded-full">
-                                            Refund Requested
+                                    <div className="flex flex-col gap-1">
+                                        <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full w-fit ${getPaymentStatusBadge(order.paymentStatus)}`}>
+                                            {order.paymentStatus === "paid" ? <CreditCard size={10} /> :
+                                                order.paymentStatus === "refunded" ? <RotateCcw size={10} /> :
+                                                    <Clock size={10} />}
+                                            {order.paymentStatus === "paid" ? "Paid" :
+                                                order.paymentStatus === "refunded" ? "Refunded" :
+                                                    "Pending"}
                                         </span>
-                                    )}
+                                        {order.refundStatus === "requested" && (
+                                            <span className="text-xs bg-orange-100 text-orange-700 px-1 py-0.5 rounded-full w-fit">
+                                                Refund Req
+                                            </span>
+                                        )}
+                                    </div>
                                 </td>
                                 <td className="p-4">
                                     {order.assignedTag ? (
@@ -154,7 +151,13 @@ export default function OrdersTable({
                                             {order.assignedTag.tagCode}
                                         </span>
                                     ) : (
-                                        <span className="text-xs text-gray-400">Unassigned</span>
+                                        <button
+                                            onClick={() => onAssignTag(order)}
+                                            className="text-xs text-blue-600 hover:underline cursor-pointer"
+                                            disabled={processingAction}
+                                        >
+                                            Assign Tag
+                                        </button>
                                     )}
                                 </td>
                                 <td className="p-4">
@@ -164,16 +167,13 @@ export default function OrdersTable({
                                             orderId={order._id}
                                             onUpdateStatus={onUpdateStatus}
                                             isUpdating={isUpdating}
+                                            hasTag={hasTag}
                                         />
                                         
-                                        {isUpdating && (
-                                            <RefreshCw size={12} className="inline ml-2 animate-spin text-gray-400" />
-                                        )}
-
                                         {order.returnStatus === "requested" && (
                                             <div className="mt-1">
                                                 <span className="text-xs bg-orange-100 text-orange-700 px-1 py-0.5 rounded-full">
-                                                    Return Requested
+                                                    Return Req
                                                 </span>
                                             </div>
                                         )}
@@ -188,7 +188,7 @@ export default function OrdersTable({
                                 </td>
                                 <td className="p-4">
                                     <div className="flex items-center gap-1 text-xs text-gray-500">
-                                        <Calendar size={12} />
+                                        <Calendar size={12} className="hidden sm:block" />
                                         {formatDate(order.createdAt)}
                                     </div>
                                 </td>

@@ -1,6 +1,6 @@
 import CustomSelect from "@/shared/CustomSelect";
 import { useAuthStore } from "@/store/authStore";
-import { Mail } from "lucide-react";
+import { Mail, Loader2 } from "lucide-react";
 import { FaGoogle } from "react-icons/fa";
 
 export default function AssignTagModal({
@@ -11,7 +11,8 @@ export default function AssignTagModal({
     selectedTag,
     setSelectedTag,
     onAssign,
-    assigning
+    assigning,
+    loadingTags = false
 }) {
     const { user } = useAuthStore();
 
@@ -54,22 +55,31 @@ export default function AssignTagModal({
                 </div>
                 
                 <div className="p-6">
-                    <CustomSelect
-                        label="Select Available Tag"
-                        options={tagOptions}
-                        value={selectedTag}
-                        onChange={setSelectedTag}
-                        placeholder="Choose a tag..."
-                        searchable={true}
-                        clearable={true}
-                    />
-                    
-                    {availableTags.length === 0 && (
-                        <div className="mt-3 p-3 bg-yellow-50 rounded-lg">
-                            <p className="text-sm text-yellow-700">
-                                No unused tags available. Please create more tags in the Tags Management page.
-                            </p>
+                    {loadingTags ? (
+                        <div className="flex items-center justify-center py-8">
+                            <Loader2 size={32} className="animate-spin text-blue-500" />
+                            <span className="ml-2 text-gray-500">Loading tags...</span>
                         </div>
+                    ) : (
+                        <>
+                            <CustomSelect
+                                label="Select Available Tag"
+                                options={tagOptions}
+                                value={selectedTag}
+                                onChange={setSelectedTag}
+                                placeholder="Choose a tag..."
+                                searchable={true}
+                                clearable={true}
+                            />
+                            
+                            {availableTags.length === 0 && (
+                                <div className="mt-3 p-3 bg-yellow-50 rounded-lg">
+                                    <p className="text-sm text-yellow-700">
+                                        No unused tags available. Please create more tags in the Tags Management page.
+                                    </p>
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
                 
@@ -83,7 +93,7 @@ export default function AssignTagModal({
                     </button>
                     <button
                         onClick={onAssign}
-                        disabled={assigning || !selectedTag}
+                        disabled={assigning || !selectedTag || loadingTags}
                         className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                         {assigning ? "Assigning..." : "Assign Tag"}

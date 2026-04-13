@@ -1,6 +1,8 @@
+// components/Checkout.jsx
 "use client";
 
 import { orderService } from "@/services/order.service";
+import Loader from "@/shared/Loader";
 import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
 import { ChevronDown } from "lucide-react";
@@ -8,6 +10,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
 
 const PLACEHOLDER_IMAGE = "https://placehold.co/400x400/e2e8f0/1e293b?text=No+Image";
 
@@ -17,14 +20,14 @@ export default function Checkout() {
     const orderId = searchParams.get("orderId");
 
     const { user } = useAuthStore();
-    const cart = useCartStore((state) => state.cart);
-    // const clearCart = useCartStore((state) => state.clearCart);
+    const { cart, clearCart } = useCartStore();
 
     const [loading, setLoading] = useState(false);
     const [pageLoading, setPageLoading] = useState(false);
     const [countryOpen, setCountryOpen] = useState(false);
     const [imageErrors, setImageErrors] = useState({});
     const [existingOrder, setExistingOrder] = useState(null);
+    const [cartLoaded, setCartLoaded] = useState(false);
 
     const [formData, setFormData] = useState({
         email: "",
@@ -40,6 +43,13 @@ export default function Checkout() {
 
     const countries = ["Bangladesh", "India", "USA", "UK", "Australia"];
 
+    // Debug: Check cart data
+    useEffect(() => {
+        console.log("Cart data in Checkout:", cart);
+        setCartLoaded(true);
+    }, [cart]);
+
+    // Set user data to form
     useEffect(() => {
         if (user) {
             setFormData((prev) => ({
@@ -50,7 +60,7 @@ export default function Checkout() {
         }
     }, [user]);
 
-    // existing order fetch
+    // Fetch existing order (for pending payment)
     useEffect(() => {
         const fetchOrder = async () => {
             if (!orderId) return;
@@ -68,7 +78,7 @@ export default function Checkout() {
                 }));
             } catch (error) {
                 console.error("Failed to load order for checkout:", error);
-                alert(error.response?.data?.message || "Failed to load order");
+                toast.error(error.response?.data?.message || "Failed to load order");
             } finally {
                 setPageLoading(false);
             }
@@ -77,6 +87,7 @@ export default function Checkout() {
         fetchOrder();
     }, [orderId]);
 
+    // Get checkout items
     const checkoutItems = useMemo(() => {
         if (orderId && existingOrder?.product) {
             return [
@@ -84,17 +95,31 @@ export default function Checkout() {
                     id: existingOrder.product._id,
                     name: existingOrder.product.name,
                     price: existingOrder.product.price,
-                    qty: 1,
+                    qty: existingOrder.quantity || 1,
                     img: existingOrder.product.image?.url || PLACEHOLDER_IMAGE,
                 },
             ];
         }
 
-        return cart;
+        // ✅ Return cart items with their quantities
+        if (cart && cart.length > 0) {
+            return cart.map(item => ({
+                id: item.id,
+                name: item.name,
+                price: item.price,
+                qty: item.qty || 1,
+                img: item.img || PLACEHOLDER_IMAGE,
+                purchaseType: item.purchaseType || "self",
+                giftMessage: item.giftMessage || null,
+            }));
+        }
+        
+        return [];
     }, [orderId, existingOrder, cart]);
 
     const firstItem = checkoutItems?.[0];
 
+    // Set form data from first item (for gift purchase)
     useEffect(() => {
         if (!orderId && firstItem) {
             setFormData((prev) => ({
@@ -105,7 +130,8 @@ export default function Checkout() {
         }
     }, [orderId, firstItem]);
 
-    const subtotal = checkoutItems.reduce((sum, item) => sum + item.price * item.qty, 0);
+    // Calculate totals with proper quantity
+    const subtotal = checkoutItems.reduce((sum, item) => sum + (item.price * (item.qty || 1)), 0);
     const shippingCost = 0;
     const total = subtotal + shippingCost;
 
@@ -121,8 +147,11 @@ export default function Checkout() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        console.log("Checkout items before submit:", checkoutItems);
+        console.log("Cart before submit:", cart);
+
         if (checkoutItems.length === 0) {
-            alert("Your cart is empty. Please add items before checkout.");
+            toast.error("Your cart is empty. Please add items before checkout.");
             router.push("/shop");
             return;
         }
@@ -134,7 +163,7 @@ export default function Checkout() {
             !formData.country ||
             formData.country === "Select your country"
         ) {
-            alert("Please fill in all required fields");
+            toast.error("Please fill in all required fields");
             return;
         }
 
@@ -144,54 +173,78 @@ export default function Checkout() {
             let response;
 
             if (orderId) {
-                // Existing pending order payment
-                // Backend e jodi orderId diye checkout session create korar endpoint thake
-                response = await orderService.createCheckout({ orderId });
+                response = await orderService.createCheckout({
+                    orderId,
+                    fullName: formData.fullName,
+                    email: formData.email,
+                    phone: formData.phone,
+                    address: formData.address,
+                    city: formData.city,
+                    postalCode: formData.postalCode,
+                    country: formData.country,
+                });
             } else {
-                // New order from cart
-                // const firstItem = cart[0];
+                // ✅ Make sure we have a valid product
+                if (!firstItem || !firstItem.id) {
+                    toast.error("No product found in cart");
+                    setLoading(false);
+                    return;
+                }
 
                 const orderPayload = {
                     productId: firstItem.id,
-                    quantity: firstItem.qty,
+                    quantity: firstItem.qty || 1,
                     purchaseType: firstItem.purchaseType || formData.purchaseType || "self",
-                    giftMessage:
-                        (firstItem.purchaseType || formData.purchaseType) === "gift"
-                            ? firstItem.giftMessage || formData.giftMessage || null
-                            : null,
+                    giftMessage: (firstItem.purchaseType || formData.purchaseType) === "gift"
+                        ? firstItem.giftMessage || formData.giftMessage || null
+                        : null,
+                    fullName: formData.fullName,
+                    email: formData.email,
+                    phone: formData.phone,
+                    address: formData.address,
+                    city: formData.city,
+                    postalCode: formData.postalCode,
+                    country: formData.country,
                 };
 
+                console.log("Order payload being sent:", orderPayload);
                 response = await orderService.createCheckout(orderPayload);
             }
 
+            console.log("Checkout response:", response);
+
             if (response.data?.url) {
+                // Clear cart after successful checkout
+                if (!orderId) {
+                    clearCart();
+                }
                 window.location.href = response.data.url;
                 return;
             }
 
             throw new Error("No checkout URL received");
         } catch (error) {
-            console.error("Checkout failed:", error);
-            const errorMessage =
-                error.response?.data?.message || "Something went wrong. Please try again.";
-            alert(errorMessage);
+            console.error("Checkout failed - Full error:", error);
+            console.error("Error response:", error.response);
+            
+            let errorMessage = "Something went wrong. Please try again.";
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+            
+            toast.error(errorMessage);
         } finally {
             setLoading(false);
         }
     };
 
-    if (pageLoading) {
-        return (
-            <section className="max-w-7xl mx-auto py-32 px-4 text-center">
-                <div className="bg-gray-50 p-8 rounded-lg">
-                    <h2 className="text-2xl font-semibold mb-4">Loading order...</h2>
-                    <p className="text-gray-600">Please wait...</p>
-                </div>
-            </section>
-        );
+    if (pageLoading || !cartLoaded) {
+        return <Loader text="QKey..." size={50} fullScreen />;
     }
 
-    if (!orderId && checkoutItems.length === 0) {
+    if (!orderId && checkoutItems.length === 0 && cart.length === 0) {
         return (
             <section className="max-w-7xl mx-auto py-32 px-4 text-center">
                 <div className="bg-gray-50 p-8 rounded-lg">
@@ -219,48 +272,56 @@ export default function Checkout() {
                 </Link>
 
                 <h2 className="text-xl font-semibold mb-6">
-                    Order Summary ({checkoutItems.reduce((sum, i) => sum + i.qty, 0)} items)
+                    Order Summary ({checkoutItems.reduce((sum, i) => sum + (i.qty || 1), 0)} items)
                 </h2>
 
-                <div className="space-y-4 max-h-96 overflow-y-auto">
-                    {checkoutItems.map((item) => (
-                        <div key={item.id} className="flex items-center justify-between border-b border-gray-100 pb-4">
-                            <div className="flex items-center gap-4">
-                                <div className="relative w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
-                                    <Image
-                                        src={getImageUrl(item)}
-                                        alt={item.name}
-                                        fill
-                                        className="object-cover"
-                                        onError={() => handleImageError(item.id)}
-                                        unoptimized
-                                    />
+                {checkoutItems.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                        No items in cart
+                    </div>
+                ) : (
+                    <>
+                        <div className="space-y-4 max-h-96 overflow-y-auto">
+                            {checkoutItems.map((item) => (
+                                <div key={item.id} className="flex items-center justify-between border-b border-gray-100 pb-4">
+                                    <div className="flex items-center gap-4">
+                                        <div className="relative w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
+                                            <Image
+                                                src={getImageUrl(item)}
+                                                alt={item.name}
+                                                fill
+                                                className="object-cover"
+                                                onError={() => handleImageError(item.id)}
+                                                unoptimized
+                                            />
+                                        </div>
+                                        <div>
+                                            <h3 className="font-medium">{item.name}</h3>
+                                            <p className="text-sm text-gray-500">Qty: {item.qty || 1}</p>
+                                            <p className="text-sm text-gray-500">${item.price} each</p>
+                                        </div>
+                                    </div>
+                                    <p className="font-medium">${((item.price || 0) * (item.qty || 1)).toFixed(2)}</p>
                                 </div>
-                                <div>
-                                    <h3 className="font-medium">{item.name}</h3>
-                                    <p className="text-sm text-gray-500">Qty: {item.qty}</p>
-                                    <p className="text-sm text-gray-500">${item.price}</p>
-                                </div>
-                            </div>
-                            <p className="font-medium">${(item.price * item.qty).toFixed(2)}</p>
+                            ))}
                         </div>
-                    ))}
-                </div>
 
-                <div className="border-t border-gray-300 mt-6 pt-4 space-y-2 text-sm">
-                    <div className="flex justify-between text-gray-600">
-                        <span>Subtotal</span>
-                        <span>${subtotal.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-gray-600">
-                        <span>Shipping</span>
-                        <span className="text-green-600">Free</span>
-                    </div>
-                    <div className="flex justify-between text-base font-semibold mt-2 border-t border-gray-300 pt-4">
-                        <span>Total</span>
-                        <span>${total.toFixed(2)}</span>
-                    </div>
-                </div>
+                        <div className="border-t border-gray-300 mt-6 pt-4 space-y-2 text-sm">
+                            <div className="flex justify-between text-gray-600">
+                                <span>Subtotal</span>
+                                <span>${subtotal.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between text-gray-600">
+                                <span>Shipping</span>
+                                <span className="text-green-600">Free</span>
+                            </div>
+                            <div className="flex justify-between text-base font-semibold mt-2 border-t border-gray-300 pt-4">
+                                <span>Total</span>
+                                <span>${total.toFixed(2)}</span>
+                            </div>
+                        </div>
+                    </>
+                )}
             </div>
 
             <div>
@@ -386,7 +447,7 @@ export default function Checkout() {
 
                     <button
                         type="submit"
-                        disabled={loading}
+                        disabled={loading || checkoutItems.length === 0}
                         className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-900 cursor-pointer transition disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         {loading ? "Processing..." : `${orderId ? "Pay Now" : "Place Order"} • $${total.toFixed(2)}`}

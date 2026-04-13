@@ -5,6 +5,7 @@ import { useCartStore } from "@/store/cartStore";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import Loader from "./Loader";
 
 export default function SuccessPage() {
     const searchParams = useSearchParams();
@@ -47,9 +48,8 @@ export default function SuccessPage() {
     // 🔄 Loading UI
     if (loading) {
         return (
-            <div className="max-w-7xl mx-auto py-32 px-4 text-center">
-                <div className="w-16 h-16 border-4 border-gray-200 border-t-black rounded-full animate-spin mx-auto"></div>
-                <p className="mt-4 text-gray-600">Verifying your order...</p>
+            <div className="min-h-screen flex items-center justify-center">
+                <Loader text="Qkey..." size={40} fullScreen={false} />
             </div>
         );
     }

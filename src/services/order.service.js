@@ -30,4 +30,64 @@ export const orderService = {
             throw error;
         }
     },
+
+    updateOrderAddress: async (orderId, addressData) => {
+        try {
+            const response = await api.patch(`/orders/${orderId}/address`, addressData);
+            return response.data;
+        } catch (error) {
+            console.error("Update order address error:", error);
+            throw error;
+        }
+    },
+
+    updateOrder: async (orderId, updateData) => {
+        try {
+            const response = await api.patch(`/orders/${orderId}`, updateData);
+            return response.data;
+        } catch (error) {
+            console.error("Update order error:", error);
+            throw error;
+        }
+    },
+
+    cancelOrder: async (orderId, reason) => {
+        try {
+            const response = await api.post(`/orders/${orderId}/cancel`, { reason });
+            return response.data;
+        } catch (error) {
+            console.error("Cancel order error:", error);
+            throw error;
+        }
+    },
+
+    requestRefund: async (orderId, reason) => {
+        try {
+            const response = await api.post(`/orders/${orderId}/refund/request`, { reason });
+            return response.data;
+        } catch (error) {
+            console.error("Request refund error:", error);
+            throw error;
+        }
+    },
+
+    requestReturn: async (orderId, reason) => {
+        try {
+            const response = await api.post(`/orders/${orderId}/return/request`, { reason });
+            return response.data;
+        } catch (error) {
+            console.error("Request return error:", error);
+            throw error;
+        }
+    },
+
+    claimGift: async (orderId) => {
+        try {
+            const response = await api.post(`/orders/${orderId}/claim-gift`);
+            return response.data;
+        } catch (error) {
+            console.error("Claim gift error:", error);
+            throw error;
+        }
+    },
 };

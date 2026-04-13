@@ -15,7 +15,7 @@ const api = axios.create({
   },
 });
 
-let accessToken = null;
+// Track refresh token requests to prevent multiple simultaneous refreshes
 let isRefreshing = false;
 let failedQueue = [];
 
@@ -30,15 +30,32 @@ const processQueue = (error, token = null) => {
   failedQueue = [];
 };
 
-// ✅ Request interceptor - access token attach করে
+// Request interceptor - add token from cookie or localStorage
 api.interceptors.request.use((config) => {
-  if (accessToken) {
-    config.headers.Authorization = `Bearer ${accessToken}`;
+  // Try to get token from cookie first
+  const getCookie = (name) => {
+    if (typeof document === 'undefined') return null;
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return null;
+  };
+  
+  let token = getCookie('accessToken');
+  
+  // If not in cookie, try localStorage
+  if (!token && typeof window !== 'undefined') {
+    token = localStorage.getItem('accessToken');
   }
+  
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  
   return config;
 });
 
-// ✅ Response interceptor - token refresh handles
+// Response interceptor for token refresh
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
@@ -52,14 +69,22 @@ api.interceptors.response.use(
     const isRefreshCall = originalRequest?.url?.includes("/auth/refresh-token");
     const isLoginCall = originalRequest?.url?.includes("/auth/login");
     const isRegisterCall = originalRequest?.url?.includes("/auth/register");
+    const isMeCall = originalRequest?.url?.includes("/auth/me");
     
-    if (isLoginCall || isRegisterCall) {
+    // Don't retry login, register, or refresh calls
+    if (isLoginCall || isRegisterCall || isRefreshCall) {
       return Promise.reject(error);
     }
     
-    if (is401 && !originalRequest._retry && !isRefreshCall) {
+    // Handle 401 errors
+    if (is401 && !originalRequest._retry) {
+      // If this is the /me call, don't try to refresh - just reject
+      if (isMeCall) {
+        return Promise.reject(error);
+      }
+      
       if (isRefreshing) {
-        // ✅ Queue the request while refreshing
+        // Queue the request while token is being refreshed
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
         })
@@ -74,25 +99,37 @@ api.interceptors.response.use(
       isRefreshing = true;
       
       try {
+        // Try to refresh token
         const response = await api.post("/auth/refresh-token");
         const newAccessToken = response.data?.data?.accessToken;
         
         if (newAccessToken) {
-          accessToken = newAccessToken;
-          processQueue(null, accessToken);
+          // Store new token
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('accessToken', newAccessToken);
+          }
           
-          originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+          // Process queued requests
+          processQueue(null, newAccessToken);
+          
+          // Retry original request
+          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return api(originalRequest);
         } else {
           throw new Error("No access token returned");
         }
       } catch (refreshError) {
+        // Refresh failed - clear all auth data
         processQueue(refreshError, null);
-        accessToken = null;
         
-        // ✅ Redirect to login
-        if (typeof window !== "undefined") {
-          window.location.href = "/login?session=expired";
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('accessToken');
+          localStorage.removeItem('user');
+          
+          // Only redirect if not already on login page
+          if (!window.location.pathname.includes('/login')) {
+            window.location.href = "/login?session=expired";
+          }
         }
         return Promise.reject(refreshError);
       } finally {
@@ -103,16 +140,5 @@ api.interceptors.response.use(
     return Promise.reject(error);
   }
 );
-
-// ✅ Helper functions for token management
-export const setAccessToken = (token) => {
-  accessToken = token;
-};
-
-export const getAccessToken = () => accessToken;
-
-export const clearAccessToken = () => {
-  accessToken = null;
-};
 
 export default api;
