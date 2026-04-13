@@ -1,5 +1,3 @@
-// components/admin/orders/OrderDetailsModal.jsx - সম্পূর্ণ আপডেটেড (Responsive)
-
 import {
     Calendar, CheckCircle, Clock, CreditCard, Gift, Package,
     Tag, Truck, User, XCircle, Ban, Undo2, RotateCcw,

@@ -38,7 +38,6 @@ export default function AdminTagsPage() {
     
     const itemsPerPage = 10;
 
-    // Get provider info
     const getProviderInfo = () => {
         if (user?.provider === "google") {
             return { icon: <FaGoogle size={14} className="text-blue-500" />, text: "Google" };
@@ -88,7 +87,6 @@ export default function AdminTagsPage() {
 
             const response = await api.get(`/tags?${params.toString()}`);
             
-            // Handle response structure safely
             const responseData = response.data?.data?.data || response.data?.data || [];
             const responseMeta = response.data?.data?.meta || response.data?.meta || {};
             
@@ -138,26 +136,22 @@ export default function AdminTagsPage() {
         }
     }, [loadStats, user]);
 
-    // Handle page change
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= totalPages) {
             setCurrentPage(newPage);
         }
     };
 
-    // Handle refresh
     const handleRefresh = () => {
         fetchTags();
         loadStats();
     };
 
-    // Handle search
     const handleSearch = (term) => {
         setSearchTerm(term);
         setCurrentPage(1);
     };
 
-    // Handle filter change
     const handleFilterChange = (status) => {
         setFilterStatus(status);
         setCurrentPage(1);
@@ -171,7 +165,6 @@ export default function AdminTagsPage() {
         return null;
     }
 
-    // Loading state for tags
     if (loading && currentPage === 1 && tags.length === 0) {
         return <Loader text="QKey..." size={50} fullScreen />;
     }
@@ -179,7 +172,6 @@ export default function AdminTagsPage() {
     return (
         <div className="min-h-screen bg-gray-50 p-4 md:p-8">
             <div className="w-full">
-                {/* Header with Provider Info */}
                 <div className="mb-8">
                     <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                         <div>
@@ -208,10 +200,8 @@ export default function AdminTagsPage() {
                     </div>
                 </div>
 
-                {/* Stats Cards */}
                 <StatsCards stats={stats} tags={[]} providerInfo={providerInfo} />
 
-                {/* Filters */}
                 <TagFilters
                     searchTerm={searchTerm}
                     setSearchTerm={handleSearch}
@@ -220,7 +210,6 @@ export default function AdminTagsPage() {
                     onRefresh={handleRefresh}
                 />
 
-                {/* Error Message */}
                 {error && (
                     <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-red-600">
                         {error}
@@ -233,7 +222,6 @@ export default function AdminTagsPage() {
                     </div>
                 )}
 
-                {/* Tags Table with Pagination */}
                 <TagsTable
                     tags={tags}
                     onShowQR={(tag) => {
@@ -246,7 +234,6 @@ export default function AdminTagsPage() {
                     onPageChange={handlePageChange}
                 />
 
-                {/* Create Tag Modal */}
                 <CreateTagModal
                     isOpen={showCreateModal}
                     onClose={() => setShowCreateModal(false)}
@@ -256,7 +243,6 @@ export default function AdminTagsPage() {
                     }}
                 />
 
-                {/* QR Code Modal */}
                 <QRCodeModal
                     isOpen={showQRModal}
                     onClose={() => setShowQRModal(false)}

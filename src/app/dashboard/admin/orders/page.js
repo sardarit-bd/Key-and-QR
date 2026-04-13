@@ -20,6 +20,7 @@ import Loader from "@/shared/Loader";
 export default function AdminOrdersPage() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [loadingTags, setLoadingTags] = useState(false);
     const [error, setError] = useState(null);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [showTagModal, setShowTagModal] = useState(false);
@@ -113,7 +114,10 @@ export default function AdminOrdersPage() {
 
     const fetchAvailableTags = async () => {
         try {
-            const response = await api.get("/tags?limit=100");
+            setLoadingTags(true);
+
+            const timestamp = Date.now();
+            const response = await api.get(`/tags?limit=1000&unused=true&_=${timestamp}`);
 
             let tags = [];
 
@@ -141,23 +145,27 @@ export default function AdminOrdersPage() {
                 return;
             }
 
-            const unusedTags = tags.filter(tag => {
-                return tag && !tag.owner && tag.isActive === true;
+            const trulyUnusedTags = tags.filter(tag => {
+                return tag &&
+                    !tag.owner &&
+                    tag.isActive === true &&
+                    tag.isActivated === false; 
             });
-
-            setAvailableTags(unusedTags);
+            setAvailableTags(trulyUnusedTags);
 
         } catch (err) {
             console.error("Fetch available tags error:", err);
             toast.error("Failed to fetch available tags");
             setAvailableTags([]);
+        } finally {
+            setLoadingTags(false);
         }
     };
 
     const handleOpenTagModal = async (order) => {
         setSelectedOrder(order);
-        await fetchAvailableTags();
         setSelectedTag("");
+        await fetchAvailableTags();
         setShowTagModal(true);
     };
 
@@ -171,10 +179,20 @@ export default function AdminOrdersPage() {
             await api.patch(`/orders/${selectedOrder._id}`, { assignedTag: selectedTag });
             toast.success("Tag assigned successfully");
             setShowTagModal(false);
-            fetchOrders();
-            fetchStats();
+            setSelectedTag("");
+            // Refresh all data
+            await Promise.all([
+                fetchAvailableTags(),
+                fetchOrders(),
+                fetchStats()
+            ]);
         } catch (err) {
-            toast.error(err.response?.data?.message || "Failed to assign tag");
+            const errorMsg = err.response?.data?.message || "Failed to assign tag";
+            toast.error(errorMsg);
+            // If tag is already assigned, refresh the list
+            if (errorMsg.includes("already") || errorMsg.includes("owner")) {
+                await fetchAvailableTags();
+            }
         } finally {
             setAssigningTag(false);
         }
@@ -201,8 +219,7 @@ export default function AdminOrdersPage() {
         try {
             await api.patch(`/orders/${orderId}`, { fulfillmentStatus: newStatus });
             toast.success(`Status updated to "${newStatus}" successfully`);
-            fetchOrders();
-            fetchStats();
+            await Promise.all([fetchOrders(), fetchStats()]);
         } catch (err) {
             let errorMessage = "Failed to update status";
             if (err.response?.status === 400) {
@@ -229,8 +246,7 @@ export default function AdminOrdersPage() {
             await api.post(`/orders/${orderId}/cancel`, { reason });
             toast.success("Order cancelled successfully");
             setShowCancelModal(false);
-            fetchOrders();
-            fetchStats();
+            await Promise.all([fetchOrders(), fetchStats()]);
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to cancel order");
         } finally {
@@ -244,8 +260,7 @@ export default function AdminOrdersPage() {
             await api.post(`/orders/${orderId}/refund/process`, { approve, rejectReason });
             toast.success(approve ? "Refund processed successfully" : "Refund request rejected");
             setShowRefundModal(false);
-            fetchOrders();
-            fetchStats();
+            await Promise.all([fetchOrders(), fetchStats()]);
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to process refund");
         } finally {
@@ -259,8 +274,7 @@ export default function AdminOrdersPage() {
             await api.post(`/orders/${orderId}/return/process`, { approve, trackingNumber, rejectReason });
             toast.success(approve ? "Return request approved" : "Return request rejected");
             setShowReturnModal(false);
-            fetchOrders();
-            fetchStats();
+            await Promise.all([fetchOrders(), fetchStats()]);
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to process return");
         } finally {
@@ -273,8 +287,7 @@ export default function AdminOrdersPage() {
         try {
             await api.post(`/orders/${orderId}/return/complete`, {});
             toast.success("Return completed and refund processed");
-            fetchOrders();
-            fetchStats();
+            await Promise.all([fetchOrders(), fetchStats()]);
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to complete return");
         } finally {
@@ -286,8 +299,7 @@ export default function AdminOrdersPage() {
         setSearchTerm("");
         setFilterStatus("all");
         setCurrentPage(1);
-        fetchOrders();
-        fetchStats();
+        Promise.all([fetchOrders(), fetchStats()]);
     };
 
     const handlePageChange = (newPage) => {
@@ -316,27 +328,12 @@ export default function AdminOrdersPage() {
     useEffect(() => {
         if (!isInitialized) return;
         if (user?.role === "admin") {
-            fetchOrders();
-            fetchStats();
+            Promise.all([fetchOrders(), fetchStats()]);
         }
     }, [user, isInitialized]);
 
     if (loading && currentPage === 1 && orders.length === 0) {
         return <Loader text="QKey..." size={50} fullScreen />;
-    }
-
-    if (error) {
-        return (
-            <div className="flex-1 w-full p-8 flex items-center justify-center min-h-[400px]">
-                <div className="text-center">
-                    <XCircle size={40} className="text-red-400 mx-auto mb-4" />
-                    <p className="text-red-600">{error}</p>
-                    <button onClick={fetchOrders} className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                        Try Again
-                    </button>
-                </div>
-            </div>
-        );
     }
 
     return (
@@ -434,10 +431,20 @@ export default function AdminOrdersPage() {
                 )}
             </div>
 
-            <AssignTagModal isOpen={showTagModal} onClose={() => setShowTagModal(false)}
-                order={selectedOrder} availableTags={availableTags}
-                selectedTag={selectedTag} setSelectedTag={setSelectedTag}
-                onAssign={handleAssignTag} assigning={assigningTag} />
+            <AssignTagModal
+                isOpen={showTagModal}
+                onClose={() => {
+                    setShowTagModal(false);
+                    setSelectedTag("");
+                }}
+                order={selectedOrder}
+                availableTags={availableTags}
+                selectedTag={selectedTag}
+                setSelectedTag={setSelectedTag}
+                onAssign={handleAssignTag}
+                assigning={assigningTag}
+                loadingTags={loadingTags}
+            />
 
             <OrderDetailsModal isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)}
                 order={selectedOrder} onAssignTag={handleOpenTagModal}
