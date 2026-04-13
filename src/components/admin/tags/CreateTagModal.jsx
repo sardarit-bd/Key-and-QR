@@ -1,4 +1,3 @@
-// components/admin/tags/CreateTagModal.js
 import { useState } from "react";
 import { X, Sparkles, Edit, Copy, Check, DollarSign, Mail } from "lucide-react";
 import { FaGoogle } from "react-icons/fa";
