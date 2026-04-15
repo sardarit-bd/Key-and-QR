@@ -1,17 +1,11 @@
+// components/admin/quotes/EditQuoteModal.jsx
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { Mail } from "lucide-react";
 import { FaGoogle } from "react-icons/fa";
-
-const CATEGORIES = [
-    { value: "faith", label: "Faith", color: "bg-purple-100 text-purple-700" },
-    { value: "love", label: "Love", color: "bg-pink-100 text-pink-700" },
-    { value: "hope", label: "Hope", color: "bg-green-100 text-green-700" },
-    { value: "success", label: "Success", color: "bg-blue-100 text-blue-700" },
-    { value: "motivation", label: "Motivation", color: "bg-orange-100 text-orange-700" },
-];
+import CategorySelect from "./CategorySelect";
 
 export default function EditQuoteModal({ isOpen, onClose, quote, onSuccess }) {
     const { user } = useAuthStore();
@@ -77,7 +71,9 @@ export default function EditQuoteModal({ isOpen, onClose, quote, onSuccess }) {
                         </div>
                     </div>
                 </div>
+                
                 <div className="p-6 space-y-4">
+                    {/* Quote Text */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Quote Text *
@@ -87,24 +83,22 @@ export default function EditQuoteModal({ isOpen, onClose, quote, onSuccess }) {
                             onChange={(e) => setText(e.target.value)}
                             rows={4}
                             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                            placeholder="Enter quote text..."
                         />
                     </div>
+                    
+                    {/* Category Select with Custom Selector */}
                     <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
                             Category *
                         </label>
-                        <select
+                        <CategorySelect
                             value={category}
-                            onChange={(e) => setCategory(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                        >
-                            {CATEGORIES.map((cat) => (
-                                <option key={cat.value} value={cat.value}>
-                                    {cat.label}
-                                </option>
-                            ))}
-                        </select>
+                            onChange={setCategory}
+                        />
                     </div>
+                    
+                    {/* Active Status */}
                     <div className="flex items-center gap-2">
                         <input
                             type="checkbox"
@@ -113,7 +107,6 @@ export default function EditQuoteModal({ isOpen, onClose, quote, onSuccess }) {
                             onChange={(e) => setIsActive(e.target.checked)}
                             className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
                         />
-
                         <label
                             htmlFor="isActive"
                             className="text-sm text-gray-700 select-none cursor-pointer"
@@ -121,12 +114,15 @@ export default function EditQuoteModal({ isOpen, onClose, quote, onSuccess }) {
                             Active (visible for scans)
                         </label>
                     </div>
+                    
+                    {/* Error Message */}
                     {error && (
                         <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
                             {error}
                         </div>
                     )}
                 </div>
+                
                 <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
                     <button
                         onClick={onClose}

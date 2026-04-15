@@ -5,7 +5,7 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import api from "@/lib/api";
 import StatusBadge from "./StatusBadge";
-import SubscriptionBadge from "./SubscriptionBadge";
+import SubscriptionTypeSelect from "./SubscriptionTypeSelect";
 
 export default function TagsTable({
     tags,
@@ -106,7 +106,7 @@ export default function TagsTable({
                 subscriptionType: newType
             });
             if (response.data.success) {
-                toast.success(`Subscription type updated to ${newType}`);
+                toast.success(`Subscription type updated to ${newType === "subscriber" ? "Subscriber" : "Free"}`);
                 onRefresh();
             }
         } catch (error) {
@@ -187,22 +187,12 @@ export default function TagsTable({
                                     </td>
 
                                     <td className="px-6 py-4">
-                                        <select
+                                        <SubscriptionTypeSelect
                                             value={tag.subscriptionType}
-                                            onChange={(e) => handleSubscriptionChange(tag._id, e.target.value)}
-                                            disabled={subscriptionUpdating === tag._id}
-                                            className={`text-xs px-2 py-1 rounded-full border-0 focus:ring-2 cursor-pointer ${
-                                                tag.subscriptionType === "subscriber"
-                                                    ? "bg-purple-100 text-purple-800"
-                                                    : "bg-gray-100 text-gray-600"
-                                            }`}
-                                        >
-                                            <option value="free">Free</option>
-                                            <option value="subscriber">Subscriber</option>
-                                        </select>
-                                        {subscriptionUpdating === tag._id && (
-                                            <span className="ml-2 text-xs text-gray-400">Updating...</span>
-                                        )}
+                                            onChange={(newType) => handleSubscriptionChange(tag._id, newType)}
+                                            isUpdating={subscriptionUpdating === tag._id}
+                                            disabled={!tag.isActive}
+                                        />
                                     </td>
 
                                     <td className="px-6 py-4">

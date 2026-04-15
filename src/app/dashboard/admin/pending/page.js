@@ -3,6 +3,7 @@
 import ApproveModal from "@/components/admin/pending-quotes/ApproveModal";
 import DeleteModal from "@/components/admin/pending-quotes/DeleteModal";
 import RejectModal from "@/components/admin/pending-quotes/RejectModal";
+import QuoteDetailsModal from "@/components/admin/pending-quotes/QuoteDetailsModal";
 import api from "@/lib/api";
 import Loader from "@/shared/Loader";
 import { useAuthStore } from "@/store/authStore";
@@ -11,7 +12,9 @@ import {
     ChevronDown,
     ChevronLeft,
     ChevronRight,
+    ChevronUp,
     Clock,
+    Eye,
     MessageSquare,
     RefreshCw,
     Search,
@@ -39,7 +42,7 @@ const CATEGORY_LABELS = {
     motivation: "Motivation",
     other: "Other",
 };
-// Main Page
+
 export default function PendingQuotesPage() {
     const { user, isInitialized } = useAuthStore();
     const [quotes, setQuotes] = useState([]);
@@ -56,6 +59,7 @@ export default function PendingQuotesPage() {
     const [showApproveModal, setShowApproveModal] = useState(false);
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [expandedId, setExpandedId] = useState(null);
 
     const fetchPendingQuotes = async () => {
@@ -178,7 +182,7 @@ export default function PendingQuotesPage() {
                     </div>
                     <button
                         onClick={handleRefresh}
-                        className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                        className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
                     >
                         <RefreshCw size={18} />
                         Refresh
@@ -188,14 +192,14 @@ export default function PendingQuotesPage() {
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-gray-500">Total Pending</span>
                         <Clock size={18} className="text-yellow-500" />
                     </div>
                     <div className="text-2xl font-bold text-gray-900">{totalQuotes}</div>
                 </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-gray-500">Unique Users</span>
                         <User size={18} className="text-blue-500" />
@@ -204,7 +208,7 @@ export default function PendingQuotesPage() {
                         {new Set(quotes.map(q => q.user?._id)).size}
                     </div>
                 </div>
-                <div className="bg-white rounded-lg border border-gray-200 p-4">
+                <div className="bg-white rounded-lg border border-gray-200 p-4 shadow-sm">
                     <div className="flex items-center justify-between mb-2">
                         <span className="text-sm text-gray-500">Total Submissions</span>
                         <MessageSquare size={18} className="text-purple-500" />
@@ -214,7 +218,7 @@ export default function PendingQuotesPage() {
             </div>
 
             {/* Search */}
-            <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+            <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6 shadow-sm">
                 <div className="relative">
                     <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                     <input
@@ -231,11 +235,17 @@ export default function PendingQuotesPage() {
             {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-red-600">
                     {error}
+                    <button
+                        onClick={fetchPendingQuotes}
+                        className="ml-4 text-sm underline hover:no-underline"
+                    >
+                        Try Again
+                    </button>
                 </div>
             )}
 
             {/* Quotes Table */}
-            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
+            <div className="bg-white rounded-lg border border-gray-200 overflow-hidden shadow-sm">
                 {quotes.length === 0 ? (
                     <div className="p-12 text-center text-gray-500">
                         <CheckCircle size={48} className="mx-auto mb-4 text-gray-300" />
@@ -270,7 +280,7 @@ export default function PendingQuotesPage() {
                                                 </div>
                                             </td>
                                             <td className="p-4">
-                                                <div className="text-sm text-gray-700 max-w-md italic">
+                                                <div className="text-sm text-gray-700 max-w-md italic line-clamp-2">
                                                     "{quote.text}"
                                                 </div>
                                             </td>
@@ -284,6 +294,19 @@ export default function PendingQuotesPage() {
                                             </td>
                                             <td className="p-4">
                                                 <div className="flex items-center gap-2">
+                                                    {/* View Details Button */}
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedQuote(quote);
+                                                            setShowDetailsModal(true);
+                                                        }}
+                                                        className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"
+                                                        title="View Details"
+                                                    >
+                                                        <Eye size={18} className="text-gray-500 group-hover:text-blue-600" />
+                                                    </button>
+                                                    
+                                                    {/* Approve Button */}
                                                     <button
                                                         onClick={() => {
                                                             setSelectedQuote(quote);
@@ -294,6 +317,8 @@ export default function PendingQuotesPage() {
                                                     >
                                                         <CheckCircle size={18} className="text-gray-500 group-hover:text-green-600" />
                                                     </button>
+                                                    
+                                                    {/* Reject Button */}
                                                     <button
                                                         onClick={() => {
                                                             setSelectedQuote(quote);
@@ -302,8 +327,10 @@ export default function PendingQuotesPage() {
                                                         className="p-1.5 hover:bg-red-50 rounded-lg transition group cursor-pointer"
                                                         title="Reject"
                                                     >
-                                                        <XCircle size={18} className="text-gray-500 group-hover:text-red-600 cursor-pointer" />
+                                                        <XCircle size={18} className="text-gray-500 group-hover:text-red-600" />
                                                     </button>
+                                                    
+                                                    {/* Delete Button */}
                                                     <button
                                                         onClick={() => {
                                                             setSelectedQuote(quote);
@@ -332,7 +359,7 @@ export default function PendingQuotesPage() {
                                     >
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between mb-2">
-                                                <span className="font-medium text-gray-900">{quote.user?.name}</span>
+                                                <span className="font-medium text-gray-900">{quote.user?.name || "Unknown"}</span>
                                                 {expandedId === quote._id ? (
                                                     <ChevronUp size={20} className="text-gray-400" />
                                                 ) : (
@@ -356,10 +383,20 @@ export default function PendingQuotesPage() {
                                     {expandedId === quote._id && (
                                         <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
                                             <div className="text-sm">
-                                                <span className="text-gray-500">User:</span>
-                                                <span className="text-gray-900 ml-2">{quote.user?.email}</span>
+                                                <span className="text-gray-500">User Email:</span>
+                                                <span className="text-gray-900 ml-2 break-all">{quote.user?.email || "N/A"}</span>
                                             </div>
-                                            <div className="flex items-center gap-3 pt-2">
+                                            <div className="flex flex-wrap items-center gap-2 pt-2">
+                                                <button
+                                                    onClick={() => {
+                                                        setSelectedQuote(quote);
+                                                        setShowDetailsModal(true);
+                                                    }}
+                                                    className="flex-1 py-2 text-center text-sm text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition cursor-pointer"
+                                                >
+                                                    <Eye size={14} className="inline mr-1" />
+                                                    View Details
+                                                </button>
                                                 <button
                                                     onClick={() => {
                                                         setSelectedQuote(quote);
@@ -406,7 +443,7 @@ export default function PendingQuotesPage() {
                                     <button
                                         onClick={() => handlePageChange(currentPage - 1)}
                                         disabled={currentPage === 1}
-                                        className="px-3 py-1 rounded-lg text-sm border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="px-3 py-1 rounded-lg text-sm border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
                                     >
                                         <ChevronLeft size={14} className="inline mr-1" />
                                         Previous
@@ -414,7 +451,7 @@ export default function PendingQuotesPage() {
                                     <button
                                         onClick={() => handlePageChange(currentPage + 1)}
                                         disabled={currentPage === totalPages}
-                                        className="px-3 py-1 rounded-lg text-sm border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                                        className="px-3 py-1 rounded-lg text-sm border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition cursor-pointer"
                                     >
                                         Next
                                         <ChevronRight size={14} className="inline ml-1" />
@@ -455,6 +492,15 @@ export default function PendingQuotesPage() {
                 }}
                 quote={selectedQuote}
                 onConfirm={handleDelete}
+            />
+
+            <QuoteDetailsModal
+                isOpen={showDetailsModal}
+                onClose={() => {
+                    setShowDetailsModal(false);
+                    setSelectedQuote(null);
+                }}
+                quote={selectedQuote}
             />
         </div>
     );
