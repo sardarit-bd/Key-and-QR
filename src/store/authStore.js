@@ -15,67 +15,44 @@ export const useAuthStore = create(
       initializeAuth: async () => {
         const state = get();
         
-        // Already initialized
         if (state.isInitialized) return;
-        
-        // Already loading
         if (state.loading) return;
         
         set({ loading: true });
         
         try {
-          // First try to get user from /me
           const response = await api.get("/auth/me");
           const user = response.data?.data;
           
           if (user) {
-            set({ 
-              user, 
-              isInitialized: true, 
-              loading: false,
-              error: null 
-            });
-          } else {
-            set({ 
-              user: null, 
-              isInitialized: true, 
-              loading: false 
-            });
+            set({ user, isInitialized: true, loading: false, error: null });
+            return;
           }
         } catch (error) {
           console.error("Init auth error:", error);
           
-          // Try to refresh token if /me failed
+          // Don't try refresh on login page
+          if (typeof window !== 'undefined' && window.location.pathname === '/login') {
+            set({ user: null, isInitialized: true, loading: false });
+            return;
+          }
+          
+          // Try refresh token
           try {
             const refreshResponse = await api.post("/auth/refresh-token");
             
             if (refreshResponse.data?.success) {
-              // Retry getting user
               const userResponse = await api.get("/auth/me");
               const user = userResponse.data?.data;
-              
-              set({ 
-                user, 
-                isInitialized: true, 
-                loading: false,
-                error: null 
-              });
-            } else {
-              set({ 
-                user: null, 
-                isInitialized: true, 
-                loading: false 
-              });
+              set({ user, isInitialized: true, loading: false, error: null });
+              return;
             }
           } catch (refreshError) {
-            console.error("Refresh token error:", refreshError);
-            set({ 
-              user: null, 
-              isInitialized: true, 
-              loading: false 
-            });
+            console.error("Refresh failed:", refreshError);
           }
         }
+        
+        set({ user: null, isInitialized: true, loading: false });
       },
 
       fetchMe: async () => {
@@ -96,14 +73,13 @@ export const useAuthStore = create(
         try {
           const response = await api.post("/auth/register", payload);
           const user = response.data?.data?.user ?? null;
+          const accessToken = response.data?.data?.accessToken;
+          
+          if (accessToken && typeof window !== 'undefined') {
+            localStorage.setItem('accessToken', accessToken);
+          }
 
-          set({
-            user,
-            loading: false,
-            error: null,
-            isInitialized: true,
-          });
-
+          set({ user, loading: false, error: null, isInitialized: true });
           return { success: true, user };
         } catch (error) {
           const message = error.response?.data?.message || "Registration failed";
@@ -118,20 +94,13 @@ export const useAuthStore = create(
         try {
           const response = await api.post("/auth/login", payload);
           const user = response.data?.data?.user;
-          
-          // Store access token if returned
           const accessToken = response.data?.data?.accessToken;
+          
           if (accessToken && typeof window !== 'undefined') {
             localStorage.setItem('accessToken', accessToken);
           }
 
-          set({
-            user,
-            loading: false,
-            error: null,
-            isInitialized: true,
-          });
-
+          set({ user, loading: false, error: null, isInitialized: true });
           return { success: true, user };
         } catch (error) {
           const message = error.response?.data?.message || "Login failed";
@@ -148,19 +117,13 @@ export const useAuthStore = create(
         } catch (error) {
           console.error("Logout error:", error);
         } finally {
-          // Clear localStorage
           if (typeof window !== "undefined") {
             localStorage.removeItem('accessToken');
             localStorage.removeItem('user');
           }
           
-          set({
-            user: null,
-            isInitialized: true,
-            error: null,
-            loading: false,
-          });
-
+          set({ user: null, isInitialized: true, error: null, loading: false });
+          
           if (typeof window !== "undefined") {
             window.location.href = "/login";
           }
@@ -173,10 +136,7 @@ export const useAuthStore = create(
         try {
           const response = await api.post("/auth/forgot-password", { email });
           set({ loading: false });
-          return {
-            success: true,
-            message: response.data?.message || "Reset email sent",
-          };
+          return { success: true, message: response.data?.message || "Reset email sent" };
         } catch (error) {
           const message = error.response?.data?.message || "Failed to send reset email";
           set({ loading: false, error: message });
@@ -190,10 +150,7 @@ export const useAuthStore = create(
         try {
           const response = await api.post("/auth/reset-password", { token, newPassword });
           set({ loading: false });
-          return {
-            success: true,
-            message: response.data?.message || "Password reset successfully",
-          };
+          return { success: true, message: response.data?.message || "Password reset successfully" };
         } catch (error) {
           const message = error.response?.data?.message || "Password reset failed";
           set({ loading: false, error: message });
@@ -207,10 +164,7 @@ export const useAuthStore = create(
         try {
           const response = await api.post("/auth/change-password", { oldPassword, newPassword });
           set({ loading: false });
-          return {
-            success: true,
-            message: response.data?.message || "Password changed successfully",
-          };
+          return { success: true, message: response.data?.message || "Password changed successfully" };
         } catch (error) {
           const message = error.response?.data?.message || "Password change failed";
           set({ loading: false, error: message });

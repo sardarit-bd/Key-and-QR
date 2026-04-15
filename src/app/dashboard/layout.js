@@ -1,7 +1,7 @@
 'use client'
 
 import { useAuthStore } from '@/store/authStore';
-import { Clock, CreditCard, Heart, Home, House, LayoutDashboard, LogOut, Mail, Menu, Package, QrCode, Quote, Send, ShoppingBag, Tag, User, X } from 'lucide-react';
+import { Clock, CreditCard, Heart, Home, House, LayoutDashboard, LogOut, Mail, Menu, Package, QrCode, Quote, Send, ShoppingBag, Tag, User, X, Settings, Image, FileText, Palette, Eye, LayoutTemplate } from 'lucide-react';
 import { FaGoogle } from 'react-icons/fa';
 
 import Link from 'next/link';
@@ -16,6 +16,7 @@ export default function DashboardLayout({ children }) {
     const router = useRouter();
 
     const [isMobile, setIsMobile] = useState(false);
+    const [isPageSettingsOpen, setIsPageSettingsOpen] = useState(false);
 
     useEffect(() => {
         const checkMobile = () => {
@@ -37,6 +38,22 @@ export default function DashboardLayout({ children }) {
         };
     }, [isSidebarOpen]);
 
+    // Auto expand Page Settings if current path is under settings
+    useEffect(() => {
+        if (pathname?.includes('/dashboard/admin/settings')) {
+            setIsPageSettingsOpen(true);
+        }
+    }, [pathname]);
+
+    /********************* Page Settings Submenu Items **************************/
+    const pageSettingsItems = [
+        { icon: LayoutTemplate, label: 'Hero Section', link: "/dashboard/admin/settings/hero" },
+        { icon: Image, label: 'Banner Images', link: "/dashboard/admin/settings/banners" },
+        { icon: Palette, label: 'Theme Settings', link: "/dashboard/admin/settings/theme" },
+        { icon: FileText, label: 'Pages', link: "/dashboard/admin/settings/pages" },
+        { icon: Eye, label: 'SEO Settings', link: "/dashboard/admin/settings/seo" },
+    ];
+
     /********************* menu item for admin **************************/
     const menuItemsforAdmin = [
         { icon: LayoutDashboard, label: 'Dashboard', link: "/dashboard/admin" },
@@ -47,6 +64,7 @@ export default function DashboardLayout({ children }) {
         { icon: Clock, label: 'Pending Quotes', link: "/dashboard/admin/pending" },
         { icon: QrCode, label: 'Scan History', link: "/dashboard/admin/qr-history" },
         { icon: CreditCard, label: 'Subscription', link: "/dashboard/admin/subscription" },
+        { icon: Settings, label: 'Page Settings', link: "#", isSubmenu: true, submenuItems: pageSettingsItems },
         { icon: User, label: 'My Profile', link: "/dashboard/admin/profile" },
     ];
 
@@ -203,21 +221,75 @@ export default function DashboardLayout({ children }) {
                     <div className="border-t border-gray-200 my-2"></div>
 
                     {/* Dashboard Menu Items */}
-                    {RoleDesider?.map((item, index) => (
-                        <Link
-                            href={item.link}
-                            key={index}
-                            onClick={() => setIsSidebarOpen(false)}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors cursor-pointer ${
-                                item.link === pathname 
-                                    ? 'bg-gray-200 text-gray-900 font-medium' 
-                                    : 'text-gray-600 hover:bg-gray-100'
-                            }`}
-                        >
-                            <item.icon size={18} />
-                            <span>{item.label}</span>
-                        </Link>
-                    ))}
+                    {RoleDesider?.map((item, index) => {
+                        // Check if it's Page Settings with submenu
+                        if (item.isSubmenu && user?.role === "admin") {
+                            return (
+                                <div key={index}>
+                                    <button
+                                        onClick={() => setIsPageSettingsOpen(!isPageSettingsOpen)}
+                                        className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-sm transition-colors cursor-pointer ${
+                                            isPageSettingsOpen ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-100'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <item.icon size={18} />
+                                            <span>{item.label}</span>
+                                        </div>
+                                        <svg 
+                                            className={`w-4 h-4 transition-transform duration-200 ${isPageSettingsOpen ? 'rotate-180' : ''}`}
+                                            fill="none" 
+                                            stroke="currentColor" 
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    
+                                    {/* Submenu Items */}
+                                    {isPageSettingsOpen && (
+                                        <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-200 pl-3">
+                                            {item.submenuItems.map((subItem, subIndex) => {
+                                                const isActive = pathname === subItem.link;
+                                                return (
+                                                    <Link
+                                                        href={subItem.link}
+                                                        key={subIndex}
+                                                        onClick={() => setIsSidebarOpen(false)}
+                                                        className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${
+                                                            isActive 
+                                                                ? 'bg-gray-200 text-gray-900 font-medium' 
+                                                                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                                                        }`}
+                                                    >
+                                                        <subItem.icon size={16} />
+                                                        <span>{subItem.label}</span>
+                                                    </Link>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        }
+                        
+                        // Regular menu item
+                        return (
+                            <Link
+                                href={item.link}
+                                key={index}
+                                onClick={() => setIsSidebarOpen(false)}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors cursor-pointer ${
+                                    item.link === pathname 
+                                        ? 'bg-gray-200 text-gray-900 font-medium' 
+                                        : 'text-gray-600 hover:bg-gray-100'
+                                }`}
+                            >
+                                <item.icon size={18} />
+                                <span>{item.label}</span>
+                            </Link>
+                        );
+                    })}
                 </nav>
 
                 {/* Logout Button */}
@@ -274,20 +346,73 @@ export default function DashboardLayout({ children }) {
 
                 {/* Navigation */}
                 <nav className="space-y-1">
-                    {RoleDesider?.map((item, index) => (
-                        <Link
-                            href={item.link}
-                            key={index}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${
-                                item.link === pathname
-                                    ? 'bg-gray-200 text-gray-900 font-medium'
-                                    : 'text-gray-600 hover:bg-gray-100'
-                            }`}
-                        >
-                            <item.icon size={18} />
-                            <span>{item.label}</span>
-                        </Link>
-                    ))}
+                    {RoleDesider?.map((item, index) => {
+                        // Check if it's Page Settings with submenu
+                        if (item.isSubmenu && user?.role === "admin") {
+                            return (
+                                <div key={index}>
+                                    <button
+                                        onClick={() => setIsPageSettingsOpen(!isPageSettingsOpen)}
+                                        className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${
+                                            isPageSettingsOpen ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-100'
+                                        }`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <item.icon size={18} />
+                                            <span>{item.label}</span>
+                                        </div>
+                                        <svg 
+                                            className={`w-4 h-4 transition-transform duration-200 ${isPageSettingsOpen ? 'rotate-180' : ''}`}
+                                            fill="none" 
+                                            stroke="currentColor" 
+                                            viewBox="0 0 24 24"
+                                        >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                                        </svg>
+                                    </button>
+                                    
+                                    {/* Submenu Items */}
+                                    {isPageSettingsOpen && (
+                                        <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-200 pl-3">
+                                            {item.submenuItems.map((subItem, subIndex) => {
+                                                const isActive = pathname === subItem.link;
+                                                return (
+                                                    <Link
+                                                        href={subItem.link}
+                                                        key={subIndex}
+                                                        className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${
+                                                            isActive 
+                                                                ? 'bg-gray-200 text-gray-900 font-medium' 
+                                                                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
+                                                        }`}
+                                                    >
+                                                        <subItem.icon size={16} />
+                                                        <span>{subItem.label}</span>
+                                                    </Link>
+                                                );
+                                            })}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        }
+                        
+                        // Regular menu item
+                        return (
+                            <Link
+                                href={item.link}
+                                key={index}
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${
+                                    item.link === pathname
+                                        ? 'bg-gray-200 text-gray-900 font-medium'
+                                        : 'text-gray-600 hover:bg-gray-100'
+                                }`}
+                            >
+                                <item.icon size={18} />
+                                <span>{item.label}</span>
+                            </Link>
+                        );
+                    })}
                 </nav>
 
                 {/* Logout Button - Desktop */}
