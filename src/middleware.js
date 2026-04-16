@@ -4,19 +4,29 @@ export function middleware(request) {
   const token = request.cookies.get('accessToken')?.value;
   const { pathname } = request.nextUrl;
   
-  const publicPages = ['/login', '/signup', '/forgot-password', '/reset-password', '/callback', '/t'];
+  // Public pages - no auth required
+  const publicPages = ['/login', '/signup', '/forgot-password', '/reset-password', '/callback', '/t', '/shop'];
   const isPublicPage = publicPages.some(page => pathname.startsWith(page));
   
-  // Check if trying to access protected routes without token
-  if (!isPublicPage && !token && pathname !== '/') {
+  // Home page is public
+  if (pathname === '/') {
+    return NextResponse.next();
+  }
+  
+  // Protected routes - require token
+  if (!isPublicPage && !token) {
     const url = new URL('/login', request.url);
     url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
   }
   
-  // Redirect to dashboard if already logged in and trying to access login
+  // Already logged in - redirect from login/signup to dashboard
   if (token && (pathname === '/login' || pathname === '/signup')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+    const userRole = request.cookies.get('userRole')?.value;
+    if (userRole === 'admin') {
+      return NextResponse.redirect(new URL('/dashboard/admin', request.url));
+    }
+    return NextResponse.redirect(new URL('/dashboard/user', request.url));
   }
   
   return NextResponse.next();
@@ -26,10 +36,13 @@ export const config = {
   matcher: [
     '/login',
     '/signup',
+    '/forgot-password',
+    '/reset-password',
+    '/callback',
     '/dashboard/:path*',
     '/profile/:path*',
     '/checkout/:path*',
-    '/callback',
     '/t/:path*',
+    '/shop/:path*',
   ],
 };

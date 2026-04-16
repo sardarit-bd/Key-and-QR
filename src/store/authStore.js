@@ -2,7 +2,20 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import api from "@/lib/api";
+import api, { setTokens, clearTokens, setUser, getUser, getAccessToken, getRefreshToken } from "@/lib/api";
+
+const filterUserData = (user) => {
+  if (!user) return null;
+
+  return {
+    _id: user._id,
+    name: user.name,
+    email: user.email,
+    role: user.role,
+    profileImage: user.profileImage?.url || user.profileImage || null,
+    provider: user.provider,
+  };
+};
 
 export const useAuthStore = create(
   persist(
@@ -12,54 +25,64 @@ export const useAuthStore = create(
       isInitialized: false,
       error: null,
 
+      // Update the initializeAuth function in authStore.js
+
       initializeAuth: async () => {
         const state = get();
-        
         if (state.isInitialized) return;
         if (state.loading) return;
-        
+
+        const storedUser = getUser();
+        const storedToken = getAccessToken();
+
+        // 🔥 If we have user and token in localStorage, just use them
+        if (storedUser && storedToken) {
+          console.log("🟢 Using stored user from localStorage");
+          const filteredUser = filterUserData(storedUser);
+          set({ user: filteredUser, isInitialized: true, loading: false });
+
+          // 🔥 Verify token in background (don't wait for it)
+          api.get("/auth/me").then(response => {
+            const freshUser = response.data?.data;
+            if (freshUser) {
+              const filteredFreshUser = filterUserData(freshUser);
+              setUser(filteredFreshUser);
+              set({ user: filteredFreshUser });
+            }
+          }).catch(() => {
+            console.log("Background verification failed, but user stays logged in");
+          });
+          return;
+        }
+
+        // No stored user, try to fetch
         set({ loading: true });
-        
         try {
           const response = await api.get("/auth/me");
           const user = response.data?.data;
-          
           if (user) {
-            set({ user, isInitialized: true, loading: false, error: null });
+            const filteredUser = filterUserData(user);
+            setUser(filteredUser);
+            set({ user: filteredUser, isInitialized: true, loading: false, error: null });
             return;
           }
         } catch (error) {
           console.error("Init auth error:", error);
-          
-          // Don't try refresh on login page
-          if (typeof window !== 'undefined' && window.location.pathname === '/login') {
-            set({ user: null, isInitialized: true, loading: false });
-            return;
-          }
-          
-          // Try refresh token
-          try {
-            const refreshResponse = await api.post("/auth/refresh-token");
-            
-            if (refreshResponse.data?.success) {
-              const userResponse = await api.get("/auth/me");
-              const user = userResponse.data?.data;
-              set({ user, isInitialized: true, loading: false, error: null });
-              return;
-            }
-          } catch (refreshError) {
-            console.error("Refresh failed:", refreshError);
-          }
         }
-        
+
         set({ user: null, isInitialized: true, loading: false });
       },
 
+      // ... rest of your store functions remain the same
       fetchMe: async () => {
         try {
           const response = await api.get("/auth/me");
           const user = response.data?.data ?? null;
-          set({ user, error: null });
+          if (user) {
+            const filteredUser = filterUserData(user);
+            setUser(filteredUser);
+            set({ user: filteredUser, error: null });
+          }
           return user;
         } catch (error) {
           set({ user: null, error: null });
@@ -74,13 +97,19 @@ export const useAuthStore = create(
           const response = await api.post("/auth/register", payload);
           const user = response.data?.data?.user ?? null;
           const accessToken = response.data?.data?.accessToken;
-          
-          if (accessToken && typeof window !== 'undefined') {
-            localStorage.setItem('accessToken', accessToken);
+          const refreshToken = response.data?.data?.refreshToken;
+
+          if (accessToken) {
+            setTokens(accessToken, refreshToken);
+          }
+          if (user) {
+            const filteredUser = filterUserData(user);
+            setUser(filteredUser);
+            set({ user: filteredUser });
           }
 
-          set({ user, loading: false, error: null, isInitialized: true });
-          return { success: true, user };
+          set({ loading: false, error: null, isInitialized: true });
+          return { success: true, user: filteredUser };
         } catch (error) {
           const message = error.response?.data?.message || "Registration failed";
           set({ loading: false, error: message });
@@ -93,17 +122,56 @@ export const useAuthStore = create(
 
         try {
           const response = await api.post("/auth/login", payload);
-          const user = response.data?.data?.user;
-          const accessToken = response.data?.data?.accessToken;
-          
-          if (accessToken && typeof window !== 'undefined') {
-            localStorage.setItem('accessToken', accessToken);
+
+          if (response.data?.success !== true) {
+            const errorMsg = response.data?.message || "Login failed";
+            set({ loading: false, error: errorMsg });
+            return { success: false, error: errorMsg };
           }
 
-          set({ user, loading: false, error: null, isInitialized: true });
-          return { success: true, user };
+          const user = response.data?.data?.user;
+          const accessToken = response.data?.data?.accessToken;
+          const refreshToken = response.data?.data?.refreshToken;
+
+          if (!accessToken || !user) {
+            set({ loading: false, error: "Invalid server response" });
+            return { success: false, error: "Invalid server response" };
+          }
+
+          // Save tokens
+          setTokens(accessToken, refreshToken);
+
+          const filteredUser = filterUserData(user);
+          setUser(filteredUser);
+
+          set({
+            user: filteredUser,
+            loading: false,
+            error: null,
+            isInitialized: true
+          });
+
+          // 🔥 Set cookie for middleware (重要!)
+          if (typeof window !== 'undefined') {
+            // Set cookie for middleware (expires in 15 min)
+            document.cookie = `accessToken=${accessToken}; path=/; max-age=900; SameSite=Lax`;
+            document.cookie = `userRole=${filteredUser.role}; path=/; max-age=604800; SameSite=Lax`;
+          }
+
+          // 🔥 Manual redirect after state update
+          setTimeout(() => {
+            if (filteredUser.role === "admin") {
+              window.location.href = "/dashboard/admin";
+            } else {
+              window.location.href = "/dashboard/user";
+            }
+          }, 100);
+
+          return { success: true, user: filteredUser };
+
         } catch (error) {
-          const message = error.response?.data?.message || "Login failed";
+          console.error("Login error:", error);
+          const message = error.response?.data?.message || "Login failed. Please try again.";
           set({ loading: false, error: message });
           return { success: false, error: message };
         }
@@ -117,16 +185,60 @@ export const useAuthStore = create(
         } catch (error) {
           console.error("Logout error:", error);
         } finally {
-          if (typeof window !== "undefined") {
-            localStorage.removeItem('accessToken');
-            localStorage.removeItem('user');
+          clearTokens();
+
+          if (typeof window !== 'undefined') {
+            document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+            document.cookie = "userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
           }
-          
+
           set({ user: null, isInitialized: true, error: null, loading: false });
-          
+
           if (typeof window !== "undefined") {
             window.location.href = "/login";
           }
+        }
+      },
+
+      checkAndRefreshToken: async () => {
+        const token = getAccessToken();
+        if (!token) return false;
+
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          const isExpired = payload.exp * 1000 < Date.now();
+
+          if (isExpired) {
+            const refreshToken = getRefreshToken();
+            if (!refreshToken) {
+              clearTokens();
+              return false;
+            }
+
+            const response = await api.post("/auth/refresh-token");
+            if (response.data?.data?.accessToken) {
+              setTokens(response.data.data.accessToken, response.data.data.refreshToken);
+              return true;
+            }
+            return false;
+          }
+          return true;
+        } catch {
+          return false;
+        }
+      },
+
+
+      setTokens: (accessToken, refreshToken) => {
+        if (typeof window !== 'undefined') {
+          if (accessToken) localStorage.setItem('accessToken', accessToken);
+          if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+        }
+      },
+
+      setUser: (user) => {
+        if (typeof window !== 'undefined' && user) {
+          localStorage.setItem('user', JSON.stringify(user));
         }
       },
 
@@ -176,15 +288,34 @@ export const useAuthStore = create(
         set((state) => ({
           user: state.user ? { ...state.user, ...updatedUserData } : null,
         }));
+        if (get().user) {
+          const filteredUser = filterUserData(get().user);
+          setUser(filteredUser);
+        }
       },
 
       updateUserPartial: (updates) => {
         set((state) => ({
           user: state.user ? { ...state.user, ...updates } : null,
         }));
+        if (get().user) {
+          const filteredUser = filterUserData(get().user);
+          setUser(filteredUser);
+        }
       },
 
-      isAuthenticated: () => !!get().user,
+      isAuthenticated: () => {
+        const token = getAccessToken();
+        if (!token || !get().user) return false;
+
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          return payload.exp * 1000 > Date.now();
+        } catch {
+          return false;
+        }
+      },
+
       isAdmin: () => get().user?.role === "admin",
       getUser: () => get().user,
     }),
@@ -196,13 +327,13 @@ export const useAuthStore = create(
         }
         return {
           getItem: () => null,
-          setItem: () => {},
-          removeItem: () => {},
+          setItem: () => { },
+          removeItem: () => { },
         };
       },
-      partialize: (state) => ({ 
-        user: state.user,
-        isInitialized: state.isInitialized 
+      partialize: (state) => ({
+        user: state.user ? filterUserData(state.user) : null,
+        isInitialized: state.isInitialized
       }),
     }
   )
