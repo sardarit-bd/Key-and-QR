@@ -42,6 +42,14 @@ export const setTokens = (accessToken, refreshToken) => {
   if (typeof window !== 'undefined') {
     if (accessToken) localStorage.setItem(TOKEN_KEY, accessToken);
     if (refreshToken) localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+
+    // Update cookies for middleware
+    if (accessToken) {
+      document.cookie = `accessToken=${accessToken}; path=/; max-age=120; SameSite=Lax`;
+    }
+    if (refreshToken) {
+      document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
+    }
   }
 };
 
@@ -50,6 +58,10 @@ export const clearTokens = () => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+
+    document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
   }
 };
 
@@ -73,19 +85,7 @@ export const getUser = () => {
   return null;
 };
 
-export const isTokenValid = () => {
-  const token = getAccessToken();
-  if (!token) return false;
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1]));
-    // Check if token expires in next 30 seconds
-    return payload.exp * 1000 > Date.now() + 30000;
-  } catch {
-    return false;
-  }
-};
-
-// Request interceptor - Add access token to headers
+// Request interceptor
 api.interceptors.request.use(
   (config) => {
     const token = getAccessToken();
@@ -97,56 +97,14 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// Response interceptor - Handle token refresh
+// Refresh token function
 let isRefreshing = false;
-let refreshSubscribers = [];
+let pendingRequests = [];
 
-const onRefreshed = (token) => {
-  refreshSubscribers.forEach(cb => cb(token));
-  refreshSubscribers = [];
-};
+const refreshAccessToken = async () => {
+  const refreshToken = getRefreshToken();
+  if (!refreshToken) return null;
 
-const addRefreshSubscriber = (cb) => {
-  refreshSubscribers.push(cb);
-};
-
-// Background token refresh
-let refreshInterval = null;
-
-export const startTokenRefreshTimer = () => {
-  if (refreshInterval) clearInterval(refreshInterval);
-  
-  // Check every 10 minutes
-  refreshInterval = setInterval(async () => {
-    const token = getAccessToken();
-    if (!token) return;
-    
-    try {
-      const payload = JSON.parse(atob(token.split('.')[1]));
-      const expiresIn = payload.exp * 1000 - Date.now();
-      
-      // If token expires in less than 2 minutes, refresh it
-      if (expiresIn < 120000) {
-        console.log("Token expiring soon, refreshing...");
-        const refreshToken = getRefreshToken();
-        if (refreshToken) {
-          await refreshAccessTokenAPI(refreshToken);
-        }
-      }
-    } catch (error) {
-      console.error("Token refresh timer error:", error);
-    }
-  }, 60000); // Check every minute
-};
-
-export const stopTokenRefreshTimer = () => {
-  if (refreshInterval) {
-    clearInterval(refreshInterval);
-    refreshInterval = null;
-  }
-};
-
-const refreshAccessTokenAPI = async (refreshToken) => {
   try {
     const response = await axios.post(
       `${getBaseURL()}/auth/refresh-token`,
@@ -157,107 +115,74 @@ const refreshAccessTokenAPI = async (refreshToken) => {
         }
       }
     );
-    
+
     const newAccessToken = response.data?.data?.accessToken;
     const newRefreshToken = response.data?.data?.refreshToken;
-    
+
     if (newAccessToken) {
       setTokens(newAccessToken, newRefreshToken);
-      
-      // Update cookie
-      if (typeof window !== 'undefined') {
-        document.cookie = `accessToken=${newAccessToken}; path=/; max-age=900; SameSite=Lax`;
-        if (newRefreshToken) {
-          document.cookie = `refreshToken=${newRefreshToken}; path=/; max-age=604800; SameSite=Lax`;
-        }
-      }
-      
       return newAccessToken;
     }
     return null;
   } catch (error) {
-    console.error("Refresh token API error:", error);
+    console.error("Refresh token failed:", error);
     return null;
   }
 };
 
+// Response interceptor
 api.interceptors.response.use(
-  (response) => {
-    // Save tokens from response if present
-    if (response.data?.data?.accessToken) {
-      setTokens(
-        response.data.data.accessToken,
-        response.data.data.refreshToken
-      );
-    }
-    if (response.data?.data?.user) {
-      setUser(response.data.data.user);
-    }
-    return response;
-  },
+  (response) => response,
   async (error) => {
     const originalRequest = error.config;
-    
+
     if (!error.response) {
       return Promise.reject(error);
     }
-    
-    // Don't retry for login/register
-    const isAuthCall = originalRequest?.url?.includes("/auth/login") ||
-                      originalRequest?.url?.includes("/auth/register");
-    
-    if (isAuthCall) {
+
+    // Skip refresh for auth endpoints
+    const skipUrls = ["/auth/login", "/auth/register", "/auth/refresh-token"];
+    const shouldSkip = skipUrls.some(url => originalRequest?.url?.includes(url));
+
+    if (shouldSkip) {
       return Promise.reject(error);
     }
-    
-    const isRefreshCall = originalRequest?.url?.includes("/auth/refresh-token");
-    
-    // If refresh token call fails, clear everything and redirect
-    if (isRefreshCall) {
-      clearTokens();
-      stopTokenRefreshTimer();
-      if (typeof window !== 'undefined') {
-        window.location.href = "/login?session=expired";
-      }
-      return Promise.reject(error);
-    }
-    
+
     // Handle 401 - Token expired
     if (error.response.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        // Wait for refresh to complete
-        return new Promise((resolve) => {
-          addRefreshSubscriber((token) => {
-            originalRequest.headers.Authorization = `Bearer ${token}`;
-            resolve(api(originalRequest));
-          });
+        // Queue the request while refreshing
+        return new Promise((resolve, reject) => {
+          pendingRequests.push({ resolve, reject, config: originalRequest });
         });
       }
-      
+
       originalRequest._retry = true;
       isRefreshing = true;
-      
+
       try {
-        const refreshToken = getRefreshToken();
-        
-        if (!refreshToken) {
-          throw new Error("No refresh token");
-        }
-        
-        const newAccessToken = await refreshAccessTokenAPI(refreshToken);
-        
-        if (newAccessToken) {
-          onRefreshed(newAccessToken);
-          originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        const newToken = await refreshAccessToken();
+
+        if (newToken) {
+          // Retry all queued requests
+          pendingRequests.forEach(({ resolve, reject, config }) => {
+            config.headers.Authorization = `Bearer ${newToken}`;
+            api(config).then(resolve).catch(reject);
+          });
+          pendingRequests = [];
+
+          // Retry original request
+          originalRequest.headers.Authorization = `Bearer ${newToken}`;
           return api(originalRequest);
         } else {
-          throw new Error("No token returned");
+          throw new Error("No token");
         }
       } catch (refreshError) {
+        // Clear all tokens and redirect to login
         clearTokens();
-        stopTokenRefreshTimer();
-        onRefreshed(null);
-        
+        pendingRequests.forEach(({ reject }) => reject(refreshError));
+        pendingRequests = [];
+
         if (typeof window !== 'undefined') {
           window.location.href = "/login?session=expired";
         }
@@ -266,9 +191,41 @@ api.interceptors.response.use(
         isRefreshing = false;
       }
     }
-    
+
     return Promise.reject(error);
   }
 );
+
+// Background token refresh timer
+let refreshTimer = null;
+
+export const startTokenRefreshTimer = () => {
+  if (refreshTimer) clearInterval(refreshTimer);
+
+  refreshTimer = setInterval(async () => {
+    const token = getAccessToken();
+    if (!token) return;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiresIn = payload.exp * 1000 - Date.now();
+
+      // Refresh if token expires in less than 30 seconds
+      if (expiresIn < 30000) {
+        console.log("Token expiring, refreshing in background...");
+        await refreshAccessToken();
+      }
+    } catch (error) {
+      console.error("Timer error:", error);
+    }
+  }, 10000); // Check every 10 seconds
+};
+
+export const stopTokenRefreshTimer = () => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer);
+    refreshTimer = null;
+  }
+};
 
 export default api;
