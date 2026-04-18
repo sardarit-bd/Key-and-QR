@@ -21,9 +21,13 @@ export const orderService = {
         }
     },
 
-    getUserOrders: async () => {
+    getUserOrders: async (params = {}) => {
         try {
-            const response = await api.get("/orders");
+            const { page = 1, limit = 10 } = params;
+            const response = await api.get("/orders", {
+                params: { page, limit }
+            });
+            console.log("Orders API response:", response.data);
             return response.data;
         } catch (error) {
             console.error("Get orders error:", error);

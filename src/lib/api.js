@@ -78,7 +78,8 @@ export const isTokenValid = () => {
   if (!token) return false;
   try {
     const payload = JSON.parse(atob(token.split('.')[1]));
-    return payload.exp * 1000 > Date.now();
+    // Check if token expires in next 30 seconds
+    return payload.exp * 1000 > Date.now() + 30000;
   } catch {
     return false;
   }
@@ -96,7 +97,7 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// 🔥 Response interceptor - Handle token refresh
+// Response interceptor - Handle token refresh
 let isRefreshing = false;
 let refreshSubscribers = [];
 
@@ -107,6 +108,77 @@ const onRefreshed = (token) => {
 
 const addRefreshSubscriber = (cb) => {
   refreshSubscribers.push(cb);
+};
+
+// Background token refresh
+let refreshInterval = null;
+
+export const startTokenRefreshTimer = () => {
+  if (refreshInterval) clearInterval(refreshInterval);
+  
+  // Check every 10 minutes
+  refreshInterval = setInterval(async () => {
+    const token = getAccessToken();
+    if (!token) return;
+    
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expiresIn = payload.exp * 1000 - Date.now();
+      
+      // If token expires in less than 2 minutes, refresh it
+      if (expiresIn < 120000) {
+        console.log("Token expiring soon, refreshing...");
+        const refreshToken = getRefreshToken();
+        if (refreshToken) {
+          await refreshAccessTokenAPI(refreshToken);
+        }
+      }
+    } catch (error) {
+      console.error("Token refresh timer error:", error);
+    }
+  }, 60000); // Check every minute
+};
+
+export const stopTokenRefreshTimer = () => {
+  if (refreshInterval) {
+    clearInterval(refreshInterval);
+    refreshInterval = null;
+  }
+};
+
+const refreshAccessTokenAPI = async (refreshToken) => {
+  try {
+    const response = await axios.post(
+      `${getBaseURL()}/auth/refresh-token`,
+      {},
+      {
+        headers: {
+          'x-refresh-token': refreshToken
+        }
+      }
+    );
+    
+    const newAccessToken = response.data?.data?.accessToken;
+    const newRefreshToken = response.data?.data?.refreshToken;
+    
+    if (newAccessToken) {
+      setTokens(newAccessToken, newRefreshToken);
+      
+      // Update cookie
+      if (typeof window !== 'undefined') {
+        document.cookie = `accessToken=${newAccessToken}; path=/; max-age=900; SameSite=Lax`;
+        if (newRefreshToken) {
+          document.cookie = `refreshToken=${newRefreshToken}; path=/; max-age=604800; SameSite=Lax`;
+        }
+      }
+      
+      return newAccessToken;
+    }
+    return null;
+  } catch (error) {
+    console.error("Refresh token API error:", error);
+    return null;
+  }
 };
 
 api.interceptors.response.use(
@@ -143,13 +215,14 @@ api.interceptors.response.use(
     // If refresh token call fails, clear everything and redirect
     if (isRefreshCall) {
       clearTokens();
+      stopTokenRefreshTimer();
       if (typeof window !== 'undefined') {
         window.location.href = "/login?session=expired";
       }
       return Promise.reject(error);
     }
     
-    // 🔥 Handle 401 - Token expired
+    // Handle 401 - Token expired
     if (error.response.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
         // Wait for refresh to complete
@@ -171,18 +244,9 @@ api.interceptors.response.use(
           throw new Error("No refresh token");
         }
         
-        // 🔥 Call refresh endpoint with refresh token in header
-        const response = await api.post("/auth/refresh-token", {}, {
-          headers: {
-            'x-refresh-token': refreshToken
-          }
-        });
-        
-        const newAccessToken = response.data?.data?.accessToken;
-        const newRefreshToken = response.data?.data?.refreshToken;
+        const newAccessToken = await refreshAccessTokenAPI(refreshToken);
         
         if (newAccessToken) {
-          setTokens(newAccessToken, newRefreshToken);
           onRefreshed(newAccessToken);
           originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
           return api(originalRequest);
@@ -191,6 +255,7 @@ api.interceptors.response.use(
         }
       } catch (refreshError) {
         clearTokens();
+        stopTokenRefreshTimer();
         onRefreshed(null);
         
         if (typeof window !== 'undefined') {

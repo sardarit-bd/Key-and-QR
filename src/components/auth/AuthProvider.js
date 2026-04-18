@@ -5,20 +5,15 @@ import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 export default function AuthProvider({ children }) {
-  const { initializeAuth, isInitialized, isLoading, user } = useAuthStore();
+  const { initializeAuth, isInitialized, isLoading } = useAuthStore();
   const [isClient, setIsClient] = useState(false);
   const pathname = usePathname();
 
-  // Public pages where we don't need auth
-  const isPublicPage =
-    pathname === "/login" ||
-    pathname === "/signup" ||
-    pathname === "/forgot-password" ||
-    pathname === "/reset-password" ||
-    pathname === "/callback" ||
-    pathname === "/" ||
-    pathname?.startsWith("/t/") ||
-    pathname?.startsWith("/shop");
+  const isPublicPage = pathname === "/login" || 
+                      pathname === "/signup" || 
+                      pathname === "/forgot-password" || 
+                      pathname === "/reset-password" ||
+                      pathname === "/callback";
 
   useEffect(() => {
     setIsClient(true);
@@ -26,12 +21,15 @@ export default function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!isClient) return;
-    if (isPublicPage) return;  // Skip auth on public pages
-    if (isInitialized || isLoading) return;
+    if (isPublicPage) return;
+    if (isInitialized || isLoading) {
+      console.log("Auth already:", { isInitialized, isLoading });
+      return;
+    }
 
-    console.log("🟢 Initializing auth for:", pathname);
+    console.log("🟢 Initializing auth");
     initializeAuth();
-  }, [isClient, isPublicPage, isInitialized, isLoading, initializeAuth, pathname]);
+  }, [isClient, isPublicPage, isInitialized, isLoading, initializeAuth]);
 
   if (!isClient) return null;
 

@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 
-export async function GET(req) {
+export async function GET() {
   const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
-  const redirectUrl = `${backendUrl}/api/v1/auth/google`;
   
-  console.log("Redirecting to backend Google OAuth:", redirectUrl);
-  return NextResponse.redirect(redirectUrl);
+  // Direct redirect to backend
+  return NextResponse.redirect(`${backendUrl}/api/v1/auth/google`);
 }

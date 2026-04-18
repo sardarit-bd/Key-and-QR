@@ -1,75 +1,76 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, Suspense } from "react";
-import Loader from "@/shared/Loader";
+import { useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { setTokens, setUser } from "@/lib/api";
+import { useAuthStore } from "@/store/authStore";
 
-function CallbackContent() {
-  const router = useRouter();
+export default function CallbackPage() {
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { setUser: setStoreUser, setIsInitialized } = useAuthStore();
 
   useEffect(() => {
-    const handleCallback = () => {
-      console.log("🔵 Callback page loaded");
-      
-      // Get tokens from URL params
-      const accessToken = searchParams.get("accessToken");
-      const refreshToken = searchParams.get("refreshToken");
-      const userParam = searchParams.get("user");
-      const error = searchParams.get("error");
+    const success = searchParams.get("success");
+    const accessToken = searchParams.get("accessToken");
+    const refreshToken = searchParams.get("refreshToken");
+    const userParam = searchParams.get("user");
+    const error = searchParams.get("error");
 
-      if (error) {
-        console.error("🔴 Error in callback:", error);
-        router.replace(`/login?error=${error}`);
-        return;
-      }
+    console.log("Callback received:", { success, hasToken: !!accessToken, error });
 
-      // 🔥 Save tokens and user to localStorage
-      if (accessToken && refreshToken && userParam) {
-        console.log("🟢 Saving tokens to localStorage...");
+    if (error) {
+      console.error("Auth error:", error);
+      router.push("/login?error=" + error);
+      return;
+    }
+
+    if (success === "true" && accessToken && refreshToken && userParam) {
+      try {
+        // Save to localStorage
+        setTokens(accessToken, refreshToken);
         
-        localStorage.setItem('accessToken', accessToken);
-        localStorage.setItem('refreshToken', refreshToken);
+        const user = JSON.parse(decodeURIComponent(userParam));
+        console.log("User from callback:", user);
+        
+        setUser(user);
+        
+        setStoreUser(user);
+        setIsInitialized(true); 
         
         // Set cookies for middleware
         document.cookie = `accessToken=${accessToken}; path=/; max-age=900; SameSite=Lax`;
+        document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
+        document.cookie = `userRole=${user.role}; path=/; max-age=604800; SameSite=Lax`;
         
-        try {
-          const user = JSON.parse(decodeURIComponent(userParam));
-          console.log("🟢 User saved:", user.email);
-          localStorage.setItem('user', JSON.stringify(user));
-          document.cookie = `userRole=${user.role}; path=/; max-age=604800; SameSite=Lax`;
-        } catch (e) {
-          console.error("🔴 Error parsing user:", e);
-        }
+        console.log("Auth successful, store updated");
         
-        // 🔥 Redirect to dashboard (no API call)
-        const role = JSON.parse(decodeURIComponent(userParam)).role;
-        if (role === "admin") {
-          window.location.href = "/dashboard/admin";
-        } else {
-          window.location.href = "/dashboard/user";
-        }
-      } else {
-        console.error("🔴 Missing tokens in callback");
-        router.replace("/login?error=missing_tokens");
+        // Small delay to ensure store is updated
+        setTimeout(() => {
+          // Redirect based on role
+          if (user.role === "admin") {
+            router.push("/dashboard/admin");
+          } else {
+            router.push("/dashboard/user");
+          }
+        }, 100);
+        
+      } catch (err) {
+        console.error("Callback processing error:", err);
+        router.push("/login?error=callback_processing_failed");
       }
-    };
-
-    handleCallback();
-  }, [searchParams, router]);
+    } else {
+      console.error("Invalid callback data");
+      router.push("/login?error=invalid_callback");
+    }
+  }, [searchParams, router, setStoreUser, setIsInitialized]);
 
   return (
     <div className="min-h-screen flex items-center justify-center">
-      <Loader text="Completing login..." size={40} fullScreen={false} />
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Processing login...</p>
+      </div>
     </div>
-  );
-}
-
-export default function CallbackPage() {
-  return (
-    <Suspense fallback={<div className="min-h-screen flex items-center justify-center">Loading...</div>}>
-      <CallbackContent />
-    </Suspense>
   );
 }

@@ -1,27 +1,31 @@
 import { NextResponse } from "next/server";
 
 export function middleware(request) {
-  const token = request.cookies.get('accessToken')?.value;
+  
+  const accessToken = request.cookies.get('accessToken')?.value;
   const { pathname } = request.nextUrl;
   
-  // Public pages - no auth required
-  const publicPages = ['/login', '/signup', '/forgot-password', '/reset-password', '/callback', '/t', '/shop'];
+  console.log("Middleware - Path:", pathname, "Has Token:", !!accessToken);
+  
+  // Public pages
+  const publicPages = ['/login', '/signup', '/forgot-password', '/reset-password', '/callback'];
   const isPublicPage = publicPages.some(page => pathname.startsWith(page));
   
-  // Home page is public
-  if (pathname === '/') {
+  // Home & public routes
+  if (pathname === '/' || pathname.startsWith('/t/') || pathname.startsWith('/shop')) {
     return NextResponse.next();
   }
   
-  // Protected routes - require token
-  if (!isPublicPage && !token) {
+  // Protected routes
+  if (!isPublicPage && !accessToken) {
+    console.log("No token, redirecting to login");
     const url = new URL('/login', request.url);
     url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
   }
   
-  // Already logged in - redirect from login/signup to dashboard
-  if (token && (pathname === '/login' || pathname === '/signup')) {
+  // Already logged in
+  if (accessToken && (pathname === '/login' || pathname === '/signup')) {
     const userRole = request.cookies.get('userRole')?.value;
     if (userRole === 'admin') {
       return NextResponse.redirect(new URL('/dashboard/admin', request.url));
@@ -35,14 +39,12 @@ export function middleware(request) {
 export const config = {
   matcher: [
     '/login',
-    '/signup',
+    '/signup', 
     '/forgot-password',
     '/reset-password',
     '/callback',
     '/dashboard/:path*',
     '/profile/:path*',
     '/checkout/:path*',
-    '/t/:path*',
-    '/shop/:path*',
   ],
 };

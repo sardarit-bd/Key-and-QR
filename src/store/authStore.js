@@ -2,7 +2,16 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import api, { setTokens, clearTokens, setUser, getUser, getAccessToken, getRefreshToken } from "@/lib/api";
+import api, { 
+  setTokens, 
+  clearTokens, 
+  setUser, 
+  getUser, 
+  getAccessToken, 
+  getRefreshToken,
+  startTokenRefreshTimer,
+  stopTokenRefreshTimer
+} from "@/lib/api";
 
 const filterUserData = (user) => {
   if (!user) return null;
@@ -14,6 +23,9 @@ const filterUserData = (user) => {
     role: user.role,
     profileImage: user.profileImage?.url || user.profileImage || null,
     provider: user.provider,
+    createdAt: user.createdAt || null,
+    updatedAt: user.updatedAt || null, 
+    isEmailVerified: user.isEmailVerified || false,
   };
 };
 
@@ -22,76 +34,147 @@ export const useAuthStore = create(
     (set, get) => ({
       user: null,
       loading: false,
+      isLoading: false,
       isInitialized: false,
       error: null,
 
-      // Update the initializeAuth function in authStore.js
+      // Direct setter for user (for Google callback)
+      setUser: (userData) => {
+        console.log("setUser called with:", userData);
+        const filteredUser = filterUserData(userData);
+        set({ user: filteredUser });
+        if (typeof window !== 'undefined' && filteredUser) {
+          localStorage.setItem('user', JSON.stringify(filteredUser));
+        }
+      },
 
+      // Direct setter for isInitialized
+      setIsInitialized: (status) => {
+        console.log("setIsInitialized called with:", status);
+        set({ isInitialized: status });
+      },
+
+      // Set loading state
+      setLoading: (loadingStatus) => {
+        set({ loading: loadingStatus, isLoading: loadingStatus });
+      },
+
+      // Initialize auth - UPDATED with timer
       initializeAuth: async () => {
         const state = get();
-        if (state.isInitialized) return;
-        if (state.loading) return;
 
-        const storedUser = getUser();
-        const storedToken = getAccessToken();
-
-        // 🔥 If we have user and token in localStorage, just use them
-        if (storedUser && storedToken) {
-          console.log("🟢 Using stored user from localStorage");
-          const filteredUser = filterUserData(storedUser);
-          set({ user: filteredUser, isInitialized: true, loading: false });
-
-          // 🔥 Verify token in background (don't wait for it)
-          api.get("/auth/me").then(response => {
-            const freshUser = response.data?.data;
-            if (freshUser) {
-              const filteredFreshUser = filterUserData(freshUser);
-              setUser(filteredFreshUser);
-              set({ user: filteredFreshUser });
-            }
-          }).catch(() => {
-            console.log("Background verification failed, but user stays logged in");
-          });
+        if (state.isInitialized) {
+          console.log("Already initialized, user:", state.user);
           return;
         }
 
-        // No stored user, try to fetch
-        set({ loading: true });
-        try {
-          const response = await api.get("/auth/me");
-          const user = response.data?.data;
-          if (user) {
-            const filteredUser = filterUserData(user);
-            setUser(filteredUser);
-            set({ user: filteredUser, isInitialized: true, loading: false, error: null });
-            return;
-          }
-        } catch (error) {
-          console.error("Init auth error:", error);
+        if (state.loading || state.isLoading) {
+          console.log("Already loading auth");
+          return;
         }
 
-        set({ user: null, isInitialized: true, loading: false });
+        console.log("🟢 Initializing auth...");
+        set({ loading: true, isLoading: true });
+
+        try {
+          const storedUser = getUser();
+          const storedToken = getAccessToken();
+
+          if (storedUser && storedToken) {
+            console.log("🟢 Using stored user from localStorage");
+            const filteredUser = filterUserData(storedUser);
+
+            if (typeof window !== 'undefined') {
+              if (!document.cookie.includes('accessToken')) {
+                document.cookie = `accessToken=${storedToken}; path=/; max-age=900; SameSite=Lax`;
+              }
+              if (!document.cookie.includes('userRole') && filteredUser?.role) {
+                document.cookie = `userRole=${filteredUser.role}; path=/; max-age=604800; SameSite=Lax`;
+              }
+              
+              // Start token refresh timer
+              startTokenRefreshTimer();
+            }
+
+            set({
+              user: filteredUser,
+              isInitialized: true,
+              loading: false,
+              isLoading: false
+            });
+
+            // Background verification
+            api.get("/auth/me").then(response => {
+              const freshUser = response.data?.data;
+              if (freshUser) {
+                const filteredFreshUser = filterUserData(freshUser);
+                set({ user: filteredFreshUser });
+                if (typeof window !== 'undefined') {
+                  localStorage.setItem('user', JSON.stringify(filteredFreshUser));
+                }
+              }
+            }).catch(() => {
+              console.log("Background verification failed, but user stays logged in");
+            });
+            return;
+          }
+
+          if (storedToken && !storedUser) {
+            console.log("Token exists, fetching user from server");
+            const response = await api.get("/auth/me");
+            const user = response.data?.data;
+            if (user) {
+              const filteredUser = filterUserData(user);
+              set({ user: filteredUser });
+              if (typeof window !== 'undefined') {
+                localStorage.setItem('user', JSON.stringify(filteredUser));
+              }
+              // Start token refresh timer
+              startTokenRefreshTimer();
+            }
+          }
+
+          set({
+            isInitialized: true,
+            loading: false,
+            isLoading: false
+          });
+
+        } catch (error) {
+          console.error("Init auth error:", error);
+          set({
+            user: null,
+            isInitialized: true,
+            loading: false,
+            isLoading: false,
+            error: error.message
+          });
+        }
       },
 
-      // ... rest of your store functions remain the same
+      // Fetch me
       fetchMe: async () => {
         try {
           const response = await api.get("/auth/me");
           const user = response.data?.data ?? null;
           if (user) {
             const filteredUser = filterUserData(user);
-            setUser(filteredUser);
             set({ user: filteredUser, error: null });
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('user', JSON.stringify(filteredUser));
+            }
           }
           return user;
         } catch (error) {
+          console.error("Fetch me error:", error);
           set({ user: null, error: null });
           return null;
         }
       },
 
+      // Register
       register: async (payload) => {
-        set({ loading: true, error: null });
+        set({ loading: true, isLoading: true, error: null });
 
         try {
           const response = await api.post("/auth/register", payload);
@@ -102,30 +185,35 @@ export const useAuthStore = create(
           if (accessToken) {
             setTokens(accessToken, refreshToken);
           }
+
+          let filteredUser = null;
           if (user) {
-            const filteredUser = filterUserData(user);
-            setUser(filteredUser);
+            filteredUser = filterUserData(user);
             set({ user: filteredUser });
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('user', JSON.stringify(filteredUser));
+            }
           }
 
-          set({ loading: false, error: null, isInitialized: true });
+          set({ loading: false, isLoading: false, error: null, isInitialized: true });
           return { success: true, user: filteredUser };
         } catch (error) {
           const message = error.response?.data?.message || "Registration failed";
-          set({ loading: false, error: message });
+          set({ loading: false, isLoading: false, error: message });
           return { success: false, error: message };
         }
       },
 
+      // Login - UPDATED with timer
       login: async (payload) => {
-        set({ loading: true, error: null });
+        set({ loading: true, isLoading: true, error: null });
 
         try {
           const response = await api.post("/auth/login", payload);
 
           if (response.data?.success !== true) {
             const errorMsg = response.data?.message || "Login failed";
-            set({ loading: false, error: errorMsg });
+            set({ loading: false, isLoading: false, error: errorMsg });
             return { success: false, error: errorMsg };
           }
 
@@ -134,7 +222,7 @@ export const useAuthStore = create(
           const refreshToken = response.data?.data?.refreshToken;
 
           if (!accessToken || !user) {
-            set({ loading: false, error: "Invalid server response" });
+            set({ loading: false, isLoading: false, error: "Invalid server response" });
             return { success: false, error: "Invalid server response" };
           }
 
@@ -142,23 +230,28 @@ export const useAuthStore = create(
           setTokens(accessToken, refreshToken);
 
           const filteredUser = filterUserData(user);
-          setUser(filteredUser);
+          set({ user: filteredUser });
+
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('user', JSON.stringify(filteredUser));
+
+            // Set cookies for middleware
+            document.cookie = `accessToken=${accessToken}; path=/; max-age=900; SameSite=Lax`;
+            document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
+            document.cookie = `userRole=${filteredUser.role}; path=/; max-age=604800; SameSite=Lax`;
+            
+            // Start token refresh timer
+            startTokenRefreshTimer();
+          }
 
           set({
-            user: filteredUser,
             loading: false,
+            isLoading: false,
             error: null,
             isInitialized: true
           });
 
-          // 🔥 Set cookie for middleware (重要!)
-          if (typeof window !== 'undefined') {
-            // Set cookie for middleware (expires in 15 min)
-            document.cookie = `accessToken=${accessToken}; path=/; max-age=900; SameSite=Lax`;
-            document.cookie = `userRole=${filteredUser.role}; path=/; max-age=604800; SameSite=Lax`;
-          }
-
-          // 🔥 Manual redirect after state update
+          // Redirect after state update
           setTimeout(() => {
             if (filteredUser.role === "admin") {
               window.location.href = "/dashboard/admin";
@@ -172,13 +265,14 @@ export const useAuthStore = create(
         } catch (error) {
           console.error("Login error:", error);
           const message = error.response?.data?.message || "Login failed. Please try again.";
-          set({ loading: false, error: message });
+          set({ loading: false, isLoading: false, error: message });
           return { success: false, error: message };
         }
       },
 
+      // Logout - UPDATED with timer stop
       logout: async () => {
-        set({ loading: true });
+        set({ loading: true, isLoading: true });
 
         try {
           await api.post("/auth/logout");
@@ -186,13 +280,24 @@ export const useAuthStore = create(
           console.error("Logout error:", error);
         } finally {
           clearTokens();
+          
+          // Stop token refresh timer
+          stopTokenRefreshTimer();
 
           if (typeof window !== 'undefined') {
             document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+            document.cookie = "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
             document.cookie = "userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+            localStorage.removeItem('user');
           }
 
-          set({ user: null, isInitialized: true, error: null, loading: false });
+          set({
+            user: null,
+            isInitialized: true,
+            error: null,
+            loading: false,
+            isLoading: false
+          });
 
           if (typeof window !== "undefined") {
             window.location.href = "/login";
@@ -200,6 +305,7 @@ export const useAuthStore = create(
         }
       },
 
+      // Check and refresh token
       checkAndRefreshToken: async () => {
         const token = getAccessToken();
         if (!token) return false;
@@ -212,101 +318,114 @@ export const useAuthStore = create(
             const refreshToken = getRefreshToken();
             if (!refreshToken) {
               clearTokens();
+              stopTokenRefreshTimer();
               return false;
             }
 
-            const response = await api.post("/auth/refresh-token");
+            const response = await api.post("/auth/refresh-token", {}, {
+              headers: {
+                'x-refresh-token': refreshToken
+              }
+            });
+
             if (response.data?.data?.accessToken) {
-              setTokens(response.data.data.accessToken, response.data.data.refreshToken);
+              const newAccessToken = response.data.data.accessToken;
+              const newRefreshToken = response.data.data.refreshToken;
+              setTokens(newAccessToken, newRefreshToken);
+
+              if (typeof window !== 'undefined') {
+                document.cookie = `accessToken=${newAccessToken}; path=/; max-age=900; SameSite=Lax`;
+                document.cookie = `refreshToken=${newRefreshToken}; path=/; max-age=604800; SameSite=Lax`;
+              }
               return true;
             }
             return false;
           }
           return true;
-        } catch {
+        } catch (error) {
+          console.error("Token check error:", error);
           return false;
         }
       },
 
-
-      setTokens: (accessToken, refreshToken) => {
-        if (typeof window !== 'undefined') {
-          if (accessToken) localStorage.setItem('accessToken', accessToken);
-          if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
-        }
-      },
-
-      setUser: (user) => {
-        if (typeof window !== 'undefined' && user) {
-          localStorage.setItem('user', JSON.stringify(user));
-        }
-      },
-
+      // Forgot password
       forgotPassword: async (email) => {
-        set({ loading: true, error: null });
+        set({ loading: true, isLoading: true, error: null });
 
         try {
           const response = await api.post("/auth/forgot-password", { email });
-          set({ loading: false });
+          set({ loading: false, isLoading: false });
           return { success: true, message: response.data?.message || "Reset email sent" };
         } catch (error) {
           const message = error.response?.data?.message || "Failed to send reset email";
-          set({ loading: false, error: message });
+          set({ loading: false, isLoading: false, error: message });
           return { success: false, error: message };
         }
       },
 
+      // Reset password
       resetPassword: async (token, newPassword) => {
-        set({ loading: true, error: null });
+        set({ loading: true, isLoading: true, error: null });
 
         try {
           const response = await api.post("/auth/reset-password", { token, newPassword });
-          set({ loading: false });
+          set({ loading: false, isLoading: false });
           return { success: true, message: response.data?.message || "Password reset successfully" };
         } catch (error) {
           const message = error.response?.data?.message || "Password reset failed";
-          set({ loading: false, error: message });
+          set({ loading: false, isLoading: false, error: message });
           return { success: false, error: message };
         }
       },
 
+      // Change password
       changePassword: async (oldPassword, newPassword) => {
-        set({ loading: true, error: null });
+        set({ loading: true, isLoading: true, error: null });
 
         try {
           const response = await api.post("/auth/change-password", { oldPassword, newPassword });
-          set({ loading: false });
+          set({ loading: false, isLoading: false });
           return { success: true, message: response.data?.message || "Password changed successfully" };
         } catch (error) {
           const message = error.response?.data?.message || "Password change failed";
-          set({ loading: false, error: message });
+          set({ loading: false, isLoading: false, error: message });
           return { success: false, error: message };
         }
       },
 
+      // Update user
       updateUser: (updatedUserData) => {
         set((state) => ({
           user: state.user ? { ...state.user, ...updatedUserData } : null,
         }));
-        if (get().user) {
-          const filteredUser = filterUserData(get().user);
-          setUser(filteredUser);
+        const currentUser = get().user;
+        if (currentUser) {
+          const filteredUser = filterUserData(currentUser);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('user', JSON.stringify(filteredUser));
+          }
         }
       },
 
+      // Update user partial
       updateUserPartial: (updates) => {
         set((state) => ({
           user: state.user ? { ...state.user, ...updates } : null,
         }));
-        if (get().user) {
-          const filteredUser = filterUserData(get().user);
-          setUser(filteredUser);
+        const currentUser = get().user;
+        if (currentUser) {
+          const filteredUser = filterUserData(currentUser);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('user', JSON.stringify(filteredUser));
+          }
         }
       },
 
+      // Check if authenticated
       isAuthenticated: () => {
         const token = getAccessToken();
-        if (!token || !get().user) return false;
+        const user = get().user;
+        if (!token || !user) return false;
 
         try {
           const payload = JSON.parse(atob(token.split('.')[1]));
@@ -316,7 +435,10 @@ export const useAuthStore = create(
         }
       },
 
+      // Check if admin
       isAdmin: () => get().user?.role === "admin",
+      
+      // Get user
       getUser: () => get().user,
     }),
     {

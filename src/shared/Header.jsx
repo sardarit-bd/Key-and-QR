@@ -27,6 +27,14 @@ export default function Header() {
     const router = useRouter();
     const isDashboard = pathname.startsWith("/dashboard");
 
+    // Helper function to get profile image URL
+    const getProfileImageUrl = () => {
+        if (!user?.profileImage) return null;
+        if (typeof user.profileImage === 'string') return user.profileImage;
+        if (user.profileImage?.url) return user.profileImage.url;
+        return null;
+    };
+
     // Body scroll lock when drawer open
     useEffect(() => {
         if (open) {
@@ -73,6 +81,45 @@ export default function Header() {
         return "Email";
     };
 
+    // Get profile image or fallback component
+    const ProfileAvatar = ({ size = "md", showFallback = true }) => {
+        const imageUrl = getProfileImageUrl();
+        const sizeClasses = {
+            sm: "w-8 h-8",
+            md: "w-10 h-10",
+            lg: "w-12 h-12",
+        };
+        
+        if (imageUrl) {
+            return (
+                <img
+                    src={imageUrl}
+                    alt={user?.name || "User"}
+                    className={`${sizeClasses[size]} rounded-full object-cover`}
+                    onError={(e) => {
+                        e.target.style.display = "none";
+                        if (showFallback && e.target.parentElement) {
+                            const initials = getUserInitials();
+                            e.target.parentElement.innerHTML = `
+                                <div class="${sizeClasses[size]} bg-black rounded-full flex items-center justify-center">
+                                    <span class="text-white text-sm font-semibold">${initials}</span>
+                                </div>
+                            `;
+                        }
+                    }}
+                />
+            );
+        }
+        
+        return (
+            <div className={`${sizeClasses[size]} bg-black rounded-full flex items-center justify-center`}>
+                <span className="text-white text-sm font-semibold">
+                    {getUserInitials()}
+                </span>
+            </div>
+        );
+    };
+
     return (
         <>
             {/* HEADER */}
@@ -108,21 +155,32 @@ export default function Header() {
 
                         {user ? (
                             <div className="relative group">
-                                {/* Avatar - User initials or icon */}
-                                <div className="w-10 h-10 bg-black rounded-full flex items-center justify-center cursor-pointer overflow-hidden">
-                                    {user?.profileImage?.url ? (
-                                        <img
-                                            src={user.profileImage.url}
-                                            alt={user?.name || "User"}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    ) : user?.name ? (
-                                        <span className="text-white text-sm font-semibold">
-                                            {getUserInitials()}
-                                        </span>
-                                    ) : (
-                                        <User size={24} className="text-white" />
-                                    )}
+                                {/* 🔥 FIXED: Avatar with proper image handling */}
+                                <div className="w-10 h-10 rounded-full overflow-hidden cursor-pointer bg-black flex items-center justify-center">
+                                    {(() => {
+                                        const imageUrl = getProfileImageUrl();
+                                        if (imageUrl) {
+                                            return (
+                                                <img
+                                                    src={imageUrl}
+                                                    alt={user?.name || "User"}
+                                                    className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        e.target.style.display = 'none';
+                                                        const parent = e.target.parentElement;
+                                                        if (parent) {
+                                                            parent.innerHTML = `<span class="text-white text-sm font-semibold">${getUserInitials()}</span>`;
+                                                        }
+                                                    }}
+                                                />
+                                            );
+                                        }
+                                        return (
+                                            <span className="text-white text-sm font-semibold">
+                                                {getUserInitials()}
+                                            </span>
+                                        );
+                                    })()}
                                 </div>
 
                                 {/* Dropdown */}
@@ -131,20 +189,32 @@ export default function Header() {
                                     {/* User Info Section */}
                                     <div className="px-4 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-100">
                                         <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center overflow-hidden">
-                                                {user?.profileImage?.url ? (
-                                                    <img
-                                                        src={user.profileImage.url}
-                                                        alt={user?.name || "User"}
-                                                        className="w-full h-full object-cover"
-                                                    />
-                                                ) : user?.name ? (
-                                                    <span className="text-white text-base font-semibold">
-                                                        {getUserInitials()}
-                                                    </span>
-                                                ) : (
-                                                    <User size={24} className="text-white" />
-                                                )}
+                                            {/* 🔥 FIXED: Dropdown avatar */}
+                                            <div className="w-12 h-12 rounded-full overflow-hidden bg-black flex items-center justify-center">
+                                                {(() => {
+                                                    const imageUrl = getProfileImageUrl();
+                                                    if (imageUrl) {
+                                                        return (
+                                                            <img
+                                                                src={imageUrl}
+                                                                alt={user?.name || "User"}
+                                                                className="w-full h-full object-cover"
+                                                                onError={(e) => {
+                                                                    e.target.style.display = 'none';
+                                                                    const parent = e.target.parentElement;
+                                                                    if (parent) {
+                                                                        parent.innerHTML = `<span class="text-white text-base font-semibold">${getUserInitials()}</span>`;
+                                                                    }
+                                                                }}
+                                                            />
+                                                        );
+                                                    }
+                                                    return (
+                                                        <span className="text-white text-base font-semibold">
+                                                            {getUserInitials()}
+                                                        </span>
+                                                    );
+                                                })()}
                                             </div>
                                             <div className="flex-1">
                                                 <div className="flex items-center gap-2 flex-wrap">
@@ -287,24 +357,38 @@ export default function Header() {
                         )}
                     </Link>
 
-                    {/* 🔥 MOBILE AUTH CHECK */}
+                    {/* 🔥 MOBILE AUTH CHECK - FIXED */}
                     {user ? (
                         <>
                             {/* Mobile User Info */}
                             <div className="bg-gradient-to-r from-gray-50 to-gray-100 p-4 rounded-xl mt-4">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-12 h-12 bg-black rounded-full flex items-center justify-center overflow-hidden">
-                                        {user?.profileImage?.url ? (
-                                            <img
-                                                src={user.profileImage.url}
-                                                alt={user?.name || "User"}
-                                                className="w-full h-full object-cover"
-                                            />
-                                        ) : (
-                                            <span className="text-white text-base font-semibold">
-                                                {getUserInitials()}
-                                            </span>
-                                        )}
+                                    {/* 🔥 FIXED: Mobile drawer avatar */}
+                                    <div className="w-12 h-12 rounded-full overflow-hidden bg-black flex items-center justify-center">
+                                        {(() => {
+                                            const imageUrl = getProfileImageUrl();
+                                            if (imageUrl) {
+                                                return (
+                                                    <img
+                                                        src={imageUrl}
+                                                        alt={user?.name || "User"}
+                                                        className="w-full h-full object-cover"
+                                                        onError={(e) => {
+                                                            e.target.style.display = 'none';
+                                                            const parent = e.target.parentElement;
+                                                            if (parent) {
+                                                                parent.innerHTML = `<span class="text-white text-base font-semibold">${getUserInitials()}</span>`;
+                                                            }
+                                                        }}
+                                                    />
+                                                );
+                                            }
+                                            return (
+                                                <span className="text-white text-base font-semibold">
+                                                    {getUserInitials()}
+                                                </span>
+                                            );
+                                        })()}
                                     </div>
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 flex-wrap">
