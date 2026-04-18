@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { BsQrCodeScan } from 'react-icons/bs';
+import Avatar from '@/shared/Avatar';
 
 export default function DashboardLayout({ children }) {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -82,7 +83,7 @@ export default function DashboardLayout({ children }) {
 
     const RoleDesider = user?.role === "admin" ? menuItemsforAdmin : menuItemsforUser;
 
-    // Get user initials for avatar
+    // Get user initials for avatar (fallback)
     const getUserInitials = () => {
         if (!user?.name) return "U";
         return user.name
@@ -170,22 +171,10 @@ export default function DashboardLayout({ children }) {
                     </button>
                 </div>
 
-                {/* Profile Section */}
+                {/* Profile Section - Using Avatar Component */}
                 <div className="p-4 border-b border-gray-200">
                     <div className="flex items-center gap-3">
-                        <div className="w-14 h-14 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 overflow-hidden flex items-center justify-center flex-shrink-0">
-                            {user?.profileImage?.url ? (
-                                <img
-                                    src={user.profileImage.url}
-                                    alt={user.name}
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <span className="text-white text-lg font-bold">
-                                    {getUserInitials()}
-                                </span>
-                            )}
-                        </div>
+                        <Avatar user={user} size="md" />
                         <div className="flex-1 min-w-0">
                             <h3 className="font-semibold text-gray-900 capitalize truncate">
                                 {user?.name}
@@ -306,22 +295,10 @@ export default function DashboardLayout({ children }) {
 
             {/* Desktop Sidebar */}
             <aside className="hidden lg:block sticky top-0 h-screen w-64 bg-white border-r border-gray-200 p-6 overflow-y-auto">
-                {/* Profile Section */}
+                {/* Profile Section - Using Avatar Component */}
                 <div className="flex flex-col items-center mb-8">
                     <div className="p-[2px] rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
-                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 overflow-hidden flex items-center justify-center">
-                            {user?.profileImage?.url ? (
-                                <img
-                                    src={user.profileImage.url}
-                                    alt={user.name}
-                                    className="w-full h-full object-cover rounded-full"
-                                />
-                            ) : (
-                                <span className="text-white text-2xl font-bold">
-                                    {getUserInitials()}
-                                </span>
-                            )}
-                        </div>
+                        <Avatar user={user} size="lg" />
                     </div>
 
                     <h3 className="font-semibold text-gray-900 capitalize text-center">

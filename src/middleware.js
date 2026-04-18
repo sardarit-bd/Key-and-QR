@@ -1,22 +1,36 @@
 import { NextResponse } from "next/server";
 
 export function middleware(request) {
-  const token = request.cookies.get('accessToken')?.value;
+  
+  const accessToken = request.cookies.get('accessToken')?.value;
   const { pathname } = request.nextUrl;
   
-  const publicPages = ['/login', '/signup', '/forgot-password', '/reset-password', '/callback', '/t'];
+  console.log("Middleware - Path:", pathname, "Has Token:", !!accessToken);
+  
+  // Public pages
+  const publicPages = ['/login', '/signup', '/forgot-password', '/reset-password', '/callback'];
   const isPublicPage = publicPages.some(page => pathname.startsWith(page));
   
-  // Check if trying to access protected routes without token
-  if (!isPublicPage && !token && pathname !== '/') {
+  // Home & public routes
+  if (pathname === '/' || pathname.startsWith('/t/') || pathname.startsWith('/shop')) {
+    return NextResponse.next();
+  }
+  
+  // Protected routes
+  if (!isPublicPage && !accessToken) {
+    console.log("No token, redirecting to login");
     const url = new URL('/login', request.url);
     url.searchParams.set('redirect', pathname);
     return NextResponse.redirect(url);
   }
   
-  // Redirect to dashboard if already logged in and trying to access login
-  if (token && (pathname === '/login' || pathname === '/signup')) {
-    return NextResponse.redirect(new URL('/dashboard', request.url));
+  // Already logged in
+  if (accessToken && (pathname === '/login' || pathname === '/signup')) {
+    const userRole = request.cookies.get('userRole')?.value;
+    if (userRole === 'admin') {
+      return NextResponse.redirect(new URL('/dashboard/admin', request.url));
+    }
+    return NextResponse.redirect(new URL('/dashboard/user', request.url));
   }
   
   return NextResponse.next();
@@ -25,11 +39,12 @@ export function middleware(request) {
 export const config = {
   matcher: [
     '/login',
-    '/signup',
+    '/signup', 
+    '/forgot-password',
+    '/reset-password',
+    '/callback',
     '/dashboard/:path*',
     '/profile/:path*',
     '/checkout/:path*',
-    '/callback',
-    '/t/:path*',
   ],
 };

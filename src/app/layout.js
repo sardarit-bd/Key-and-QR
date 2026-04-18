@@ -36,7 +36,6 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      {/* ✅ suppressHydrationWarning যোগ করুন body তে */}
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} font-sans antialiased bg-white text-black`}
         suppressHydrationWarning={true}

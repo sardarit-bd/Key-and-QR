@@ -1,30 +1,18 @@
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
-  const backendUrl = process.env.BACKEND_URL || 'https://key-and-qr-backend.vercel.app';
-  const incomingUrl = new URL(req.url);
-  const backendCallbackUrl = `${backendUrl}/api/v1/auth/google/callback${incomingUrl.search}`;
+  const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
+  const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3000';
   
-  const response = await fetch(backendCallbackUrl, {
-    method: "GET",
-    redirect: "manual",
-    headers: {
-      cookie: req.headers.get("cookie") || "",
-    },
-  });
+  // Forward all query params to backend
+  const url = new URL(req.url);
+  const queryString = url.search;
   
-  const location = response.headers.get("location");
-  const redirectPath = location 
-    ? new URL(location).pathname + new URL(location).search
-    : "/callback?success=true";
+  // Redirect to backend callback
+  const backendCallbackUrl = `${backendUrl}/api/v1/auth/google/callback${queryString}`;
   
-  const nextResponse = NextResponse.redirect(new URL(redirectPath, req.url));
+  console.log("Forwarding to:", backendCallbackUrl);
   
-  // ✅ Pass through cookies from backend
-  const setCookie = response.headers.get("set-cookie");
-  if (setCookie) {
-    nextResponse.headers.set("set-cookie", setCookie);
-  }
-  
-  return nextResponse;
+  // Just redirect - let backend handle everything
+  return NextResponse.redirect(backendCallbackUrl);
 }
