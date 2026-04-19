@@ -29,7 +29,7 @@ export default function Header() {
     const [open, setOpen] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
-    const isDashboard = pathname.startsWith("/dashboard");
+    const isDashboard = pathname?.startsWith("/dashboard") || false;
     const drawerRef = useRef(null);
 
     // Helper function to get profile image URL
@@ -122,12 +122,21 @@ export default function Header() {
         return "Email";
     };
 
-    // Mobile menu items
-    const mobileMenuItems = [
+    // Dashboard menu items
+    const dashboardMenuItems = [
+        { icon: LayoutDashboard, label: "Dashboard", href: user?.role === "admin" ? "/dashboard/admin" : "/dashboard/user" },
+        { icon: ShoppingBag, label: "Cart", href: "/cart" },
+    ];
+
+    // Main site menu items (non-dashboard)
+    const mainSiteMenuItems = [
         { icon: Home, label: "Home", href: "/" },
         { icon: Store, label: "Shop", href: "/shop" },
         { icon: CreditCard, label: "Subscription", href: "/subscription" },
     ];
+
+    // Select menu items based on current route
+    const mobileMenuItems = isDashboard ? dashboardMenuItems : mainSiteMenuItems;
 
     return (
         <>
@@ -140,27 +149,31 @@ export default function Header() {
                         <Image src="/logo.png" alt="Logo" width={100} height={50} />
                     </Link>
 
-                    {/* Desktop Navigation */}
-                    <nav className={`${`${isDashboard ? "hidden" : "hidden md:block"}`}`}>
-                        <ul className="flex space-x-12 text-gray-700 font-medium">
-                            <li><Link href="/" className="hover:text-brandColor">Home</Link></li>
-                            <li><Link href="/shop" className="hover:text-brandColor">Shop</Link></li>
-                            <li><Link href="/subscription" className="hover:text-brandColor">Subscription</Link></li>
-                        </ul>
-                    </nav>
+                    {/* Desktop Navigation - Only show on non-dashboard routes */}
+                    {!isDashboard && (
+                        <nav className="hidden md:block">
+                            <ul className="flex space-x-12 text-gray-700 font-medium">
+                                <li><Link href="/" className="hover:text-brandColor">Home</Link></li>
+                                <li><Link href="/shop" className="hover:text-brandColor">Shop</Link></li>
+                                <li><Link href="/subscription" className="hover:text-brandColor">Subscription</Link></li>
+                            </ul>
+                        </nav>
+                    )}
 
                     {/* Desktop Right Side */}
                     <div className="hidden md:flex items-center space-x-4">
 
-                        {/* Cart */}
-                        <Link href="/cart" className="relative mt-0.5">
-                            <ShoppingBag className="text-gray-700" />
-                            {cartCount > 0 && (
-                                <span className="absolute -top-2 -right-2 bg-black text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                                    {cartCount}
-                                </span>
-                            )}
-                        </Link>
+                        {/* Cart - Show on non-dashboard only */}
+                        {!isDashboard && (
+                            <Link href="/cart" className="relative mt-0.5">
+                                <ShoppingBag className="text-gray-700" />
+                                {cartCount > 0 && (
+                                    <span className="absolute -top-2 -right-2 bg-black text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                                        {cartCount}
+                                    </span>
+                                )}
+                            </Link>
+                        )}
 
                         {user ? (
                             <div className="relative group">
@@ -276,42 +289,41 @@ export default function Header() {
                                 </div>
                             </div>
                         ) : (
-                            <>
-                                <Link
-                                    href="/login"
-                                    className="text-gray-700 px-4 py-2 border rounded-md hover:bg-gray-700 hover:text-white transition"
-                                >
-                                    Sign In
-                                </Link>
-                                <Link
-                                    href="/signup"
-                                    className="bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-800 transition"
-                                >
-                                    Get Started
-                                </Link>
-                            </>
+                            !isDashboard && (
+                                <>
+                                    <Link
+                                        href="/login"
+                                        className="text-gray-700 px-4 py-2 border rounded-md hover:bg-gray-700 hover:text-white transition"
+                                    >
+                                        Sign In
+                                    </Link>
+                                    <Link
+                                        href="/signup"
+                                        className="bg-gray-700 text-white px-4 py-2 rounded-md hover:bg-gray-800 transition"
+                                    >
+                                        Get Started
+                                    </Link>
+                                </>
+                            )
                         )}
                     </div>
                 </div>
             </header>
 
-            {/* BOTTOM FLOATING ACTION BUTTON - Mobile & Tablet Only */}
-            <div className="md:hidden fixed bottom-6 right-6 z-50">
-                <button
-                    onClick={handleMenuOpen}
-                    className="group relative flex items-center justify-center w-14 h-14 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white rounded-full shadow-2xl hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer overflow-hidden"
-                    aria-label="Open menu"
-                >
-                    {/* Animated background effect */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full"></div>
-                    
-                    {/* Menu icon with rotation */}
-                    <Menu size={26} className="relative z-10 group-hover:rotate-90 transition-transform duration-300" />
-                    
-                    {/* Sparkle effect on hover */}
-                    <Sparkles size={14} className="absolute -top-1 -right-1 text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                </button>
-            </div>
+            {/* 🔥 BOTTOM FLOATING ACTION BUTTON - Mobile & Tablet Only (Only for non-dashboard) */}
+            {!isDashboard && (
+                <div className="md:hidden fixed bottom-6 right-6 z-50">
+                    <button
+                        onClick={handleMenuOpen}
+                        className="group relative flex items-center justify-center w-14 h-14 bg-gradient-to-br from-gray-900 via-gray-800 to-black text-white rounded-full shadow-2xl hover:shadow-xl transform hover:scale-105 active:scale-95 transition-all duration-300 cursor-pointer overflow-hidden"
+                        aria-label="Open menu"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full"></div>
+                        <Menu size={26} className="relative z-10 group-hover:rotate-90 transition-transform duration-300" />
+                        <Sparkles size={14} className="absolute -top-1 -right-1 text-yellow-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                    </button>
+                </div>
+            )}
 
             {/* BACKDROP WITH BLUR */}
             {open && (
@@ -399,7 +411,7 @@ export default function Header() {
 
                 {/* Navigation Links */}
                 <nav className="flex-1 p-5 space-y-1 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 200px)' }}>
-                    {/* Menu Items */}
+                    {/* Menu Items - Dynamic based on route */}
                     {mobileMenuItems.map((item) => {
                         const isActive = pathname === item.href;
                         return (
@@ -425,36 +437,40 @@ export default function Header() {
                     {/* Divider */}
                     <div className="my-4 border-t border-gray-100"></div>
 
-                    {/* Cart Link */}
-                    <Link
-                        href="/cart"
-                        onClick={handleMenuClose}
-                        className="flex items-center justify-between py-3 px-3 rounded-xl hover:bg-gray-100 transition-all duration-200 text-gray-700"
-                    >
-                        <div className="flex items-center gap-3">
-                            <ShoppingBag size={20} className="text-gray-500" />
-                            <span className="font-medium">Cart</span>
-                        </div>
-                        {cartCount > 0 && (
-                            <span className="bg-gray-900 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center">
-                                {cartCount}
-                            </span>
-                        )}
-                    </Link>
+                    {/* Cart Link - Only for non-dashboard */}
+                    {!isDashboard && (
+                        <Link
+                            href="/cart"
+                            onClick={handleMenuClose}
+                            className="flex items-center justify-between py-3 px-3 rounded-xl hover:bg-gray-100 transition-all duration-200 text-gray-700"
+                        >
+                            <div className="flex items-center gap-3">
+                                <ShoppingBag size={20} className="text-gray-500" />
+                                <span className="font-medium">Cart</span>
+                            </div>
+                            {cartCount > 0 && (
+                                <span className="bg-gray-900 text-white text-xs w-6 h-6 rounded-full flex items-center justify-center">
+                                    {cartCount}
+                                </span>
+                            )}
+                        </Link>
+                    )}
 
                     {/* Auth Section */}
                     {user ? (
                         <>
                             <div className="my-2 border-t border-gray-100"></div>
                             
-                            <Link
-                                href={`${user?.role === "admin" ? "/dashboard/admin" : "/dashboard/user"}`}
-                                onClick={handleMenuClose}
-                                className="flex items-center gap-3 py-3 px-3 rounded-xl bg-gray-100 hover:bg-gray-200 transition-all duration-200 text-gray-700 mt-2"
-                            >
-                                <LayoutDashboard size={20} className="text-gray-600" />
-                                <span className="font-medium">Dashboard</span>
-                            </Link>
+                            {!isDashboard && (
+                                <Link
+                                    href={`${user?.role === "admin" ? "/dashboard/admin" : "/dashboard/user"}`}
+                                    onClick={handleMenuClose}
+                                    className="flex items-center gap-3 py-3 px-3 rounded-xl bg-gray-100 hover:bg-gray-200 transition-all duration-200 text-gray-700 mt-2"
+                                >
+                                    <LayoutDashboard size={20} className="text-gray-600" />
+                                    <span className="font-medium">Dashboard</span>
+                                </Link>
+                            )}
 
                             <button
                                 onClick={handleLogout}
@@ -466,22 +482,24 @@ export default function Header() {
                             </button>
                         </>
                     ) : (
-                        <div className="mt-4 space-y-3">
-                            <Link
-                                href="/login"
-                                onClick={handleMenuClose}
-                                className="block w-full py-3 px-4 bg-gray-900 text-white rounded-xl text-center font-medium hover:bg-gray-800 transition-all duration-200"
-                            >
-                                Sign In
-                            </Link>
-                            <Link
-                                href="/signup"
-                                onClick={handleMenuClose}
-                                className="block w-full py-3 px-4 border-2 border-gray-900 text-gray-900 rounded-xl text-center font-medium hover:bg-gray-900 hover:text-white transition-all duration-200"
-                            >
-                                Get Started
-                            </Link>
-                        </div>
+                        !isDashboard && (
+                            <div className="mt-4 space-y-3">
+                                <Link
+                                    href="/login"
+                                    onClick={handleMenuClose}
+                                    className="block w-full py-3 px-4 bg-gray-900 text-white rounded-xl text-center font-medium hover:bg-gray-800 transition-all duration-200"
+                                >
+                                    Sign In
+                                </Link>
+                                <Link
+                                    href="/signup"
+                                    onClick={handleMenuClose}
+                                    className="block w-full py-3 px-4 border-2 border-gray-900 text-gray-900 rounded-xl text-center font-medium hover:bg-gray-900 hover:text-white transition-all duration-200"
+                                >
+                                    Get Started
+                                </Link>
+                            </div>
+                        )
                     )}
                 </nav>
             </div>
