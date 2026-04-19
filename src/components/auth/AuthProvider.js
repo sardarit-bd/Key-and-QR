@@ -23,11 +23,8 @@ export default function AuthProvider({ children }) {
     if (!isClient) return;
     if (isPublicPage) return;
     if (isInitialized || isLoading) {
-      console.log("Auth already:", { isInitialized, isLoading });
       return;
     }
-
-    console.log("🟢 Initializing auth");
     initializeAuth();
   }, [isClient, isPublicPage, isInitialized, isLoading, initializeAuth]);
 
