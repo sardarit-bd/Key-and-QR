@@ -54,6 +54,14 @@ export default function AdminProfilePage() {
     // File input ref
     const fileInputRef = useRef(null);
 
+    // 🔥 Helper function to get profile image URL (handles both string and object)
+    const getProfileImageUrl = () => {
+        if (!user?.profileImage) return null;
+        if (typeof user.profileImage === 'string') return user.profileImage;
+        if (user.profileImage?.url) return user.profileImage.url;
+        return null;
+    };
+
     // Initialize form data when user loads
     useEffect(() => {
         if (user) {
@@ -61,7 +69,9 @@ export default function AdminProfilePage() {
                 name: user.name || "",
                 email: user.email || "",
             });
-            setImagePreview(user.profileImage?.url || null);
+            // 🔥 FIX: Handle both string and object profileImage
+            const imageUrl = getProfileImageUrl();
+            setImagePreview(imageUrl);
 
             // Check if user is admin
             if (user.role !== "admin") {
@@ -238,7 +248,8 @@ export default function AdminProfilePage() {
             email: user?.email || "",
         });
         setProfileImage(null);
-        setImagePreview(user?.profileImage?.url || null);
+        const imageUrl = getProfileImageUrl();
+        setImagePreview(imageUrl);
     };
 
     if (!user || user.role !== "admin") {
@@ -280,17 +291,29 @@ export default function AdminProfilePage() {
                     <div className="lg:col-span-1">
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sticky top-6">
                             <div className="flex flex-col items-center text-center">
-                                {/* Avatar */}
+                                {/* 🔥 FIXED: Avatar with proper image handling */}
                                 <div className="relative">
                                     <div className="w-32 h-32 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-0.5">
                                         <div className="w-full h-full rounded-full bg-white p-0.5">
                                             {imagePreview ? (
-                                                <Image
+                                                <img
                                                     src={imagePreview}
                                                     alt={user.name}
-                                                    width={120}
-                                                    height={120}
                                                     className="w-full h-full rounded-full object-cover"
+                                                    onError={(e) => {
+                                                        console.error("Image failed to load:", imagePreview);
+                                                        e.target.style.display = 'none';
+                                                        const parent = e.target.parentElement;
+                                                        if (parent) {
+                                                            parent.innerHTML = `
+                                                                <div class="w-full h-full rounded-full bg-gradient-to-r from-purple-100 to-pink-100 flex items-center justify-center">
+                                                                    <svg class="w-12 h-12 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
+                                                                    </svg>
+                                                                </div>
+                                                            `;
+                                                        }
+                                                    }}
                                                 />
                                             ) : (
                                                 <div className="w-full h-full rounded-full bg-gradient-to-r from-purple-100 to-pink-100 flex items-center justify-center">

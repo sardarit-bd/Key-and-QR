@@ -1,10 +1,130 @@
 "use client";
 
 import api from "@/lib/api";
-import { ArrowLeft, Upload, X, Plus } from "lucide-react";
+import { 
+    ArrowLeft, 
+    Upload, 
+    X, 
+    Plus, 
+    Package, 
+    DollarSign, 
+    Tag, 
+    Building2, 
+    Layers, 
+    FileText, 
+    Image as ImageIcon,
+    Grid3x3,
+    Check,
+    ChevronDown,
+    AlertCircle,
+    CheckCircle
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+
+// Custom Category Select Component
+const CategorySelect = ({ value, onChange, categories }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    const [searchTerm, setSearchTerm] = useState("");
+    const dropdownRef = useRef(null);
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+                setIsOpen(false);
+            }
+        };
+        document.addEventListener("mousedown", handleClickOutside);
+        return () => document.removeEventListener("mousedown", handleClickOutside);
+    }, []);
+
+    const filteredCategories = categories.filter(cat =>
+        cat.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+    const selectedCategory = categories.find(cat => cat === value);
+
+    // Category icons mapping
+    const getCategoryIcon = (category) => {
+        const icons = {
+            "Smart NFC Keychain": <Tag size={14} className="text-blue-500" />,
+            "Digital Keychain": <Layers size={14} className="text-purple-500" />,
+            "RFID Card": <CreditCard size={14} className="text-green-500" />,
+            "Smart Tag": <Package size={14} className="text-orange-500" />,
+            "Accessories": <Grid3x3 size={14} className="text-pink-500" />,
+            "Other": <Package size={14} className="text-gray-500" />,
+        };
+        return icons[category] || <Tag size={14} className="text-gray-500" />;
+    };
+
+    return (
+        <div className="relative" ref={dropdownRef}>
+            <button
+                type="button"
+                onClick={() => setIsOpen(!isOpen)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 bg-white flex items-center justify-between cursor-pointer hover:border-gray-400 transition-colors"
+            >
+                <div className="flex items-center gap-2">
+                    {value ? (
+                        <>
+                            {getCategoryIcon(value)}
+                            <span className="text-gray-900">{value}</span>
+                        </>
+                    ) : (
+                        <span className="text-gray-500">Select category</span>
+                    )}
+                </div>
+                <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+            </button>
+
+            {isOpen && (
+                <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-50 overflow-hidden">
+                    <div className="p-2 border-b border-gray-100">
+                        <input
+                            type="text"
+                            placeholder="Search category..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full px-3 py-1.5 text-sm border border-gray-200 rounded-md focus:outline-none focus:ring-2 focus:ring-gray-400"
+                        />
+                    </div>
+                    <div className="max-h-48 overflow-y-auto">
+                        {filteredCategories.length > 0 ? (
+                            filteredCategories.map((category) => (
+                                <button
+                                    key={category}
+                                    type="button"
+                                    onClick={() => {
+                                        onChange(category);
+                                        setIsOpen(false);
+                                        setSearchTerm("");
+                                    }}
+                                    className={`w-full px-3 py-2 text-sm text-left hover:bg-gray-50 transition-colors cursor-pointer flex items-center justify-between ${
+                                        value === category ? 'bg-gray-100 text-gray-900 font-medium' : 'text-gray-600'
+                                    }`}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        {getCategoryIcon(category)}
+                                        <span>{category}</span>
+                                    </div>
+                                    {value === category && <Check size={14} className="text-green-500" />}
+                                </button>
+                            ))
+                        ) : (
+                            <div className="px-3 py-2 text-sm text-gray-500 text-center">
+                                No categories found
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+// Need to import CreditCard for the icon
+import { CreditCard } from "lucide-react";
 
 export default function AddProductPage() {
     const router = useRouter();
@@ -28,7 +148,7 @@ export default function AddProductPage() {
     const [galleryImages, setGalleryImages] = useState([]);
     const [galleryPreviews, setGalleryPreviews] = useState([]);
 
-    // Categories list (you can fetch from API or define here)
+    // Categories list
     const categories = [
         "Smart NFC Keychain",
         "Digital Keychain",
@@ -51,18 +171,14 @@ export default function AddProductPage() {
     const handleMainImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
-            // Validate file type
             if (!file.type.startsWith('image/')) {
                 setError("Please upload an image file");
                 return;
             }
-            
-            // Validate file size (max 5MB)
             if (file.size > 5 * 1024 * 1024) {
                 setError("Image size should be less than 5MB");
                 return;
             }
-            
             setMainImage(file);
             setMainImagePreview(URL.createObjectURL(file));
             setError("");
@@ -92,7 +208,6 @@ export default function AddProductPage() {
         if (validFiles.length > 0) {
             const newImages = [...galleryImages, ...validFiles];
             const newPreviews = validFiles.map(file => URL.createObjectURL(file));
-            
             setGalleryImages(newImages);
             setGalleryPreviews([...galleryPreviews, ...newPreviews]);
             setError("");
@@ -102,10 +217,8 @@ export default function AddProductPage() {
     // Remove single gallery image
     const removeGalleryImage = (index) => {
         URL.revokeObjectURL(galleryPreviews[index]);
-        
         const newImages = galleryImages.filter((_, i) => i !== index);
         const newPreviews = galleryPreviews.filter((_, i) => i !== index);
-        
         setGalleryImages(newImages);
         setGalleryPreviews(newPreviews);
     };
@@ -128,29 +241,13 @@ export default function AddProductPage() {
         setLoading(true);
 
         try {
-            // Validation
-            if (!mainImage) {
-                throw new Error("Main image is required");
-            }
-
-            if (!formData.name.trim()) {
-                throw new Error("Product name is required");
-            }
-
-            if (!formData.price || isNaN(formData.price) || Number(formData.price) <= 0) {
-                throw new Error("Please enter a valid price");
-            }
-
-            if (!formData.category) {
-                throw new Error("Category is required");
-            }
-
-            if (!formData.description.trim()) {
-                throw new Error("Description is required");
-            }
+            if (!mainImage) throw new Error("Main image is required");
+            if (!formData.name.trim()) throw new Error("Product name is required");
+            if (!formData.price || isNaN(formData.price) || Number(formData.price) <= 0) throw new Error("Please enter a valid price");
+            if (!formData.category) throw new Error("Category is required");
+            if (!formData.description.trim()) throw new Error("Description is required");
 
             const formDataToSend = new FormData();
-            
             formDataToSend.append("name", formData.name.trim());
             formDataToSend.append("price", Number(formData.price));
             formDataToSend.append("category", formData.category);
@@ -159,24 +256,17 @@ export default function AddProductPage() {
             formDataToSend.append("stock", Number(formData.stock) || 0);
             formDataToSend.append("image", mainImage);
             
-            // Add gallery images
             galleryImages.forEach((img) => {
                 formDataToSend.append("gallery", img);
             });
 
-            // Send to backend
             const response = await api.post("/products", formDataToSend, {
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
+                headers: { "Content-Type": "multipart/form-data" },
             });
 
             if (response.data.success) {
                 setSuccess("Product created successfully!");
-                // Reset form after successful submission
-                setTimeout(() => {
-                    router.push("/dashboard/admin/products");
-                }, 1500);
+                setTimeout(() => router.push("/dashboard/admin/products"), 1500);
             }
         } catch (err) {
             setError(err.response?.data?.message || err.message || "Failed to create product");
@@ -195,19 +285,14 @@ export default function AddProductPage() {
             description: "",
             stock: 0,
         });
-        
-        if (mainImagePreview) {
-            URL.revokeObjectURL(mainImagePreview);
-        }
+        if (mainImagePreview) URL.revokeObjectURL(mainImagePreview);
         galleryPreviews.forEach(preview => URL.revokeObjectURL(preview));
-        
         setMainImage(null);
         setMainImagePreview("");
         setGalleryImages([]);
         setGalleryPreviews([]);
         setError("");
         setSuccess("");
-        
         document.getElementById("main-image-input").value = "";
         document.getElementById("gallery-input").value = "";
     };
@@ -230,40 +315,36 @@ export default function AddProductPage() {
                             href="/dashboard/admin/products"
                             className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
                         >
-                            <ArrowLeft size={20} />
+                            <ArrowLeft size={20} className="text-gray-600" />
                         </Link>
-                        <h1 className="text-2xl font-semibold text-gray-900">Add New Product</h1>
+                        <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
+                            <Package size={28} className="text-gray-700" />
+                            Add New Product
+                        </h1>
                     </div>
                     <button
                         type="button"
                         onClick={handleReset}
-                        className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                        className="px-4 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition flex items-center gap-2 cursor-pointer"
                     >
+                        <X size={16} />
                         Reset Form
                     </button>
                 </div>
 
                 {/* Success Message */}
                 {success && (
-                    <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg mb-6">
-                        <div className="flex items-center gap-2">
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                            </svg>
-                            {success}
-                        </div>
+                    <div className="bg-green-50 border border-green-200 text-green-700 p-4 rounded-lg mb-6 flex items-center gap-2">
+                        <CheckCircle size={20} />
+                        {success}
                     </div>
                 )}
 
                 {/* Error Message */}
                 {error && (
-                    <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-6">
-                        <div className="flex items-center gap-2">
-                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                            </svg>
-                            {error}
-                        </div>
+                    <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-lg mb-6 flex items-center gap-2">
+                        <AlertCircle size={20} />
+                        {error}
                     </div>
                 )}
 
@@ -272,7 +353,8 @@ export default function AddProductPage() {
                     <div className="space-y-6">
                         {/* Product Name */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                <Tag size={16} />
                                 Product Name <span className="text-red-500">*</span>
                             </label>
                             <input
@@ -290,7 +372,8 @@ export default function AddProductPage() {
                         {/* Price and Category */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                    <DollarSign size={16} />
                                     Price (USD) <span className="text-red-500">*</span>
                                 </label>
                                 <input
@@ -307,28 +390,23 @@ export default function AddProductPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                    <Layers size={16} />
                                     Category <span className="text-red-500">*</span>
                                 </label>
-                                <select
-                                    name="category"
+                                <CategorySelect
                                     value={formData.category}
-                                    onChange={handleChange}
-                                    required
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
-                                >
-                                    <option value="">Select category</option>
-                                    {categories.map((cat) => (
-                                        <option key={cat} value={cat}>{cat}</option>
-                                    ))}
-                                </select>
+                                    onChange={(value) => setFormData(prev => ({ ...prev, category: value }))}
+                                    categories={categories}
+                                />
                             </div>
                         </div>
 
                         {/* Brand and Stock */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                    <Building2 size={16} />
                                     Brand
                                 </label>
                                 <input
@@ -342,7 +420,8 @@ export default function AddProductPage() {
                             </div>
 
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-2">
+                                <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                    <Package size={16} />
                                     Stock Quantity
                                 </label>
                                 <input
@@ -360,17 +439,17 @@ export default function AddProductPage() {
                                 />
                                 {formData.stock <= 0 && (
                                     <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                                        <span>⚠️</span> Product will show as <span className="font-semibold">"Out of Stock"</span>
+                                        <AlertCircle size={12} /> Product will show as "Out of Stock"
                                     </p>
                                 )}
                                 {formData.stock > 0 && formData.stock <= 2 && (
                                     <p className="text-xs text-orange-600 mt-1 flex items-center gap-1">
-                                        <span>⚠️</span> Only {formData.stock} left - Limited stock warning
+                                        <AlertCircle size={12} /> Only {formData.stock} left - Limited stock warning
                                     </p>
                                 )}
                                 {formData.stock > 2 && (
                                     <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                                        <span>✓</span> In stock - Normal display
+                                        <CheckCircle size={12} /> In stock - Normal display
                                     </p>
                                 )}
                             </div>
@@ -378,7 +457,8 @@ export default function AddProductPage() {
 
                         {/* Main Image */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                <ImageIcon size={16} />
                                 Main Image <span className="text-red-500">*</span>
                             </label>
                             <div className="space-y-3">
@@ -390,7 +470,6 @@ export default function AddProductPage() {
                                     className="hidden"
                                 />
 
-                                {/* Image Preview */}
                                 {mainImagePreview ? (
                                     <div className="relative inline-block">
                                         <div className="relative w-40 h-40">
@@ -402,19 +481,20 @@ export default function AddProductPage() {
                                             <button
                                                 type="button"
                                                 onClick={removeMainImage}
-                                                className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition shadow-lg"
-                                                title="Remove image"
+                                                className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition shadow-lg cursor-pointer"
                                             >
                                                 <X size={14} />
                                             </button>
                                         </div>
-                                        <p className="text-xs text-green-600 mt-2">Main image selected</p>
+                                        <p className="text-xs text-green-600 mt-2 flex items-center gap-1">
+                                            <CheckCircle size={12} /> Main image selected
+                                        </p>
                                     </div>
                                 ) : (
                                     <button
                                         type="button"
                                         onClick={() => document.getElementById("main-image-input").click()}
-                                        className="w-full h-40 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 transition group"
+                                        className="w-full h-40 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 transition group cursor-pointer"
                                     >
                                         <Upload size={32} className="text-gray-400 group-hover:text-gray-500 mb-2" />
                                         <span className="text-sm text-gray-500">Click to upload main image</span>
@@ -426,7 +506,8 @@ export default function AddProductPage() {
 
                         {/* Gallery Images */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                <Grid3x3 size={16} />
                                 Gallery Images
                             </label>
                             <div className="space-y-3">
@@ -439,7 +520,6 @@ export default function AddProductPage() {
                                     className="hidden"
                                 />
 
-                                {/* Gallery Previews */}
                                 {galleryPreviews.length > 0 && (
                                     <div className="mb-4">
                                         <p className="text-xs text-gray-500 mb-2">
@@ -456,8 +536,7 @@ export default function AddProductPage() {
                                                     <button
                                                         type="button"
                                                         onClick={() => removeGalleryImage(index)}
-                                                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition"
-                                                        title="Remove image"
+                                                        className="absolute top-1 right-1 p-1 bg-red-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition cursor-pointer"
                                                     >
                                                         <X size={12} />
                                                     </button>
@@ -467,26 +546,24 @@ export default function AddProductPage() {
                                     </div>
                                 )}
 
-                                {/* Upload Button */}
                                 <button
                                     type="button"
                                     onClick={() => document.getElementById("gallery-input").click()}
-                                    className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 transition group"
+                                    className="w-full h-32 border-2 border-dashed border-gray-300 rounded-lg flex flex-col items-center justify-center hover:border-gray-400 transition group cursor-pointer"
                                 >
                                     <Plus size={24} className="text-gray-400 group-hover:text-gray-500 mb-2" />
                                     <span className="text-sm text-gray-500">
                                         {galleryImages.length > 0 ? 'Add more images' : 'Add gallery images'}
                                     </span>
-                                    <span className="text-xs text-gray-400 mt-1">
-                                        You can select multiple images
-                                    </span>
+                                    <span className="text-xs text-gray-400 mt-1">You can select multiple images</span>
                                 </button>
                             </div>
                         </div>
 
                         {/* Description */}
                         <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">
+                            <label className="block text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                                <FileText size={16} />
                                 Description <span className="text-red-500">*</span>
                             </label>
                             <textarea
@@ -507,8 +584,9 @@ export default function AddProductPage() {
                         <div className="flex justify-end gap-3 pt-4 border-t border-gray-200">
                             <Link
                                 href="/dashboard/admin/products"
-                                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                                className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition flex items-center gap-2"
                             >
+                                <X size={16} />
                                 Cancel
                             </Link>
                             <button

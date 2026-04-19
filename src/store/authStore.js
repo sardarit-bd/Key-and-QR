@@ -2,12 +2,11 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import api, { 
-  setTokens, 
-  clearTokens, 
-  setUser, 
-  getUser, 
-  getAccessToken, 
+import api, {
+  setTokens,
+  clearTokens,
+  getUser,
+  getAccessToken,
   getRefreshToken,
   startTokenRefreshTimer,
   stopTokenRefreshTimer
@@ -24,7 +23,7 @@ const filterUserData = (user) => {
     profileImage: user.profileImage?.url || user.profileImage || null,
     provider: user.provider,
     createdAt: user.createdAt || null,
-    updatedAt: user.updatedAt || null, 
+    updatedAt: user.updatedAt || null,
     isEmailVerified: user.isEmailVerified || false,
   };
 };
@@ -43,8 +42,8 @@ export const useAuthStore = create(
         console.log("setUser called with:", userData);
         const filteredUser = filterUserData(userData);
         set({ user: filteredUser });
-        if (typeof window !== 'undefined' && filteredUser) {
-          localStorage.setItem('user', JSON.stringify(filteredUser));
+        if (typeof window !== "undefined" && filteredUser) {
+          localStorage.setItem("user", JSON.stringify(filteredUser));
         }
       },
 
@@ -59,7 +58,7 @@ export const useAuthStore = create(
         set({ loading: loadingStatus, isLoading: loadingStatus });
       },
 
-      // Initialize auth - UPDATED with timer
+      // Initialize auth
       initializeAuth: async () => {
         const state = get();
 
@@ -79,19 +78,37 @@ export const useAuthStore = create(
         try {
           const storedUser = getUser();
           const storedToken = getAccessToken();
+          const storedRefreshToken = getRefreshToken();
 
-          if (storedUser && storedToken) {
+          // No token at all
+          if (!storedToken && !storedRefreshToken) {
+            set({
+              user: null,
+              isInitialized: true,
+              loading: false,
+              isLoading: false,
+              error: null,
+            });
+            return;
+          }
+
+          if (storedUser && (storedToken || storedRefreshToken)) {
             console.log("🟢 Using stored user from localStorage");
             const filteredUser = filterUserData(storedUser);
 
-            if (typeof window !== 'undefined') {
-              if (!document.cookie.includes('accessToken')) {
+            if (typeof window !== "undefined") {
+              if (storedToken && !document.cookie.includes("accessToken")) {
                 document.cookie = `accessToken=${storedToken}; path=/; max-age=900; SameSite=Lax`;
               }
-              if (!document.cookie.includes('userRole') && filteredUser?.role) {
+
+              if (storedRefreshToken && !document.cookie.includes("refreshToken")) {
+                document.cookie = `refreshToken=${storedRefreshToken}; path=/; max-age=604800; SameSite=Lax`;
+              }
+
+              if (!document.cookie.includes("userRole") && filteredUser?.role) {
                 document.cookie = `userRole=${filteredUser.role}; path=/; max-age=604800; SameSite=Lax`;
               }
-              
+
               // Start token refresh timer
               startTokenRefreshTimer();
             }
@@ -100,35 +117,55 @@ export const useAuthStore = create(
               user: filteredUser,
               isInitialized: true,
               loading: false,
-              isLoading: false
+              isLoading: false,
+              error: null,
             });
 
             // Background verification
-            api.get("/auth/me").then(response => {
-              const freshUser = response.data?.data;
-              if (freshUser) {
-                const filteredFreshUser = filterUserData(freshUser);
-                set({ user: filteredFreshUser });
-                if (typeof window !== 'undefined') {
-                  localStorage.setItem('user', JSON.stringify(filteredFreshUser));
+            api
+              .get("/auth/me")
+              .then((response) => {
+                const freshUser = response.data?.data;
+                if (freshUser) {
+                  const filteredFreshUser = filterUserData(freshUser);
+                  set({ user: filteredFreshUser });
+                  if (typeof window !== "undefined") {
+                    localStorage.setItem("user", JSON.stringify(filteredFreshUser));
+                  }
                 }
-              }
-            }).catch(() => {
-              console.log("Background verification failed, but user stays logged in");
-            });
+              })
+              .catch(() => {
+                console.log("Background verification failed, but user stays logged in");
+              });
+
             return;
           }
 
-          if (storedToken && !storedUser) {
+          if ((storedToken || storedRefreshToken) && !storedUser) {
             console.log("Token exists, fetching user from server");
             const response = await api.get("/auth/me");
             const user = response.data?.data;
+
             if (user) {
               const filteredUser = filterUserData(user);
               set({ user: filteredUser });
-              if (typeof window !== 'undefined') {
-                localStorage.setItem('user', JSON.stringify(filteredUser));
+
+              if (typeof window !== "undefined") {
+                localStorage.setItem("user", JSON.stringify(filteredUser));
+
+                if (storedToken && !document.cookie.includes("accessToken")) {
+                  document.cookie = `accessToken=${storedToken}; path=/; max-age=900; SameSite=Lax`;
+                }
+
+                if (storedRefreshToken && !document.cookie.includes("refreshToken")) {
+                  document.cookie = `refreshToken=${storedRefreshToken}; path=/; max-age=604800; SameSite=Lax`;
+                }
+
+                if (!document.cookie.includes("userRole") && filteredUser?.role) {
+                  document.cookie = `userRole=${filteredUser.role}; path=/; max-age=604800; SameSite=Lax`;
+                }
               }
+
               // Start token refresh timer
               startTokenRefreshTimer();
             }
@@ -137,9 +174,9 @@ export const useAuthStore = create(
           set({
             isInitialized: true,
             loading: false,
-            isLoading: false
+            isLoading: false,
+            error: null,
           });
-
         } catch (error) {
           console.error("Init auth error:", error);
           set({
@@ -147,7 +184,7 @@ export const useAuthStore = create(
             isInitialized: true,
             loading: false,
             isLoading: false,
-            error: error.message
+            error: error.message,
           });
         }
       },
@@ -157,13 +194,16 @@ export const useAuthStore = create(
         try {
           const response = await api.get("/auth/me");
           const user = response.data?.data ?? null;
+
           if (user) {
             const filteredUser = filterUserData(user);
             set({ user: filteredUser, error: null });
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('user', JSON.stringify(filteredUser));
+
+            if (typeof window !== "undefined") {
+              localStorage.setItem("user", JSON.stringify(filteredUser));
             }
           }
+
           return user;
         } catch (error) {
           console.error("Fetch me error:", error);
@@ -190,12 +230,33 @@ export const useAuthStore = create(
           if (user) {
             filteredUser = filterUserData(user);
             set({ user: filteredUser });
-            if (typeof window !== 'undefined') {
-              localStorage.setItem('user', JSON.stringify(filteredUser));
+
+            if (typeof window !== "undefined") {
+              localStorage.setItem("user", JSON.stringify(filteredUser));
             }
           }
 
-          set({ loading: false, isLoading: false, error: null, isInitialized: true });
+          if (typeof window !== "undefined") {
+            if (accessToken) {
+              document.cookie = `accessToken=${accessToken}; path=/; max-age=900; SameSite=Lax`;
+            }
+            if (refreshToken) {
+              document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
+            }
+            if (filteredUser?.role) {
+              document.cookie = `userRole=${filteredUser.role}; path=/; max-age=604800; SameSite=Lax`;
+            }
+
+            startTokenRefreshTimer();
+          }
+
+          set({
+            loading: false,
+            isLoading: false,
+            error: null,
+            isInitialized: true,
+          });
+
           return { success: true, user: filteredUser };
         } catch (error) {
           const message = error.response?.data?.message || "Registration failed";
@@ -204,7 +265,7 @@ export const useAuthStore = create(
         }
       },
 
-      // Login - UPDATED with timer
+      // Login
       login: async (payload) => {
         set({ loading: true, isLoading: true, error: null });
 
@@ -222,7 +283,11 @@ export const useAuthStore = create(
           const refreshToken = response.data?.data?.refreshToken;
 
           if (!accessToken || !user) {
-            set({ loading: false, isLoading: false, error: "Invalid server response" });
+            set({
+              loading: false,
+              isLoading: false,
+              error: "Invalid server response",
+            });
             return { success: false, error: "Invalid server response" };
           }
 
@@ -232,15 +297,19 @@ export const useAuthStore = create(
           const filteredUser = filterUserData(user);
           set({ user: filteredUser });
 
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('user', JSON.stringify(filteredUser));
+          if (typeof window !== "undefined") {
+            localStorage.setItem("user", JSON.stringify(filteredUser));
 
-            // Set cookies for middleware
-            document.cookie = `accessToken=${accessToken}; path=/; max-age=900; SameSite=Lax`;
-            document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
-            document.cookie = `userRole=${filteredUser.role}; path=/; max-age=604800; SameSite=Lax`;
-            
-            // Start token refresh timer
+            if (accessToken) {
+              document.cookie = `accessToken=${accessToken}; path=/; max-age=900; SameSite=Lax`;
+            }
+            if (refreshToken) {
+              document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
+            }
+            if (filteredUser?.role) {
+              document.cookie = `userRole=${filteredUser.role}; path=/; max-age=604800; SameSite=Lax`;
+            }
+
             startTokenRefreshTimer();
           }
 
@@ -248,7 +317,7 @@ export const useAuthStore = create(
             loading: false,
             isLoading: false,
             error: null,
-            isInitialized: true
+            isInitialized: true,
           });
 
           // Redirect after state update
@@ -261,16 +330,16 @@ export const useAuthStore = create(
           }, 100);
 
           return { success: true, user: filteredUser };
-
         } catch (error) {
           console.error("Login error:", error);
-          const message = error.response?.data?.message || "Login failed. Please try again.";
+          const message =
+            error.response?.data?.message || "Login failed. Please try again.";
           set({ loading: false, isLoading: false, error: message });
           return { success: false, error: message };
         }
       },
 
-      // Logout - UPDATED with timer stop
+      // Logout
       logout: async () => {
         set({ loading: true, isLoading: true });
 
@@ -280,15 +349,18 @@ export const useAuthStore = create(
           console.error("Logout error:", error);
         } finally {
           clearTokens();
-          
+
           // Stop token refresh timer
           stopTokenRefreshTimer();
 
-          if (typeof window !== 'undefined') {
-            document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-            document.cookie = "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-            document.cookie = "userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-            localStorage.removeItem('user');
+          if (typeof window !== "undefined") {
+            document.cookie =
+              "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+            document.cookie =
+              "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+            document.cookie =
+              "userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+            localStorage.removeItem("user");
           }
 
           set({
@@ -296,7 +368,7 @@ export const useAuthStore = create(
             isInitialized: true,
             error: null,
             loading: false,
-            isLoading: false
+            isLoading: false,
           });
 
           if (typeof window !== "undefined") {
@@ -308,44 +380,13 @@ export const useAuthStore = create(
       // Check and refresh token
       checkAndRefreshToken: async () => {
         const token = getAccessToken();
-        if (!token) return false;
+        const refreshToken = getRefreshToken();
 
-        try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          const isExpired = payload.exp * 1000 < Date.now();
-
-          if (isExpired) {
-            const refreshToken = getRefreshToken();
-            if (!refreshToken) {
-              clearTokens();
-              stopTokenRefreshTimer();
-              return false;
-            }
-
-            const response = await api.post("/auth/refresh-token", {}, {
-              headers: {
-                'x-refresh-token': refreshToken
-              }
-            });
-
-            if (response.data?.data?.accessToken) {
-              const newAccessToken = response.data.data.accessToken;
-              const newRefreshToken = response.data.data.refreshToken;
-              setTokens(newAccessToken, newRefreshToken);
-
-              if (typeof window !== 'undefined') {
-                document.cookie = `accessToken=${newAccessToken}; path=/; max-age=900; SameSite=Lax`;
-                document.cookie = `refreshToken=${newRefreshToken}; path=/; max-age=604800; SameSite=Lax`;
-              }
-              return true;
-            }
-            return false;
-          }
-          return true;
-        } catch (error) {
-          console.error("Token check error:", error);
+        if (!token && !refreshToken) {
           return false;
         }
+
+        return true;
       },
 
       // Forgot password
@@ -355,9 +396,13 @@ export const useAuthStore = create(
         try {
           const response = await api.post("/auth/forgot-password", { email });
           set({ loading: false, isLoading: false });
-          return { success: true, message: response.data?.message || "Reset email sent" };
+          return {
+            success: true,
+            message: response.data?.message || "Reset email sent",
+          };
         } catch (error) {
-          const message = error.response?.data?.message || "Failed to send reset email";
+          const message =
+            error.response?.data?.message || "Failed to send reset email";
           set({ loading: false, isLoading: false, error: message });
           return { success: false, error: message };
         }
@@ -368,11 +413,18 @@ export const useAuthStore = create(
         set({ loading: true, isLoading: true, error: null });
 
         try {
-          const response = await api.post("/auth/reset-password", { token, newPassword });
+          const response = await api.post("/auth/reset-password", {
+            token,
+            newPassword,
+          });
           set({ loading: false, isLoading: false });
-          return { success: true, message: response.data?.message || "Password reset successfully" };
+          return {
+            success: true,
+            message: response.data?.message || "Password reset successfully",
+          };
         } catch (error) {
-          const message = error.response?.data?.message || "Password reset failed";
+          const message =
+            error.response?.data?.message || "Password reset failed";
           set({ loading: false, isLoading: false, error: message });
           return { success: false, error: message };
         }
@@ -383,11 +435,18 @@ export const useAuthStore = create(
         set({ loading: true, isLoading: true, error: null });
 
         try {
-          const response = await api.post("/auth/change-password", { oldPassword, newPassword });
+          const response = await api.post("/auth/change-password", {
+            oldPassword,
+            newPassword,
+          });
           set({ loading: false, isLoading: false });
-          return { success: true, message: response.data?.message || "Password changed successfully" };
+          return {
+            success: true,
+            message: response.data?.message || "Password changed successfully",
+          };
         } catch (error) {
-          const message = error.response?.data?.message || "Password change failed";
+          const message =
+            error.response?.data?.message || "Password change failed";
           set({ loading: false, isLoading: false, error: message });
           return { success: false, error: message };
         }
@@ -401,8 +460,8 @@ export const useAuthStore = create(
         const currentUser = get().user;
         if (currentUser) {
           const filteredUser = filterUserData(currentUser);
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('user', JSON.stringify(filteredUser));
+          if (typeof window !== "undefined") {
+            localStorage.setItem("user", JSON.stringify(filteredUser));
           }
         }
       },
@@ -415,8 +474,8 @@ export const useAuthStore = create(
         const currentUser = get().user;
         if (currentUser) {
           const filteredUser = filterUserData(currentUser);
-          if (typeof window !== 'undefined') {
-            localStorage.setItem('user', JSON.stringify(filteredUser));
+          if (typeof window !== "undefined") {
+            localStorage.setItem("user", JSON.stringify(filteredUser));
           }
         }
       },
@@ -428,7 +487,7 @@ export const useAuthStore = create(
         if (!token || !user) return false;
 
         try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
+          const payload = JSON.parse(atob(token.split(".")[1]));
           return payload.exp * 1000 > Date.now();
         } catch {
           return false;
@@ -437,25 +496,25 @@ export const useAuthStore = create(
 
       // Check if admin
       isAdmin: () => get().user?.role === "admin",
-      
+
       // Get user
       getUser: () => get().user,
     }),
     {
-      name: 'auth-storage',
+      name: "auth-storage",
       getStorage: () => {
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
           return localStorage;
         }
         return {
           getItem: () => null,
-          setItem: () => { },
-          removeItem: () => { },
+          setItem: () => {},
+          removeItem: () => {},
         };
       },
       partialize: (state) => ({
         user: state.user ? filterUserData(state.user) : null,
-        isInitialized: state.isInitialized
+        isInitialized: state.isInitialized,
       }),
     }
   )

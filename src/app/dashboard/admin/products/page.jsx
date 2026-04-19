@@ -3,13 +3,91 @@
 import api from "@/lib/api";
 import Loader from "@/shared/Loader";
 import { useAuthStore } from "@/store/authStore";
-import { Archive, Edit, Mail, Plus, RotateCcw, Search, Trash2 } from "lucide-react";
+import { Archive, Edit, Mail, Plus, RotateCcw, Search, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { FaGoogle } from "react-icons/fa";
 
+// Custom Select Component for items per page
+const ItemsPerPageSelect = ({ value, onChange, options }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const selectedOption = options.find(opt => opt.value === value);
+
+  return (
+    <div className="relative" ref={dropdownRef}>
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex items-center justify-between gap-2 px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white min-w-[70px] cursor-pointer hover:border-gray-400 transition-colors"
+      >
+        <span>{selectedOption?.label || value}</span>
+        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-50 overflow-hidden">
+          <div className="max-h-25 overflow-y-auto custom-scroll">
+            {options.map((option, index) => (
+              <div key={option.value}>
+                <button
+                  onClick={() => {
+                    onChange(option.value);
+                    setIsOpen(false);
+                  }}
+                  className={`w-full px-3 py-2 text-sm text-left hover:bg-gray-50 transition-colors cursor-pointer ${value === option.value
+                      ? 'bg-gray-100 text-gray-900 font-medium'
+                      : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                >
+                  {option.label}
+                </button>
+                {index < options.length - 1 && (
+                  <div className="border-t border-gray-100 mx-2" />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Global styles for custom scrollbar */}
+      <style jsx global>{`
+                .custom-scroll::-webkit-scrollbar {
+                    width: 6px;
+                }
+                .custom-scroll::-webkit-scrollbar-track {
+                    background: #f1f5f9;
+                    border-radius: 10px;
+                }
+                .custom-scroll::-webkit-scrollbar-thumb {
+                    background: #cbd5e1;
+                    border-radius: 10px;
+                }
+                .custom-scroll::-webkit-scrollbar-thumb:hover {
+                    background: #94a3b8;
+                }
+            `}</style>
+    </div>
+  );
+};
+
+// Need to import ChevronDown and useRef
+import { ChevronDown } from "lucide-react";
+import { useRef } from "react";
+
 export default function ProductsPage() {
-  const { user } = useAuthStore();
+  const { user, isInitialized } = useAuthStore();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -18,8 +96,12 @@ export default function ProductsPage() {
     id: null,
     type: null,
   });
+
+  // Pagination states
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [viewTrash, setViewTrash] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [restoreModal, setRestoreModal] = useState({ show: false, id: null });
@@ -40,8 +122,12 @@ export default function ProductsPage() {
 
   // Fetch products
   useEffect(() => {
+    if (!isInitialized) return;
+    if (!user) return;
+    if (user.role !== "admin") return;
+
     fetchProducts();
-  }, [currentPage, searchTerm, viewTrash]);
+  }, [currentPage, itemsPerPage, searchTerm, viewTrash, isInitialized, user]);
 
   const fetchProducts = async () => {
     try {
@@ -49,13 +135,14 @@ export default function ProductsPage() {
       const response = await api.get("/products", {
         params: {
           page: currentPage,
-          limit: 10,
+          limit: itemsPerPage,
           search: searchTerm,
           trash: viewTrash,
         },
       });
       setProducts(response.data.data || []);
       setTotalPages(response.data.meta?.totalPage || 1);
+      setTotalProducts(response.data.meta?.total || 0);
     } catch (error) {
       console.error("Error fetching products:", error);
     } finally {
@@ -96,6 +183,72 @@ export default function ProductsPage() {
     }
   };
 
+  // Pagination handlers
+  const goToPage = (page) => {
+    if (page >= 1 && page <= totalPages) {
+      setCurrentPage(page);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const goToPreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const goToNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const goToFirstPage = () => {
+    setCurrentPage(1);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const goToLastPage = () => {
+    setCurrentPage(totalPages);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const handleItemsPerPageChange = (newLimit) => {
+    setItemsPerPage(newLimit);
+    setCurrentPage(1);
+  };
+
+  // Generate page numbers to display
+  const getPageNumbers = () => {
+    const pages = [];
+    const maxVisible = 5;
+
+    if (totalPages <= maxVisible) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      if (currentPage <= 3) {
+        for (let i = 1; i <= 4; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1);
+        pages.push('...');
+        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
+      } else {
+        pages.push(1);
+        pages.push('...');
+        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
+        pages.push('...');
+        pages.push(totalPages);
+      }
+    }
+    return pages;
+  };
+
   const providerInfo = getProviderInfo();
 
   if (loading) {
@@ -111,7 +264,10 @@ export default function ProductsPage() {
             {viewTrash ? "Trash" : "Products"}
           </h1>
           <button
-            onClick={() => setViewTrash(!viewTrash)}
+            onClick={() => {
+              setViewTrash(!viewTrash);
+              setCurrentPage(1);
+            }}
             className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm transition ${viewTrash
               ? "bg-gray-900 text-white"
               : "bg-gray-100 text-gray-700 hover:bg-gray-200"
@@ -283,28 +439,104 @@ export default function ProductsPage() {
         )}
       </div>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-6">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-1 border rounded disabled:opacity-50 hover:bg-gray-50 transition"
-          >
-            Previous
-          </button>
-          <span className="px-3 py-1 text-sm text-gray-600">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 border rounded disabled:opacity-50 hover:bg-gray-50 transition"
-          >
-            Next
-          </button>
+      {/* Pagination Section */}
+      {totalPages > 1 || products.length > 0 ? (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t border-gray-200">
+          {/* Items per page selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-gray-600">Show:</span>
+            <ItemsPerPageSelect
+              value={itemsPerPage}
+              onChange={handleItemsPerPageChange}
+              options={[
+                { value: 5, label: "5" },
+                { value: 10, label: "10" },
+                { value: 20, label: "20" },
+                { value: 50, label: "50" },
+              ]}
+            />
+            <span className="text-sm text-gray-600">per page</span>
+          </div>
+
+          {/* Pagination buttons */}
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1">
+              <button
+                onClick={goToFirstPage}
+                disabled={currentPage === 1}
+                className={`p-2 rounded-md transition-all duration-200 ${currentPage === 1
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100 cursor-pointer"
+                  }`}
+                aria-label="First page"
+              >
+                <ChevronsLeft className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={goToPreviousPage}
+                disabled={currentPage === 1}
+                className={`p-2 rounded-md transition-all duration-200 ${currentPage === 1
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100 cursor-pointer"
+                  }`}
+                aria-label="Previous page"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+
+              {getPageNumbers().map((page, index) => (
+                page === '...' ? (
+                  <span key={`dots-${index}`} className="px-3 py-1 text-gray-400">
+                    ...
+                  </span>
+                ) : (
+                  <button
+                    key={page}
+                    onClick={() => goToPage(page)}
+                    className={`min-w-[36px] h-9 px-3 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${currentPage === page
+                      ? "bg-gray-900 text-white"
+                      : "text-gray-600 hover:bg-gray-100"
+                      }`}
+                  >
+                    {page}
+                  </button>
+                )
+              ))}
+
+              <button
+                onClick={goToNextPage}
+                disabled={currentPage === totalPages}
+                className={`p-2 rounded-md transition-all duration-200 ${currentPage === totalPages
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100 cursor-pointer"
+                  }`}
+                aria-label="Next page"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              <button
+                onClick={goToLastPage}
+                disabled={currentPage === totalPages}
+                className={`p-2 rounded-md transition-all duration-200 ${currentPage === totalPages
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-600 hover:bg-gray-100 cursor-pointer"
+                  }`}
+                aria-label="Last page"
+              >
+                <ChevronsRight className="w-4 h-4" />
+              </button>
+            </div>
+          )}
+
+          {/* Info text */}
+          <div className="text-sm text-gray-500">
+            Showing {products.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} to{" "}
+            {Math.min(currentPage * itemsPerPage, totalProducts)} of {totalProducts} products
+          </div>
         </div>
-      )}
+      ) : null}
 
       {/* Delete Confirmation Modal */}
       {deleteModal.show && (

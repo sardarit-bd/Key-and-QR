@@ -14,15 +14,16 @@ import api from "@/lib/api";
 import Loader from "@/shared/Loader";
 
 export default function UserSubscriptionsPage() {
-    const { user } = useAuthStore();
+    const { user, isInitialized } = useAuthStore();
     const { mySubscriptions, fetchMySubscriptions, loading } = useSubscriptionStore();
     const [loadingPortal, setLoadingPortal] = useState(false);
 
     useEffect(() => {
-        if (user) {
-            fetchMySubscriptions();
-        }
-    }, [user, fetchMySubscriptions]);
+        if (!isInitialized) return;
+        if (!user) return;
+
+        fetchMySubscriptions();
+    }, [user, isInitialized, fetchMySubscriptions]);
 
     const handleManageSubscription = async () => {
         setLoadingPortal(true);

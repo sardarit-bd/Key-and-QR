@@ -21,7 +21,7 @@ import { toast } from "react-hot-toast";
 
 export default function DashboardFavorites() {
     const router = useRouter();
-    const { user } = useAuthStore(); // 👈 Removed accessToken
+    const { user, isInitialized } = useAuthStore();
 
     const [favorites, setFavorites] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -112,12 +112,14 @@ export default function DashboardFavorites() {
 
     // Initial fetch - UPDATED to check user instead of accessToken
     useEffect(() => {
+        if (!isInitialized) return;
+
         if (user) {
             fetchFavorites();
         } else {
             setLoading(false);
         }
-    }, [user, currentPage]); // 👈 Now depends on user instead of accessToken
+    }, [user, currentPage, isInitialized]);
 
     // Empty state with login prompt - UPDATED to check user
     if (!user) {

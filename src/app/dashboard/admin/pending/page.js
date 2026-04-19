@@ -131,6 +131,9 @@ export default function PendingQuotesPage() {
 
     // Debounced search
     useEffect(() => {
+        if (!isInitialized) return;
+        if (!user || user.role !== "admin") return;
+
         const timer = setTimeout(() => {
             if (currentPage === 1) {
                 fetchPendingQuotes();
@@ -138,12 +141,16 @@ export default function PendingQuotesPage() {
                 setCurrentPage(1);
             }
         }, 500);
+
         return () => clearTimeout(timer);
-    }, [searchTerm]);
+    }, [searchTerm, isInitialized, user, currentPage]);
 
     useEffect(() => {
+        if (!isInitialized) return;
+        if (!user || user.role !== "admin") return;
+
         fetchPendingQuotes();
-    }, [currentPage]);
+    }, [currentPage, isInitialized, user]);
 
     useEffect(() => {
         if (!isInitialized) return;
@@ -305,7 +312,7 @@ export default function PendingQuotesPage() {
                                                     >
                                                         <Eye size={18} className="text-gray-500 group-hover:text-blue-600" />
                                                     </button>
-                                                    
+
                                                     {/* Approve Button */}
                                                     <button
                                                         onClick={() => {
@@ -317,7 +324,7 @@ export default function PendingQuotesPage() {
                                                     >
                                                         <CheckCircle size={18} className="text-gray-500 group-hover:text-green-600" />
                                                     </button>
-                                                    
+
                                                     {/* Reject Button */}
                                                     <button
                                                         onClick={() => {
@@ -329,7 +336,7 @@ export default function PendingQuotesPage() {
                                                     >
                                                         <XCircle size={18} className="text-gray-500 group-hover:text-red-600" />
                                                     </button>
-                                                    
+
                                                     {/* Delete Button */}
                                                     <button
                                                         onClick={() => {

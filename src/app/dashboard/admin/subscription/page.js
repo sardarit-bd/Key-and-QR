@@ -2,8 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useAuthStore } from "@/store/authStore";
-import { 
-    Crown, Calendar, DollarSign, CreditCard, 
+import {
+    Crown, Calendar, DollarSign, CreditCard,
     AlertCircle, Loader2, XCircle, Search,
     Filter, ChevronLeft, ChevronRight, RefreshCw,
     Users, TrendingUp, Clock, CheckCircle, Ban,
@@ -18,7 +18,7 @@ import Loader from "@/shared/Loader";
 
 
 export default function AdminSubscriptionsPage() {
-    const { user } = useAuthStore();
+    const { user, isInitialized } = useAuthStore();
     const [subscriptions, setSubscriptions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState("");
@@ -61,7 +61,7 @@ export default function AdminSubscriptionsPage() {
             if (filterStatus !== "all") params.append("status", filterStatus);
 
             const response = await api.get(`/subscriptions/admin/subscriptions?${params.toString()}`);
-            
+
             setSubscriptions(response.data?.data || []);
             setTotalPages(response.data?.meta?.totalPage || 1);
             setTotalSubscriptions(response.data?.meta?.total || 0);
@@ -98,19 +98,24 @@ export default function AdminSubscriptionsPage() {
     };
 
     useEffect(() => {
-        if (user?.role === "admin") {
-            fetchSubscriptions();
-            fetchStats();
-        }
-    }, [user, currentPage, filterStatus]);
+        if (!isInitialized) return;
+        if (!user || user.role !== "admin") return;
+
+        fetchSubscriptions();
+        fetchStats();
+    }, [user, currentPage, filterStatus, isInitialized]);
 
     useEffect(() => {
+        if (!isInitialized) return;
+        if (!user || user.role !== "admin") return;
+
         const timer = setTimeout(() => {
             if (currentPage === 1) fetchSubscriptions();
             else setCurrentPage(1);
         }, 500);
+
         return () => clearTimeout(timer);
-    }, [searchTerm]);
+    }, [searchTerm, isInitialized, user, currentPage]);
 
     const getStatusBadge = (status) => {
         const styles = {
