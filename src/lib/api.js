@@ -247,7 +247,12 @@ api.interceptors.response.use(
     }
 
     if (isRefreshCall) {
-      forceLogout();
+      const hasRefreshToken = getRefreshToken();
+
+      if (hasRefreshToken) {
+        forceLogout("expired");
+      }
+
       return Promise.reject(error);
     }
 
@@ -256,7 +261,12 @@ api.interceptors.response.use(
     }
 
     if (originalRequest._retry) {
-      forceLogout();
+      const hasRefreshToken = getRefreshToken();
+
+      if (hasRefreshToken) {
+        forceLogout("expired");
+      }
+
       return Promise.reject(error);
     }
 
@@ -283,7 +293,13 @@ api.interceptors.response.use(
       return api(originalRequest);
     } catch (refreshError) {
       processQueue(refreshError, null);
-      forceLogout();
+
+      const hasRefreshToken = getRefreshToken();
+
+      if (hasRefreshToken) {
+        forceLogout("expired");
+      }
+
       return Promise.reject(refreshError);
     } finally {
       isRefreshing = false;
