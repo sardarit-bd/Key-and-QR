@@ -98,7 +98,7 @@ export const useAuthStore = create(
 
             if (typeof window !== "undefined") {
               if (storedToken && !document.cookie.includes("accessToken")) {
-                document.cookie = `accessToken=${storedToken}; path=/; max-age=120; SameSite=Lax`;
+                document.cookie = `accessToken=${storedToken}; path=/; max-age=900; SameSite=Lax`;
               }
 
               if (storedRefreshToken && !document.cookie.includes("refreshToken")) {
@@ -154,7 +154,7 @@ export const useAuthStore = create(
                 localStorage.setItem("user", JSON.stringify(filteredUser));
 
                 if (storedToken && !document.cookie.includes("accessToken")) {
-                  document.cookie = `accessToken=${storedToken}; path=/; max-age=120; SameSite=Lax`;
+                  document.cookie = `accessToken=${storedToken}; path=/; max-age=900; SameSite=Lax`;
                 }
 
                 if (storedRefreshToken && !document.cookie.includes("refreshToken")) {
@@ -238,7 +238,7 @@ export const useAuthStore = create(
 
           if (typeof window !== "undefined") {
             if (accessToken) {
-              document.cookie = `accessToken=${accessToken}; path=/; max-age=120; SameSite=Lax`;
+              document.cookie = `accessToken=${accessToken}; path=/; max-age=900; SameSite=Lax`;
             }
             if (refreshToken) {
               document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
@@ -301,7 +301,7 @@ export const useAuthStore = create(
             localStorage.setItem("user", JSON.stringify(filteredUser));
 
             if (accessToken) {
-              document.cookie = `accessToken=${accessToken}; path=/; max-age=120; SameSite=Lax`;
+              document.cookie = `accessToken=${accessToken}; path=/; max-age=900; SameSite=Lax`;
             }
             if (refreshToken) {
               document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
