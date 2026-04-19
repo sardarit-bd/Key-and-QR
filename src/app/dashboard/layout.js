@@ -65,7 +65,7 @@ export default function DashboardLayout({ children }) {
         { icon: Clock, label: 'Pending Quotes', link: "/dashboard/admin/pending" },
         { icon: QrCode, label: 'Scan History', link: "/dashboard/admin/qr-history" },
         { icon: CreditCard, label: 'Subscription', link: "/dashboard/admin/subscription" },
-        { icon: Settings, label: 'Page Settings', link: "#", isSubmenu: true, submenuItems: pageSettingsItems },
+        // { icon: Settings, label: 'Page Settings', link: "#", isSubmenu: true, submenuItems: pageSettingsItems },
         { icon: User, label: 'My Profile', link: "/dashboard/admin/profile" },
     ];
 
