@@ -149,7 +149,7 @@ export default function AdminOrdersPage() {
                 return tag &&
                     !tag.owner &&
                     tag.isActive === true &&
-                    tag.isActivated === false; 
+                    tag.isActivated === false;
             });
             setAvailableTags(trulyUnusedTags);
 
@@ -309,21 +309,31 @@ export default function AdminOrdersPage() {
     };
 
     useEffect(() => {
+        if (!isInitialized) return;
+        if (!user || user.role !== "admin") return;
+
         const timer = setTimeout(() => {
             if (currentPage === 1) fetchOrders();
             else setCurrentPage(1);
         }, 500);
+
         return () => clearTimeout(timer);
-    }, [searchTerm]);
+    }, [searchTerm, isInitialized, user, currentPage]);
 
     useEffect(() => {
+        if (!isInitialized) return;
+        if (!user || user.role !== "admin") return;
+
         setCurrentPage(1);
         fetchOrders();
-    }, [filterStatus]);
+    }, [filterStatus, isInitialized, user]);
 
     useEffect(() => {
+        if (!isInitialized) return;
+        if (!user || user.role !== "admin") return;
+
         fetchOrders();
-    }, [currentPage]);
+    }, [currentPage, isInitialized, user]);
 
     useEffect(() => {
         if (!isInitialized) return;

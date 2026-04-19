@@ -35,7 +35,7 @@ const CATEGORIES = [
 ];
 
 export default function QuotesManagementPage() {
-    const { user, accessToken } = useAuthStore();
+    const { user, isInitialized } = useAuthStore();
     const [quotes, setQuotes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -157,6 +157,9 @@ export default function QuotesManagementPage() {
 
     // Debounced search
     useEffect(() => {
+        if (!isInitialized) return;
+        if (!user || user.role !== "admin") return;
+
         const timer = setTimeout(() => {
             if (currentPage === 1) {
                 fetchQuotes();
@@ -164,24 +167,32 @@ export default function QuotesManagementPage() {
                 setCurrentPage(1);
             }
         }, 500);
+
         return () => clearTimeout(timer);
-    }, [searchTerm]);
+    }, [searchTerm, isInitialized, user, currentPage]);
 
     useEffect(() => {
+        if (!isInitialized) return;
+        if (!user || user.role !== "admin") return;
+
         setCurrentPage(1);
         fetchQuotes();
-    }, [selectedCategory]);
+    }, [selectedCategory, isInitialized, user]);
 
     useEffect(() => {
+        if (!isInitialized) return;
+        if (!user || user.role !== "admin") return;
+
         fetchQuotes();
-    }, [currentPage]);
+    }, [currentPage, isInitialized, user]);
 
     useEffect(() => {
-        if (accessToken) {
-            fetchQuotes();
-            fetchStats();
-        }
-    }, [accessToken]);
+        if (!isInitialized) return;
+        if (!user || user.role !== "admin") return;
+
+        fetchQuotes();
+        fetchStats();
+    }, [isInitialized, user]);
 
     const getCategoryBadge = (category) => {
         const cat = CATEGORIES.find(c => c.value === category);

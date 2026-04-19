@@ -28,10 +28,11 @@ export default function AdminHeroPage() {
   const [heroData, setHeroData] = useState(null);
 
   useEffect(() => {
-    if (user?.role === "admin") {
-      fetchHeroContent();
-    }
-  }, [user]);
+    if (!isInitialized) return;
+    if (!user || user.role !== "admin") return;
+
+    fetchHeroContent();
+  }, [user, isInitialized]);
 
   const fetchHeroContent = async () => {
     try {
@@ -48,7 +49,7 @@ export default function AdminHeroPage() {
 
   const handleUpdate = async () => {
     if (!heroData?._id) return;
-    
+
     setSaving(true);
     try {
       const response = await api.put(`/hero/${heroData._id}`, heroData);

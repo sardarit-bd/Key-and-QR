@@ -25,7 +25,7 @@ import toast from "react-hot-toast";
 import Loader from "@/shared/Loader";
 
 export default function UserScanHistoryPage() {
-  const { user } = useAuthStore();
+  const { user, isInitialized } = useAuthStore();
   const [scans, setScans] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -90,11 +90,12 @@ export default function UserScanHistoryPage() {
   };
 
   useEffect(() => {
-    if (user) {
-      fetchScanHistory();
-      fetchScanStats();
-    }
-  }, [user, currentPage]);
+    if (!isInitialized) return;
+    if (!user) return;
+
+    fetchScanHistory();
+    fetchScanStats();
+  }, [user, currentPage, isInitialized]);
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-US", {

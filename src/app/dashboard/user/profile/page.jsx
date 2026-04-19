@@ -30,8 +30,7 @@ import { toast } from "react-hot-toast";
 
 export default function UserProfilePage() {
     const router = useRouter();
-    const { user, updateUser, logout } = useAuthStore();
-
+    const { user, updateUser, logout, isInitialized } = useAuthStore();
     // Profile states
     const [loading, setLoading] = useState(false);
     const [isEditing, setIsEditing] = useState(false);
@@ -76,18 +75,22 @@ export default function UserProfilePage() {
     };
 
     // Initialize form data when user loads
+
+
     useEffect(() => {
-        if (user) {
-            setFormData({
-                name: user.name || "",
-                email: user.email || "",
-            });
-            // 🔥 FIX: Handle both string and object profileImage
-            const imageUrl = getProfileImageUrl();
-            setImagePreview(imageUrl);
-            fetchUserStats();
-        }
-    }, [user]);
+        if (!isInitialized) return;
+        if (!user) return;
+
+        setFormData({
+            name: user.name || "",
+            email: user.email || "",
+        });
+
+        const imageUrl = getProfileImageUrl();
+        setImagePreview(imageUrl);
+
+        fetchUserStats();
+    }, [user, isInitialized]);
 
     // Fetch user stats
     const fetchUserStats = async () => {
@@ -211,7 +214,7 @@ export default function UserProfilePage() {
             toast.success("Profile updated successfully!");
             setIsEditing(false);
             setProfileImage(null);
-            
+
             // Refresh page to show updated image
             setTimeout(() => {
                 window.location.reload();

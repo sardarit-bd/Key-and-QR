@@ -31,7 +31,7 @@ import { toast } from "react-hot-toast";
 
 export default function OrdersPage() {
     const router = useRouter();
-    const { user } = useAuthStore();
+    const { user, isInitialized } = useAuthStore();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
@@ -44,13 +44,15 @@ export default function OrdersPage() {
     const [totalSpent, setTotalSpent] = useState(0);
 
     useEffect(() => {
+        if (!isInitialized) return;
+
         if (!user) {
-            toast.error("Please login to view orders");
             router.push("/login");
             return;
         }
+
         fetchOrders();
-    }, [user, currentPage, itemsPerPage]);
+    }, [user, currentPage, itemsPerPage, isInitialized]);
 
     const fetchOrders = async () => {
         try {

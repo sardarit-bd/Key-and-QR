@@ -9,7 +9,7 @@ import { useEffect, useState } from "react";
 import { FaGoogle } from "react-icons/fa";
 
 export default function ProductsPage() {
-  const { user } = useAuthStore();
+  const { user, isInitialized } = useAuthStore();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -40,8 +40,12 @@ export default function ProductsPage() {
 
   // Fetch products
   useEffect(() => {
+    if (!isInitialized) return;
+    if (!user) return;
+    if (user.role !== "admin") return;
+
     fetchProducts();
-  }, [currentPage, searchTerm, viewTrash]);
+  }, [currentPage, searchTerm, viewTrash, isInitialized, user]);
 
   const fetchProducts = async () => {
     try {

@@ -35,7 +35,7 @@ const CATEGORY_CONFIG = {
 
 export default function UserDashboard() {
   const router = useRouter();
-  const { user } = useAuthStore();
+  const { user, isInitialized } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState("random");
   const [dailyQuote, setDailyQuote] = useState(null);
@@ -161,9 +161,7 @@ export default function UserDashboard() {
     }
   };
 
-  // Initial data load - UPDATED: now checks for user instead of accessToken
   useEffect(() => {
-    console.log("User from store:", user); // Debug log
 
     const loadData = async () => {
       setLoading(true);
@@ -180,14 +178,15 @@ export default function UserDashboard() {
       }
     };
 
+    if (!isInitialized) return;
+
     if (user) {
-      console.log("User found, loading dashboard data...");
       loadData();
     } else {
       console.log("No user found");
       setLoading(false);
     }
-  }, [user]);
+  }, [user, isInitialized]);
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";

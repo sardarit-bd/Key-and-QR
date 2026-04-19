@@ -23,7 +23,7 @@ import {
 } from "recharts";
 
 export default function AdminDashboard() {
-  const { user } = useAuthStore();
+  const { user, isInitialized } = useAuthStore();
   const [stats, setStats] = useState({
     totalProducts: 0,
     totalTags: 0,
@@ -52,8 +52,11 @@ export default function AdminDashboard() {
   const currentMonthName = months[new Date().getMonth()];
 
   useEffect(() => {
+    if (!isInitialized) return;
+    if (!user) return;
+
     fetchDashboardData();
-  }, [selectedYear]);
+  }, [selectedYear, isInitialized, user]);
 
   const fetchDashboardData = async () => {
     try {
@@ -95,7 +98,7 @@ export default function AdminDashboard() {
     const years = new Set();
     const currentYear = new Date().getFullYear();
     years.add(currentYear);
-    
+
     // Add years from orders
     orders.forEach(order => {
       if (order.createdAt) {
@@ -111,7 +114,7 @@ export default function AdminDashboard() {
     generateSalesData(orders, selectedYear);
     generateOrdersData(orders, selectedYear);
     processOrderStatusData(orders);
-    
+
     // Set default selected month to current month if not set
     if (!selectedMonth) {
       setSelectedMonth(currentMonthName);
@@ -289,7 +292,7 @@ export default function AdminDashboard() {
             </h1>
             <p className="text-gray-500 mt-2">Here's what's happening with your store today.</p>
           </div>
-          
+
           {/* Year Selector */}
           {availableYears.length > 0 && (
             <div className="flex items-center gap-2 bg-white rounded-xl p-1 border border-gray-200">
@@ -297,11 +300,10 @@ export default function AdminDashboard() {
                 <button
                   key={year}
                   onClick={() => handleYearChange(year)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    selectedYear === year
-                      ? "bg-gray-900 text-white shadow-md"
-                      : "text-gray-600 hover:bg-gray-100"
-                  }`}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${selectedYear === year
+                    ? "bg-gray-900 text-white shadow-md"
+                    : "text-gray-600 hover:bg-gray-100"
+                    }`}
                 >
                   {year}
                 </button>
@@ -336,11 +338,10 @@ export default function AdminDashboard() {
             <button
               key={month}
               onClick={() => handleMonthClick(month)}
-              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
-                selectedMonth === month
-                  ? "bg-purple-600 text-white shadow-md"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
+              className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${selectedMonth === month
+                ? "bg-purple-600 text-white shadow-md"
+                : "text-gray-600 hover:bg-gray-100"
+                }`}
             >
               {month}
               {month === currentMonthName && selectedMonth === month && (
@@ -349,7 +350,7 @@ export default function AdminDashboard() {
             </button>
           ))}
         </div>
-        
+
         {filteredData && (
           <div className="flex items-center gap-4 bg-white rounded-xl p-3 border border-gray-200">
             <div className="text-center">
@@ -400,20 +401,20 @@ export default function AdminDashboard() {
               <AreaChart data={salesData}>
                 <defs>
                   <linearGradient id="modernSales" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.4}/>
-                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.02}/>
+                    <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.4} />
+                    <stop offset="100%" stopColor="#8b5cf6" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                <XAxis 
-                  dataKey="month" 
-                  stroke="#d1d5db" 
+                <XAxis
+                  dataKey="month"
+                  stroke="#d1d5db"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                 />
-                <YAxis 
-                  stroke="#d1d5db" 
+                <YAxis
+                  stroke="#d1d5db"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -462,15 +463,15 @@ export default function AdminDashboard() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={ordersData}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                <XAxis 
-                  dataKey="month" 
-                  stroke="#d1d5db" 
+                <XAxis
+                  dataKey="month"
+                  stroke="#d1d5db"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
                 />
-                <YAxis 
-                  stroke="#d1d5db" 
+                <YAxis
+                  stroke="#d1d5db"
                   fontSize={12}
                   tickLine={false}
                   axisLine={false}
@@ -522,8 +523,8 @@ export default function AdminDashboard() {
                   labelLine={{ stroke: '#9ca3af', strokeWidth: 1 }}
                 >
                   {orderStatusData.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
+                    <Cell
+                      key={`cell-${index}`}
                       fill={entry.color}
                       className="cursor-pointer hover:opacity-80 transition-opacity"
                     />
@@ -589,7 +590,7 @@ export default function AdminDashboard() {
                       <span className={`text-xs px-2 py-0.5 rounded-full ${order.paymentStatus === "paid"
                         ? "bg-green-50 text-green-700"
                         : "bg-yellow-50 text-yellow-700"
-                      }`}>
+                        }`}>
                         {order.paymentStatus === "paid" ? "Paid" : "Pending"}
                       </span>
                     </div>
@@ -645,7 +646,7 @@ export default function AdminDashboard() {
                         : tag.isActive
                           ? "bg-yellow-50 text-yellow-700"
                           : "bg-red-50 text-red-700"
-                      }`}>
+                        }`}>
                         {tag.isActivated
                           ? "Activated"
                           : tag.isActive
