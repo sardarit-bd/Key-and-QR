@@ -17,7 +17,7 @@ import { Calendar, Sparkles } from "lucide-react";
 export default function TagPage() {
     const { tagCode } = useParams();
     const router = useRouter();
-    const { user, accessToken, isLoading: authLoading } = useAuthStore();
+    const { user, isInitialized, isLoading: authLoading } = useAuthStore();
 
     // States
     const [loading, setLoading] = useState(true);
@@ -32,10 +32,11 @@ export default function TagPage() {
     // Fetch last unlock info
     const fetchLastUnlock = async () => {
         if (!tagCode) return;
-        
+        if (!user) return;
+
         try {
             const response = await api.get(`/scan/last/${tagCode}`);
-            
+
             if (response.data?.data) {
                 setLastUnlock(response.data.data);
             }
@@ -51,14 +52,13 @@ export default function TagPage() {
             setError(null);
 
             const response = await api.get(`/tags/resolve/${tagCode}`);
-
             const data = response.data.data;
 
             setTagData(data);
             setTagStatus(data.status);
 
             // If tag is activated and user is logged in, proceed to unlock
-            if (data.status === "READY_FOR_UNLOCK" && accessToken) {
+            if (data.status === "READY_FOR_UNLOCK" && user) {
                 await checkAndUnlock(data);
             }
         } catch (err) {
@@ -72,7 +72,7 @@ export default function TagPage() {
 
     // Step 2: Check if user can unlock (for activated tags)
     const checkAndUnlock = async (resolvedTagData = tagData) => {
-        if (!accessToken) return;
+        if (!user) return;
 
         try {
             setLoading(true);
@@ -133,7 +133,7 @@ export default function TagPage() {
 
     // Handle activation after login
     const handleActivation = async () => {
-        if (!accessToken) {
+        if (!user) {
             // Redirect to login with return URL
             router.push(`/login?redirect=/t/${tagCode}`);
             return;
@@ -141,7 +141,7 @@ export default function TagPage() {
 
         try {
             setLoading(true);
-            const response = await api.post(`/tags/activate/${tagCode}`, {});
+            await api.post(`/tags/activate/${tagCode}`, {});
 
             toast.success("Tag activated successfully!");
             // Re-resolve tag status
@@ -156,19 +156,30 @@ export default function TagPage() {
     };
 
     // Initial load
+    // Initial load
     useEffect(() => {
         if (tagCode) {
             resolveTag();
-            fetchLastUnlock();
         }
     }, [tagCode]);
 
-    // When user logs in, re-check unlock
+    // Fetch last unlock only for logged in user
     useEffect(() => {
-        if (!authLoading && accessToken && tagStatus === "READY_FOR_UNLOCK" && tagData) {
+        if (!isInitialized) return;
+        if (!user) return;
+        if (!tagCode) return;
+
+        fetchLastUnlock();
+    }, [user, isInitialized, tagCode]);
+
+    // When auth finishes initializing and user exists, re-check unlock
+    useEffect(() => {
+        if (!isInitialized) return;
+
+        if (!authLoading && user && tagStatus === "READY_FOR_UNLOCK" && tagData) {
             checkAndUnlock(tagData);
         }
-    }, [accessToken, authLoading, tagStatus, tagData]);
+    }, [user, authLoading, tagStatus, tagData, isInitialized]);
 
     if (loading) {
         return <Loader text="Qkey" size={50} fullScreen />;
@@ -203,7 +214,7 @@ export default function TagPage() {
             <ActivationScreen
                 tagCode={tagCode}
                 onActivate={handleActivation}
-                isLoggedIn={!!accessToken}
+                isLoggedIn={!!user}
             />
         );
     }
@@ -225,12 +236,12 @@ export default function TagPage() {
         );
     }
 
-    if (tagStatus === "READY_FOR_UNLOCK" && !accessToken) {
+    if (isInitialized && tagStatus === "READY_FOR_UNLOCK" && !user) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
                 <div className="text-center max-w-md">
                     <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                        <CgProfile size={45} className="text-blue-400"/>
+                        <CgProfile size={45} className="text-blue-400" />
                     </div>
 
                     <h2 className="text-xl font-semibold text-gray-900 mb-2">
@@ -283,7 +294,7 @@ export default function TagPage() {
                     dailyLimit={unlockResult.data?.dailyLimit}
                     isAlreadyScanned={unlockResult.status === "ALREADY_SCANNED_TODAY"}
                 />
-                
+
                 {/* Show last unlock info if available and not already scanned today */}
                 {lastUnlock && unlockResult.status !== "ALREADY_SCANNED_TODAY" && (
                     <div className="max-w-md mx-auto mt-4 p-4 bg-gray-50 rounded-xl border border-gray-200">
@@ -316,11 +327,11 @@ export default function TagPage() {
                             </div>
                             <span className="text-sm font-medium text-gray-700">Your Last Message</span>
                         </div>
-                        
+
                         <p className="text-gray-800 italic text-center py-4 border-y border-gray-100">
                             "{lastUnlock.quote}"
                         </p>
-                        
+
                         <p className="text-xs text-gray-400 text-center mt-4">
                             {new Date(lastUnlock.scannedAt).toLocaleString()}
                         </p>

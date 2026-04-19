@@ -4,6 +4,7 @@ import Link from "next/link";
 export default function LimitReachedScreen({ dailyLimit = 3 }) {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
+
     const tomorrowFormatted = tomorrow.toLocaleDateString("en-US", {
         weekday: "long",
         month: "long",
@@ -17,7 +18,10 @@ export default function LimitReachedScreen({ dailyLimit = 3 }) {
                     <Clock size={32} className="text-white" />
                 </div>
 
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Come Back Tomorrow</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">
+                    Come Back Tomorrow
+                </h1>
+
                 <p className="text-gray-600 mb-4">
                     You've used all {dailyLimit} unlocks for today.
                 </p>
