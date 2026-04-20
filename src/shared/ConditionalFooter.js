@@ -6,8 +6,9 @@ import Footer from "../shared/Footer";
 export default function ConditionalFooter() {
   const pathname = usePathname();
   const isDashboard = pathname?.startsWith('/dashboard');
+  const isTagPage = pathname?.startsWith('/t/');
   
-  if (isDashboard) return null;
+  if (isDashboard || isTagPage) return null;
   
   return <Footer />;
 }

@@ -7,6 +7,7 @@ import MessageDisplay from "@/components/scan/MessageDisplay";
 import LimitReachedScreen from "@/components/scan/LimitReachedScreen";
 import { toast } from "react-hot-toast";
 import Loader from "@/shared/Loader";
+import MessageLoadingScreen from "@/components/scan/MessageLoadingScreen";
 
 export default function TagPage() {
     const { tagCode } = useParams();
@@ -64,7 +65,7 @@ export default function TagPage() {
     }, [tagCode]);
 
     if (loading) {
-        return <Loader text="Preparing your message..." fullScreen />;
+        return <MessageLoadingScreen category="faith" />;
     }
 
     if (error) {
@@ -105,9 +106,9 @@ export default function TagPage() {
                 message={unlockResult.data?.quote}
                 category={unlockResult.data?.category}
                 isPersonalMessage={unlockResult.data?.isPersonalMessage}
-                remaining={null}
-                dailyLimit={null}
                 isAlreadyScanned={unlockResult.status === "ALREADY_SCANNED_TODAY"}
+                quoteId={unlockResult.data?._id}
+                tagCode={tagCode}
             />
         );
     }
