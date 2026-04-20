@@ -1,4 +1,3 @@
-// app/layout.js
 import AuthProvider from "@/components/auth/AuthProvider";
 import { Geist, Geist_Mono, Inter } from "next/font/google";
 import Footer from "../shared/Footer";
