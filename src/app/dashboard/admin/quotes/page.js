@@ -3,6 +3,7 @@
 import CreateQuoteModal from "@/components/admin/quotes/CreateQuoteModal";
 import DeleteConfirmModal from "@/components/admin/quotes/DeleteConfirmModal";
 import EditQuoteModal from "@/components/admin/quotes/EditQuoteModal";
+import QuoteDetailsModal from "@/components/admin/quotes/QuoteDetailsModal";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import {
@@ -18,12 +19,14 @@ import {
     Quote,
     RefreshCw,
     Search,
-    Trash2
+    Trash2,
+    X
 } from "lucide-react";
 import { FaGoogle } from "react-icons/fa";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { toast } from "react-hot-toast";
 import Loader from "@/shared/Loader";
+import useAuthInit from "@/hooks/useAuthInit";
 
 // Category options
 const CATEGORIES = [
@@ -35,29 +38,40 @@ const CATEGORIES = [
 ];
 
 export default function QuotesManagementPage() {
-    const { user, accessToken } = useAuthStore();
+    useAuthInit();
+    const { user, isInitialized } = useAuthStore();
     const [quotes, setQuotes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [selectedQuote, setSelectedQuote] = useState(null);
 
     // Filters and Pagination
     const [searchTerm, setSearchTerm] = useState("");
+    const [activeSearchTerm, setActiveSearchTerm] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("all");
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalQuotes, setTotalQuotes] = useState(0);
+    const [isSearching, setIsSearching] = useState(false);
     const itemsPerPage = 10;
+    const searchInputRef = useRef(null);
 
     // Stats
     const [stats, setStats] = useState({
         total: 0,
         active: 0,
         inactive: 0,
-        byCategory: {}
+        byCategory: {
+            faith: 0,
+            love: 0,
+            hope: 0,
+            success: 0,
+            motivation: 0
+        }
     });
 
     // Get provider info
@@ -70,16 +84,19 @@ export default function QuotesManagementPage() {
 
     const providerInfo = getProviderInfo();
 
-    const fetchQuotes = async () => {
+    // Single fetch function
+    const fetchQuotes = useCallback(async (page, search, category) => {
+        if (!user || user.role !== "admin") return;
+        
         try {
             setLoading(true);
             setError("");
 
             const params = new URLSearchParams();
-            params.append("page", currentPage);
+            params.append("page", page);
             params.append("limit", itemsPerPage);
-            if (searchTerm) params.append("search", searchTerm);
-            if (selectedCategory !== "all") params.append("category", selectedCategory);
+            if (search) params.append("search", search);
+            if (category !== "all") params.append("category", category);
 
             const response = await api.get(`/quotes?${params.toString()}`);
             setQuotes(response.data?.data || []);
@@ -88,22 +105,34 @@ export default function QuotesManagementPage() {
         } catch (err) {
             console.error("Error fetching quotes:", err);
             setError(err.response?.data?.message || "Failed to load quotes");
-            toast.error("Failed to load quotes");
         } finally {
             setLoading(false);
+            setIsSearching(false);
         }
-    };
+    }, [user]);
 
-    const fetchStats = async () => {
+    const fetchStats = useCallback(async () => {
+        if (!user || user.role !== "admin") return;
+        
         try {
             const response = await api.get("/quotes?limit=1000");
             const allQuotes = response.data?.data || [];
+            
             const activeCount = allQuotes.filter(q => q.isActive).length;
             const inactiveCount = allQuotes.filter(q => !q.isActive).length;
 
-            const byCategory = {};
-            CATEGORIES.forEach(cat => {
-                byCategory[cat.value] = allQuotes.filter(q => q.category === cat.value).length;
+            const byCategory = {
+                faith: 0,
+                love: 0,
+                hope: 0,
+                success: 0,
+                motivation: 0
+            };
+            
+            allQuotes.forEach(quote => {
+                if (byCategory.hasOwnProperty(quote.category)) {
+                    byCategory[quote.category]++;
+                }
             });
 
             setStats({
@@ -115,13 +144,31 @@ export default function QuotesManagementPage() {
         } catch (error) {
             console.error("Error fetching stats:", error);
         }
-    };
+    }, [user]);
+
+    // Check authentication
+    useEffect(() => {
+        if (!isInitialized) return;
+        if (!user) return;
+        if (user.role !== "admin") return;
+        
+        fetchQuotes(currentPage, activeSearchTerm, selectedCategory);
+    }, [isInitialized, user, currentPage, activeSearchTerm, selectedCategory]);
+
+    // Fetch stats
+    useEffect(() => {
+        if (!isInitialized) return;
+        if (!user) return;
+        if (user.role !== "admin") return;
+        
+        fetchStats();
+    }, [isInitialized, user]);
 
     const handleToggleActive = async (id) => {
         try {
             const response = await api.patch(`/quotes/${id}/toggle`);
             toast.success(`Quote ${response.data.data.isActive ? "activated" : "deactivated"}`);
-            fetchQuotes();
+            fetchQuotes(currentPage, activeSearchTerm, selectedCategory);
             fetchStats();
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to toggle quote status");
@@ -134,7 +181,7 @@ export default function QuotesManagementPage() {
             toast.success("Quote deleted successfully");
             setShowDeleteModal(false);
             setSelectedQuote(null);
-            fetchQuotes();
+            fetchQuotes(currentPage, activeSearchTerm, selectedCategory);
             fetchStats();
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to delete quote");
@@ -143,10 +190,9 @@ export default function QuotesManagementPage() {
 
     const handleRefresh = () => {
         setSearchTerm("");
+        setActiveSearchTerm("");
         setSelectedCategory("all");
         setCurrentPage(1);
-        fetchQuotes();
-        fetchStats();
     };
 
     const handlePageChange = (newPage) => {
@@ -155,33 +201,41 @@ export default function QuotesManagementPage() {
         }
     };
 
-    // Debounced search
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            if (currentPage === 1) {
-                fetchQuotes();
-            } else {
+    const performSearch = () => {
+        if (!searchTerm || searchTerm.trim() === "") {
+            if (activeSearchTerm !== "") {
+                setActiveSearchTerm("");
                 setCurrentPage(1);
             }
-        }, 500);
-        return () => clearTimeout(timer);
-    }, [searchTerm]);
-
-    useEffect(() => {
-        setCurrentPage(1);
-        fetchQuotes();
-    }, [selectedCategory]);
-
-    useEffect(() => {
-        fetchQuotes();
-    }, [currentPage]);
-
-    useEffect(() => {
-        if (accessToken) {
-            fetchQuotes();
-            fetchStats();
+            return;
         }
-    }, [accessToken]);
+        
+        setIsSearching(true);
+        setActiveSearchTerm(searchTerm);
+        setCurrentPage(1);
+    };
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === "Enter") {
+            performSearch();
+        }
+    };
+
+    const handleClearSearch = () => {
+        setSearchTerm("");
+        setActiveSearchTerm("");
+        setCurrentPage(1);
+        searchInputRef.current?.focus();
+    };
+
+    const handleCategoryChange = (category) => {
+        setSelectedCategory(category);
+        setCurrentPage(1);
+    };
 
     const getCategoryBadge = (category) => {
         const cat = CATEGORIES.find(c => c.value === category);
@@ -192,17 +246,25 @@ export default function QuotesManagementPage() {
         ) : category;
     };
 
-    if (loading && currentPage === 1 && quotes.length === 0) {
+    if (!isInitialized) {
+        return <Loader text="QKey..." size={50} fullScreen />;
+    }
+
+    if (user && user.role !== "admin") {
+        return null;
+    }
+
+    if (loading && currentPage === 1 && quotes.length === 0 && !activeSearchTerm) {
         return <Loader text="QKey..." size={50} fullScreen />;
     }
 
     return (
         <div className="flex-1 w-full p-4 lg:p-8">
-            {/* Header with Provider Info */}
+            {/* Header */}
             <div className="mb-6">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
                     <div>
-                        <div className="flex items-center gap-2 mb-1">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <h1 className="text-2xl font-semibold text-gray-900 flex items-center gap-2">
                                 <Quote size={24} />
                                 Quotes Management
@@ -218,7 +280,7 @@ export default function QuotesManagementPage() {
                     </div>
                     <button
                         onClick={() => setShowCreateModal(true)}
-                        className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
+                        className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition cursor-pointer whitespace-nowrap"
                     >
                         <Plus size={18} />
                         Add New Quote
@@ -281,36 +343,72 @@ export default function QuotesManagementPage() {
                     <div className="flex-1 relative">
                         <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                         <input
+                            ref={searchInputRef}
                             type="text"
-                            placeholder="Search quotes..."
+                            placeholder="Search quotes by text or author..."
                             value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
+                            onChange={handleSearchChange}
+                            onKeyPress={handleKeyPress}
+                            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400"
                         />
+                        {searchTerm && (
+                            <button
+                                onClick={handleClearSearch}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition"
+                            >
+                                <X size={16} className="text-gray-400 hover:text-gray-600" />
+                            </button>
+                        )}
                     </div>
+                    
+                    <button
+                        onClick={performSearch}
+                        disabled={isSearching || !searchTerm || searchTerm.trim() === ""}
+                        className={`px-6 py-2 rounded-lg transition cursor-pointer flex items-center gap-2 whitespace-nowrap ${
+                            !searchTerm || searchTerm.trim() === ""
+                                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                : "bg-gray-900 text-white hover:bg-gray-800"
+                        }`}
+                    >
+                        {isSearching ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <span>Searching...</span>
+                            </>
+                        ) : (
+                            <>
+                                <Search size={18} />
+                                <span>Search</span>
+                            </>
+                        )}
+                    </button>
+
                     <div className="flex gap-2 flex-wrap">
                         <button
-                            onClick={() => setSelectedCategory("all")}
-                            className={`px-4 py-2 rounded-lg text-sm transition cursor-pointer ${selectedCategory === "all"
-                                ? "bg-gray-900 text-white"
-                                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                }`}
+                            onClick={() => handleCategoryChange("all")}
+                            className={`px-4 py-2 rounded-lg text-sm transition cursor-pointer whitespace-nowrap ${
+                                selectedCategory === "all"
+                                    ? "bg-gray-900 text-white"
+                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                            }`}
                         >
                             All
                         </button>
                         {CATEGORIES.map((cat) => (
                             <button
                                 key={cat.value}
-                                onClick={() => setSelectedCategory(cat.value)}
-                                className={`px-4 py-2 rounded-lg text-sm transition cursor-pointer ${selectedCategory === cat.value
-                                    ? cat.color.replace("text-", "bg-").replace("100", "500") + " text-white"
-                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                                    }`}
+                                onClick={() => handleCategoryChange(cat.value)}
+                                className={`px-4 py-2 rounded-lg text-sm transition cursor-pointer whitespace-nowrap ${
+                                    selectedCategory === cat.value
+                                        ? cat.color.replace("text-", "bg-").replace("100", "600") + " text-white"
+                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                }`}
                             >
                                 {cat.label}
                             </button>
                         ))}
                     </div>
+                    
                     <button
                         onClick={handleRefresh}
                         className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
@@ -319,12 +417,42 @@ export default function QuotesManagementPage() {
                         <RefreshCw size={18} />
                     </button>
                 </div>
+
+                {activeSearchTerm && (
+                    <div className="mt-3 flex items-center gap-2 flex-wrap">
+                        <div className="inline-flex items-center gap-2 px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-sm">
+                            <Search size={14} />
+                            <span>Showing results for: <strong>"{activeSearchTerm}"</strong></span>
+                            <button
+                                onClick={handleClearSearch}
+                                className="ml-1 p-0.5 hover:bg-blue-100 rounded-full transition"
+                            >
+                                <X size={14} />
+                            </button>
+                        </div>
+                        {totalQuotes > 0 && (
+                            <span className="text-sm text-gray-500">
+                                Found {totalQuotes} result{totalQuotes !== 1 ? 's' : ''}
+                            </span>
+                        )}
+                    </div>
+                )}
             </div>
 
-            {/* Error Message */}
             {error && (
                 <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-red-600">
                     {error}
+                </div>
+            )}
+
+            {loading && quotes.length > 0 && (
+                <div className="relative mb-6">
+                    <div className="absolute inset-0 bg-white/50 z-10 flex items-center justify-center rounded-lg">
+                        <div className="bg-white p-4 rounded-lg shadow-lg flex items-center gap-3">
+                            <div className="w-5 h-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-sm text-gray-600">Updating quotes...</span>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -343,7 +471,6 @@ export default function QuotesManagementPage() {
                     </div>
                 ) : (
                     <>
-                        {/* Desktop Table */}
                         <div className="hidden lg:block overflow-x-auto">
                             <table className="w-full">
                                 <thead className="bg-gray-50 border-b border-gray-200">
@@ -362,15 +489,21 @@ export default function QuotesManagementPage() {
                                                 <div className="text-sm text-gray-900 max-w-md">
                                                     "{quote.text}"
                                                 </div>
+                                                {quote.author && (
+                                                    <div className="text-xs text-gray-500 mt-1">
+                                                        — {quote.author}
+                                                    </div>
+                                                )}
                                             </td>
                                             <td className="p-4">
                                                 {getCategoryBadge(quote.category)}
                                             </td>
                                             <td className="p-4">
-                                                <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${quote.isActive
-                                                    ? "bg-green-100 text-green-700"
-                                                    : "bg-red-100 text-red-700"
-                                                    }`}>
+                                                <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${
+                                                    quote.isActive
+                                                        ? "bg-green-100 text-green-700"
+                                                        : "bg-red-100 text-red-700"
+                                                }`}>
                                                     {quote.isActive ? <Power size={10} /> : <PowerOff size={10} />}
                                                     {quote.isActive ? "Active" : "Inactive"}
                                                 </span>
@@ -380,6 +513,16 @@ export default function QuotesManagementPage() {
                                             </td>
                                             <td className="p-4">
                                                 <div className="flex items-center gap-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedQuote(quote);
+                                                            setShowDetailsModal(true);
+                                                        }}
+                                                        className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"
+                                                        title="View Details"
+                                                    >
+                                                        <Eye size={16} className="text-gray-500 group-hover:text-blue-600" />
+                                                    </button>
                                                     <button
                                                         onClick={() => handleToggleActive(quote._id)}
                                                         className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"
@@ -426,18 +569,33 @@ export default function QuotesManagementPage() {
                                     <div className="text-sm text-gray-900 italic">
                                         "{quote.text}"
                                     </div>
+                                    {quote.author && (
+                                        <div className="text-xs text-gray-500 mt-1">
+                                            — {quote.author}
+                                        </div>
+                                    )}
                                     <div className="flex items-center justify-between mt-3">
                                         <div className="flex items-center gap-2">
                                             {getCategoryBadge(quote.category)}
-                                            <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${quote.isActive
-                                                ? "bg-green-100 text-green-700"
-                                                : "bg-red-100 text-red-700"
-                                                }`}>
+                                            <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${
+                                                quote.isActive
+                                                    ? "bg-green-100 text-green-700"
+                                                    : "bg-red-100 text-red-700"
+                                            }`}>
                                                 {quote.isActive ? <Power size={10} /> : <PowerOff size={10} />}
                                                 {quote.isActive ? "Active" : "Inactive"}
                                             </span>
                                         </div>
                                         <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => {
+                                                    setSelectedQuote(quote);
+                                                    setShowDetailsModal(true);
+                                                }}
+                                                className="p-2 hover:bg-gray-100 rounded-lg transition cursor-pointer"
+                                            >
+                                                <Eye size={16} className="text-blue-600" />
+                                            </button>
                                             <button
                                                 onClick={() => handleToggleActive(quote._id)}
                                                 className="p-2 hover:bg-gray-100 rounded-lg transition cursor-pointer"
@@ -477,15 +635,15 @@ export default function QuotesManagementPage() {
 
                         {/* Pagination */}
                         {totalPages > 1 && (
-                            <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
-                                <div className="text-sm text-gray-500">
+                            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-6 py-4 border-t border-gray-200 bg-gray-50">
+                                <div className="text-sm text-gray-500 order-2 sm:order-1">
                                     Showing {((currentPage - 1) * itemsPerPage) + 1} - {Math.min(currentPage * itemsPerPage, totalQuotes)} of {totalQuotes} quotes
                                 </div>
-                                <div className="flex gap-2">
+                                <div className="flex gap-2 order-1 sm:order-2">
                                     <button
                                         onClick={() => handlePageChange(currentPage - 1)}
                                         disabled={currentPage === 1}
-                                        className="px-3 py-1 rounded-lg text-sm border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                        className="px-3 py-1 rounded-lg text-sm border border-gray-300 bg-white text-gray-700 cursor-pointer hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
                                     >
                                         <ChevronLeft size={14} className="inline mr-1" />
                                         Previous
@@ -493,7 +651,7 @@ export default function QuotesManagementPage() {
                                     <button
                                         onClick={() => handlePageChange(currentPage + 1)}
                                         disabled={currentPage === totalPages}
-                                        className="px-3 py-1 rounded-lg text-sm border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
+                                        className="px-3 py-1 rounded-lg text-sm border border-gray-300 bg-white text-gray-700 cursor-pointer  hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition"
                                     >
                                         Next
                                         <ChevronRight size={14} className="inline ml-1" />
@@ -510,7 +668,7 @@ export default function QuotesManagementPage() {
                 isOpen={showCreateModal}
                 onClose={() => setShowCreateModal(false)}
                 onSuccess={() => {
-                    fetchQuotes();
+                    fetchQuotes(currentPage, activeSearchTerm, selectedCategory);
                     fetchStats();
                 }}
             />
@@ -523,7 +681,7 @@ export default function QuotesManagementPage() {
                 }}
                 quote={selectedQuote}
                 onSuccess={() => {
-                    fetchQuotes();
+                    fetchQuotes(currentPage, activeSearchTerm, selectedCategory);
                     fetchStats();
                 }}
                 CATEGORIES={CATEGORIES}
@@ -537,6 +695,15 @@ export default function QuotesManagementPage() {
                 }}
                 quote={selectedQuote}
                 onConfirm={handleDelete}
+            />
+
+            <QuoteDetailsModal
+                isOpen={showDetailsModal}
+                onClose={() => {
+                    setShowDetailsModal(false);
+                    setSelectedQuote(null);
+                }}
+                quote={selectedQuote}
             />
         </div>
     );

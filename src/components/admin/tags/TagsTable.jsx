@@ -34,12 +34,11 @@ export default function TagsTable({
     const getOwnerProviderIcon = (owner) => {
         if (!owner) return null;
         if (owner.provider === "google") {
-            return <FaGoogle size={10} className="text-blue-500 ml-1" />;
+            return <FaGoogle size={10} className="text-blue-500 ml-1 flex-shrink-0" />;
         }
-        return <Mail size={10} className="text-gray-400 ml-1" />;
+        return <Mail size={10} className="text-gray-400 ml-1 flex-shrink-0" />;
     };
 
-    // Check if tag is assigned to any active order before disabling
     const checkTagAssignment = async (tagId) => {
         try {
             const response = await api.get(`/orders/admin/all?limit=100`);
@@ -59,7 +58,6 @@ export default function TagsTable({
     };
 
     const handleToggleActive = async (tag) => {
-        // If trying to disable an activated tag that's assigned to an order
         if (tag.isActive && tag.isActivated) {
             const isAssignedToOrder = await checkTagAssignment(tag._id);
             if (isAssignedToOrder) {
@@ -128,45 +126,45 @@ export default function TagsTable({
         <>
             <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
                 <div className="overflow-x-auto">
-                    <table className="w-full min-w-[800px]">
+                    <table className="w-full">
                         <thead className="bg-gray-50 border-b border-gray-200">
                             <tr>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Tag Code</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Owner</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Status</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Activation</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Subscription</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Created</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Activated At</th>
-                                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Actions</th>
+                                <th className="px-3 py-3 text-left text-xs md:text-sm font-semibold text-gray-900">Tag Code</th>
+                                <th className="px-3 py-3 text-left text-xs md:text-sm font-semibold text-gray-900">Owner</th>
+                                <th className="px-3 py-3 text-left text-xs md:text-sm font-semibold text-gray-900">Status</th>
+                                <th className="px-3 py-3 text-left text-xs md:text-sm font-semibold text-gray-900">Activation</th>
+                                <th className="px-3 py-3 text-left text-xs md:text-sm font-semibold text-gray-900">Subscription</th>
+                                <th className="px-3 py-3 text-left text-xs md:text-sm font-semibold text-gray-900">Created</th>
+                                <th className="px-3 py-3 text-left text-xs md:text-sm font-semibold text-gray-900">Activated At</th>
+                                <th className="px-3 py-3 text-left text-xs md:text-sm font-semibold text-gray-900">Actions</th>
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-gray-200">
                             {tags.map((tag) => (
                                 <tr key={tag._id} className="hover:bg-gray-50 transition">
-                                    <td className="px-6 py-4">
-                                        <span className="font-mono text-sm font-medium text-gray-900">
+                                    <td className="px-3 py-3">
+                                        <span className="font-mono text-xs md:text-sm font-medium text-gray-900 break-all">
                                             {tag.tagCode}
                                         </span>
                                     </td>
 
-                                    <td className="px-6 py-4">
+                                    <td className="px-3 py-3">
                                         {tag.owner ? (
-                                            <div className="flex items-center gap-2">
-                                                <User size={14} className="text-gray-400" />
-                                                <span className="text-sm text-gray-600">
+                                            <div className="flex items-center gap-1 md:gap-2 flex-wrap">
+                                                <User size={12} className="text-gray-400 flex-shrink-0" />
+                                                <span className="text-xs md:text-sm text-gray-600 break-all">
                                                     {tag.owner.name || tag.owner.email}
                                                 </span>
                                                 {getOwnerProviderIcon(tag.owner)}
                                             </div>
                                         ) : (
-                                            <span className="text-sm text-gray-400">Unassigned</span>
+                                            <span className="text-xs md:text-sm text-gray-400">Unassigned</span>
                                         )}
                                     </td>
 
-                                    <td className="px-6 py-4">
-                                        <div className="flex items-center gap-2">
-                                            <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${
+                                    <td className="px-3 py-3">
+                                        <div className="flex items-center gap-1 md:gap-2 flex-wrap">
+                                            <span className={`inline-flex items-center gap-1 px-1.5 md:px-2 py-0.5 md:py-1 text-xs font-medium rounded-full ${
                                                 tag.isActive
                                                     ? "bg-green-100 text-green-800"
                                                     : "bg-red-100 text-red-800"
@@ -182,11 +180,11 @@ export default function TagsTable({
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4">
+                                    <td className="px-3 py-3">
                                         <StatusBadge tag={tag} />
                                     </td>
 
-                                    <td className="px-6 py-4">
+                                    <td className="px-3 py-3">
                                         <SubscriptionTypeSelect
                                             value={tag.subscriptionType}
                                             onChange={(newType) => handleSubscriptionChange(tag._id, newType)}
@@ -195,29 +193,29 @@ export default function TagsTable({
                                         />
                                     </td>
 
-                                    <td className="px-6 py-4">
+                                    <td className="px-3 py-3">
                                         <div className="flex items-center gap-1">
-                                            <Calendar size={12} className="text-gray-400" />
-                                            <span className="text-sm text-gray-600">
+                                            <Calendar size={12} className="text-gray-400 flex-shrink-0" />
+                                            <span className="text-xs md:text-sm text-gray-600 whitespace-nowrap">
                                                 {formatDate(tag.createdAt)}
                                             </span>
                                         </div>
                                     </td>
 
-                                    <td className="px-6 py-4">
-                                        <span className="text-sm text-gray-600">
+                                    <td className="px-3 py-3">
+                                        <span className="text-xs md:text-sm text-gray-600 whitespace-nowrap">
                                             {tag.activatedAt ? formatDate(tag.activatedAt) : "—"}
                                         </span>
                                     </td>
 
-                                    <td className="px-6 py-4">
-                                        <div className="flex gap-2">
+                                    <td className="px-3 py-3">
+                                        <div className="flex gap-1 md:gap-2">
                                             <button
                                                 onClick={() => onShowQR(tag)}
                                                 className="p-1.5 text-blue-600 hover:bg-blue-50 rounded transition cursor-pointer"
                                                 title="Show QR Code"
                                             >
-                                                <QrCode size={18} />
+                                                <QrCode size={16} />
                                             </button>
 
                                             <Link
@@ -226,7 +224,7 @@ export default function TagsTable({
                                                 className="p-1.5 text-gray-600 hover:bg-gray-100 rounded transition"
                                                 title="Open Tag"
                                             >
-                                                <ExternalLink size={18} />
+                                                <ExternalLink size={16} />
                                             </Link>
 
                                             <button
@@ -242,9 +240,9 @@ export default function TagsTable({
                                                 {updating === tag._id ? (
                                                     <div className="w-4 h-4 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
                                                 ) : tag.isActive ? (
-                                                    <PowerOff size={16} />
+                                                    <PowerOff size={14} />
                                                 ) : (
-                                                    <Power size={16} />
+                                                    <Power size={14} />
                                                 )}
                                             </button>
                                         </div>
@@ -256,7 +254,7 @@ export default function TagsTable({
                 </div>
 
                 {totalPages > 1 && (
-                    <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
+                    <div className="flex items-center justify-between px-4 py-4 border-t border-gray-200 bg-gray-50 flex-wrap gap-2">
                         <div className="text-sm text-gray-500">
                             Page {currentPage} of {totalPages}
                         </div>
