@@ -57,8 +57,8 @@ const canCancel = (status) => {
 };
 
 const canRefund = (order) => {
-    return order.paymentStatus === "paid" &&
-        order.refundStatus === "none" &&
+    return order.refundStatus === "requested" &&
+        order.paymentStatus === "paid" &&
         !["cancelled", "returned"].includes(order.fulfillmentStatus);
 };
 
@@ -162,7 +162,7 @@ export default function OrderDetailsModal({
                         </div>
                     </div>
 
-                    {/* 🆕 Shipping Address Section - Responsive */}
+                    {/* Shipping Address Section */}
                     {hasShippingAddress && (
                         <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                             <h4 className="font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
@@ -224,7 +224,7 @@ export default function OrderDetailsModal({
                         </div>
                     )}
 
-                    {/* Product Info - Responsive */}
+                    {/* Product Info */}
                     <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                         <h4 className="font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
                             <Package size={16} className="text-green-500" />
@@ -256,7 +256,7 @@ export default function OrderDetailsModal({
                         </div>
                     </div>
 
-                    {/* Order Info - Responsive */}
+                    {/* Order Info */}
                     <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                         <h4 className="font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
                             <Tag size={16} className="text-purple-500" />

@@ -6,10 +6,7 @@ import {
     ChevronDown, Check
 } from "lucide-react";
 import { FulfillmentStatusSelect } from "./FulfillmentStatus";
-import { createPortal } from "react-dom";
 import { TableTooltip } from "./TableTooltip";
-
-
 
 const getPaymentStatusBadge = (status) => {
     const styles = {
@@ -37,8 +34,8 @@ const canCancel = (status) => {
 };
 
 const canRefund = (order) => {
-    return order.paymentStatus === "paid" &&
-        order.refundStatus === "none" &&
+    return order.refundStatus === "requested" &&
+        order.paymentStatus === "paid" &&
         !["cancelled", "returned"].includes(order.fulfillmentStatus);
 };
 
@@ -140,7 +137,7 @@ export default function OrdersTable({
                                         </span>
                                         {order.refundStatus === "requested" && (
                                             <span className="text-xs bg-orange-100 text-orange-700 px-1 py-0.5 rounded-full w-fit">
-                                                Refund Req
+                                                Refund Requested
                                             </span>
                                         )}
                                     </div>
@@ -220,7 +217,7 @@ export default function OrdersTable({
                                             <button
                                                 onClick={() => onProcessRefund(order)}
                                                 className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"
-                                                title="Process Refund"
+                                                title="Process Refund Request"
                                                 disabled={processingAction}
                                             >
                                                 <RotateCcw size={16} className="text-gray-500 group-hover:text-purple-600" />

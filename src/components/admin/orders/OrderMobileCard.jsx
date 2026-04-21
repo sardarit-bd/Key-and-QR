@@ -58,6 +58,18 @@ const formatDate = (date) => {
     });
 };
 
+// ✅ FIXED: Refund button should only show when refundStatus is "requested"
+const canRefund = (order) => {
+    return order.refundStatus === "requested" &&
+        order.paymentStatus === "paid" &&
+        !["cancelled", "returned"].includes(order.fulfillmentStatus);
+};
+
+const canReturn = (order) => {
+    return ["shipped", "delivered"].includes(order.fulfillmentStatus) &&
+        order.returnStatus === "none";
+};
+
 // কাস্টম স্ট্যাটাস সিলেক্টর কম্পোনেন্ট
 function CustomStatusSelect({ currentStatus, hasTag, onStatusChange, isUpdating, orderId }) {
     const [isOpen, setIsOpen] = useState(false);
@@ -179,6 +191,8 @@ export default function OrderMobileCard({
     onViewDetails,
     onUpdateStatus,
     onCancelOrder,
+    onProcessRefund,      // ✅ নতুন প্রপস যোগ করুন
+    onProcessReturn,      // ✅ নতুন প্রপস যোগ করুন
     updatingStatus,
     statusUpdateOrder
 }) {
@@ -229,6 +243,21 @@ export default function OrderMobileCard({
                             {getFulfillmentStatusIcon(currentStatus)}
                             {currentStatus}
                         </span>
+                        {order.refundStatus === "requested" && (
+                            <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full">
+                                Refund Req
+                            </span>
+                        )}
+                        {order.returnStatus === "requested" && (
+                            <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full">
+                                Return Req
+                            </span>
+                        )}
+                        {order.returnStatus === "shipped" && (
+                            <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">
+                                Return Shipped
+                            </span>
+                        )}
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -297,7 +326,7 @@ export default function OrderMobileCard({
                         <span className="text-gray-900">{formatDate(order.createdAt)}</span>
                     </div>
 
-                    {/* Custom Status Update Section */}
+                    {/* Status Update Section */}
                     {!isStatusLocked && (
                         <div className="flex justify-between text-sm items-center flex-wrap gap-2 pt-1">
                             <span className="text-gray-500">Update Status:</span>
@@ -321,17 +350,60 @@ export default function OrderMobileCard({
                         </div>
                     )}
 
-                    {canCancel && (
-                        <div className="pt-1">
+                    {/* ✅ Action Buttons Grid for Mobile */}
+                    <div className="grid grid-cols-2 gap-2 pt-2">
+                        {!order.assignedTag && order.fulfillmentStatus !== "cancelled" && order.fulfillmentStatus !== "returned" && (
+                            <button
+                                onClick={() => onAssignTag(order)}
+                                className="py-2 text-center text-sm text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition"
+                            >
+                                <Tag size={14} className="inline mr-1" />
+                                Assign Tag
+                            </button>
+                        )}
+
+                        {canCancel && (
                             <button
                                 onClick={() => onCancelOrder(order)}
-                                className="w-full py-2 text-center text-sm text-red-600 font-medium border border-red-200 rounded-lg hover:bg-red-50 transition"
+                                className="py-2 text-center text-sm text-red-600 font-medium border border-red-200 rounded-lg hover:bg-red-50 transition"
                             >
                                 <Ban size={14} className="inline mr-1" />
                                 Cancel Order
                             </button>
-                        </div>
-                    )}
+                        )}
+
+                        {/* ✅ Refund Button for Mobile */}
+                        {canRefund(order) && (
+                            <button
+                                onClick={() => onProcessRefund(order)}
+                                className="py-2 text-center text-sm text-purple-600 font-medium border border-purple-200 rounded-lg hover:bg-purple-50 transition"
+                            >
+                                <RotateCcw size={14} className="inline mr-1" />
+                                Process Refund
+                            </button>
+                        )}
+
+                        {/* ✅ Return Button for Mobile */}
+                        {canReturn(order) && (
+                            <button
+                                onClick={() => onProcessReturn(order)}
+                                className="py-2 text-center text-sm text-orange-600 font-medium border border-orange-200 rounded-lg hover:bg-orange-50 transition"
+                            >
+                                <Undo2 size={14} className="inline mr-1" />
+                                Process Return
+                            </button>
+                        )}
+
+                        {order.returnStatus === "shipped" && (
+                            <button
+                                onClick={() => onCompleteReturn(order._id)}
+                                className="py-2 text-center text-sm text-green-600 font-medium border border-green-200 rounded-lg hover:bg-green-50 transition"
+                            >
+                                <CheckCircle size={14} className="inline mr-1" />
+                                Complete Return
+                            </button>
+                        )}
+                    </div>
 
                     <div className="pt-1">
                         <button

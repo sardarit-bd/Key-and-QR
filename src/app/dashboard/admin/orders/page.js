@@ -2,15 +2,14 @@
 
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
-import { Package, RefreshCw, XCircle, Mail } from "lucide-react";
+import { Package, RefreshCw, XCircle, Mail, Search, X } from "lucide-react";
 import { FaGoogle } from "react-icons/fa";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { toast } from "react-hot-toast";
 import OrderDetailsModal from "@/components/admin/orders/OrderDetailsModal";
 import AssignTagModal from "@/components/admin/orders/AssignTagModal";
 import OrderMobileCard from "@/components/admin/orders/OrderMobileCard";
 import OrdersTable from "@/components/admin/orders/OrdersTable";
-import OrderFilters from "@/components/admin/orders/OrderFilters";
 import OrderStatsCards from "@/components/admin/orders/OrderStatsCards";
 import CancelOrderModal from "@/components/admin/orders/CancelOrderModal";
 import ProcessRefundModal from "@/components/admin/orders/ProcessRefundModal";
@@ -35,12 +34,16 @@ export default function AdminOrdersPage() {
     const [statusUpdateOrder, setStatusUpdateOrder] = useState(null);
     const [processingAction, setProcessingAction] = useState(false);
 
+    // Search and Filters
     const [searchTerm, setSearchTerm] = useState("");
+    const [activeSearchTerm, setActiveSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState("all");
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [totalOrders, setTotalOrders] = useState(0);
+    const [isSearching, setIsSearching] = useState(false);
     const itemsPerPage = 10;
+    const searchInputRef = useRef(null);
 
     const { user, isInitialized } = useAuthStore();
 
@@ -59,21 +62,17 @@ export default function AdminOrdersPage() {
         paid: 0, unpaid: 0, refunded: 0
     });
 
-    const fetchOrders = async () => {
+    const fetchOrders = useCallback(async () => {
+        if (!user || user.role !== "admin") return;
+
         try {
             setLoading(true);
             setError(null);
 
-            if (!user) {
-                setError("Please login to view orders");
-                toast.error("Please login to view orders");
-                return;
-            }
-
             const params = new URLSearchParams();
             params.append("page", currentPage);
             params.append("limit", itemsPerPage);
-            if (searchTerm) params.append("search", searchTerm);
+            if (activeSearchTerm) params.append("search", activeSearchTerm);
             if (filterStatus !== "all") params.append("fulfillmentStatus", filterStatus);
 
             const response = await api.get(`/orders/admin/all?${params.toString()}`);
@@ -100,22 +99,24 @@ export default function AdminOrdersPage() {
             }
         } finally {
             setLoading(false);
+            setIsSearching(false);
         }
-    };
+    }, [user, currentPage, activeSearchTerm, filterStatus]);
 
-    const fetchStats = async () => {
+    const fetchStats = useCallback(async () => {
+        if (!user || user.role !== "admin") return;
+
         try {
             const response = await api.get("/orders/admin/stats");
             setStats(response.data?.data || stats);
         } catch (error) {
             console.error("Error fetching stats:", error);
         }
-    };
+    }, [user]);
 
     const fetchAvailableTags = async () => {
         try {
             setLoadingTags(true);
-
             const timestamp = Date.now();
             const response = await api.get(`/tags?limit=1000&unused=true&_=${timestamp}`);
 
@@ -162,6 +163,62 @@ export default function AdminOrdersPage() {
         }
     };
 
+    // Fetch data on dependency changes
+    useEffect(() => {
+        if (!isInitialized || !user || user.role !== "admin") return;
+        fetchOrders();
+    }, [fetchOrders, isInitialized, user]);
+
+    useEffect(() => {
+        if (!isInitialized || !user || user.role !== "admin") return;
+        fetchStats();
+    }, [fetchStats, isInitialized, user]);
+
+    // Search handlers
+    const performSearch = () => {
+        if (!searchTerm || searchTerm.trim() === "") {
+            if (activeSearchTerm !== "") {
+                setActiveSearchTerm("");
+                setCurrentPage(1);
+            }
+            return;
+        }
+
+        setIsSearching(true);
+        setActiveSearchTerm(searchTerm);
+        setCurrentPage(1);
+    };
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+    };
+
+    const handleKeyPress = (e) => {
+        if (e.key === "Enter") {
+            performSearch();
+        }
+    };
+
+    const handleClearSearch = () => {
+        setSearchTerm("");
+        setActiveSearchTerm("");
+        setCurrentPage(1);
+        searchInputRef.current?.focus();
+    };
+
+    const handleRefresh = () => {
+        setSearchTerm("");
+        setActiveSearchTerm("");
+        setFilterStatus("all");
+        setCurrentPage(1);
+    };
+
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= totalPages) {
+            setCurrentPage(newPage);
+        }
+    };
+
     const handleOpenTagModal = async (order) => {
         setSelectedOrder(order);
         setSelectedTag("");
@@ -180,16 +237,10 @@ export default function AdminOrdersPage() {
             toast.success("Tag assigned successfully");
             setShowTagModal(false);
             setSelectedTag("");
-            // Refresh all data
-            await Promise.all([
-                fetchAvailableTags(),
-                fetchOrders(),
-                fetchStats()
-            ]);
+            await Promise.all([fetchAvailableTags(), fetchOrders(), fetchStats()]);
         } catch (err) {
             const errorMsg = err.response?.data?.message || "Failed to assign tag";
             toast.error(errorMsg);
-            // If tag is already assigned, refresh the list
             if (errorMsg.includes("already") || errorMsg.includes("owner")) {
                 await fetchAvailableTags();
             }
@@ -295,54 +346,15 @@ export default function AdminOrdersPage() {
         }
     };
 
-    const handleRefresh = () => {
-        setSearchTerm("");
-        setFilterStatus("all");
-        setCurrentPage(1);
-        Promise.all([fetchOrders(), fetchStats()]);
-    };
+    if (!isInitialized) {
+        return <Loader text="QKey..." size={50} fullScreen />;
+    }
 
-    const handlePageChange = (newPage) => {
-        if (newPage >= 1 && newPage <= totalPages) {
-            setCurrentPage(newPage);
-        }
-    };
+    if (user && user.role !== "admin") {
+        return null;
+    }
 
-    useEffect(() => {
-        if (!isInitialized) return;
-        if (!user || user.role !== "admin") return;
-
-        const timer = setTimeout(() => {
-            if (currentPage === 1) fetchOrders();
-            else setCurrentPage(1);
-        }, 500);
-
-        return () => clearTimeout(timer);
-    }, [searchTerm, isInitialized, user, currentPage]);
-
-    useEffect(() => {
-        if (!isInitialized) return;
-        if (!user || user.role !== "admin") return;
-
-        setCurrentPage(1);
-        fetchOrders();
-    }, [filterStatus, isInitialized, user]);
-
-    useEffect(() => {
-        if (!isInitialized) return;
-        if (!user || user.role !== "admin") return;
-
-        fetchOrders();
-    }, [currentPage, isInitialized, user]);
-
-    useEffect(() => {
-        if (!isInitialized) return;
-        if (user?.role === "admin") {
-            Promise.all([fetchOrders(), fetchStats()]);
-        }
-    }, [user, isInitialized]);
-
-    if (loading && currentPage === 1 && orders.length === 0) {
+    if (loading && currentPage === 1 && orders.length === 0 && !activeSearchTerm) {
         return <Loader text="QKey..." size={50} fullScreen />;
     }
 
@@ -361,14 +373,112 @@ export default function AdminOrdersPage() {
 
             <OrderStatsCards stats={stats} totalOrders={totalOrders} />
 
-            <OrderFilters
-                searchTerm={searchTerm}
-                setSearchTerm={setSearchTerm}
-                filterStatus={filterStatus}
-                setFilterStatus={setFilterStatus}
-                onRefresh={handleRefresh}
-            />
+            {/* Search Section with Manual Search */}
+            <div className="bg-white rounded-lg border border-gray-200 p-4 mb-6">
+                <div className="flex flex-col lg:flex-row gap-4">
+                    <div className="flex-1 relative">
+                        <Search size={18} className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                        <input
+                            ref={searchInputRef}
+                            type="text"
+                            placeholder="Search by order ID, customer name, email, or product..."
+                            value={searchTerm}
+                            onChange={handleSearchChange}
+                            onKeyPress={handleKeyPress}
+                            className="w-full pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 text-sm"
+                        />
+                        {searchTerm && (
+                            <button
+                                onClick={handleClearSearch}
+                                className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition"
+                            >
+                                <X size={16} className="text-gray-400 hover:text-gray-600" />
+                            </button>
+                        )}
+                    </div>
 
+                    <button
+                        onClick={performSearch}
+                        disabled={isSearching || !searchTerm || searchTerm.trim() === ""}
+                        className={`px-6 py-2 rounded-lg transition cursor-pointer flex items-center gap-2 whitespace-nowrap ${!searchTerm || searchTerm.trim() === ""
+                                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                                : "bg-gray-900 text-white hover:bg-gray-800"
+                            }`}
+                    >
+                        {isSearching ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                <span>Searching...</span>
+                            </>
+                        ) : (
+                            <>
+                                <Search size={18} />
+                                <span>Search</span>
+                            </>
+                        )}
+                    </button>
+
+                    <div className="flex gap-2 flex-wrap">
+                        {[
+                            { value: "all", label: "All Orders" },
+                            { value: "pending", label: "Pending" },
+                            { value: "assigned", label: "Assigned" },
+                            { value: "shipped", label: "Shipped" },
+                            { value: "delivered", label: "Delivered" }
+                        ].map((filter) => (
+                            <button
+                                key={filter.value}
+                                onClick={() => {
+                                    setFilterStatus(filter.value);
+                                    setCurrentPage(1);
+                                }}
+                                className={`px-4 py-2 rounded-lg text-sm transition cursor-pointer whitespace-nowrap ${filterStatus === filter.value
+                                        ? "bg-gray-900 text-white"
+                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                    }`}
+                            >
+                                {filter.label}
+                            </button>
+                        ))}
+                    </div>
+
+                    <button
+                        onClick={handleRefresh}
+                        className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
+                        title="Refresh"
+                    >
+                        <RefreshCw size={18} />
+                    </button>
+                </div>
+
+                {activeSearchTerm && (
+                    <div className="mt-3 flex items-center gap-2 flex-wrap">
+                        <div className="inline-flex items-center gap-2 px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-sm">
+                            <Search size={14} />
+                            <span>Showing results for: <strong>"{activeSearchTerm}"</strong></span>
+                            <button
+                                onClick={handleClearSearch}
+                                className="ml-1 p-0.5 hover:bg-blue-100 rounded-full transition"
+                            >
+                                <X size={14} />
+                            </button>
+                        </div>
+                        {totalOrders > 0 && (
+                            <span className="text-sm text-gray-500">
+                                Found {totalOrders} order{totalOrders !== 1 ? 's' : ''}
+                            </span>
+                        )}
+                    </div>
+                )}
+            </div>
+
+            {error && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6 text-red-600">
+                    {error}
+                </div>
+            )}
+
+            {/* Desktop Table */}
             <div className="hidden lg:block bg-white rounded-lg border border-gray-200 overflow-hidden">
                 <OrdersTable
                     orders={orders}
@@ -402,6 +512,7 @@ export default function AdminOrdersPage() {
                 )}
             </div>
 
+            {/* Mobile Cards */}
             <div className="lg:hidden bg-white rounded-lg border border-gray-200 overflow-hidden">
                 {orders.length === 0 ? (
                     <div className="p-12 text-center text-gray-500">
@@ -418,6 +529,8 @@ export default function AdminOrdersPage() {
                                 onViewDetails={(order) => { setSelectedOrder(order); setShowDetailsModal(true); }}
                                 onUpdateStatus={handleUpdateStatus}
                                 onCancelOrder={(order) => { setSelectedOrder(order); setShowCancelModal(true); }}
+                                onProcessRefund={(order) => { setSelectedOrder(order); setShowRefundModal(true); }}
+                                onProcessReturn={(order) => { setSelectedOrder(order); setShowReturnModal(true); }}
                                 updatingStatus={updatingStatus}
                                 statusUpdateOrder={statusUpdateOrder}
                             />
@@ -441,6 +554,7 @@ export default function AdminOrdersPage() {
                 )}
             </div>
 
+            {/* Modals */}
             <AssignTagModal
                 isOpen={showTagModal}
                 onClose={() => {
