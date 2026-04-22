@@ -23,7 +23,7 @@ import {
     XCircle
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 
 const CATEGORY_COLORS = {
     faith: "bg-purple-100 text-purple-700",
@@ -175,6 +175,7 @@ export default function PendingQuotesPage() {
 
     return (
         <div className="flex-1 w-full p-4 lg:p-8">
+            <Toaster position="top-right" />
             {/* Header */}
             <div className="mb-6">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">

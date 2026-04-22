@@ -120,7 +120,7 @@ export default function UserScanHistoryPage() {
   }
 
   return (
-    <div className="flex-1 w-full p-4 lg:p-8 bg-white">
+    <div className="flex-1 w-full p-4 lg:p-3 bg-white">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-1">

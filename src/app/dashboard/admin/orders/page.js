@@ -5,7 +5,7 @@ import { useAuthStore } from "@/store/authStore";
 import { Package, RefreshCw, XCircle, Mail, Search, X } from "lucide-react";
 import { FaGoogle } from "react-icons/fa";
 import { useEffect, useState, useCallback, useRef } from "react";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 import OrderDetailsModal from "@/components/admin/orders/OrderDetailsModal";
 import AssignTagModal from "@/components/admin/orders/AssignTagModal";
 import OrderMobileCard from "@/components/admin/orders/OrderMobileCard";
@@ -360,6 +360,7 @@ export default function AdminOrdersPage() {
 
     return (
         <div className="flex-1 w-full p-4 lg:p-8">
+                <Toaster position="top-right" />
             <div className="mb-6">
                 <div className="flex items-center gap-2 mb-1">
                     <h1 className="text-2xl font-semibold text-gray-900">Orders Management</h1>

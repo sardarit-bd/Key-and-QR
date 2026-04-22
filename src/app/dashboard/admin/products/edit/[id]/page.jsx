@@ -233,7 +233,7 @@ export default function EditProductPage() {
     }
 
     return (
-        <div className="flex-1 w-full p-4 lg:p-8">
+        <div className="flex-1 w-full p-4 lg:p-3">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">

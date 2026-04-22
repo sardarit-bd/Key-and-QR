@@ -17,7 +17,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 
 export default function DashboardFavorites() {
     const router = useRouter();
@@ -124,7 +124,7 @@ export default function DashboardFavorites() {
     // Empty state with login prompt - UPDATED to check user
     if (!user) {
         return (
-            <div className="flex-1 w-full p-4 lg:p-8 flex items-center justify-center min-h-[400px]">
+            <div className="flex-1 w-full p-4 lg:p-3 flex items-center justify-center min-h-[400px]">
                 <div className="text-center max-w-md transition-all duration-300">
                     <Heart size={48} className="text-gray-300 mx-auto mb-4" />
                     <h2 className="text-xl font-semibold text-gray-900 mb-2">Login to View Favorites</h2>
@@ -163,7 +163,7 @@ export default function DashboardFavorites() {
 
     if (favorites.length === 0 && !loading) {
         return (
-            <div className="flex-1 w-full p-4 lg:p-8 flex items-center justify-center min-h-[400px]">
+            <div className="flex-1 w-full p-4 lg:p-3 flex items-center justify-center min-h-[400px]">
                 <div className="text-center max-w-md transition-all duration-300">
                     <Heart size={48} className="text-gray-300 mx-auto mb-4" />
                     <h2 className="text-xl font-semibold text-gray-900 mb-2">No Favorites Yet</h2>
@@ -181,7 +181,8 @@ export default function DashboardFavorites() {
     }
 
     return (
-        <div className="flex-1 w-full p-4 lg:p-8">
+        <div className="flex-1 w-full p-4 lg:p-3">
+            <Toaster position="top-right" />
             {/* Header */}
             <div className="mb-6">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -194,16 +195,6 @@ export default function DashboardFavorites() {
                             {totalFavorites} {totalFavorites === 1 ? "item" : "items"} saved
                         </p>
                     </div>
-                    {/* {favorites.length > 0 && (
-                        <button
-                            onClick={fetchFavorites}
-                            disabled={loading}
-                            className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all duration-200 hover:scale-[1.02] active:scale-[0.98] cursor-pointer disabled:opacity-50"
-                        >
-                            <RefreshCw size={18} className={loading ? "animate-spin" : ""} />
-                            Refresh
-                        </button>
-                    )} */}
                 </div>
             </div>
 
@@ -220,10 +211,13 @@ export default function DashboardFavorites() {
                             key={fav._id}
                             className="group bg-white rounded-lg border border-gray-200 overflow-hidden hover:shadow-xl transition-all duration-300 hover:scale-[1.02] relative"
                         >
+                            {/* Delete Button - Always visible on mobile, visible on hover on desktop */}
                             <button
                                 onClick={() => handleRemoveFromFavorites(fav._id, itemName)}
                                 disabled={isRemoving}
-                                className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-all duration-200 cursor-pointer disabled:opacity-50 z-10 opacity-0 group-hover:opacity-100"
+                                className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-all duration-200 cursor-pointer disabled:opacity-50 z-10 
+                                lg:opacity-0 lg:group-hover:opacity-100 
+                                opacity-100"
                             >
                                 {isRemoving ? (
                                     <RefreshCw size={16} className="animate-spin" />
@@ -304,13 +298,6 @@ export default function DashboardFavorites() {
                     </div>
                 </div>
             )}
-
-            {/* Loading More Indicator */}
-            {/* {loading && favorites.length > 0 && (
-                <div className="flex justify-center mt-8">
-                    <RefreshCw size={24} className="animate-spin text-gray-400" />
-                </div>
-            )} */}
         </div>
     );
 }
