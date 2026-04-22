@@ -40,8 +40,11 @@ const canRefund = (order) => {
 };
 
 const canReturn = (order) => {
-    return ["shipped", "delivered"].includes(order.fulfillmentStatus) &&
-        order.returnStatus === "none";
+    return order.returnStatus === "requested";
+};
+
+const canCompleteReturn = (order) => {
+    return ["approved", "shipped", "received"].includes(order.returnStatus);
 };
 
 export default function OrdersTable({
@@ -167,17 +170,44 @@ export default function OrdersTable({
                                             hasTag={hasTag}
                                         />
                                         
+                                        {/* Return Status Badges */}
                                         {order.returnStatus === "requested" && (
                                             <div className="mt-1">
-                                                <span className="text-xs bg-orange-100 text-orange-700 px-1 py-0.5 rounded-full">
-                                                    Return Req
+                                                <span className="inline-flex items-center gap-1 text-xs bg-orange-100 text-orange-700 px-1 py-0.5 rounded-full">
+                                                    <Clock size={10} />
+                                                    Return Requested
+                                                </span>
+                                            </div>
+                                        )}
+                                        {order.returnStatus === "approved" && (
+                                            <div className="mt-1">
+                                                <span className="inline-flex items-center gap-1 text-xs bg-blue-100 text-blue-700 px-1 py-0.5 rounded-full">
+                                                    <CheckCircle size={10} />
+                                                    Return Approved
                                                 </span>
                                             </div>
                                         )}
                                         {order.returnStatus === "shipped" && (
                                             <div className="mt-1">
-                                                <span className="text-xs bg-blue-100 text-blue-700 px-1 py-0.5 rounded-full">
+                                                <span className="inline-flex items-center gap-1 text-xs bg-blue-100 text-blue-700 px-1 py-0.5 rounded-full">
+                                                    <Truck size={10} />
                                                     Return Shipped
+                                                </span>
+                                            </div>
+                                        )}
+                                        {order.returnStatus === "completed" && (
+                                            <div className="mt-1">
+                                                <span className="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 px-1 py-0.5 rounded-full">
+                                                    <CheckCircle size={10} />
+                                                    Return Completed
+                                                </span>
+                                            </div>
+                                        )}
+                                        {order.returnStatus === "rejected" && (
+                                            <div className="mt-1">
+                                                <span className="inline-flex items-center gap-1 text-xs bg-red-100 text-red-700 px-1 py-0.5 rounded-full">
+                                                    <XCircle size={10} />
+                                                    Return Rejected
                                                 </span>
                                             </div>
                                         )}
@@ -228,14 +258,14 @@ export default function OrdersTable({
                                             <button
                                                 onClick={() => onProcessReturn(order)}
                                                 className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"
-                                                title="Process Return"
+                                                title="Process Return Request"
                                                 disabled={processingAction}
                                             >
                                                 <Undo2 size={16} className="text-gray-500 group-hover:text-orange-600" />
                                             </button>
                                         )}
 
-                                        {order.returnStatus === "shipped" && (
+                                        {canCompleteReturn(order) && (
                                             <button
                                                 onClick={() => onCompleteReturn(order._id)}
                                                 className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"

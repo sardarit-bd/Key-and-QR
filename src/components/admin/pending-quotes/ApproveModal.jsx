@@ -1,19 +1,32 @@
-const { useState } = require("react");
-import { CheckCircle } from 'lucide-react';
+import { useState } from "react";
+import { CheckCircle, X } from "lucide-react";
 
 const ApproveModal = ({ isOpen, onClose, quote, onConfirm }) => {
     const [adminNote, setAdminNote] = useState("");
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState("");
 
     if (!isOpen || !quote) return null;
 
     const handleSubmit = async () => {
+        setError("");
         setLoading(true);
         try {
             await onConfirm(quote._id, adminNote);
+            setAdminNote(""); // Reset textarea after successful submission
             onClose();
+        } catch (err) {
+            setError(err.response?.data?.message || "Failed to approve quote");
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleClose = () => {
+        if (!loading) {
+            setAdminNote("");
+            setError("");
+            onClose();
         }
     };
 
@@ -21,10 +34,19 @@ const ApproveModal = ({ isOpen, onClose, quote, onConfirm }) => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl max-w-md w-full shadow-xl">
                 <div className="p-6 border-b border-gray-200">
-                    <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                        <CheckCircle size={20} className="text-green-600" />
-                        Approve Quote
-                    </h3>
+                    <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
+                            <CheckCircle size={20} className="text-green-600" />
+                            Approve Quote
+                        </h3>
+                        <button
+                            onClick={handleClose}
+                            className="p-1 hover:bg-gray-100 rounded-lg transition cursor-pointer"
+                            disabled={loading}
+                        >
+                            <X size={18} className="text-gray-400" />
+                        </button>
+                    </div>
                 </div>
                 <div className="p-6">
                     <p className="text-sm text-gray-600 mb-3">Quote from {quote.user?.name}:</p>
@@ -37,21 +59,41 @@ const ApproveModal = ({ isOpen, onClose, quote, onConfirm }) => {
                             value={adminNote}
                             onChange={(e) => setAdminNote(e.target.value)}
                             rows={2}
-                            className="w-full px-3 py-2  border border-gray-300 outline-0 rounded-lg focus:ring-1 focus:ring-black/30 focus:ring-offset-2 focus:ring-offset-white transition"
-                            placeholder="Add a note..."
+                            disabled={loading}
+                            className="w-full px-3 py-2 border border-gray-300 outline-0 rounded-lg focus:ring-1 focus:ring-black/30 focus:ring-offset-2 focus:ring-offset-white transition disabled:bg-gray-100"
+                            placeholder="Add a note (will be visible to user)..."
                         />
                     </div>
+                    {error && (
+                        <div className="mt-3 p-2 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-sm text-red-600">{error}</p>
+                        </div>
+                    )}
                 </div>
                 <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
-                    <button onClick={onClose} className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer">
+                    <button
+                        onClick={handleClose}
+                        disabled={loading}
+                        className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition cursor-pointer disabled:opacity-50"
+                    >
                         Cancel
                     </button>
                     <button
                         onClick={handleSubmit}
                         disabled={loading}
-                        className="px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-600 disabled:opacity-50 cursor-pointer"
+                        className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50 cursor-pointer flex items-center gap-2"
                     >
-                        {loading ? "Approving..." : "Approve & Add to Quotes"}
+                        {loading ? (
+                            <>
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                Approving...
+                            </>
+                        ) : (
+                            <>
+                                <CheckCircle size={16} />
+                                Approve & Add to Quotes
+                            </>
+                        )}
                     </button>
                 </div>
             </div>

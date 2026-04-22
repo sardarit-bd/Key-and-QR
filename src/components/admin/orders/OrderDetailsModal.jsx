@@ -63,8 +63,11 @@ const canRefund = (order) => {
 };
 
 const canReturn = (order) => {
-    return ["shipped", "delivered"].includes(order.fulfillmentStatus) &&
-        order.returnStatus === "none";
+    return order.returnStatus === "requested";
+};
+
+const canCompleteReturn = (order) => {
+    return ["approved", "shipped", "received"].includes(order.returnStatus);
 };
 
 export default function OrderDetailsModal({
@@ -130,16 +133,35 @@ export default function OrderDetailsModal({
                                 Refund Requested
                             </span>
                         )}
+                        {/* Return Status Badges */}
                         {order.returnStatus === "requested" && (
                             <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-orange-100 text-orange-700">
-                                <Undo2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                                 Return Requested
+                            </span>
+                        )}
+                        {order.returnStatus === "approved" && (
+                            <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-blue-100 text-blue-700">
+                                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                                Return Approved
                             </span>
                         )}
                         {order.returnStatus === "shipped" && (
                             <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-blue-100 text-blue-700">
                                 <Truck className="w-3 h-3 sm:w-4 sm:h-4" />
                                 Return Shipped
+                            </span>
+                        )}
+                        {order.returnStatus === "completed" && (
+                            <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-green-100 text-green-700">
+                                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                                Return Completed
+                            </span>
+                        )}
+                        {order.returnStatus === "rejected" && (
+                            <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-red-100 text-red-700">
+                                <XCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                                Return Rejected
                             </span>
                         )}
                     </div>
@@ -404,7 +426,7 @@ export default function OrderDetailsModal({
                             </button>
                         )}
 
-                        {order.returnStatus === "shipped" && (
+                        {canCompleteReturn(order) && (
                             <button
                                 onClick={() => {
                                     onClose();

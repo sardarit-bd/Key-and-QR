@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Eye, Tag, User, Gift, CreditCard, Clock, Truck, CheckCircle, Ban, Undo2, RotateCcw, Info, RefreshCw, Check } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, Tag, User, Gift, CreditCard, Clock, Truck, CheckCircle, Ban, Undo2, RotateCcw, Info, RefreshCw, Check, XCircle } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
 
@@ -58,7 +58,6 @@ const formatDate = (date) => {
     });
 };
 
-// ✅ FIXED: Refund button should only show when refundStatus is "requested"
 const canRefund = (order) => {
     return order.refundStatus === "requested" &&
         order.paymentStatus === "paid" &&
@@ -66,11 +65,13 @@ const canRefund = (order) => {
 };
 
 const canReturn = (order) => {
-    return ["shipped", "delivered"].includes(order.fulfillmentStatus) &&
-        order.returnStatus === "none";
+    return order.returnStatus === "requested";
 };
 
-// কাস্টম স্ট্যাটাস সিলেক্টর কম্পোনেন্ট
+const canCompleteReturn = (order) => {
+    return ["approved", "shipped", "received"].includes(order.returnStatus);
+};
+
 function CustomStatusSelect({ currentStatus, hasTag, onStatusChange, isUpdating, orderId }) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
@@ -191,8 +192,9 @@ export default function OrderMobileCard({
     onViewDetails,
     onUpdateStatus,
     onCancelOrder,
-    onProcessRefund,      // ✅ নতুন প্রপস যোগ করুন
-    onProcessReturn,      // ✅ নতুন প্রপস যোগ করুন
+    onProcessRefund,
+    onProcessReturn,
+    onCompleteReturn,
     updatingStatus,
     statusUpdateOrder
 }) {
@@ -244,18 +246,40 @@ export default function OrderMobileCard({
                             {currentStatus}
                         </span>
                         {order.refundStatus === "requested" && (
-                            <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full">
+                            <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                <RotateCcw size={10} />
                                 Refund Req
                             </span>
                         )}
+                        {/* Return Status Badges */}
                         {order.returnStatus === "requested" && (
-                            <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full">
+                            <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                <Clock size={10} />
                                 Return Req
                             </span>
                         )}
+                        {order.returnStatus === "approved" && (
+                            <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                <CheckCircle size={10} />
+                                Return Approved
+                            </span>
+                        )}
                         {order.returnStatus === "shipped" && (
-                            <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">
+                            <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                <Truck size={10} />
                                 Return Shipped
+                            </span>
+                        )}
+                        {order.returnStatus === "completed" && (
+                            <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                <CheckCircle size={10} />
+                                Return Completed
+                            </span>
+                        )}
+                        {order.returnStatus === "rejected" && (
+                            <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                <XCircle size={10} />
+                                Return Rejected
                             </span>
                         )}
                         <button
@@ -350,7 +374,7 @@ export default function OrderMobileCard({
                         </div>
                     )}
 
-                    {/* ✅ Action Buttons Grid for Mobile */}
+                    {/* Action Buttons Grid for Mobile */}
                     <div className="grid grid-cols-2 gap-2 pt-2">
                         {!order.assignedTag && order.fulfillmentStatus !== "cancelled" && order.fulfillmentStatus !== "returned" && (
                             <button
@@ -372,7 +396,6 @@ export default function OrderMobileCard({
                             </button>
                         )}
 
-                        {/* ✅ Refund Button for Mobile */}
                         {canRefund(order) && (
                             <button
                                 onClick={() => onProcessRefund(order)}
@@ -383,7 +406,6 @@ export default function OrderMobileCard({
                             </button>
                         )}
 
-                        {/* ✅ Return Button for Mobile */}
                         {canReturn(order) && (
                             <button
                                 onClick={() => onProcessReturn(order)}
@@ -394,7 +416,7 @@ export default function OrderMobileCard({
                             </button>
                         )}
 
-                        {order.returnStatus === "shipped" && (
+                        {canCompleteReturn(order) && (
                             <button
                                 onClick={() => onCompleteReturn(order._id)}
                                 className="py-2 text-center text-sm text-green-600 font-medium border border-green-200 rounded-lg hover:bg-green-50 transition"
