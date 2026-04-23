@@ -25,7 +25,26 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import { UserDetailsRequestModal } from "@/components/user/order/UserDetailsRequestModal";
 
+<<<<<<< HEAD
+=======
+// Helper function to check if return is within 3-day window
+const isWithinReturnWindow = (deliveredAt) => {
+    if (!deliveredAt) return false;
+    
+    const now = new Date();
+    const deliveredDate = new Date(deliveredAt);
+    const diffTime = now - deliveredDate;
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    
+    return diffDays <= 3;
+};
+
+// Request Modal Component
+
+
+>>>>>>> d362c6c (upadate quoteAssign page)
 export default function OrderDetailsPage() {
     const { id } = useParams();
     const router = useRouter();
@@ -250,6 +269,31 @@ export default function OrderDetailsPage() {
 
     return (
         <div className="py-16 px-4 md:px-8">
+<<<<<<< HEAD
+=======
+            {/* Refund Modal */}
+            <UserDetailsRequestModal
+                isOpen={refundModalOpen}
+                onClose={() => setRefundModalOpen(false)}
+                onSubmit={handleRequestRefund}
+                title="Request Refund"
+                description="Please provide the reason for requesting a refund. This will help us process your request faster."
+                submitText="Submit Refund Request"
+                loading={submitting}
+            />
+            
+            {/* Return Modal */}
+            <UserDetailsRequestModal
+                isOpen={returnModalOpen}
+                onClose={() => setReturnModalOpen(false)}
+                onSubmit={handleRequestReturn}
+                title="Request Return"
+                description="Please provide the reason for returning this item. Returns are only accepted within 3 days of delivery."
+                submitText="Submit Return Request"
+                loading={submitting}
+            />
+            
+>>>>>>> d362c6c (upadate quoteAssign page)
             {/* Header */}
             <div className="mb-8">
                 <Link
@@ -614,6 +658,63 @@ export default function OrderDetailsPage() {
                             )}
                         </div>
                     </div>
+<<<<<<< HEAD
+=======
+
+                    {/* Request Refund/Return Buttons */}
+                    {canRequestRefund && (
+                        <div className="bg-white border border-gray-200 rounded-lg p-4">
+                            <button
+                                onClick={() => setRefundModalOpen(true)}
+                                className="w-full py-2 bg-green-400 text-white rounded-lg hover:bg-green-500 transition flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                <RotateCcw className="w-4 h-4" />
+                                Request Refund
+                            </button>
+                            <p className="text-xs text-gray-500 mt-2 text-center">
+                                Request refund for this order (order not shipped yet)
+                            </p>
+                        </div>
+                    )}
+
+                    {canRequestReturn && (
+                        <div className="bg-white border border-gray-200 rounded-lg p-4">
+                            <button
+                                onClick={() => setReturnModalOpen(true)}
+                                className="w-full py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                <Undo2 className="w-4 h-4" />
+                                Request Return
+                            </button>
+                            <p className="text-xs text-gray-500 mt-2 text-center">
+                                Request return within 3 days of delivery
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Show expired return message */}
+                    {order.paymentStatus === "paid" && 
+                     order.fulfillmentStatus === "delivered" && 
+                     order.returnStatus === "none" && 
+                     !isWithinReturnWindow(order.deliveredAt) && (
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <div className="flex items-center gap-2 text-gray-500">
+                                <Clock className="w-4 h-4" />
+                                <div>
+                                    <p className="text-sm font-medium">Return window expired</p>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        Returns are only available within 3 days of delivery.
+                                    </p>
+                                    {order.deliveredAt && (
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            Delivered on: {formatDate(order.deliveredAt)}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+>>>>>>> d362c6c (upadate quoteAssign page)
                 </div>
             </div>
         </div>

@@ -27,7 +27,23 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+<<<<<<< HEAD
 import { toast } from "react-hot-toast";
+=======
+import { toast, Toaster } from "react-hot-toast";
+import { UserRequestModal } from "@/components/user/order/UserRequestModal";
+
+const isWithinReturnWindow = (deliveredAt) => {
+    if (!deliveredAt) return false;
+    
+    const now = new Date();
+    const deliveredDate = new Date(deliveredAt);
+    const diffTime = now - deliveredDate;
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    
+    return diffDays <= 3;
+};
+>>>>>>> d362c6c (upadate quoteAssign page)
 
 export default function OrdersPage() {
     const router = useRouter();
@@ -361,6 +377,39 @@ export default function OrdersPage() {
 
     return (
         <div className="py-16 px-4 md:px-8">
+<<<<<<< HEAD
+=======
+            <Toaster position="top-right" />
+            
+            {/* Refund Modal */}
+            <UserRequestModal
+                isOpen={refundModalOpen}
+                onClose={() => {
+                    setRefundModalOpen(false);
+                    setSelectedOrderId(null);
+                }}
+                onSubmit={(reason) => handleRequestRefund(selectedOrderId, reason)}
+                title="Request Refund"
+                description="Please provide the reason for requesting a refund. This will help us process your request faster."
+                submitText="Submit Refund Request"
+                loading={submitting}
+            />
+            
+            {/* Return Modal */}
+            <UserRequestModal
+                isOpen={returnModalOpen}
+                onClose={() => {
+                    setReturnModalOpen(false);
+                    setSelectedOrderId(null);
+                }}
+                onSubmit={(reason) => handleRequestReturn(selectedOrderId, reason)}
+                title="Request Return"
+                description="Please provide the reason for returning this item. Returns are only accepted within 3 days of delivery."
+                submitText="Submit Return Request"
+                loading={submitting}
+            />
+            
+>>>>>>> d362c6c (upadate quoteAssign page)
             {/* Header */}
             <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
