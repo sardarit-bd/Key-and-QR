@@ -1,6 +1,6 @@
 "use client";
 
-import { Calendar, User, Tag, Power, PowerOff, X, Quote } from "lucide-react";
+import { Calendar, User, Tag, Power, PowerOff, X, Quote, Image as ImageIcon, Repeat, FileText, Palette } from "lucide-react";
 
 export default function QuoteDetailsModal({ isOpen, onClose, quote }) {
     if (!isOpen || !quote) return null;
@@ -30,7 +30,7 @@ export default function QuoteDetailsModal({ isOpen, onClose, quote }) {
     const getCategoryColor = (category) => {
         const colors = {
             faith: "bg-purple-100 text-purple-700",
-            love: "bg-red-100 text-pink-700",
+            love: "bg-pink-100 text-pink-700",
             hope: "bg-green-100 text-green-700",
             success: "bg-blue-100 text-blue-700",
             motivation: "bg-orange-100 text-orange-700"
@@ -59,6 +59,17 @@ export default function QuoteDetailsModal({ isOpen, onClose, quote }) {
 
                 {/* Content */}
                 <div className="p-6 space-y-6">
+                    {/* Quote Image (if exists) */}
+                    {quote.image?.url && (
+                        <div className="rounded-lg overflow-hidden border border-gray-200">
+                            <img 
+                                src={quote.image.url} 
+                                alt="Quote visual"
+                                className="w-full h-auto max-h-64 object-cover"
+                            />
+                        </div>
+                    )}
+
                     {/* Quote Text */}
                     <div className="bg-gray-50 rounded-lg p-4">
                         <p className="text-gray-700 text-lg leading-relaxed italic">
@@ -102,6 +113,43 @@ export default function QuoteDetailsModal({ isOpen, onClose, quote }) {
                                 </span>
                             </div>
                         </div>
+
+                        {/* Allow Reuse */}
+                        <div className="flex items-start gap-3">
+                            <Repeat size={18} className="text-gray-400 mt-0.5" />
+                            <div>
+                                <p className="text-xs text-gray-500">Reuse Policy</p>
+                                <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full mt-1 ${
+                                    quote.allowReuse
+                                        ? "bg-blue-100 text-blue-700"
+                                        : "bg-orange-100 text-orange-700"
+                                }`}>
+                                    {quote.allowReuse ? "Can Reuse" : "No Reuse (Unique per day)"}
+                                </span>
+                            </div>
+                        </div>
+
+                        {/* Theme */}
+                        <div className="flex items-start gap-3">
+                            <Palette size={18} className="text-gray-400 mt-0.5" />
+                            <div>
+                                <p className="text-xs text-gray-500">Theme</p>
+                                <p className="text-sm text-gray-700 mt-1">
+                                    {quote.theme || <span className="text-gray-400">Not specified</span>}
+                                </p>
+                            </div>
+                        </div>
+
+                        {/* Description */}
+                        {quote.description && (
+                            <div className="flex items-start gap-3 md:col-span-2">
+                                <FileText size={18} className="text-gray-400 mt-0.5" />
+                                <div>
+                                    <p className="text-xs text-gray-500">Description</p>
+                                    <p className="text-sm text-gray-700 mt-1">{quote.description}</p>
+                                </div>
+                            </div>
+                        )}
 
                         {/* Created Date */}
                         <div className="flex items-start gap-3">
