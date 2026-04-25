@@ -219,7 +219,7 @@ export default function UserDashboard() {
 
   return (
     <main className="flex-1 w-full">
-      <div className="p-4 lg:p-8">
+      <div className="p-4 lg:p-3">
         {/* Header */}
         <div className="mb-6 lg:mb-8">
           <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-2">

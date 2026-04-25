@@ -5,6 +5,7 @@ import { useAuthStore } from "@/store/authStore";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -21,32 +22,38 @@ export default function LoginPage() {
     const sessionExpired = urlParams.get("session");
 
     if (sessionExpired === "expired") {
-      setError("Your session has expired. Please login again.");
+      const errorMsg = "Your session has expired. Please login again.";
+      setError(errorMsg);
+      toast.error(errorMsg);
     }
 
     if (!errorParam) return;
 
+    let errorMsg = "";
     switch (errorParam) {
       case "google_auth_failed":
-        setError("Google login failed. Please try again.");
+        errorMsg = "Google login failed. Please try again.";
         break;
       case "social_login_failed":
-        setError("Social login failed. Please try again.");
+        errorMsg = "Social login failed. Please try again.";
         break;
       case "apple_auth_failed":
-        setError("Apple login failed. Please try again.");
+        errorMsg = "Apple login failed. Please try again.";
         break;
       case "auth_failed":
-        setError("Authentication failed. Please try again.");
+        errorMsg = "Authentication failed. Please try again.";
         break;
       default:
-        setError("Login failed. Please try again.");
+        errorMsg = "Login failed. Please try again.";
     }
+    setError(errorMsg);
+    toast.error(errorMsg);
   }, []);
 
-  // 🔥 Redirect if already logged in - Simplified
+  // Redirect if already logged in - Simplified
   useEffect(() => {
     if (isInitialized && user) {
+      // toast.success(`Welcome back, ${user.email || 'User'}!`);
       if (user.role === "admin") {
         router.replace("/dashboard/admin");
       } else {
@@ -63,11 +70,15 @@ export default function LoginPage() {
     
     // Basic validation
     if (!email.trim()) {
-      setError("Email is required");
+      const errorMsg = "Email is required";
+      setError(errorMsg);
+      toast.error(errorMsg);
       return;
     }
     if (!password.trim()) {
-      setError("Password is required");
+      const errorMsg = "Password is required";
+      setError(errorMsg);
+      toast.error(errorMsg);
       return;
     }
 
@@ -76,8 +87,10 @@ export default function LoginPage() {
     if (!result?.success) {
       const errorMsg = result?.error || storeError || "Invalid email or password!";
       setError(errorMsg);
+      toast.error(errorMsg);
+    } else {
+      // toast.success("Login successful! Redirecting...");
     }
-    // 🔥 No need for console.log or manual redirect - useEffect handles it
   };
 
   // Clear error when user starts typing
@@ -93,6 +106,9 @@ export default function LoginPage() {
 
   return (
     <div className="p-3">
+      <Toaster 
+        position="top-right"
+      />
       <div className="max-w-md mx-auto my-36 p-6 border border-gray-300 rounded-xl shadow-sm bg-white">
         <h2 className="text-2xl text-center font-semibold mb-4">Sign In</h2>
 

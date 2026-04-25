@@ -59,7 +59,7 @@ export default function UserSubscriptionsPage() {
     }
 
     return (
-        <div className="flex-1 w-full p-4 lg:p-8 bg-white">
+        <div className="flex-1 w-full p-4 lg:p-3 bg-white">
             <div className="mb-6">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                     <div>

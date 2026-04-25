@@ -23,7 +23,7 @@ import {
     XCircle
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 
 const CATEGORY_COLORS = {
     faith: "bg-purple-100 text-purple-700",
@@ -41,6 +41,12 @@ const CATEGORY_LABELS = {
     success: "Success",
     motivation: "Motivation",
     other: "Other",
+};
+
+const STATUS_BADGES = {
+    pending: { icon: <Clock size={12} />, text: "Pending", color: "bg-yellow-100 text-yellow-700" },
+    approved: { icon: <CheckCircle size={12} />, text: "Approved", color: "bg-green-100 text-green-700" },
+    rejected: { icon: <XCircle size={12} />, text: "Rejected", color: "bg-red-100 text-red-700" },
 };
 
 export default function PendingQuotesPage() {
@@ -89,7 +95,8 @@ export default function PendingQuotesPage() {
         try {
             await api.patch(`/pending-quotes/${id}/approve`, { adminNote });
             toast.success("Quote approved and added to main quotes");
-            fetchPendingQuotes();
+            await fetchPendingQuotes();
+            // Refresh quotes list to update status
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to approve quote");
             throw err;
@@ -100,7 +107,7 @@ export default function PendingQuotesPage() {
         try {
             await api.patch(`/pending-quotes/${id}/reject`, { adminNote });
             toast.success("Quote rejected");
-            fetchPendingQuotes();
+            await fetchPendingQuotes();
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to reject quote");
             throw err;
@@ -111,9 +118,10 @@ export default function PendingQuotesPage() {
         try {
             await api.delete(`/pending-quotes/${id}`);
             toast.success("Pending quote deleted");
-            fetchPendingQuotes();
+            await fetchPendingQuotes();
         } catch (err) {
             toast.error(err.response?.data?.message || "Failed to delete quote");
+            throw err;
         }
     };
 
@@ -129,6 +137,12 @@ export default function PendingQuotesPage() {
         }
     };
 
+    // Check if quote can be approved (only pending quotes)
+    const canApprove = (quote) => quote.status === "pending";
+    
+    // Check if quote can be rejected (only pending quotes)
+    const canReject = (quote) => quote.status === "pending";
+
     // Debounced search
     useEffect(() => {
         if (!isInitialized) return;
@@ -143,18 +157,16 @@ export default function PendingQuotesPage() {
         }, 500);
 
         return () => clearTimeout(timer);
-    }, [searchTerm, isInitialized, user, currentPage]);
+    }, [searchTerm, isInitialized, user]);
 
     useEffect(() => {
         if (!isInitialized) return;
         if (!user || user.role !== "admin") return;
-
         fetchPendingQuotes();
     }, [currentPage, isInitialized, user]);
 
     useEffect(() => {
         if (!isInitialized) return;
-
         if (user?.role === "admin") {
             fetchPendingQuotes();
         }
@@ -175,6 +187,7 @@ export default function PendingQuotesPage() {
 
     return (
         <div className="flex-1 w-full p-4 lg:p-8">
+            <Toaster position="top-right" />
             {/* Header */}
             <div className="mb-6">
                 <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
@@ -270,174 +283,204 @@ export default function PendingQuotesPage() {
                                         <th className="text-left p-4 text-sm font-semibold text-gray-600">User</th>
                                         <th className="text-left p-4 text-sm font-semibold text-gray-600">Quote</th>
                                         <th className="text-left p-4 text-sm font-semibold text-gray-600">Category</th>
+                                        <th className="text-left p-4 text-sm font-semibold text-gray-600">Status</th>
                                         <th className="text-left p-4 text-sm font-semibold text-gray-600">Submitted</th>
                                         <th className="text-left p-4 text-sm font-semibold text-gray-600">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-gray-200">
-                                    {quotes.map((quote, index) => (
-                                        <tr key={quote._id} className="hover:bg-gray-50 transition">
-                                            <td className="p-4 text-sm text-gray-500">
-                                                {(currentPage - 1) * itemsPerPage + index + 1}
-                                            </td>
-                                            <td className="p-4">
-                                                <div>
-                                                    <p className="text-sm font-medium text-gray-900">{quote.user?.name || "Unknown"}</p>
-                                                    <p className="text-xs text-gray-500">{quote.user?.email}</p>
-                                                </div>
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="text-sm text-gray-700 max-w-md italic line-clamp-2">
-                                                    "{quote.text}"
-                                                </div>
-                                            </td>
-                                            <td className="p-4">
-                                                <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${CATEGORY_COLORS[quote.category] || "bg-gray-100 text-gray-700"}`}>
-                                                    {CATEGORY_LABELS[quote.category] || quote.category}
-                                                </span>
-                                            </td>
-                                            <td className="p-4 text-sm text-gray-500">
-                                                {formatDate(quote.createdAt)}
-                                            </td>
-                                            <td className="p-4">
-                                                <div className="flex items-center gap-2">
-                                                    {/* View Details Button */}
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedQuote(quote);
-                                                            setShowDetailsModal(true);
-                                                        }}
-                                                        className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"
-                                                        title="View Details"
-                                                    >
-                                                        <Eye size={18} className="text-gray-500 group-hover:text-blue-600" />
-                                                    </button>
+                                    {quotes.map((quote, index) => {
+                                        const statusBadge = STATUS_BADGES[quote.status] || STATUS_BADGES.pending;
+                                        const isPending = quote.status === "pending";
+                                        
+                                        return (
+                                            <tr key={quote._id} className="hover:bg-gray-50 transition">
+                                                <td className="p-4 text-sm text-gray-500">
+                                                    {(currentPage - 1) * itemsPerPage + index + 1}
+                                                </td>
+                                                <td className="p-4">
+                                                    <div>
+                                                        <p className="text-sm font-medium text-gray-900">{quote.user?.name || "Unknown"}</p>
+                                                        <p className="text-xs text-gray-500">{quote.user?.email}</p>
+                                                    </div>
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="text-sm text-gray-700 max-w-md italic line-clamp-2">
+                                                        "{quote.text}"
+                                                    </div>
+                                                </td>
+                                                <td className="p-4">
+                                                    <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${CATEGORY_COLORS[quote.category] || "bg-gray-100 text-gray-700"}`}>
+                                                        {CATEGORY_LABELS[quote.category] || quote.category}
+                                                    </span>
+                                                </td>
+                                                <td className="p-4">
+                                                    <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${statusBadge.color}`}>
+                                                        {statusBadge.icon}
+                                                        {statusBadge.text}
+                                                    </span>
+                                                </td>
+                                                <td className="p-4 text-sm text-gray-500">
+                                                    {formatDate(quote.createdAt)}
+                                                </td>
+                                                <td className="p-4">
+                                                    <div className="flex items-center gap-2">
+                                                        {/* View Details Button */}
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedQuote(quote);
+                                                                setShowDetailsModal(true);
+                                                            }}
+                                                            className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"
+                                                            title="View Details"
+                                                        >
+                                                            <Eye size={18} className="text-gray-500 group-hover:text-blue-600" />
+                                                        </button>
 
-                                                    {/* Approve Button */}
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedQuote(quote);
-                                                            setShowApproveModal(true);
-                                                        }}
-                                                        className="p-1.5 hover:bg-green-50 rounded-lg transition group cursor-pointer"
-                                                        title="Approve"
-                                                    >
-                                                        <CheckCircle size={18} className="text-gray-500 group-hover:text-green-600" />
-                                                    </button>
+                                                        {/* Approve Button - Only show for pending quotes */}
+                                                        {canApprove(quote) && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedQuote(quote);
+                                                                    setShowApproveModal(true);
+                                                                }}
+                                                                className="p-1.5 hover:bg-green-50 rounded-lg transition group cursor-pointer"
+                                                                title="Approve"
+                                                            >
+                                                                <CheckCircle size={18} className="text-gray-500 group-hover:text-green-600" />
+                                                            </button>
+                                                        )}
 
-                                                    {/* Reject Button */}
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedQuote(quote);
-                                                            setShowRejectModal(true);
-                                                        }}
-                                                        className="p-1.5 hover:bg-red-50 rounded-lg transition group cursor-pointer"
-                                                        title="Reject"
-                                                    >
-                                                        <XCircle size={18} className="text-gray-500 group-hover:text-red-600" />
-                                                    </button>
+                                                        {/* Reject Button - Only show for pending quotes */}
+                                                        {canReject(quote) && (
+                                                            <button
+                                                                onClick={() => {
+                                                                    setSelectedQuote(quote);
+                                                                    setShowRejectModal(true);
+                                                                }}
+                                                                className="p-1.5 hover:bg-red-50 rounded-lg transition group cursor-pointer"
+                                                                title="Reject"
+                                                            >
+                                                                <XCircle size={18} className="text-gray-500 group-hover:text-red-600" />
+                                                            </button>
+                                                        )}
 
-                                                    {/* Delete Button */}
-                                                    <button
-                                                        onClick={() => {
-                                                            setSelectedQuote(quote);
-                                                            setShowDeleteModal(true);
-                                                        }}
-                                                        className="p-1.5 hover:bg-red-50 rounded-lg transition group cursor-pointer"
-                                                        title="Delete"
-                                                    >
-                                                        <Trash2 size={18} className="text-gray-500 group-hover:text-red-600" />
-                                                    </button>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ))}
+                                                        {/* Delete Button - Always show */}
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedQuote(quote);
+                                                                setShowDeleteModal(true);
+                                                            }}
+                                                            className="p-1.5 hover:bg-red-50 rounded-lg transition group cursor-pointer"
+                                                            title="Delete"
+                                                        >
+                                                            <Trash2 size={18} className="text-gray-500 group-hover:text-red-600" />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
 
                         {/* Mobile Cards */}
                         <div className="lg:hidden divide-y divide-gray-100">
-                            {quotes.map((quote) => (
-                                <div key={quote._id} className="p-4">
-                                    <div
-                                        className="flex items-center justify-between cursor-pointer"
-                                        onClick={() => setExpandedId(expandedId === quote._id ? null : quote._id)}
-                                    >
-                                        <div className="flex-1">
-                                            <div className="flex items-center justify-between mb-2">
-                                                <span className="font-medium text-gray-900">{quote.user?.name || "Unknown"}</span>
-                                                {expandedId === quote._id ? (
-                                                    <ChevronUp size={20} className="text-gray-400" />
-                                                ) : (
-                                                    <ChevronDown size={20} className="text-gray-400" />
-                                                )}
-                                            </div>
-                                            <div className="text-sm text-gray-600 italic line-clamp-2">
-                                                "{quote.text}"
-                                            </div>
-                                            <div className="flex items-center gap-2 mt-2">
-                                                <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${CATEGORY_COLORS[quote.category] || "bg-gray-100 text-gray-700"}`}>
-                                                    {CATEGORY_LABELS[quote.category] || quote.category}
-                                                </span>
-                                                <span className="text-xs text-gray-400">
-                                                    {formatDate(quote.createdAt)}
-                                                </span>
+                            {quotes.map((quote) => {
+                                const statusBadge = STATUS_BADGES[quote.status] || STATUS_BADGES.pending;
+                                const isPending = quote.status === "pending";
+                                
+                                return (
+                                    <div key={quote._id} className="p-4">
+                                        <div
+                                            className="flex items-center justify-between cursor-pointer"
+                                            onClick={() => setExpandedId(expandedId === quote._id ? null : quote._id)}
+                                        >
+                                            <div className="flex-1">
+                                                <div className="flex items-center justify-between mb-2">
+                                                    <span className="font-medium text-gray-900">{quote.user?.name || "Unknown"}</span>
+                                                    {expandedId === quote._id ? (
+                                                        <ChevronUp size={20} className="text-gray-400" />
+                                                    ) : (
+                                                        <ChevronDown size={20} className="text-gray-400" />
+                                                    )}
+                                                </div>
+                                                <div className="text-sm text-gray-600 italic line-clamp-2">
+                                                    "{quote.text}"
+                                                </div>
+                                                <div className="flex items-center gap-2 mt-2">
+                                                    <span className={`inline-flex items-center px-2 py-1 text-xs rounded-full ${CATEGORY_COLORS[quote.category] || "bg-gray-100 text-gray-700"}`}>
+                                                        {CATEGORY_LABELS[quote.category] || quote.category}
+                                                    </span>
+                                                    <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${statusBadge.color}`}>
+                                                        {statusBadge.icon}
+                                                        {statusBadge.text}
+                                                    </span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {expandedId === quote._id && (
-                                        <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
-                                            <div className="text-sm">
-                                                <span className="text-gray-500">User Email:</span>
-                                                <span className="text-gray-900 ml-2 break-all">{quote.user?.email || "N/A"}</span>
+                                        {expandedId === quote._id && (
+                                            <div className="mt-3 pt-3 border-t border-gray-100 space-y-3">
+                                                <div className="text-sm">
+                                                    <span className="text-gray-500">User Email:</span>
+                                                    <span className="text-gray-900 ml-2 break-all">{quote.user?.email || "N/A"}</span>
+                                                </div>
+                                                <div className="text-sm">
+                                                    <span className="text-gray-500">Submitted:</span>
+                                                    <span className="text-gray-900 ml-2">{formatDate(quote.createdAt)}</span>
+                                                </div>
+                                                <div className="flex flex-wrap items-center gap-2 pt-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedQuote(quote);
+                                                            setShowDetailsModal(true);
+                                                        }}
+                                                        className="flex-1 py-2 text-center text-sm text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition cursor-pointer"
+                                                    >
+                                                        <Eye size={14} className="inline mr-1" />
+                                                        View Details
+                                                    </button>
+                                                    {canApprove(quote) && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedQuote(quote);
+                                                                setShowApproveModal(true);
+                                                            }}
+                                                            className="flex-1 py-2 text-center text-sm text-green-600 font-medium border border-green-200 rounded-lg hover:bg-green-50 transition cursor-pointer"
+                                                        >
+                                                            <CheckCircle size={14} className="inline mr-1" />
+                                                            Approve
+                                                        </button>
+                                                    )}
+                                                    {canReject(quote) && (
+                                                        <button
+                                                            onClick={() => {
+                                                                setSelectedQuote(quote);
+                                                                setShowRejectModal(true);
+                                                            }}
+                                                            className="flex-1 py-2 text-center text-sm text-red-600 font-medium border border-red-200 rounded-lg hover:bg-red-50 transition cursor-pointer"
+                                                        >
+                                                            <XCircle size={14} className="inline mr-1" />
+                                                            Reject
+                                                        </button>
+                                                    )}
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelectedQuote(quote);
+                                                            setShowDeleteModal(true);
+                                                        }}
+                                                        className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
                                             </div>
-                                            <div className="flex flex-wrap items-center gap-2 pt-2">
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedQuote(quote);
-                                                        setShowDetailsModal(true);
-                                                    }}
-                                                    className="flex-1 py-2 text-center text-sm text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition cursor-pointer"
-                                                >
-                                                    <Eye size={14} className="inline mr-1" />
-                                                    View Details
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedQuote(quote);
-                                                        setShowApproveModal(true);
-                                                    }}
-                                                    className="flex-1 py-2 text-center text-sm text-green-600 font-medium border border-green-200 rounded-lg hover:bg-green-50 transition cursor-pointer"
-                                                >
-                                                    <CheckCircle size={14} className="inline mr-1" />
-                                                    Approve
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedQuote(quote);
-                                                        setShowRejectModal(true);
-                                                    }}
-                                                    className="flex-1 py-2 text-center text-sm text-red-600 font-medium border border-red-200 rounded-lg hover:bg-red-50 transition cursor-pointer"
-                                                >
-                                                    <XCircle size={14} className="inline mr-1" />
-                                                    Reject
-                                                </button>
-                                                <button
-                                                    onClick={() => {
-                                                        setSelectedQuote(quote);
-                                                        setShowDeleteModal(true);
-                                                    }}
-                                                    className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
 
                         {/* Pagination */}

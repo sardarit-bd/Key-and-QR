@@ -6,6 +6,8 @@ import { ArrowLeft, Upload, X } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { PiWarningDuotone } from "react-icons/pi";
+import { TiTickOutline } from "react-icons/ti";
 
 export default function EditProductPage() {
     const { id } = useParams();
@@ -231,7 +233,7 @@ export default function EditProductPage() {
     }
 
     return (
-        <div className="flex-1 w-full p-4 lg:p-8">
+        <div className="flex-1 w-full p-4 lg:p-3">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="flex items-center justify-between mb-6">
@@ -351,17 +353,17 @@ export default function EditProductPage() {
                                 />
                                 {formData.stock <= 0 && (
                                     <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                                        <span>⚠️</span> Product will show as <span className="font-semibold">"Out of Stock"</span>
+                                        <span><PiWarningDuotone className="text-yellow-600" size={17}/></span> Product will show as <span className="font-semibold">"Out of Stock"</span>
                                     </p>
                                 )}
                                 {formData.stock > 0 && formData.stock <= 2 && (
                                     <p className="text-xs text-orange-600 mt-1 flex items-center gap-1">
-                                        <span>⚠️</span> Only {formData.stock} left - <span className="font-semibold">"Limited stock"</span> message will appear
+                                        <span><PiWarningDuotone className="text-yellow-600" size={17}/></span> Only {formData.stock} left - <span className="font-semibold">"Limited stock"</span> message will appear
                                     </p>
                                 )}
                                 {formData.stock > 2 && (
                                     <p className="text-xs text-green-600 mt-1 flex items-center gap-1">
-                                        <span>✓</span> In stock - Normal display
+                                        <span><TiTickOutline size={17}/></span> In stock - Normal display
                                     </p>
                                 )}
                             </div>

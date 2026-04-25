@@ -1,4 +1,4 @@
-import { X, User, Mail, Calendar, Tag, MessageSquare, CheckCircle, XCircle, Clock } from "lucide-react";
+import { X, User, Mail, Calendar, Tag, MessageSquare, CheckCircle, XCircle, Clock, FileText } from "lucide-react";
 import { useAuthStore } from "@/store/authStore";
 import { FaGoogle } from "react-icons/fa";
 import { Mail as MailIcon } from "lucide-react";
@@ -21,6 +21,29 @@ const CATEGORY_LABELS = {
     other: "Other",
 };
 
+const getStatusBadge = (status) => {
+    switch (status) {
+        case "approved":
+            return {
+                icon: <CheckCircle size={12} />,
+                text: "Approved",
+                color: "bg-green-100 text-green-700",
+            };
+        case "rejected":
+            return {
+                icon: <XCircle size={12} />,
+                text: "Rejected",
+                color: "bg-red-100 text-red-700",
+            };
+        default:
+            return {
+                icon: <Clock size={12} />,
+                text: "Pending",
+                color: "bg-yellow-100 text-yellow-700",
+            };
+    }
+};
+
 export default function QuoteDetailsModal({ isOpen, onClose, quote }) {
     const { user } = useAuthStore();
 
@@ -32,6 +55,7 @@ export default function QuoteDetailsModal({ isOpen, onClose, quote }) {
     };
 
     const providerInfo = getProviderInfo();
+    const statusBadge = getStatusBadge(quote?.status);
 
     const formatDate = (date) => {
         if (!date) return "N/A";
@@ -53,12 +77,16 @@ export default function QuoteDetailsModal({ isOpen, onClose, quote }) {
                 <div className="sticky top-0 bg-white border-b border-gray-200 p-6">
                     <div className="flex items-center justify-between">
                         <div>
-                            <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 flex-wrap">
                                 <h3 className="text-lg font-semibold text-gray-900">Quote Details</h3>
                                 <div className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs">
                                     {providerInfo.icon}
-                                    <span className="text-gray-600">Pending Review</span>
+                                    <span className="text-gray-600">{providerInfo.text}</span>
                                 </div>
+                                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs ${statusBadge.color}`}>
+                                    {statusBadge.icon}
+                                    {statusBadge.text}
+                                </span>
                             </div>
                             <p className="text-sm text-gray-500 mt-1">
                                 ID: {quote._id?.slice(-8).toUpperCase()}
@@ -85,6 +113,29 @@ export default function QuoteDetailsModal({ isOpen, onClose, quote }) {
                             "{quote.text}"
                         </p>
                     </div>
+
+                    {/* Admin Note Section - Show if exists */}
+                    {quote.adminNote && (
+                        <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+                            <div className="flex items-center gap-2 mb-3">
+                                <FileText size={18} className="text-blue-600" />
+                                <span className="text-sm font-medium text-blue-800">Admin Note</span>
+                            </div>
+                            <p className="text-blue-900 text-sm leading-relaxed">
+                                {quote.adminNote}
+                            </p>
+                            {quote.approvedAt && (
+                                <p className="text-xs text-blue-600 mt-2">
+                                    Processed on: {formatDate(quote.approvedAt)}
+                                </p>
+                            )}
+                            {quote.rejectedAt && (
+                                <p className="text-xs text-blue-600 mt-2">
+                                    Processed on: {formatDate(quote.rejectedAt)}
+                                </p>
+                            )}
+                        </div>
+                    )}
 
                     {/* User Information */}
                     <div className="bg-gray-50 rounded-xl p-6">
@@ -138,76 +189,46 @@ export default function QuoteDetailsModal({ isOpen, onClose, quote }) {
                             </div>
                             <div className="flex items-center justify-between py-2">
                                 <span className="text-sm text-gray-500">Status</span>
-                                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full bg-yellow-100 text-yellow-700">
-                                    <Clock size={12} />
-                                    Pending Approval
+                                <span className={`inline-flex items-center gap-1 px-2 py-1 text-xs rounded-full ${statusBadge.color}`}>
+                                    {statusBadge.icon}
+                                    {statusBadge.text}
                                 </span>
                             </div>
                         </div>
                     </div>
 
-                    {/* Preview Section */}
-                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
-                        <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
-                            <CheckCircle size={16} className="text-blue-600" />
-                            Preview
-                        </h4>
-                        <div className="bg-white rounded-lg p-4 shadow-sm">
-                            <div className="flex items-start gap-3">
-                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
-                                    <MessageSquare size={14} className="text-blue-600" />
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex items-center gap-2 mb-2">
-                                        <span className="text-xs font-medium text-gray-500">
-                                            {quote.user?.name || "Anonymous"}
-                                        </span>
-                                        <span className={`text-xs px-1.5 py-0.5 rounded-full ${CATEGORY_COLORS[quote.category] || "bg-gray-100 text-gray-700"}`}>
-                                            {CATEGORY_LABELS[quote.category] || quote.category}
-                                        </span>
+                    {/* Preview Section - Only show for pending quotes */}
+                    {quote.status === "pending" && (
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 border border-blue-100">
+                            <h4 className="font-medium text-gray-900 mb-3 flex items-center gap-2">
+                                <CheckCircle size={16} className="text-blue-600" />
+                                Preview (After Approval)
+                            </h4>
+                            <div className="bg-white rounded-lg p-4 shadow-sm">
+                                <div className="flex items-start gap-3">
+                                    <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                                        <MessageSquare size={14} className="text-blue-600" />
                                     </div>
-                                    <p className="text-gray-700 italic">
-                                        "{quote.text}"
-                                    </p>
+                                    <div className="flex-1">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="text-xs font-medium text-gray-500">
+                                                {quote.user?.name || "Anonymous"}
+                                            </span>
+                                            <span className={`text-xs px-1.5 py-0.5 rounded-full ${CATEGORY_COLORS[quote.category] || "bg-gray-100 text-gray-700"}`}>
+                                                {CATEGORY_LABELS[quote.category] || quote.category}
+                                            </span>
+                                        </div>
+                                        <p className="text-gray-700 italic">
+                                            "{quote.text}"
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
+                            <p className="text-xs text-gray-500 mt-3 text-center">
+                                This is how the quote will appear to users after approval
+                            </p>
                         </div>
-                        <p className="text-xs text-gray-500 mt-3 text-center">
-                            This is how the quote will appear to users after approval
-                        </p>
-                    </div>
-                </div>
-
-                {/* Footer with Actions */}
-                <div className="sticky bottom-0 bg-white border-t border-gray-200 p-6">
-                    <div className="flex justify-end gap-3">
-                        <button
-                            onClick={onClose}
-                            className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition cursor-pointer"
-                        >
-                            Close
-                        </button>
-                        <button
-                            onClick={() => {
-                                onClose();
-                                // You can trigger approve action here if needed
-                            }}
-                            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition cursor-pointer flex items-center gap-2"
-                        >
-                            <CheckCircle size={16} />
-                            Approve Quote
-                        </button>
-                        <button
-                            onClick={() => {
-                                onClose();
-                                // You can trigger reject action here if needed
-                            }}
-                            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition cursor-pointer flex items-center gap-2"
-                        >
-                            <XCircle size={16} />
-                            Reject Quote
-                        </button>
-                    </div>
+                    )}
                 </div>
             </div>
         </div>

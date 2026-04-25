@@ -57,14 +57,17 @@ const canCancel = (status) => {
 };
 
 const canRefund = (order) => {
-    return order.paymentStatus === "paid" &&
-        order.refundStatus === "none" &&
+    return order.refundStatus === "requested" &&
+        order.paymentStatus === "paid" &&
         !["cancelled", "returned"].includes(order.fulfillmentStatus);
 };
 
 const canReturn = (order) => {
-    return ["shipped", "delivered"].includes(order.fulfillmentStatus) &&
-        order.returnStatus === "none";
+    return order.returnStatus === "requested";
+};
+
+const canCompleteReturn = (order) => {
+    return ["approved", "shipped", "received"].includes(order.returnStatus);
 };
 
 export default function OrderDetailsModal({
@@ -130,16 +133,35 @@ export default function OrderDetailsModal({
                                 Refund Requested
                             </span>
                         )}
+                        {/* Return Status Badges */}
                         {order.returnStatus === "requested" && (
                             <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-orange-100 text-orange-700">
-                                <Undo2 className="w-3 h-3 sm:w-4 sm:h-4" />
+                                <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
                                 Return Requested
+                            </span>
+                        )}
+                        {order.returnStatus === "approved" && (
+                            <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-blue-100 text-blue-700">
+                                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                                Return Approved
                             </span>
                         )}
                         {order.returnStatus === "shipped" && (
                             <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-blue-100 text-blue-700">
                                 <Truck className="w-3 h-3 sm:w-4 sm:h-4" />
                                 Return Shipped
+                            </span>
+                        )}
+                        {order.returnStatus === "completed" && (
+                            <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-green-100 text-green-700">
+                                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                                Return Completed
+                            </span>
+                        )}
+                        {order.returnStatus === "rejected" && (
+                            <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-red-100 text-red-700">
+                                <XCircle className="w-3 h-3 sm:w-4 sm:h-4" />
+                                Return Rejected
                             </span>
                         )}
                     </div>
@@ -162,7 +184,7 @@ export default function OrderDetailsModal({
                         </div>
                     </div>
 
-                    {/* 🆕 Shipping Address Section - Responsive */}
+                    {/* Shipping Address Section */}
                     {hasShippingAddress && (
                         <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                             <h4 className="font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
@@ -224,7 +246,7 @@ export default function OrderDetailsModal({
                         </div>
                     )}
 
-                    {/* Product Info - Responsive */}
+                    {/* Product Info */}
                     <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                         <h4 className="font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
                             <Package size={16} className="text-green-500" />
@@ -256,7 +278,7 @@ export default function OrderDetailsModal({
                         </div>
                     </div>
 
-                    {/* Order Info - Responsive */}
+                    {/* Order Info */}
                     <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
                         <h4 className="font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
                             <Tag size={16} className="text-purple-500" />
@@ -404,7 +426,7 @@ export default function OrderDetailsModal({
                             </button>
                         )}
 
-                        {order.returnStatus === "shipped" && (
+                        {canCompleteReturn(order) && (
                             <button
                                 onClick={() => {
                                     onClose();

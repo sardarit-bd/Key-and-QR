@@ -32,6 +32,14 @@ export default function Header() {
     const isDashboard = pathname?.startsWith("/dashboard") || false;
     const drawerRef = useRef(null);
 
+
+    const isScanPage =
+        pathname?.startsWith("/TAG-") ||
+        pathname?.startsWith("/QR-") ||
+        pathname?.startsWith("/t/");
+
+    if (isScanPage) return null;
+
     // Helper function to get profile image URL
     const getProfileImageUrl = () => {
         if (!user?.profileImage) return null;
@@ -345,7 +353,7 @@ export default function Header() {
                     <div className="flex items-center gap-2">
                         <Image src="/logo.png" alt="Logo" width={80} height={40} priority />
                     </div>
-                    <button 
+                    <button
                         onClick={handleMenuClose}
                         className="p-2 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
                         aria-label="Close menu"
@@ -389,11 +397,10 @@ export default function Header() {
                                     <p className="font-semibold text-gray-800 capitalize">
                                         {user?.name || "User"}
                                     </p>
-                                    <span className={`text-xs px-2 py-0.5 rounded-full ${
-                                        user?.role === "admin" 
-                                            ? "bg-purple-100 text-purple-700" 
+                                    <span className={`text-xs px-2 py-0.5 rounded-full ${user?.role === "admin"
+                                            ? "bg-purple-100 text-purple-700"
                                             : "bg-green-100 text-green-700"
-                                    }`}>
+                                        }`}>
                                         {user?.role === "admin" ? "Admin" : "User"}
                                     </span>
                                 </div>
@@ -419,11 +426,10 @@ export default function Header() {
                                 key={item.label}
                                 href={item.href}
                                 onClick={handleMenuClose}
-                                className={`flex items-center justify-between py-3 px-3 rounded-xl transition-all duration-200 ${
-                                    isActive 
-                                        ? "bg-gray-900 text-white" 
+                                className={`flex items-center justify-between py-3 px-3 rounded-xl transition-all duration-200 ${isActive
+                                        ? "bg-gray-900 text-white"
                                         : "text-gray-700 hover:bg-gray-100"
-                                }`}
+                                    }`}
                             >
                                 <div className="flex items-center gap-3">
                                     <item.icon size={20} className={isActive ? "text-white" : "text-gray-500"} />
@@ -460,7 +466,7 @@ export default function Header() {
                     {user ? (
                         <>
                             <div className="my-2 border-t border-gray-100"></div>
-                            
+
                             {!isDashboard && (
                                 <Link
                                     href={`${user?.role === "admin" ? "/dashboard/admin" : "/dashboard/user"}`}

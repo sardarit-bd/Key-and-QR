@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Eye, Tag, User, Gift, CreditCard, Clock, Truck, CheckCircle, Ban, Undo2, RotateCcw, Info, RefreshCw, Check } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, Tag, User, Gift, CreditCard, Clock, Truck, CheckCircle, Ban, Undo2, RotateCcw, Info, RefreshCw, Check, XCircle } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
 
@@ -58,7 +58,20 @@ const formatDate = (date) => {
     });
 };
 
-// কাস্টম স্ট্যাটাস সিলেক্টর কম্পোনেন্ট
+const canRefund = (order) => {
+    return order.refundStatus === "requested" &&
+        order.paymentStatus === "paid" &&
+        !["cancelled", "returned"].includes(order.fulfillmentStatus);
+};
+
+const canReturn = (order) => {
+    return order.returnStatus === "requested";
+};
+
+const canCompleteReturn = (order) => {
+    return ["approved", "shipped", "received"].includes(order.returnStatus);
+};
+
 function CustomStatusSelect({ currentStatus, hasTag, onStatusChange, isUpdating, orderId }) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
@@ -179,6 +192,9 @@ export default function OrderMobileCard({
     onViewDetails,
     onUpdateStatus,
     onCancelOrder,
+    onProcessRefund,
+    onProcessReturn,
+    onCompleteReturn,
     updatingStatus,
     statusUpdateOrder
 }) {
@@ -229,6 +245,43 @@ export default function OrderMobileCard({
                             {getFulfillmentStatusIcon(currentStatus)}
                             {currentStatus}
                         </span>
+                        {order.refundStatus === "requested" && (
+                            <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                <RotateCcw size={10} />
+                                Refund Req
+                            </span>
+                        )}
+                        {/* Return Status Badges */}
+                        {order.returnStatus === "requested" && (
+                            <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                <Clock size={10} />
+                                Return Req
+                            </span>
+                        )}
+                        {order.returnStatus === "approved" && (
+                            <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                <CheckCircle size={10} />
+                                Return Approved
+                            </span>
+                        )}
+                        {order.returnStatus === "shipped" && (
+                            <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                <Truck size={10} />
+                                Return Shipped
+                            </span>
+                        )}
+                        {order.returnStatus === "completed" && (
+                            <span className="text-xs bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                <CheckCircle size={10} />
+                                Return Completed
+                            </span>
+                        )}
+                        {order.returnStatus === "rejected" && (
+                            <span className="text-xs bg-red-100 text-red-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                <XCircle size={10} />
+                                Return Rejected
+                            </span>
+                        )}
                         <button
                             onClick={(e) => {
                                 e.stopPropagation();
@@ -297,7 +350,7 @@ export default function OrderMobileCard({
                         <span className="text-gray-900">{formatDate(order.createdAt)}</span>
                     </div>
 
-                    {/* Custom Status Update Section */}
+                    {/* Status Update Section */}
                     {!isStatusLocked && (
                         <div className="flex justify-between text-sm items-center flex-wrap gap-2 pt-1">
                             <span className="text-gray-500">Update Status:</span>
@@ -321,17 +374,58 @@ export default function OrderMobileCard({
                         </div>
                     )}
 
-                    {canCancel && (
-                        <div className="pt-1">
+                    {/* Action Buttons Grid for Mobile */}
+                    <div className="grid grid-cols-2 gap-2 pt-2">
+                        {!order.assignedTag && order.fulfillmentStatus !== "cancelled" && order.fulfillmentStatus !== "returned" && (
+                            <button
+                                onClick={() => onAssignTag(order)}
+                                className="py-2 text-center text-sm text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition"
+                            >
+                                <Tag size={14} className="inline mr-1" />
+                                Assign Tag
+                            </button>
+                        )}
+
+                        {canCancel && (
                             <button
                                 onClick={() => onCancelOrder(order)}
-                                className="w-full py-2 text-center text-sm text-red-600 font-medium border border-red-200 rounded-lg hover:bg-red-50 transition"
+                                className="py-2 text-center text-sm text-red-600 font-medium border border-red-200 rounded-lg hover:bg-red-50 transition"
                             >
                                 <Ban size={14} className="inline mr-1" />
                                 Cancel Order
                             </button>
-                        </div>
-                    )}
+                        )}
+
+                        {canRefund(order) && (
+                            <button
+                                onClick={() => onProcessRefund(order)}
+                                className="py-2 text-center text-sm text-purple-600 font-medium border border-purple-200 rounded-lg hover:bg-purple-50 transition"
+                            >
+                                <RotateCcw size={14} className="inline mr-1" />
+                                Process Refund
+                            </button>
+                        )}
+
+                        {canReturn(order) && (
+                            <button
+                                onClick={() => onProcessReturn(order)}
+                                className="py-2 text-center text-sm text-orange-600 font-medium border border-orange-200 rounded-lg hover:bg-orange-50 transition"
+                            >
+                                <Undo2 size={14} className="inline mr-1" />
+                                Process Return
+                            </button>
+                        )}
+
+                        {canCompleteReturn(order) && (
+                            <button
+                                onClick={() => onCompleteReturn(order._id)}
+                                className="py-2 text-center text-sm text-green-600 font-medium border border-green-200 rounded-lg hover:bg-green-50 transition"
+                            >
+                                <CheckCircle size={14} className="inline mr-1" />
+                                Complete Return
+                            </button>
+                        )}
+                    </div>
 
                     <div className="pt-1">
                         <button

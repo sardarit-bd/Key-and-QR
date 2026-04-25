@@ -64,9 +64,9 @@ export default function TagPage() {
         }
     }, [tagCode]);
 
-    if (loading) {
-        return <MessageLoadingScreen category="faith" />;
-    }
+    // if (loading) {
+    //     return <MessageLoadingScreen category="faith" />;
+    // }
 
     if (error) {
         return (
@@ -103,7 +103,16 @@ export default function TagPage() {
     if (unlockResult) {
         return (
             <MessageDisplay
-                message={unlockResult.data?.quote}
+                message={
+                    unlockResult.data?.quoteData || {
+                        _id: unlockResult.data?._id,
+                        text: unlockResult.data?.quote,
+                        category: unlockResult.data?.category,
+                        author: unlockResult.data?.author,
+                        image: unlockResult.data?.image,
+                        theme: unlockResult.data?.theme,
+                    }
+                }
                 category={unlockResult.data?.category}
                 isPersonalMessage={unlockResult.data?.isPersonalMessage}
                 isAlreadyScanned={unlockResult.status === "ALREADY_SCANNED_TODAY"}
@@ -113,5 +122,5 @@ export default function TagPage() {
         );
     }
 
-    return <Loader text="Preparing your message..." fullScreen />;
+    return <Loader text="QKey..." fullScreen />;
 }

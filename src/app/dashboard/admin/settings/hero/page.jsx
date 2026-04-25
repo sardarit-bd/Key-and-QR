@@ -100,7 +100,7 @@ export default function AdminHeroPage() {
   }
 
   return (
-    <div className="flex-1 w-full p-4 lg:p-8">
+    <div className="flex-1 w-full p-4 lg:p-3">
       <div className="mb-6">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
           <div>

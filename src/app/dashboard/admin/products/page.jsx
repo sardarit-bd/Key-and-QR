@@ -3,143 +3,80 @@
 import api from "@/lib/api";
 import Loader from "@/shared/Loader";
 import { useAuthStore } from "@/store/authStore";
-import { Archive, Edit, Mail, Plus, RotateCcw, Search, Trash2, ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight } from "lucide-react";
+import { Archive, Plus, Search, Mail, X, Filter, Clock } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { FaGoogle } from "react-icons/fa";
-
-// Custom Select Component for items per page
-const ItemsPerPageSelect = ({ value, onChange, options }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const dropdownRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
-      }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const selectedOption = options.find(opt => opt.value === value);
-
-  return (
-    <div className="relative" ref={dropdownRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center justify-between gap-2 px-3 py-1.5 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 bg-white min-w-[70px] cursor-pointer hover:border-gray-400 transition-colors"
-      >
-        <span>{selectedOption?.label || value}</span>
-        <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />
-      </button>
-
-      {isOpen && (
-        <div className="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg z-50 overflow-hidden">
-          <div className="max-h-25 overflow-y-auto custom-scroll">
-            {options.map((option, index) => (
-              <div key={option.value}>
-                <button
-                  onClick={() => {
-                    onChange(option.value);
-                    setIsOpen(false);
-                  }}
-                  className={`w-full px-3 py-2 text-sm text-left hover:bg-gray-50 transition-colors cursor-pointer ${value === option.value
-                      ? 'bg-gray-100 text-gray-900 font-medium'
-                      : 'text-gray-600 hover:text-gray-900'
-                    }`}
-                >
-                  {option.label}
-                </button>
-                {index < options.length - 1 && (
-                  <div className="border-t border-gray-100 mx-2" />
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Global styles for custom scrollbar */}
-      <style jsx global>{`
-                .custom-scroll::-webkit-scrollbar {
-                    width: 6px;
-                }
-                .custom-scroll::-webkit-scrollbar-track {
-                    background: #f1f5f9;
-                    border-radius: 10px;
-                }
-                .custom-scroll::-webkit-scrollbar-thumb {
-                    background: #cbd5e1;
-                    border-radius: 10px;
-                }
-                .custom-scroll::-webkit-scrollbar-thumb:hover {
-                    background: #94a3b8;
-                }
-            `}</style>
-    </div>
-  );
-};
-
-// Need to import ChevronDown and useRef
-import { ChevronDown } from "lucide-react";
-import { useRef } from "react";
+import useAuthInit from "@/hooks/useAuthInit";
+import ProductsTable from "@/components/admin/products/ProductsTable";
 
 export default function ProductsPage() {
+  useAuthInit();
   const { user, isInitialized } = useAuthStore();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
-  const [deleteModal, setDeleteModal] = useState({
-    show: false,
-    id: null,
-    type: null,
-  });
-
-  // Pagination states
+  const [activeSearchTerm, setActiveSearchTerm] = useState("");
+  const [deleteModal, setDeleteModal] = useState({ show: false, id: null, type: null });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalProducts, setTotalProducts] = useState(0);
-  const [itemsPerPage, setItemsPerPage] = useState(10);
   const [viewTrash, setViewTrash] = useState(false);
-  const [selectedProduct, setSelectedProduct] = useState(null);
   const [restoreModal, setRestoreModal] = useState({ show: false, id: null });
+  const [isSearching, setIsSearching] = useState(false);
+  const [showRecentSearches, setShowRecentSearches] = useState(false);
+  const [searchHistory, setSearchHistory] = useState([]);
 
-  // Get provider info for admin badge
+  const itemsPerPage = 10;
+  const searchInputRef = useRef(null);
+
   const getProviderInfo = () => {
     if (user?.provider === "google") {
-      return {
-        icon: <FaGoogle size={12} className="text-blue-500" />,
-        text: "Google"
-      };
+      return { icon: <FaGoogle size={14} className="text-blue-500" />, text: "Google" };
     }
-    return {
-      icon: <Mail size={12} className="text-gray-500" />,
-      text: "Email"
-    };
+    return { icon: <Mail size={14} className="text-gray-500" />, text: "Email" };
   };
 
-  // Fetch products
+  const providerInfo = getProviderInfo();
+
+  // Load recent searches from localStorage
   useEffect(() => {
-    if (!isInitialized) return;
-    if (!user) return;
-    if (user.role !== "admin") return;
+    const savedSearches = localStorage.getItem("productSearchHistory");
+    if (savedSearches) {
+      try {
+        const parsed = JSON.parse(savedSearches);
+        setSearchHistory(parsed.slice(0, 5));
+      } catch (e) {
+        console.error("Error loading search history", e);
+      }
+    }
+  }, []);
 
-    fetchProducts();
-  }, [currentPage, itemsPerPage, searchTerm, viewTrash, isInitialized, user]);
+  // Save search term to history
+  const saveToSearchHistory = (term) => {
+    if (!term || term.trim() === "") return;
+    
+    setSearchHistory(prev => {
+      const newHistory = [term, ...prev.filter(t => t !== term)].slice(0, 5);
+      localStorage.setItem("productSearchHistory", JSON.stringify(newHistory));
+      return newHistory;
+    });
+  };
 
-  const fetchProducts = async () => {
+  const fetchProducts = useCallback(async () => {
+    if (!user || user.role !== "admin") return;
+
     try {
       setLoading(true);
       const response = await api.get("/products", {
         params: {
           page: currentPage,
           limit: itemsPerPage,
-          search: searchTerm,
+          search: activeSearchTerm,
           trash: viewTrash,
         },
       });
+
       setProducts(response.data.data || []);
       setTotalPages(response.data.meta?.totalPage || 1);
       setTotalProducts(response.data.meta?.total || 0);
@@ -147,11 +84,32 @@ export default function ProductsPage() {
       console.error("Error fetching products:", error);
     } finally {
       setLoading(false);
+      setIsSearching(false);
     }
+  }, [currentPage, activeSearchTerm, viewTrash, user]);
+
+  // Fetch products when active search term changes
+  useEffect(() => {
+    if (!isInitialized) return;
+    if (!user) return;
+    if (user.role !== "admin") return;
+    
+    fetchProducts();
+  }, [fetchProducts, isInitialized, user, activeSearchTerm]);
+
+  const handleSoftDelete = async (id) => {
+    setDeleteModal({ show: true, id, type: "soft" });
   };
 
-  // Handle soft delete (move to trash)
-  const handleSoftDelete = async () => {
+  const handlePermanentDelete = async (id) => {
+    setDeleteModal({ show: true, id, type: "permanent" });
+  };
+
+  const handleRestore = async (id) => {
+    setRestoreModal({ show: true, id });
+  };
+
+  const confirmSoftDelete = async () => {
     try {
       await api.delete(`/products/${deleteModal.id}`);
       setDeleteModal({ show: false, id: null, type: null });
@@ -161,8 +119,7 @@ export default function ProductsPage() {
     }
   };
 
-  // Handle permanent delete
-  const handlePermanentDelete = async () => {
+  const confirmPermanentDelete = async () => {
     try {
       await api.delete(`/products/permanent/${deleteModal.id}`);
       setDeleteModal({ show: false, id: null, type: null });
@@ -172,8 +129,7 @@ export default function ProductsPage() {
     }
   };
 
-  // Handle restore
-  const handleRestore = async () => {
+  const confirmRestore = async () => {
     try {
       await api.patch(`/products/restore/${restoreModal.id}`);
       setRestoreModal({ show: false, id: null });
@@ -183,360 +139,302 @@ export default function ProductsPage() {
     }
   };
 
-  // Pagination handlers
-  const goToPage = (page) => {
-    if (page >= 1 && page <= totalPages) {
-      setCurrentPage(page);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages) {
+      setCurrentPage(newPage);
     }
   };
 
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+  // Handle search on button click or Enter key
+  const performSearch = () => {
+    if (searchTerm.trim() === "") {
+      // If search is empty, clear active search
+      setActiveSearchTerm("");
+      setCurrentPage(1);
+      setShowRecentSearches(false);
+      return;
     }
-  };
-
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  const goToFirstPage = () => {
+    
+    setIsSearching(true);
+    setActiveSearchTerm(searchTerm);
     setCurrentPage(1);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    saveToSearchHistory(searchTerm);
+    setShowRecentSearches(false);
   };
 
-  const goToLastPage = () => {
-    setCurrentPage(totalPages);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
   };
 
-  const handleItemsPerPageChange = (newLimit) => {
-    setItemsPerPage(newLimit);
-    setCurrentPage(1);
-  };
-
-  // Generate page numbers to display
-  const getPageNumbers = () => {
-    const pages = [];
-    const maxVisible = 5;
-
-    if (totalPages <= maxVisible) {
-      for (let i = 1; i <= totalPages; i++) {
-        pages.push(i);
-      }
-    } else {
-      if (currentPage <= 3) {
-        for (let i = 1; i <= 4; i++) pages.push(i);
-        pages.push('...');
-        pages.push(totalPages);
-      } else if (currentPage >= totalPages - 2) {
-        pages.push(1);
-        pages.push('...');
-        for (let i = totalPages - 3; i <= totalPages; i++) pages.push(i);
-      } else {
-        pages.push(1);
-        pages.push('...');
-        for (let i = currentPage - 1; i <= currentPage + 1; i++) pages.push(i);
-        pages.push('...');
-        pages.push(totalPages);
-      }
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      performSearch();
     }
-    return pages;
   };
 
-  const providerInfo = getProviderInfo();
+  const handleClearSearch = () => {
+    setSearchTerm("");
+    setActiveSearchTerm("");
+    setCurrentPage(1);
+    searchInputRef.current?.focus();
+  };
 
-  if (loading) {
+  const handleRecentSearchClick = (term) => {
+    setSearchTerm(term);
+    setActiveSearchTerm(term);
+    setCurrentPage(1);
+    setShowRecentSearches(false);
+    setIsSearching(true);
+  };
+
+  const handleClearHistory = () => {
+    setSearchHistory([]);
+    localStorage.removeItem("productSearchHistory");
+    setShowRecentSearches(false);
+  };
+
+  // Show loader only on initial load
+  if (!isInitialized || (loading && products.length === 0 && !activeSearchTerm)) {
     return <Loader text="Qkey..." size={50} fullScreen />;
   }
 
   return (
-    <div className="flex-1 w-full p-4 lg:p-8">
-      {/* Header with Admin Info */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
-        <div className="flex items-center gap-4 flex-wrap">
-          <h1 className="text-2xl font-semibold text-gray-900">
-            {viewTrash ? "Trash" : "Products"}
-          </h1>
-          <button
-            onClick={() => {
-              setViewTrash(!viewTrash);
-              setCurrentPage(1);
-            }}
-            className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm transition ${viewTrash
-              ? "bg-gray-900 text-white"
-              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-              }`}
-          >
-            <Archive size={16} />
-            {viewTrash ? "View Products" : "View Trash"}
-          </button>
+    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
+      <div className="w-full">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <h1 className="text-2xl md:text-3xl font-bold text-gray-900">
+                  {viewTrash ? "Trash" : "Products"}
+                </h1>
+                <div className="flex items-center gap-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs">
+                  {providerInfo.icon}
+                  <span className="text-gray-600">{providerInfo.text} Admin</span>
+                </div>
+              </div>
+              <p className="text-gray-600 mt-1">
+                {viewTrash ? "Restore or permanently delete products" : "Manage all products"}
+                {totalProducts > 0 && !viewTrash && <span className="ml-2 text-sm">({totalProducts} total products)</span>}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => {
+                  setViewTrash(!viewTrash);
+                  setCurrentPage(1);
+                  setSearchTerm("");
+                  setActiveSearchTerm("");
+                }}
+                className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg transition cursor-pointer ${
+                  viewTrash
+                    ? "bg-gray-900 text-white hover:bg-gray-800"
+                    : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
+                }`}
+              >
+                <Archive size={18} />
+                {viewTrash ? "View Products" : "View Trash"}
+              </button>
 
-          {/* Admin Provider Badge */}
-          <div className="flex items-center gap-1 px-2 py-1 bg-gray-100 rounded-full text-xs">
-            {providerInfo.icon}
-            <span className="text-gray-600">{providerInfo.text} Admin</span>
+              {!viewTrash && (
+                <Link
+                  href="/dashboard/admin/products/add"
+                  className="inline-flex items-center gap-2 px-4 py-2 bg-black text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
+                >
+                  <Plus size={18} />
+                  Add Product
+                </Link>
+              )}
+            </div>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-3">
-          {/* Search */}
-          <div className="relative">
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-              size={18}
-            />
-            <input
-              type="text"
-              placeholder="Search products..."
-              value={searchTerm}
-              onChange={(e) => {
-                setSearchTerm(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 w-full sm:w-64"
-            />
-          </div>
+        {/* Enhanced Search Section with Search Button */}
+        <div className="mb-6">
+          <div className="flex gap-2">
+            <div className="relative flex-1 max-w-md">
+              {/* Search Icon */}
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={18} />
+              
+              {/* Search Input */}
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search by product name, brand, or category..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+                onKeyPress={handleKeyPress}
+                onFocus={() => setShowRecentSearches(true)}
+                onBlur={() => setTimeout(() => setShowRecentSearches(false), 200)}
+                className="w-full pl-10 pr-10 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-gray-400 focus:border-transparent transition"
+              />
+              
+              {/* Clear Button */}
+              {searchTerm && (
+                <button
+                  onClick={handleClearSearch}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-100 rounded-full transition cursor-pointer"
+                  title="Clear search"
+                >
+                  <X size={16} className="text-gray-400 hover:text-gray-600" />
+                </button>
+              )}
 
-          {/* Add Product Button - only show when not in trash */}
-          {!viewTrash && (
-            <Link
-              href="/dashboard/admin/products/add"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition"
-            >
-              <Plus size={18} />
-              Add Product
-            </Link>
-          )}
-        </div>
-      </div>
-
-      {/* Products Table */}
-      <div className="bg-white rounded-lg border border-gray-200 overflow-hidden">
-        {products.length === 0 ? (
-          <div className="p-8 text-center">
-            <p className="text-gray-500">
-              {viewTrash ? "Trash is empty" : "No products found"}
-            </p>
-          </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left p-4 text-sm font-medium text-gray-600">Image</th>
-                  <th className="text-left p-4 text-sm font-medium text-gray-600">Name</th>
-                  <th className="text-left p-4 text-sm font-medium text-gray-600">Category</th>
-                  <th className="text-left p-4 text-sm font-medium text-gray-600">Price</th>
-                  <th className="text-left p-4 text-sm font-medium text-gray-600">Stock</th>
-                  <th className="text-left p-4 text-sm font-medium text-gray-600">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {products.map((product) => (
-                  <tr key={product._id} className="hover:bg-gray-50 transition">
-                    <td className="p-4">
-                      {product.image?.url ? (
-                        <img
-                          src={product.image.url}
-                          alt={product.name}
-                          className="w-12 h-12 object-cover rounded-lg"
-                          onError={(e) => {
-                            e.target.src = "https://placehold.co/400x400/e2e8f0/1e293b?text=No+Image";
-                          }}
-                        />
-                      ) : (
-                        <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
-                          <span className="text-xs text-gray-400">No img</span>
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-4">
-                      <div className="font-medium text-gray-900">{product.name}</div>
-                      <div className="text-xs text-gray-500">{product.brand}</div>
-                      {product.deletedAt && (
-                        <div className="text-xs text-red-500 mt-1">
-                          Deleted: {new Date(product.deletedAt).toLocaleDateString()}
-                        </div>
-                      )}
-                    </td>
-                    <td className="p-4 text-sm text-gray-600">{product.category}</td>
-                    <td className="p-4 text-sm font-medium text-gray-900">${product.price}</td>
-                    <td className="p-4">
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${product.stock > 0
-                          ? product.stock <= 2
-                            ? "bg-orange-50 text-orange-700"
-                            : "bg-green-50 text-green-700"
-                          : "bg-red-50 text-red-700"
-                          }`}
+              {/* Recent Searches Dropdown */}
+              {showRecentSearches && searchHistory.length > 0 && !searchTerm && (
+                <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-20 overflow-hidden">
+                  <div className="px-3 py-2 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      <Clock size={14} className="text-gray-500" />
+                      <span className="text-xs font-medium text-gray-600">Recent Searches</span>
+                    </div>
+                    <button
+                      onClick={handleClearHistory}
+                      className="text-xs text-red-600 hover:text-red-700 transition"
+                    >
+                      Clear All
+                    </button>
+                  </div>
+                  <div className="max-h-60 overflow-y-auto">
+                    {searchHistory.map((term, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleRecentSearchClick(term)}
+                        className="w-full px-3 py-2 text-left hover:bg-gray-50 transition flex items-center gap-2 group cursor-pointer"
                       >
-                        {product.stock > 0
-                          ? product.stock <= 2
-                            ? `Only ${product.stock} left`
-                            : `${product.stock} in stock`
-                          : "Out of stock"}
-                      </span>
-                    </td>
-                    <td className="p-4">
-                      {viewTrash ? (
-                        <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => setRestoreModal({ show: true, id: product._id })}
-                            className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition"
-                            title="Restore product"
-                          >
-                            <RotateCcw size={18} />
-                          </button>
-                          <button
-                            onClick={() =>
-                              setDeleteModal({
-                                show: true,
-                                id: product._id,
-                                type: "permanent",
-                              })
-                            }
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                            title="Delete permanently"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2">
-                          <Link
-                            href={`/dashboard/admin/products/edit/${product._id}`}
-                            className="p-2 text-gray-600 hover:bg-gray-100 rounded-lg transition"
-                          >
-                            <Edit size={18} />
-                          </Link>
-                          <button
-                            onClick={() =>
-                              setDeleteModal({
-                                show: true,
-                                id: product._id,
-                                type: "soft",
-                              })
-                            }
-                            className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
-                            title="Move to trash"
-                          >
-                            <Archive size={18} />
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+                        <Search size={14} className="text-gray-400 group-hover:text-gray-600" />
+                        <span className="text-sm text-gray-700">{term}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
 
-      {/* Pagination Section */}
-      {totalPages > 1 || products.length > 0 ? (
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-6 pt-4 border-t border-gray-200">
-          {/* Items per page selector */}
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-600">Show:</span>
-            <ItemsPerPageSelect
-              value={itemsPerPage}
-              onChange={handleItemsPerPageChange}
-              options={[
-                { value: 5, label: "5" },
-                { value: 10, label: "10" },
-                { value: 20, label: "20" },
-                { value: 50, label: "50" },
-              ]}
-            />
-            <span className="text-sm text-gray-600">per page</span>
+            {/* Search Button */}
+            <button
+              onClick={performSearch}
+              disabled={isSearching}
+              className="px-6 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSearching ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Searching...</span>
+                </>
+              ) : (
+                <>
+                  <Search size={18} />
+                  <span>Search</span>
+                </>
+              )}
+            </button>
           </div>
 
-          {/* Pagination buttons */}
-          {totalPages > 1 && (
-            <div className="flex items-center gap-1">
-              <button
-                onClick={goToFirstPage}
-                disabled={currentPage === 1}
-                className={`p-2 rounded-md transition-all duration-200 ${currentPage === 1
-                  ? "text-gray-300 cursor-not-allowed"
-                  : "text-gray-600 hover:bg-gray-100 cursor-pointer"
-                  }`}
-                aria-label="First page"
-              >
-                <ChevronsLeft className="w-4 h-4" />
-              </button>
-
-              <button
-                onClick={goToPreviousPage}
-                disabled={currentPage === 1}
-                className={`p-2 rounded-md transition-all duration-200 ${currentPage === 1
-                  ? "text-gray-300 cursor-not-allowed"
-                  : "text-gray-600 hover:bg-gray-100 cursor-pointer"
-                  }`}
-                aria-label="Previous page"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-
-              {getPageNumbers().map((page, index) => (
-                page === '...' ? (
-                  <span key={`dots-${index}`} className="px-3 py-1 text-gray-400">
-                    ...
-                  </span>
-                ) : (
-                  <button
-                    key={page}
-                    onClick={() => goToPage(page)}
-                    className={`min-w-[36px] h-9 px-3 rounded-md text-sm font-medium transition-all duration-200 cursor-pointer ${currentPage === page
-                      ? "bg-gray-900 text-white"
-                      : "text-gray-600 hover:bg-gray-100"
-                      }`}
-                  >
-                    {page}
-                  </button>
-                )
-              ))}
-
-              <button
-                onClick={goToNextPage}
-                disabled={currentPage === totalPages}
-                className={`p-2 rounded-md transition-all duration-200 ${currentPage === totalPages
-                  ? "text-gray-300 cursor-not-allowed"
-                  : "text-gray-600 hover:bg-gray-100 cursor-pointer"
-                  }`}
-                aria-label="Next page"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-
-              <button
-                onClick={goToLastPage}
-                disabled={currentPage === totalPages}
-                className={`p-2 rounded-md transition-all duration-200 ${currentPage === totalPages
-                  ? "text-gray-300 cursor-not-allowed"
-                  : "text-gray-600 hover:bg-gray-100 cursor-pointer"
-                  }`}
-                aria-label="Last page"
-              >
-                <ChevronsRight className="w-4 h-4" />
-              </button>
+          {/* Active Search Indicator */}
+          {activeSearchTerm && (
+            <div className="mt-2 flex items-center gap-2 flex-wrap">
+              <div className="inline-flex items-center gap-2 px-2 py-1 bg-blue-50 text-blue-700 rounded-md text-sm">
+                <Search size={14} />
+                <span>Showing results for: <strong>"{activeSearchTerm}"</strong></span>
+                <button
+                  onClick={handleClearSearch}
+                  className="ml-1 p-0.5 hover:bg-blue-100 rounded-full transition"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              {totalProducts > 0 && (
+                <span className="text-sm text-gray-500">
+                  Found {totalProducts} result{totalProducts !== 1 ? 's' : ''}
+                </span>
+              )}
             </div>
           )}
 
-          {/* Info text */}
-          <div className="text-sm text-gray-500">
-            Showing {products.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} to{" "}
-            {Math.min(currentPage * itemsPerPage, totalProducts)} of {totalProducts} products
-          </div>
+          {/* Popular Search Suggestions */}
+          {!activeSearchTerm && !viewTrash && (
+            <div className="mt-3 flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-gray-500 flex items-center gap-1">
+                <Filter size={12} />
+                Popular searches:
+              </span>
+              {["Qkey", "Smart", "Classic", "Premium", "Keychain"].map((suggestion) => (
+                <button
+                  key={suggestion}
+                  onClick={() => handleRecentSearchClick(suggestion)}
+                  className="text-xs px-2 py-1 bg-gray-100 text-gray-600 rounded-full hover:bg-gray-200 transition cursor-pointer"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-      ) : null}
+
+        {/* Loading overlay for table only (not full page) */}
+        {loading && products.length > 0 && (
+          <div className="relative">
+            <div className="absolute inset-0 bg-white/50 z-10 flex items-center justify-center rounded-lg">
+              <div className="bg-white p-4 rounded-lg shadow-lg flex items-center gap-3">
+                <div className="w-5 h-5 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
+                <span className="text-sm text-gray-600">Updating products...</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Products Table */}
+        <ProductsTable
+          products={products}
+          viewTrash={viewTrash}
+          onRestore={handleRestore}
+          onSoftDelete={handleSoftDelete}
+          onPermanentDelete={handlePermanentDelete}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={handlePageChange}
+        />
+
+        {/* Empty State with Search Suggestion */}
+        {products.length === 0 && !loading && (
+          <div className="text-center py-12 bg-white rounded-lg border border-gray-200 mt-4">
+            {activeSearchTerm ? (
+              <>
+                <Search size={48} className="mx-auto text-gray-300 mb-3" />
+                <h3 className="text-lg font-medium text-gray-900 mb-1">No products found</h3>
+                <p className="text-gray-500 mb-4">
+                  No results found for "{activeSearchTerm}"
+                </p>
+                <button
+                  onClick={handleClearSearch}
+                  className="text-sm text-gray-600 hover:text-gray-900 underline"
+                >
+                  Clear search
+                </button>
+              </>
+            ) : (
+              <>
+                <Archive size={48} className="mx-auto text-gray-300 mb-3" />
+                <h3 className="text-lg font-medium text-gray-900 mb-1">No products available</h3>
+                <p className="text-gray-500">
+                  {viewTrash ? "Trash is empty" : "Start by adding your first product"}
+                </p>
+                {!viewTrash && (
+                  <Link
+                    href="/dashboard/admin/products/add"
+                    className="inline-block mt-4 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition"
+                  >
+                    <Plus size={18} className="inline mr-1" />
+                    Add Product
+                  </Link>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Delete Confirmation Modal */}
       {deleteModal.show && (
@@ -547,22 +445,23 @@ export default function ProductsPage() {
             </h3>
             <p className="text-gray-600 mb-6">
               {deleteModal.type === "permanent"
-                ? "Are you sure you want to permanently delete this product? This action cannot be undone and will remove all images from Cloudinary."
-                : "Are you sure you want to move this product to trash? You can restore it later from the trash."}
+                ? "Are you sure you want to permanently delete this product? This action cannot be undone."
+                : "Are you sure you want to move this product to trash? You can restore it later."}
             </p>
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setDeleteModal({ show: false, id: null, type: null })}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
-                onClick={deleteModal.type === "permanent" ? handlePermanentDelete : handleSoftDelete}
-                className={`px-4 py-2 text-white rounded-lg transition ${deleteModal.type === "permanent"
-                  ? "bg-red-600 hover:bg-red-700"
-                  : "bg-orange-600 hover:bg-orange-700"
-                  }`}
+                onClick={deleteModal.type === "permanent" ? confirmPermanentDelete : confirmSoftDelete}
+                className={`px-4 py-2 text-white rounded-lg transition cursor-pointer ${
+                  deleteModal.type === "permanent"
+                    ? "bg-red-600 hover:bg-red-700"
+                    : "bg-orange-600 hover:bg-orange-700"
+                }`}
               >
                 {deleteModal.type === "permanent" ? "Permanently Delete" : "Move to Trash"}
               </button>
@@ -582,13 +481,13 @@ export default function ProductsPage() {
             <div className="flex justify-end gap-3">
               <button
                 onClick={() => setRestoreModal({ show: false, id: null })}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
               >
                 Cancel
               </button>
               <button
-                onClick={handleRestore}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition"
+                onClick={confirmRestore}
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition cursor-pointer"
               >
                 Restore
               </button>

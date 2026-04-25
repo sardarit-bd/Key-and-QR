@@ -21,7 +21,7 @@ import {
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
 
 export default function AdminProfilePage() {
     const router = useRouter();
@@ -272,6 +272,7 @@ export default function AdminProfilePage() {
 
     return (
         <div className="min-h-screen bg-gray-50 py-8 px-4 md:px-8">
+            <Toaster position="top-right" />
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
                 <div className="mb-8">

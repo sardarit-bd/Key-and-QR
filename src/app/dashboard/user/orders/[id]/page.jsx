@@ -3,6 +3,7 @@
 import { orderService } from "@/services/order.service";
 import Loader from "@/shared/Loader";
 import { useAuthStore } from "@/store/authStore";
+import api from "@/lib/api";
 import {
     AlertCircle,
     ArrowLeft,
@@ -12,19 +13,38 @@ import {
     CreditCard,
     Gift,
     Package,
+    RotateCcw,
     Tag,
     Truck,
+    Undo2,
     User,
     Edit2,
     Save,
     X,
-    MapPin
+    MapPin,
+    XCircle
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import { UserDetailsRequestModal } from "@/components/user/order/UserDetailsRequestModal";
+
+// Helper function to check if return is within 3-day window
+const isWithinReturnWindow = (deliveredAt) => {
+    if (!deliveredAt) return false;
+    
+    const now = new Date();
+    const deliveredDate = new Date(deliveredAt);
+    const diffTime = now - deliveredDate;
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    
+    return diffDays <= 3;
+};
+
+// Request Modal Component
+
 
 export default function OrderDetailsPage() {
     const { id } = useParams();
@@ -33,6 +53,11 @@ export default function OrderDetailsPage() {
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    
+    // Modal states
+    const [refundModalOpen, setRefundModalOpen] = useState(false);
+    const [returnModalOpen, setReturnModalOpen] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
 
     // Edit address state
     const [isEditingAddress, setIsEditingAddress] = useState(false);
@@ -88,6 +113,36 @@ export default function OrderDetailsPage() {
         }
     };
 
+    // Request Refund Handler
+    const handleRequestRefund = async (reason) => {
+        setSubmitting(true);
+        try {
+            await api.post(`/orders/${order._id}/refund/request`, { reason });
+            toast.success("Refund request submitted successfully. Admin will review it.");
+            fetchOrderDetails();
+        } catch (error) {
+            console.error("Error requesting refund:", error);
+            toast.error(error.response?.data?.message || "Failed to submit refund request");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    // Request Return Handler
+    const handleRequestReturn = async (reason) => {
+        setSubmitting(true);
+        try {
+            await api.post(`/orders/${order._id}/return/request`, { reason });
+            toast.success("Return request submitted successfully. Admin will review it.");
+            fetchOrderDetails();
+        } catch (error) {
+            console.error("Error requesting return:", error);
+            toast.error(error.response?.data?.message || "Failed to submit return request");
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
     // Check if user can edit address (only before shipping)
     const canEditAddress = () => {
         const uneditableStatuses = ["shipped", "delivered", "cancelled", "returned"];
@@ -100,7 +155,7 @@ export default function OrderDetailsPage() {
         setEditFormData(prev => ({ ...prev, [name]: value }));
     };
 
-    //  Save updated shipping address
+    // Save updated shipping address
     const handleSaveAddress = async () => {
         if (!editFormData.address || !editFormData.city || !editFormData.country) {
             toast.error("Please fill in address, city, and country");
@@ -180,6 +235,20 @@ export default function OrderDetailsPage() {
                 label: "Delivered",
                 description: "Your order has been delivered",
                 canEdit: false
+            },
+            cancelled: {
+                icon: XCircle,
+                color: "bg-red-100 text-red-800",
+                label: "Cancelled",
+                description: "Your order has been cancelled",
+                canEdit: false
+            },
+            returned: {
+                icon: Undo2,
+                color: "bg-orange-100 text-orange-800",
+                label: "Returned",
+                description: "Your order has been returned",
+                canEdit: false
             }
         };
         return configs[status] || configs.pending;
@@ -247,9 +316,39 @@ export default function OrderDetailsPage() {
     const subtotal = getSubtotal();
     const total = calculateTotal();
     const canEdit = canEditAddress();
+    const isReturnEligible = isWithinReturnWindow(order.deliveredAt);
+    const canRequestRefund = order.paymentStatus === "paid" &&
+        !["shipped", "delivered", "cancelled", "returned"].includes(order.fulfillmentStatus) &&
+        order.refundStatus === "none";
+    const canRequestReturn = order.paymentStatus === "paid" &&
+        order.fulfillmentStatus === "delivered" &&
+        order.returnStatus === "none" &&
+        isReturnEligible;
 
     return (
         <div className="py-16 px-4 md:px-8">
+            {/* Refund Modal */}
+            <UserDetailsRequestModal
+                isOpen={refundModalOpen}
+                onClose={() => setRefundModalOpen(false)}
+                onSubmit={handleRequestRefund}
+                title="Request Refund"
+                description="Please provide the reason for requesting a refund. This will help us process your request faster."
+                submitText="Submit Refund Request"
+                loading={submitting}
+            />
+            
+            {/* Return Modal */}
+            <UserDetailsRequestModal
+                isOpen={returnModalOpen}
+                onClose={() => setReturnModalOpen(false)}
+                onSubmit={handleRequestReturn}
+                title="Request Return"
+                description="Please provide the reason for returning this item. Returns are only accepted within 3 days of delivery."
+                submitText="Submit Return Request"
+                loading={submitting}
+            />
+            
             {/* Header */}
             <div className="mb-8">
                 <Link
@@ -301,7 +400,7 @@ export default function OrderDetailsPage() {
                                         { status: "Payment Confirmed", date: order.paymentStatus === "paid" ? order.updatedAt : null, icon: CreditCard, completed: order.paymentStatus === "paid" },
                                         { status: "Tag Assigned", date: order.assignedTag ? order.updatedAt : null, icon: Tag, completed: !!order.assignedTag },
                                         { status: "Shipped", date: order.fulfillmentStatus === "shipped" ? order.updatedAt : null, icon: Truck, completed: order.fulfillmentStatus === "shipped" },
-                                        { status: "Delivered", date: order.fulfillmentStatus === "delivered" ? order.updatedAt : null, icon: CheckCircle, completed: order.fulfillmentStatus === "delivered" }
+                                        { status: "Delivered", date: order.fulfillmentStatus === "delivered" ? order.deliveredAt : null, icon: CheckCircle, completed: order.fulfillmentStatus === "delivered" }
                                     ].map((step, index) => (
                                         <div key={index} className="flex gap-4 relative">
                                             <div className={`w-8 h-8 rounded-full flex items-center justify-center z-10 transition-all duration-300 ${step.completed ? "bg-green-100" : "bg-gray-100"}`}>
@@ -321,6 +420,99 @@ export default function OrderDetailsPage() {
                             </div>
                         </div>
                     </div>
+
+                    {/* Refund/Return Status Section */}
+                    {(order.refundStatus !== "none" || order.returnStatus !== "none" || order.cancellationReason) && (
+                        <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm">
+                            <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+                                <AlertCircle className="w-5 h-5" />
+                                Request Status
+                            </h2>
+
+                            {order.cancellationReason && (
+                                <div className="mb-4 p-3 bg-red-50 rounded-lg">
+                                    <p className="text-sm font-medium text-red-800">Cancellation Reason:</p>
+                                    <p className="text-sm text-red-700 mt-1">{order.cancellationReason}</p>
+                                    {order.cancelledAt && (
+                                        <p className="text-xs text-red-600 mt-2">Cancelled on: {formatDate(order.cancelledAt)}</p>
+                                    )}
+                                </div>
+                            )}
+
+                            {order.refundStatus === "requested" && (
+                                <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
+                                    <p className="text-sm font-medium text-yellow-800">Refund Request Pending</p>
+                                    <p className="text-sm text-yellow-700 mt-1">Reason: {order.refundReason || "Not specified"}</p>
+                                    <p className="text-xs text-yellow-600 mt-2">Requested on: {formatDate(order.refundRequestedAt)}</p>
+                                </div>
+                            )}
+
+                            {order.refundStatus === "rejected" && (
+                                <div className="mb-4 p-3 bg-red-50 rounded-lg">
+                                    <p className="text-sm font-medium text-red-800">Refund Request Rejected</p>
+                                    <p className="text-sm text-red-700 mt-1">Reason: {order.refundReason}</p>
+                                </div>
+                            )}
+
+                            {order.refundStatus === "completed" && (
+                                <div className="mb-4 p-3 bg-green-50 rounded-lg">
+                                    <p className="text-sm font-medium text-green-800">Refund Processed</p>
+                                    <p className="text-sm text-green-700 mt-1">Your refund has been processed successfully.</p>
+                                    {order.refundProcessedAt && (
+                                        <p className="text-xs text-green-600 mt-2">Processed on: {formatDate(order.refundProcessedAt)}</p>
+                                    )}
+                                </div>
+                            )}
+
+                            {order.returnStatus === "requested" && (
+                                <div className="mb-4 p-3 bg-yellow-50 rounded-lg">
+                                    <p className="text-sm font-medium text-yellow-800">Return Request Pending</p>
+                                    <p className="text-sm text-yellow-700 mt-1">Reason: {order.returnReason || "Not specified"}</p>
+                                    <p className="text-xs text-yellow-600 mt-2">Requested on: {formatDate(order.returnRequestedAt)}</p>
+                                </div>
+                            )}
+
+                            {order.returnStatus === "approved" && (
+                                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                                    <p className="text-sm font-medium text-blue-800">Return Request Approved</p>
+                                    <p className="text-sm text-blue-700 mt-1">Your return request has been approved by admin.</p>
+                                    {order.returnApprovedAt && (
+                                        <p className="text-xs text-blue-600 mt-2">Approved on: {formatDate(order.returnApprovedAt)}</p>
+                                    )}
+                                </div>
+                            )}
+
+                            {order.returnStatus === "shipped" && (
+                                <div className="mb-4 p-3 bg-blue-50 rounded-lg">
+                                    <p className="text-sm font-medium text-blue-800">Return in Progress</p>
+                                    <p className="text-sm text-blue-700 mt-1">Return approved. Please ship the item back.</p>
+                                    {order.returnTrackingNumber && (
+                                        <p className="text-xs text-blue-600 mt-2">Tracking Number: {order.returnTrackingNumber}</p>
+                                    )}
+                                    {order.returnApprovedAt && (
+                                        <p className="text-xs text-blue-600 mt-1">Approved on: {formatDate(order.returnApprovedAt)}</p>
+                                    )}
+                                </div>
+                            )}
+
+                            {order.returnStatus === "rejected" && (
+                                <div className="mb-4 p-3 bg-red-50 rounded-lg">
+                                    <p className="text-sm font-medium text-red-800">Return Request Rejected</p>
+                                    <p className="text-sm text-red-700 mt-1">Reason: {order.returnReason}</p>
+                                </div>
+                            )}
+
+                            {order.returnStatus === "completed" && (
+                                <div className="mb-4 p-3 bg-green-50 rounded-lg">
+                                    <p className="text-sm font-medium text-green-800">Return Completed</p>
+                                    <p className="text-sm text-green-700 mt-1">Your return has been completed and refund processed.</p>
+                                    {order.returnReceivedAt && (
+                                        <p className="text-xs text-green-600 mt-2">Return received on: {formatDate(order.returnReceivedAt)}</p>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Product Details */}
                     <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-300">
@@ -386,7 +578,7 @@ export default function OrderDetailsPage() {
                         </div>
                     )}
 
-                    {/* ✅ Shipping Address Section with Edit Feature */}
+                    {/* Shipping Address Section with Edit Feature */}
                     <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-md transition-all duration-300">
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
@@ -415,7 +607,7 @@ export default function OrderDetailsPage() {
                                             name="fullName"
                                             value={editFormData.fullName}
                                             onChange={handleEditInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:border-transparent focus:outline-none focus:ring-gray-400"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent focus:outline-none focus:ring-gray-400"
                                             placeholder="Full name"
                                         />
                                     </div>
@@ -426,7 +618,7 @@ export default function OrderDetailsPage() {
                                             name="phone"
                                             value={editFormData.phone}
                                             onChange={handleEditInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:border-transparent focus:outline-none focus:ring-gray-400"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent focus:outline-none focus:ring-gray-400"
                                             placeholder="Phone number"
                                         />
                                     </div>
@@ -439,7 +631,7 @@ export default function OrderDetailsPage() {
                                         name="address"
                                         value={editFormData.address}
                                         onChange={handleEditInputChange}
-                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:border-transparent focus:outline-none focus:ring-gray-400"
+                                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent focus:outline-none focus:ring-gray-400"
                                         placeholder="Street address"
                                     />
                                 </div>
@@ -452,7 +644,7 @@ export default function OrderDetailsPage() {
                                             name="city"
                                             value={editFormData.city}
                                             onChange={handleEditInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:border-transparent focus:outline-none focus:ring-gray-400"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent focus:outline-none focus:ring-gray-400"
                                             placeholder="City"
                                         />
                                     </div>
@@ -463,7 +655,7 @@ export default function OrderDetailsPage() {
                                             name="postalCode"
                                             value={editFormData.postalCode}
                                             onChange={handleEditInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:border-transparent focus:outline-none focus:ring-gray-400"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent focus:outline-none focus:ring-gray-400"
                                             placeholder="Postal code"
                                         />
                                     </div>
@@ -474,7 +666,7 @@ export default function OrderDetailsPage() {
                                             name="country"
                                             value={editFormData.country}
                                             onChange={handleEditInputChange}
-                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2  focus:border-transparent focus:outline-none focus:ring-gray-400"
+                                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:border-transparent focus:outline-none focus:ring-gray-400"
                                             placeholder="Country"
                                         />
                                     </div>
@@ -601,6 +793,22 @@ export default function OrderDetailsPage() {
                                 </p>
                                 <p className="font-medium text-gray-900">Stripe (Card)</p>
                             </div>
+                            <div>
+                                <p className="text-gray-500 flex items-center gap-1">
+                                    <CreditCard className="w-3 h-3" />
+                                    Payment Status
+                                </p>
+                                <p className="font-medium text-gray-900 capitalize">{order.paymentStatus}</p>
+                            </div>
+                            {order.deliveredAt && (
+                                <div>
+                                    <p className="text-gray-500 flex items-center gap-1">
+                                        <Truck className="w-3 h-3" />
+                                        Delivered On
+                                    </p>
+                                    <p className="font-medium text-gray-900">{formatDate(order.deliveredAt)}</p>
+                                </div>
+                            )}
                             {order.assignedTag && (
                                 <div>
                                     <p className="text-gray-500 flex items-center gap-1">
@@ -614,6 +822,60 @@ export default function OrderDetailsPage() {
                             )}
                         </div>
                     </div>
+
+                    {/* Request Refund/Return Buttons */}
+                    {canRequestRefund && (
+                        <div className="bg-white border border-gray-200 rounded-lg p-4">
+                            <button
+                                onClick={() => setRefundModalOpen(true)}
+                                className="w-full py-2 bg-green-400 text-white rounded-lg hover:bg-green-500 transition flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                <RotateCcw className="w-4 h-4" />
+                                Request Refund
+                            </button>
+                            <p className="text-xs text-gray-500 mt-2 text-center">
+                                Request refund for this order (order not shipped yet)
+                            </p>
+                        </div>
+                    )}
+
+                    {canRequestReturn && (
+                        <div className="bg-white border border-gray-200 rounded-lg p-4">
+                            <button
+                                onClick={() => setReturnModalOpen(true)}
+                                className="w-full py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition flex items-center justify-center gap-2 cursor-pointer"
+                            >
+                                <Undo2 className="w-4 h-4" />
+                                Request Return
+                            </button>
+                            <p className="text-xs text-gray-500 mt-2 text-center">
+                                Request return within 3 days of delivery
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Show expired return message */}
+                    {order.paymentStatus === "paid" && 
+                     order.fulfillmentStatus === "delivered" && 
+                     order.returnStatus === "none" && 
+                     !isWithinReturnWindow(order.deliveredAt) && (
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                            <div className="flex items-center gap-2 text-gray-500">
+                                <Clock className="w-4 h-4" />
+                                <div>
+                                    <p className="text-sm font-medium">Return window expired</p>
+                                    <p className="text-xs text-gray-400 mt-1">
+                                        Returns are only available within 3 days of delivery.
+                                    </p>
+                                    {order.deliveredAt && (
+                                        <p className="text-xs text-gray-400 mt-1">
+                                            Delivered on: {formatDate(order.deliveredAt)}
+                                        </p>
+                                    )}
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

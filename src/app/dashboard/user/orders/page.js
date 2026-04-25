@@ -1,10 +1,10 @@
-// app/dashboard/user/orders/page.js
 "use client";
 
 import UserCustomSelect from "@/components/user/UserCustomSelect";
 import { orderService } from "@/services/order.service";
 import Loader from "@/shared/Loader";
 import { useAuthStore } from "@/store/authStore";
+import api from "@/lib/api";
 import {
     AlertCircle,
     ArrowRight,
@@ -15,19 +15,35 @@ import {
     DollarSign,
     Eye,
     Package,
+    RotateCcw,
     ShoppingBag,
     Tag,
     Truck,
+    Undo2,
+    XCircle,
     ChevronLeft,
     ChevronRight,
     ChevronsLeft,
-    ChevronsRight
+    ChevronsRight,
+    X
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { toast } from "react-hot-toast";
+import { toast, Toaster } from "react-hot-toast";
+import { UserRequestModal } from "@/components/user/order/UserRequestModal";
+
+const isWithinReturnWindow = (deliveredAt) => {
+    if (!deliveredAt) return false;
+    
+    const now = new Date();
+    const deliveredDate = new Date(deliveredAt);
+    const diffTime = now - deliveredDate;
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    
+    return diffDays <= 3;
+};
 
 export default function OrdersPage() {
     const router = useRouter();
@@ -35,6 +51,12 @@ export default function OrdersPage() {
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    
+    // Modal states
+    const [refundModalOpen, setRefundModalOpen] = useState(false);
+    const [returnModalOpen, setReturnModalOpen] = useState(false);
+    const [selectedOrderId, setSelectedOrderId] = useState(null);
+    const [submitting, setSubmitting] = useState(false);
 
     // Pagination states
     const [currentPage, setCurrentPage] = useState(1);
@@ -98,6 +120,49 @@ export default function OrdersPage() {
         }
     };
 
+    // Request Refund Handler
+    const handleRequestRefund = async (orderId, reason) => {
+        setSubmitting(true);
+        try {
+            await api.post(`/orders/${orderId}/refund/request`, { reason });
+            toast.success("Refund request submitted successfully. Admin will review it.");
+            fetchOrders();
+        } catch (error) {
+            console.error("Error requesting refund:", error);
+            toast.error(error.response?.data?.message || "Failed to submit refund request");
+        } finally {
+            setSubmitting(false);
+            setSelectedOrderId(null);
+        }
+    };
+
+    // Request Return Handler
+    const handleRequestReturn = async (orderId, reason) => {
+        setSubmitting(true);
+        try {
+            await api.post(`/orders/${orderId}/return/request`, { reason });
+            toast.success("Return request submitted successfully. Admin will review it.");
+            fetchOrders();
+        } catch (error) {
+            console.error("Error requesting return:", error);
+            toast.error(error.response?.data?.message || "Failed to submit return request");
+        } finally {
+            setSubmitting(false);
+            setSelectedOrderId(null);
+        }
+    };
+
+    // Open refund modal
+    const openRefundModal = (orderId) => {
+        setSelectedOrderId(orderId);
+        setRefundModalOpen(true);
+    };
+
+    // Open return modal
+    const openReturnModal = (orderId) => {
+        setSelectedOrderId(orderId);
+        setReturnModalOpen(true);
+    };
 
     const getStatusIcon = (status) => {
         switch (status) {
@@ -120,7 +185,8 @@ export default function OrdersPage() {
             assigned: "bg-blue-100 text-blue-800",
             shipped: "bg-purple-100 text-purple-800",
             delivered: "bg-green-100 text-green-800",
-            paid: "bg-green-100 text-green-800",
+            cancelled: "bg-red-100 text-red-800",
+            returned: "bg-orange-100 text-orange-800"
         };
         return colors[status] || "bg-gray-100 text-gray-800";
     };
@@ -131,6 +197,14 @@ export default function OrdersPage() {
                 <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800">
                     <CheckCircle className="w-3 h-3" />
                     Paid
+                </span>
+            );
+        }
+        if (status === "refunded") {
+            return (
+                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-purple-100 text-purple-800">
+                    <RotateCcw className="w-3 h-3" />
+                    Refunded
                 </span>
             );
         }
@@ -239,7 +313,6 @@ export default function OrdersPage() {
 
         return (
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-6 border-t border-gray-200">
-                {/* Items per page selector - Custom Dropdown */}
                 <div className="flex items-center gap-2">
                     <UserCustomSelect
                         value={itemsPerPage}
@@ -258,7 +331,6 @@ export default function OrdersPage() {
                     <span className="text-sm text-gray-600">Per Page</span>
                 </div>
 
-                {/* Pagination buttons - only show if more than one page */}
                 {totalPages > 1 && (
                     <div className="flex items-center gap-1">
                         <button
@@ -330,7 +402,6 @@ export default function OrdersPage() {
                     </div>
                 )}
 
-                {/* Info text */}
                 <div className="text-sm text-gray-500">
                     Showing {(currentPage - 1) * itemsPerPage + 1} to{" "}
                     {Math.min(currentPage * itemsPerPage, totalOrders)} of {totalOrders} orders
@@ -363,6 +434,36 @@ export default function OrdersPage() {
 
     return (
         <div className="py-16 px-4 md:px-8">
+            <Toaster position="top-right" />
+            
+            {/* Refund Modal */}
+            <UserRequestModal
+                isOpen={refundModalOpen}
+                onClose={() => {
+                    setRefundModalOpen(false);
+                    setSelectedOrderId(null);
+                }}
+                onSubmit={(reason) => handleRequestRefund(selectedOrderId, reason)}
+                title="Request Refund"
+                description="Please provide the reason for requesting a refund. This will help us process your request faster."
+                submitText="Submit Refund Request"
+                loading={submitting}
+            />
+            
+            {/* Return Modal */}
+            <UserRequestModal
+                isOpen={returnModalOpen}
+                onClose={() => {
+                    setReturnModalOpen(false);
+                    setSelectedOrderId(null);
+                }}
+                onSubmit={(reason) => handleRequestReturn(selectedOrderId, reason)}
+                title="Request Return"
+                description="Please provide the reason for returning this item. Returns are only accepted within 3 days of delivery."
+                submitText="Submit Return Request"
+                loading={submitting}
+            />
+            
             {/* Header */}
             <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                 <div>
@@ -454,6 +555,14 @@ export default function OrdersPage() {
                                     {orders.map((order) => {
                                         const quantity = getOrderQuantity(order);
                                         const totalAmount = getOrderTotal(order);
+                                        const isReturnEligible = isWithinReturnWindow(order.deliveredAt);
+                                        const canRequestRefund = order.paymentStatus === "paid" &&
+                                            !["shipped", "delivered", "cancelled", "returned"].includes(order.fulfillmentStatus) &&
+                                            order.refundStatus === "none";
+                                        const canRequestReturn = order.paymentStatus === "paid" &&
+                                            order.fulfillmentStatus === "delivered" &&
+                                            order.returnStatus === "none" &&
+                                            isReturnEligible;
 
                                         return (
                                             <tr key={order._id} className="hover:bg-gray-50 transition-colors duration-200">
@@ -502,19 +611,61 @@ export default function OrdersPage() {
                                                     </p>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span
-                                                        className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(
-                                                            order.fulfillmentStatus
-                                                        )}`}
-                                                    >
-                                                        {getStatusIcon(order.fulfillmentStatus)}
-                                                        {order.fulfillmentStatus === "assigned" && "Assigned"}
-                                                        {order.fulfillmentStatus === "pending" && "Pending"}
-                                                        {order.fulfillmentStatus === "shipped" && "Shipped"}
-                                                        {order.fulfillmentStatus === "delivered" && "Delivered"}
-                                                        {!["assigned", "pending", "shipped", "delivered"].includes(order.fulfillmentStatus) &&
-                                                            order.fulfillmentStatus?.toUpperCase()}
-                                                    </span>
+                                                    <div className="flex flex-col gap-1">
+                                                        <span
+                                                            className={`inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full capitalize ${getStatusColor(
+                                                                order.fulfillmentStatus
+                                                            )}`}
+                                                        >
+                                                            {getStatusIcon(order.fulfillmentStatus)}
+                                                            {order.fulfillmentStatus === "assigned" && "Assigned"}
+                                                            {order.fulfillmentStatus === "pending" && "Pending"}
+                                                            {order.fulfillmentStatus === "shipped" && "Shipped"}
+                                                            {order.fulfillmentStatus === "delivered" && "Delivered"}
+                                                            {order.fulfillmentStatus === "cancelled" && "Cancelled"}
+                                                            {order.fulfillmentStatus === "returned" && "Returned"}
+                                                        </span>
+
+                                                        {/* Refund Status Badges */}
+                                                        {order.refundStatus === "requested" && (
+                                                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-700">
+                                                                <Clock className="w-3 h-3" />
+                                                                Refund Requested
+                                                            </span>
+                                                        )}
+                                                        {order.refundStatus === "rejected" && (
+                                                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700">
+                                                                <XCircle className="w-3 h-3" />
+                                                                Refund Rejected
+                                                            </span>
+                                                        )}
+
+                                                        {/* Return Status Badges */}
+                                                        {order.returnStatus === "requested" && (
+                                                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-700">
+                                                                <Undo2 className="w-3 h-3" />
+                                                                Return Requested
+                                                            </span>
+                                                        )}
+                                                        {order.returnStatus === "approved" && (
+                                                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
+                                                                <CheckCircle className="w-3 h-3" />
+                                                                Return Approved
+                                                            </span>
+                                                        )}
+                                                        {order.returnStatus === "shipped" && (
+                                                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-700">
+                                                                <Truck className="w-3 h-3" />
+                                                                Return Shipped
+                                                            </span>
+                                                        )}
+                                                        {order.returnStatus === "rejected" && (
+                                                            <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-700">
+                                                                <XCircle className="w-3 h-3" />
+                                                                Return Rejected
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     {getPaymentBadge(order.paymentStatus)}
@@ -532,22 +683,60 @@ export default function OrdersPage() {
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <div className="flex gap-2">
-                                                        <Link
-                                                            href={`/dashboard/user/orders/${order._id}`}
-                                                            className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-all duration-200 hover:scale-[1.02]"
-                                                        >
-                                                            <Eye className="w-3 h-3" />
-                                                            View
-                                                        </Link>
-                                                        {order.paymentStatus === "pending" && (
+                                                    <div className="flex flex-col gap-1">
+                                                        <div className="flex gap-2 flex-wrap">
                                                             <Link
-                                                                href={`/checkout?orderId=${order._id}`}
-                                                                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-black rounded-md hover:bg-gray-900 transition-all duration-200 hover:scale-[1.02]"
+                                                                href={`/dashboard/user/orders/${order._id}`}
+                                                                className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 transition-all duration-200 hover:scale-[1.02]"
                                                             >
-                                                                Pay
-                                                                <ArrowRight className="w-3 h-3" />
+                                                                <Eye className="w-3 h-3" />
+                                                                View
                                                             </Link>
+
+                                                            {order.paymentStatus === "pending" && (
+                                                                <Link
+                                                                    href={`/checkout?orderId=${order._id}`}
+                                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-white bg-black rounded-md hover:bg-gray-900 transition-all duration-200 hover:scale-[1.02]"
+                                                                >
+                                                                    Pay
+                                                                    <ArrowRight className="w-3 h-3" />
+                                                                </Link>
+                                                            )}
+
+                                                            {/* Request Refund Button */}
+                                                            {canRequestRefund && (
+                                                                <button
+                                                                    onClick={() => openRefundModal(order._id)}
+                                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-purple-700 bg-purple-100 rounded-md hover:bg-purple-200 transition-all duration-200 cursor-pointer"
+                                                                >
+                                                                    <RotateCcw className="w-3 h-3" />
+                                                                    Request Refund
+                                                                </button>
+                                                            )}
+
+                                                            {/* Request Return Button */}
+                                                            {canRequestReturn && (
+                                                                <button
+                                                                    onClick={() => openReturnModal(order._id)}
+                                                                    className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-orange-700 bg-orange-100 rounded-md hover:bg-orange-200 transition-all duration-200 cursor-pointer"
+                                                                >
+                                                                    <Undo2 className="w-3 h-3" />
+                                                                    Request Return
+                                                                </button>
+                                                            )}
+                                                        </div>
+                                                        
+                                                        {/* Show expired return message */}
+                                                        {order.paymentStatus === "paid" && 
+                                                         order.fulfillmentStatus === "delivered" && 
+                                                         order.returnStatus === "none" && 
+                                                         !isWithinReturnWindow(order.deliveredAt) && (
+                                                            <div className="mt-1">
+                                                                <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs text-gray-400">
+                                                                    <Clock className="w-3 h-3" />
+                                                                    Return window expired (3 days)
+                                                                </span>
+                                                            </div>
                                                         )}
                                                     </div>
                                                 </td>
@@ -563,6 +752,14 @@ export default function OrdersPage() {
                             {orders.map((order) => {
                                 const quantity = getOrderQuantity(order);
                                 const totalAmount = getOrderTotal(order);
+                                const isReturnEligible = isWithinReturnWindow(order.deliveredAt);
+                                const canRequestRefund = order.paymentStatus === "paid" &&
+                                    !["shipped", "delivered", "cancelled", "returned"].includes(order.fulfillmentStatus) &&
+                                    order.refundStatus === "none";
+                                const canRequestReturn = order.paymentStatus === "paid" &&
+                                    order.fulfillmentStatus === "delivered" &&
+                                    order.returnStatus === "none" &&
+                                    isReturnEligible;
 
                                 return (
                                     <div key={order._id} className="p-4 hover:bg-gray-50 transition-colors">
@@ -606,12 +803,22 @@ export default function OrdersPage() {
                                                         {formatPrice(totalAmount)}
                                                     </span>
                                                 </div>
-                                                <div className="flex items-center gap-2 mt-2">
-                                                    {order.assignedTag && (
-                                                        <span className="text-xs text-blue-600">Tag assigned</span>
-                                                    )}
-                                                </div>
                                             </div>
+                                        </div>
+
+                                        {/* Status Badges Mobile */}
+                                        <div className="flex flex-wrap gap-2 mt-3">
+                                            {getPaymentBadge(order.paymentStatus)}
+                                            {order.refundStatus === "requested" && (
+                                                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-700">
+                                                    Refund Requested
+                                                </span>
+                                            )}
+                                            {order.returnStatus === "requested" && (
+                                                <span className="inline-flex items-center gap-1 px-2 py-1 text-xs font-medium rounded-full bg-orange-100 text-orange-700">
+                                                    Return Requested
+                                                </span>
+                                            )}
                                         </div>
 
                                         <div className="flex gap-2 mt-4 pt-3 border-t border-gray-100">
@@ -629,7 +836,36 @@ export default function OrdersPage() {
                                                     Pay Now
                                                 </Link>
                                             )}
+                                            {canRequestRefund && (
+                                                <button
+                                                    onClick={() => openRefundModal(order._id)}
+                                                    className="flex-1 text-center px-3 py-2 text-sm font-medium text-purple-700 bg-purple-100 rounded-lg hover:bg-purple-200 transition"
+                                                >
+                                                    Request Refund
+                                                </button>
+                                            )}
+                                            {canRequestReturn && (
+                                                <button
+                                                    onClick={() => openReturnModal(order._id)}
+                                                    className="flex-1 text-center px-3 py-2 text-sm font-medium text-orange-700 bg-orange-100 rounded-lg hover:bg-orange-200 transition"
+                                                >
+                                                    Request Return
+                                                </button>
+                                            )}
                                         </div>
+                                        
+                                        {/* Show expired return message on mobile */}
+                                        {order.paymentStatus === "paid" && 
+                                         order.fulfillmentStatus === "delivered" && 
+                                         order.returnStatus === "none" && 
+                                         !isWithinReturnWindow(order.deliveredAt) && (
+                                            <div className="text-center mt-2">
+                                                <span className="inline-flex items-center gap-1 text-xs text-gray-400">
+                                                    <Clock className="w-3 h-3" />
+                                                    Return window expired (3 days)
+                                                </span>
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
