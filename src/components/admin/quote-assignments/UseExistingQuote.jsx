@@ -119,7 +119,6 @@ export default function UseExistingQuote({ editingAssignment, onClose, onSuccess
     u.email?.toLowerCase().includes(searchUser.toLowerCase())
   );
 
-  // Get owner display text for tag
   const getTagOwnerText = (tag) => {
     if (tag.owner) {
       const ownerName = tag.owner?.name || "Unknown";
@@ -157,7 +156,6 @@ export default function UseExistingQuote({ editingAssignment, onClose, onSuccess
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* 1. Select Quote */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
               Select Quote <span className="text-red-500">*</span>
@@ -216,7 +214,6 @@ export default function UseExistingQuote({ editingAssignment, onClose, onSuccess
             )}
           </div>
 
-          {/* 2. Assign To - Button Style */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-3">
               Assign To <span className="text-red-500">*</span>
@@ -249,7 +246,6 @@ export default function UseExistingQuote({ editingAssignment, onClose, onSuccess
             </div>
           </div>
 
-          {/* 3a. Select Tag (conditional) */}
           {formData.assignmentType === "tag" && (
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
