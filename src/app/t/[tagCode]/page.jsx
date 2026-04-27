@@ -111,6 +111,7 @@ export default function TagPage() {
                         author: unlockResult.data?.author,
                         image: unlockResult.data?.image,
                         theme: unlockResult.data?.theme,
+                        sourceType: unlockResult.data?.sourceType,
                     }
                 }
                 category={unlockResult.data?.category}

@@ -41,12 +41,12 @@ const statusConfig = {
     }
 };
 
-const getNextAllowedStatuses = (currentStatus, hasTag) => {
+const getNextAllowedStatuses = (currentStatus, hasAllRequiredTags) => {
     const flow = {
-        pending: hasTag ? ["assigned", "cancelled"] : ["cancelled"],
+        pending: hasAllRequiredTags ? ["assigned", "cancelled"] : ["cancelled"],
         assigned: ["shipped", "cancelled"],
-        shipped: ["delivered", "returned"],
-        delivered: ["returned"],
+        shipped: ["delivered"],
+        delivered: [],
         cancelled: [],
         returned: []
     };
@@ -58,7 +58,7 @@ export function FulfillmentStatusSelect({
     orderId, 
     onUpdateStatus, 
     isUpdating,
-    hasTag 
+    hasAllRequiredTags 
 }) {
     const [isOpen, setIsOpen] = useState(false);
     const [showTooltip, setShowTooltip] = useState(false);
@@ -75,15 +75,15 @@ export function FulfillmentStatusSelect({
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
 
-    const nextStatuses = getNextAllowedStatuses(currentStatus, hasTag);
+    const nextStatuses = getNextAllowedStatuses(currentStatus, hasAllRequiredTags);
     const isLocked = currentStatus === "cancelled" || currentStatus === "returned";
     
     const currentConfig = statusConfig[currentStatus] || statusConfig.pending;
     const CurrentIcon = currentConfig.icon;
 
     const handleStatusChange = (newStatus) => {
-        if (newStatus === "assigned" && !hasTag) {
-            toast.error("Cannot assign status: Please assign a tag first.", {
+        if (newStatus === "assigned" && !hasAllRequiredTags) {
+            toast.error("Cannot change status: Assign all required tags first.", {
                 duration: 4000,
                 icon: '⚠️'
             });

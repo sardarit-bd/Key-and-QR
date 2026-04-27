@@ -1,7 +1,7 @@
 import {
     Calendar, CheckCircle, Clock, CreditCard, Gift, Package,
     Tag, Truck, User, XCircle, Ban, Undo2, RotateCcw,
-    AlertCircle, Info, MapPin, Phone, Mail, Home, Building2, Globe
+    AlertCircle, Info, MapPin, Phone, Mail, Home, Building2, Globe, RefreshCw, X
 } from "lucide-react";
 
 const getPaymentStatusBadge = (status) => {
@@ -70,11 +70,44 @@ const canCompleteReturn = (order) => {
     return ["approved", "shipped", "received"].includes(order.returnStatus);
 };
 
+// Helper function to get all tags from order
+const getAllTagsFromOrder = (order) => {
+    const tags = [];
+    const seenIds = new Set();
+
+    // Get from assignedTags array
+    if (order.assignedTags && Array.isArray(order.assignedTags)) {
+        order.assignedTags.forEach(item => {
+            let tagObj = item.tag;
+            if (tagObj && tagObj.tagCode && !seenIds.has(tagObj._id?.toString())) {
+                seenIds.add(tagObj._id?.toString());
+                tags.push({
+                    code: tagObj.tagCode,
+                    id: tagObj._id
+                });
+            }
+        });
+    }
+
+    // Get from legacy assignedTag (if not already included)
+    if (order.assignedTag && order.assignedTag.tagCode && !seenIds.has(order.assignedTag._id?.toString())) {
+        tags.push({
+            code: order.assignedTag.tagCode,
+            id: order.assignedTag._id
+        });
+    }
+
+    return tags;
+};
+
 export default function OrderDetailsModal({
     isOpen,
     onClose,
     order,
     onAssignTag,
+    onRemoveTag,
+    onReplaceTag,
+    canEditTags,
     onCancelOrder,
     onProcessRefund,
     onProcessReturn,
@@ -82,6 +115,19 @@ export default function OrderDetailsModal({
     processingAction
 }) {
     if (!isOpen || !order) return null;
+
+    // Calculate tag assignment status
+    const assignedCount = order.assignedTags?.length || (order.assignedTag ? 1 : 0);
+    const requiredCount = order.quantity || 1;
+    const hasAllRequiredTags = assignedCount >= requiredCount;
+    const hasAnyTag = assignedCount > 0;
+    const tagsEditable = canEditTags && canEditTags(order.fulfillmentStatus);
+    const allTags = getAllTagsFromOrder(order);
+
+    // Calculate total price
+    const unitPrice = order.product?.price || 0;
+    const quantity = order.quantity || 1;
+    const totalPrice = unitPrice * quantity;
 
     // Check if shipping address exists and has data
     const hasShippingAddress = order.shippingAddress && (
@@ -93,7 +139,7 @@ export default function OrderDetailsModal({
 
     return (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-2 sm:p-4">
-            <div className="bg-white rounded-xl max-w-2xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-xl">
+            <div className="bg-white rounded-xl max-w-4xl w-full max-h-[95vh] sm:max-h-[90vh] overflow-y-auto shadow-xl">
                 {/* Header - Sticky */}
                 <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white z-10">
                     <div className="flex justify-between items-start gap-2">
@@ -103,8 +149,8 @@ export default function OrderDetailsModal({
                                 Order ID: {order._id}
                             </p>
                         </div>
-                        <button 
-                            onClick={onClose} 
+                        <button
+                            onClick={onClose}
                             className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer flex-shrink-0"
                         >
                             <XCircle size={20} className="text-gray-400 hover:text-gray-600" />
@@ -113,7 +159,7 @@ export default function OrderDetailsModal({
                 </div>
 
                 <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-                    {/* Status Summary - Responsive Grid */}
+                    {/* Status Summary */}
                     <div className="flex flex-wrap gap-2 p-3 bg-gray-50 rounded-lg">
                         <span className={`inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm ${getPaymentStatusBadge(order.paymentStatus)}`}>
                             {order.paymentStatus === "paid" ? <CreditCard className="w-3 h-3 sm:w-4 sm:h-4" /> :
@@ -133,7 +179,6 @@ export default function OrderDetailsModal({
                                 Refund Requested
                             </span>
                         )}
-                        {/* Return Status Badges */}
                         {order.returnStatus === "requested" && (
                             <span className="inline-flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full text-xs sm:text-sm bg-orange-100 text-orange-700">
                                 <Clock className="w-3 h-3 sm:w-4 sm:h-4" />
@@ -166,227 +211,314 @@ export default function OrderDetailsModal({
                         )}
                     </div>
 
-                    {/* Customer Info - Responsive */}
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                        <h4 className="font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
-                            <User size={16} className="text-blue-500" />
-                            Customer Information
-                        </h4>
-                        <div className="space-y-2 text-xs sm:text-sm">
-                            <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
-                                <span className="text-gray-500">Name:</span>
-                                <span className="text-gray-900 font-medium xs:font-normal">{order.user?.name || "N/A"}</span>
+                    {/* Two Column Layout */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                        {/* Left Column */}
+                        <div className="space-y-4">
+                            {/* Customer Info */}
+                            <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                                <h4 className="font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
+                                    <User size={16} className="text-blue-500" />
+                                    Customer Information
+                                </h4>
+                                <div className="space-y-2 text-xs sm:text-sm">
+                                    <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
+                                        <span className="text-gray-500">Name:</span>
+                                        <span className="text-gray-900 font-medium xs:font-normal">{order.user?.name || "N/A"}</span>
+                                    </div>
+                                    <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
+                                        <span className="text-gray-500">Email:</span>
+                                        <span className="text-gray-900 break-all">{order.user?.email || "N/A"}</span>
+                                    </div>
+                                </div>
                             </div>
-                            <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
-                                <span className="text-gray-500">Email:</span>
-                                <span className="text-gray-900 break-all">{order.user?.email || "N/A"}</span>
+
+                            {/* Product Info - Updated with Total Price */}
+                            <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                                <h4 className="font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
+                                    <Package size={16} className="text-green-500" />
+                                    Product Information
+                                </h4>
+                                <div className="space-y-2 text-xs sm:text-sm">
+                                    <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
+                                        <span className="text-gray-500">Product:</span>
+                                        <span className="text-gray-900 text-right xs:text-left">{order.product?.name || "N/A"}</span>
+                                    </div>
+                                    <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
+                                        <span className="text-gray-500">Unit Price:</span>
+                                        <span className="text-gray-900 font-semibold">{formatPrice(unitPrice)}</span>
+                                    </div>
+                                    <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
+                                        <span className="text-gray-500">Quantity:</span>
+                                        <span className="text-gray-900">{quantity}</span>
+                                    </div>
+                                    <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0 border-t border-gray-200 pt-2 mt-1">
+                                        <span className="text-gray-500 font-medium">Total Price:</span>
+                                        <span className="text-gray-900 font-bold text-sm sm:text-base">
+                                            {formatPrice(totalPrice)}
+                                        </span>
+                                    </div>
+                                    <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
+                                        <span className="text-gray-500">Purchase Type:</span>
+                                        <span className="text-gray-900 capitalize flex items-center gap-1">
+                                            {order.purchaseType === "gift" ? <Gift size={12} /> : <User size={12} />}
+                                            {order.purchaseType === "gift" ? "Gift" : "Self Purchase"}
+                                        </span>
+                                    </div>
+                                    {order.product?.image?.url && (
+                                        <div className="mt-2">
+                                            <span className="text-gray-500 text-xs block mb-1">Image:</span>
+                                            <img
+                                                src={order.product.image.url}
+                                                alt={order.product.name || "Product"}
+                                                className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg border border-gray-200"
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Order Info - Part 1 */}
+                            <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                                <h4 className="font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
+                                    <Tag size={16} className="text-purple-500" />
+                                    Order Information
+                                </h4>
+                                <div className="space-y-2 text-xs sm:text-sm">
+                                    <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
+                                        <span className="text-gray-500 flex items-center gap-1">
+                                            <Calendar size={12} /> Created:
+                                        </span>
+                                        <span className="text-gray-900">{formatDate(order.createdAt)}</span>
+                                    </div>
+                                    <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
+                                        <span className="text-gray-500">Last Updated:</span>
+                                        <span className="text-gray-900">{formatDate(order.updatedAt)}</span>
+                                    </div>
+                                    {order.cancelledAt && (
+                                        <>
+                                            <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
+                                                <span className="text-gray-500">Cancelled At:</span>
+                                                <span className="text-gray-900">{formatDate(order.cancelledAt)}</span>
+                                            </div>
+                                            <div>
+                                                <span className="text-gray-500 text-xs block mb-1">Cancellation Reason:</span>
+                                                <p className="text-gray-900 mt-1 text-xs sm:text-sm bg-white p-2 rounded border border-gray-200 break-words">
+                                                    {order.cancellationReason}
+                                                </p>
+                                            </div>
+                                        </>
+                                    )}
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    {/* Shipping Address Section */}
-                    {hasShippingAddress && (
-                        <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                            <h4 className="font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
-                                <MapPin size={16} className="text-blue-500" />
-                                Shipping Address
-                            </h4>
-                            <div className="space-y-2 text-xs sm:text-sm">
-                                {order.shippingAddress.fullName && (
-                                    <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
-                                        <span className="text-gray-500 flex items-center gap-1">
-                                            <User size={12} /> Full Name:
-                                        </span>
-                                        <span className="text-gray-900 font-medium xs:font-normal">{order.shippingAddress.fullName}</span>
-                                    </div>
-                                )}
-                                {order.shippingAddress.email && (
-                                    <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
-                                        <span className="text-gray-500 flex items-center gap-1">
-                                            <Mail size={12} /> Email:
-                                        </span>
-                                        <span className="text-gray-900 break-all">{order.shippingAddress.email}</span>
-                                    </div>
-                                )}
-                                {order.shippingAddress.phone && (
-                                    <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
-                                        <span className="text-gray-500 flex items-center gap-1">
-                                            <Phone size={12} /> Phone:
-                                        </span>
-                                        <span className="text-gray-900">{order.shippingAddress.phone}</span>
-                                    </div>
-                                )}
-                                {order.shippingAddress.address && (
-                                    <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
-                                        <span className="text-gray-500 flex items-center gap-1">
-                                            <Home size={12} /> Address:
-                                        </span>
-                                        <span className="text-gray-900">{order.shippingAddress.address}</span>
-                                    </div>
-                                )}
-                                {(order.shippingAddress.city || order.shippingAddress.postalCode) && (
-                                    <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
-                                        <span className="text-gray-500 flex items-center gap-1">
-                                            <Building2 size={12} /> City/PIN:
-                                        </span>
-                                        <span className="text-gray-900">
-                                            {[order.shippingAddress.city, order.shippingAddress.postalCode].filter(Boolean).join(", ")}
-                                        </span>
-                                    </div>
-                                )}
-                                {order.shippingAddress.country && (
-                                    <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
-                                        <span className="text-gray-500 flex items-center gap-1">
-                                            <Globe size={12} /> Country:
-                                        </span>
-                                        <span className="text-gray-900">{order.shippingAddress.country}</span>
-                                    </div>
-                                )}
+                        {/* Right Column */}
+                        <div className="space-y-4">
+                            {/* Tags Section */}
+                            <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                                <h4 className="font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
+                                    <Tag size={16} className="text-purple-500" />
+                                    Tags
+                                </h4>
+                                <div className="space-y-2">
+                                    {hasAnyTag ? (
+                                        <>
+                                            <div className="flex flex-wrap gap-2">
+                                                {allTags.map((tag, idx) => (
+                                                    <div key={idx} className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 px-2 py-1 rounded font-mono text-sm">
+                                                        <span>{tag.code}</span>
+                                                        {tagsEditable && (
+                                                            <div className="flex items-center gap-1 ml-1">
+                                                                <button
+                                                                    onClick={() => onReplaceTag?.(order._id, tag.id, tag.code)}
+                                                                    className="hover:text-green-600 transition cursor-pointer"
+                                                                    title="Replace tag"
+                                                                    disabled={processingAction}
+                                                                >
+                                                                    <RefreshCw size={12} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => onRemoveTag?.(order._id, tag.id, tag.code)}
+                                                                    className="hover:text-red-600 transition cursor-pointer"
+                                                                    title="Remove tag"
+                                                                    disabled={processingAction}
+                                                                >
+                                                                    <X size={12} />
+                                                                </button>
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                                {assignedCount} / {requiredCount} tags assigned
+                                                {!hasAllRequiredTags && tagsEditable && (
+                                                    <span className="text-orange-500 ml-1">(Need {requiredCount - assignedCount} more)</span>
+                                                )}
+                                            </div>
+                                            {!hasAllRequiredTags && tagsEditable && (
+                                                <button
+                                                    onClick={() => onAssignTag(order)}
+                                                    className="text-xs text-blue-600 hover:underline cursor-pointer"
+                                                    disabled={processingAction}
+                                                >
+                                                    {hasAnyTag ? "Add Another Tag" : "Assign Tag"}
+                                                </button>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="text-xs text-gray-500">
+                                            No tags assigned
+                                            {tagsEditable && (
+                                                <button
+                                                    onClick={() => onAssignTag(order)}
+                                                    className="ml-2 text-blue-600 hover:underline"
+                                                >
+                                                    Assign Tag
+                                                </button>
+                                            )}
+                                        </div>
+                                    )}
+                                    {!tagsEditable && hasAnyTag && (
+                                        <div className="text-xs text-gray-400">
+                                            Tags locked ({order.fulfillmentStatus})
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    )}
 
-                    {/* Product Info */}
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                        <h4 className="font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
-                            <Package size={16} className="text-green-500" />
-                            Product Information
-                        </h4>
-                        <div className="space-y-2 text-xs sm:text-sm">
-                            <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
-                                <span className="text-gray-500">Product:</span>
-                                <span className="text-gray-900 text-right xs:text-left">{order.product?.name || "N/A"}</span>
-                            </div>
-                            <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
-                                <span className="text-gray-500">Price:</span>
-                                <span className="text-gray-900 font-semibold">{formatPrice(order.product?.price || 0)}</span>
-                            </div>
-                            <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
-                                <span className="text-gray-500">Quantity:</span>
-                                <span className="text-gray-900">{order.quantity || 1}</span>
-                            </div>
-                            {order.product?.image?.url && (
-                                <div className="mt-2">
-                                    <span className="text-gray-500 text-xs block mb-1">Image:</span>
-                                    <img 
-                                        src={order.product.image.url} 
-                                        alt={order.product.name || "Product"} 
-                                        className="w-16 h-16 sm:w-20 sm:h-20 object-cover rounded-lg border border-gray-200" 
-                                    />
+                            {/* Shipping Address */}
+                            {hasShippingAddress && (
+                                <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                                    <h4 className="font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
+                                        <MapPin size={16} className="text-blue-500" />
+                                        Shipping Address
+                                    </h4>
+                                    <div className="space-y-2 text-xs sm:text-sm">
+                                        {order.shippingAddress.fullName && (
+                                            <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
+                                                <span className="text-gray-500 flex items-center gap-1">
+                                                    <User size={12} /> Full Name:
+                                                </span>
+                                                <span className="text-gray-900 font-medium xs:font-normal">{order.shippingAddress.fullName}</span>
+                                            </div>
+                                        )}
+                                        {order.shippingAddress.email && (
+                                            <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
+                                                <span className="text-gray-500 flex items-center gap-1">
+                                                    <Mail size={12} /> Email:
+                                                </span>
+                                                <span className="text-gray-900 break-all">{order.shippingAddress.email}</span>
+                                            </div>
+                                        )}
+                                        {order.shippingAddress.phone && (
+                                            <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
+                                                <span className="text-gray-500 flex items-center gap-1">
+                                                    <Phone size={12} /> Phone:
+                                                </span>
+                                                <span className="text-gray-900">{order.shippingAddress.phone}</span>
+                                            </div>
+                                        )}
+                                        {order.shippingAddress.address && (
+                                            <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
+                                                <span className="text-gray-500 flex items-center gap-1">
+                                                    <Home size={12} /> Address:
+                                                </span>
+                                                <span className="text-gray-900">{order.shippingAddress.address}</span>
+                                            </div>
+                                        )}
+                                        {(order.shippingAddress.city || order.shippingAddress.postalCode) && (
+                                            <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
+                                                <span className="text-gray-500 flex items-center gap-1">
+                                                    <Building2 size={12} /> City/PIN:
+                                                </span>
+                                                <span className="text-gray-900">
+                                                    {[order.shippingAddress.city, order.shippingAddress.postalCode].filter(Boolean).join(", ")}
+                                                </span>
+                                            </div>
+                                        )}
+                                        {order.shippingAddress.country && (
+                                            <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
+                                                <span className="text-gray-500 flex items-center gap-1">
+                                                    <Globe size={12} /> Country:
+                                                </span>
+                                                <span className="text-gray-900">{order.shippingAddress.country}</span>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             )}
-                        </div>
-                    </div>
 
-                    {/* Order Info */}
-                    <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
-                        <h4 className="font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
-                            <Tag size={16} className="text-purple-500" />
-                            Order Information
-                        </h4>
-                        <div className="space-y-2 text-xs sm:text-sm">
-                            <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
-                                <span className="text-gray-500">Purchase Type:</span>
-                                <span className="text-gray-900 capitalize flex items-center gap-1">
-                                    {order.purchaseType === "gift" ? <Gift size={12} /> : <User size={12} />}
-                                    {order.purchaseType === "gift" ? "Gift" : "Self Purchase"}
-                                </span>
-                            </div>
+                            {/* Refund & Return Info */}
+                            {(order.refundReason || order.returnReason || order.returnTrackingNumber) && (
+                                <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                                    <h4 className="font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
+                                        <AlertCircle size={16} className="text-orange-500" />
+                                        Refund & Return Information
+                                    </h4>
+                                    <div className="space-y-2 text-xs sm:text-sm">
+                                        {order.refundReason && (
+                                            <div>
+                                                <span className="text-gray-500 text-xs block mb-1">Refund Reason:</span>
+                                                <p className="text-gray-900 mt-1 bg-white p-2 rounded border border-gray-200 break-words">
+                                                    {order.refundReason}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {order.returnReason && (
+                                            <div>
+                                                <span className="text-gray-500 text-xs block mb-1">Return Reason:</span>
+                                                <p className="text-gray-900 mt-1 bg-white p-2 rounded border border-gray-200 break-words">
+                                                    {order.returnReason}
+                                                </p>
+                                            </div>
+                                        )}
+                                        {order.returnTrackingNumber && (
+                                            <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
+                                                <span className="text-gray-500">Return Tracking:</span>
+                                                <span className="text-gray-900 font-mono text-xs break-all">{order.returnTrackingNumber}</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Gift Message */}
                             {order.giftMessage && (
-                                <div>
-                                    <span className="text-gray-500 text-xs block mb-1">Gift Message:</span>
-                                    <p className="text-gray-900 mt-1 italic bg-white p-2 rounded border border-gray-200 text-xs sm:text-sm break-words">
+                                <div className="bg-gray-50 rounded-lg p-3 sm:p-4">
+                                    <h4 className="font-medium text-gray-900 mb-2 sm:mb-3 flex items-center gap-2 text-sm sm:text-base">
+                                        <Gift size={16} className="text-pink-500" />
+                                        Gift Message
+                                    </h4>
+                                    <p className="text-gray-900 italic bg-white p-2 rounded border border-gray-200 text-xs sm:text-sm break-words">
                                         "{order.giftMessage}"
                                     </p>
                                 </div>
                             )}
-                            <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
-                                <span className="text-gray-500">Assigned Tag:</span>
-                                {order.assignedTag ? (
-                                    <span className="text-blue-600 font-mono font-medium text-xs sm:text-sm">
-                                        {order.assignedTag.tagCode}
-                                    </span>
-                                ) : (
-                                    <button
-                                        onClick={() => {
-                                            onClose();
-                                            onAssignTag(order);
-                                        }}
-                                        className="text-blue-600 text-xs sm:text-sm font-medium hover:underline"
-                                        disabled={processingAction}
-                                    >
-                                        Assign Tag
-                                    </button>
-                                )}
-                            </div>
-                            <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
-                                <span className="text-gray-500 flex items-center gap-1">
-                                    <Calendar size={12} /> Created:
-                                </span>
-                                <span className="text-gray-900">{formatDate(order.createdAt)}</span>
-                            </div>
-                            <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
-                                <span className="text-gray-500">Last Updated:</span>
-                                <span className="text-gray-900">{formatDate(order.updatedAt)}</span>
-                            </div>
-                            {order.cancelledAt && (
-                                <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
-                                    <span className="text-gray-500">Cancelled At:</span>
-                                    <span className="text-gray-900">{formatDate(order.cancelledAt)}</span>
-                                </div>
-                            )}
-                            {order.cancellationReason && (
-                                <div>
-                                    <span className="text-gray-500 text-xs block mb-1">Cancellation Reason:</span>
-                                    <p className="text-gray-900 mt-1 text-xs sm:text-sm bg-white p-2 rounded border border-gray-200 break-words">
-                                        {order.cancellationReason}
-                                    </p>
-                                </div>
-                            )}
-                            {order.refundReason && (
-                                <div>
-                                    <span className="text-gray-500 text-xs block mb-1">Refund Reason:</span>
-                                    <p className="text-gray-900 mt-1 text-xs sm:text-sm bg-white p-2 rounded border border-gray-200 break-words">
-                                        {order.refundReason}
-                                    </p>
-                                </div>
-                            )}
-                            {order.returnReason && (
-                                <div>
-                                    <span className="text-gray-500 text-xs block mb-1">Return Reason:</span>
-                                    <p className="text-gray-900 mt-1 text-xs sm:text-sm bg-white p-2 rounded border border-gray-200 break-words">
-                                        {order.returnReason}
-                                    </p>
-                                </div>
-                            )}
-                            {order.returnTrackingNumber && (
-                                <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
-                                    <span className="text-gray-500">Return Tracking:</span>
-                                    <span className="text-gray-900 font-mono text-xs break-all">{order.returnTrackingNumber}</span>
-                                </div>
-                            )}
                         </div>
                     </div>
 
-                    {/* Action Buttons - Responsive Grid */}
+                    {/* Action Buttons */}
                     <div className="flex flex-wrap gap-2 pt-2">
-                        {!order.assignedTag && order.fulfillmentStatus !== "cancelled" && order.fulfillmentStatus !== "returned" && (
+                        {!hasAllRequiredTags && tagsEditable && order.fulfillmentStatus !== "cancelled" && order.fulfillmentStatus !== "returned" && (
                             <button
                                 onClick={() => {
-                                    onClose();
+                                    // Just call onAssignTag, don't close this modal
                                     onAssignTag(order);
                                 }}
                                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs sm:text-sm border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition"
                                 disabled={processingAction}
                             >
                                 <Tag size={14} />
-                                Assign Tag
+                                {hasAnyTag ? "Add Another Tag" : "Assign Tag"}
                             </button>
                         )}
 
                         {canCancel(order.fulfillmentStatus) && (
                             <button
                                 onClick={() => {
+                                    // Close details modal and open cancel modal
                                     onClose();
                                     onCancelOrder(order);
                                 }}
@@ -442,7 +574,7 @@ export default function OrderDetailsModal({
                     </div>
                 </div>
 
-                {/* Footer - Sticky */}
+                {/* Footer */}
                 <div className="p-4 sm:p-6 border-t border-gray-200 flex justify-end sticky bottom-0 bg-white">
                     <button
                         onClick={onClose}

@@ -16,8 +16,6 @@ import DeleteConfirmModal from "@/components/admin/quote-assignments/DeleteConfi
 import EditAssignmentModal from "@/components/admin/quote-assignments/EditAssignmentModal";
 import CreateNewQuoteModal from "@/components/admin/quote-assignments/CreateNewQuoteModal";
 import FilterBar from "@/components/admin/quote-assignments/FiltersBar";
-import UseExistingQuote from "@/components/admin/quote-assignments/UseExistingQuote";
-import ViewAllQuotes from "@/components/admin/quote-assignments/ViewAllQuotes"; // New import
 
 export default function QuoteAssignmentsPage() {
   useAuthInit();
@@ -31,8 +29,6 @@ export default function QuoteAssignmentsPage() {
   const [totalItems, setTotalItems] = useState(0);
   const [filters, setFilters] = useState({ assignmentType: "", isActive: "" });
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
-  const [showCreatePage, setShowCreatePage] = useState(false);
-  const [showViewQuotesPage, setShowViewQuotesPage] = useState(false); // New state
   const [showNewQuoteModal, setShowNewQuoteModal] = useState(false);
   const [editingAssignment, setEditingAssignment] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -106,28 +102,18 @@ export default function QuoteAssignmentsPage() {
   if (!isInitialized) return <Loader text="Loading..." size={50} fullScreen />;
   if (user && user.role !== "admin") return null;
 
-  // View All Quotes Page View
-  if (showViewQuotesPage) {
-    return (
-      <ViewAllQuotes
-        onClose={() => setShowViewQuotesPage(false)}
-      />
-    );
-  }
-
-  // Create Assignment Page View
-  if (showCreatePage) {
-    return (
-      <UseExistingQuote
-        editingAssignment={editingAssignment}
-        onClose={() => {
-          setShowCreatePage(false);
-          setEditingAssignment(null);
-        }}
-        onSuccess={fetchAssignments}
-      />
-    );
-  }
+  // if (showCreatePage) {
+  //   return (
+  //     <UseExistingQuote
+  //       editingAssignment={editingAssignment}
+  //       onClose={() => {
+  //         setShowCreatePage(false);
+  //         setEditingAssignment(null);
+  //       }}
+  //       onSuccess={fetchAssignments}
+  //     />
+  //   );
+  // }
 
   // Main List View
   return (
@@ -147,10 +133,7 @@ export default function QuoteAssignmentsPage() {
           </div>
           <div className="flex gap-3">
             <button
-              onClick={() => {
-                setEditingAssignment(null);
-                setShowCreatePage(true);
-              }}
+              onClick={() => router.push("/dashboard/admin/use-existing-quote")}
               className="inline-flex items-center gap-2 px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition cursor-pointer"
             >
               <Plus size={18} />
@@ -164,7 +147,7 @@ export default function QuoteAssignmentsPage() {
               Create New Quote
             </button>
             <button
-              onClick={() => setShowViewQuotesPage(true)}
+              onClick={() => router.push("/dashboard/admin/allquotes")}
               className="inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition cursor-pointer"
             >
               <Eye size={18} />
