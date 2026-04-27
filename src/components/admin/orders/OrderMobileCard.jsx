@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Eye, Tag, User, Gift, CreditCard, Clock, Truck, CheckCircle, Ban, Undo2, RotateCcw, Info, RefreshCw, Check, XCircle } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, Tag, User, Gift, CreditCard, Clock, Truck, CheckCircle, Ban, Undo2, RotateCcw, Info, RefreshCw, Check, XCircle, X } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "react-hot-toast";
 
@@ -35,12 +35,12 @@ const getFulfillmentStatusIcon = (status) => {
     }
 };
 
-const getNextAllowedStatuses = (currentStatus, hasTag) => {
+const getNextAllowedStatuses = (currentStatus, hasAllRequiredTags) => {
     const flow = {
-        pending: hasTag ? ["assigned", "cancelled"] : ["cancelled"],
+        pending: hasAllRequiredTags ? ["assigned", "cancelled"] : ["cancelled"],
         assigned: ["shipped", "cancelled"],
-        shipped: ["delivered", "returned"],
-        delivered: ["returned"],
+        shipped: ["delivered"],
+        delivered: [],
         cancelled: [],
         returned: []
     };
@@ -72,7 +72,7 @@ const canCompleteReturn = (order) => {
     return ["approved", "shipped", "received"].includes(order.returnStatus);
 };
 
-function CustomStatusSelect({ currentStatus, hasTag, onStatusChange, isUpdating, orderId }) {
+function CustomStatusSelect({ currentStatus, hasAllRequiredTags, onStatusChange, isUpdating, orderId }) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
     
@@ -83,7 +83,7 @@ function CustomStatusSelect({ currentStatus, hasTag, onStatusChange, isUpdating,
         { value: "delivered", label: "Delivered", icon: CheckCircle, color: "bg-green-100 text-green-700" }
     ];
     
-    const nextStatuses = getNextAllowedStatuses(currentStatus, hasTag);
+    const nextStatuses = getNextAllowedStatuses(currentStatus, hasAllRequiredTags);
     const currentStatusIndex = statuses.findIndex(s => s.value === currentStatus);
     
     useEffect(() => {
@@ -103,8 +103,8 @@ function CustomStatusSelect({ currentStatus, hasTag, onStatusChange, isUpdating,
     };
     
     const handleSelect = (statusValue) => {
-        if (statusValue === "assigned" && !hasTag) {
-            toast.error("Cannot assign status: Please assign a tag first.", {
+        if (statusValue === "assigned" && !hasAllRequiredTags) {
+            toast.error("Cannot change status: Assign all required tags first.", {
                 duration: 4000,
                 icon: '⚠️'
             });
@@ -195,17 +195,45 @@ export default function OrderMobileCard({
     onProcessRefund,
     onProcessReturn,
     onCompleteReturn,
+    onRemoveTag,
+    onReplaceTag,
+    canEditTags,
     updatingStatus,
-    statusUpdateOrder
+    statusUpdateOrder,
+    processingAction
 }) {
     const [expanded, setExpanded] = useState(false);
     const [showStatusInfo, setShowStatusInfo] = useState(false);
 
     const currentStatus = order.fulfillmentStatus;
-    const hasTag = !!order.assignedTag;
-    const nextStatuses = getNextAllowedStatuses(currentStatus, hasTag);
+    
+    // Calculate tag assignment status
+    const assignedCount = order.assignedTags?.length || (order.assignedTag ? 1 : 0);
+    const requiredCount = order.quantity || 1;
+    const hasAllRequiredTags = assignedCount >= requiredCount;
+    const hasAnyTag = assignedCount > 0;
+    const tagsEditable = canEditTags(order.fulfillmentStatus);
+    
+    // Get all tag codes
+    const allTags = [];
+    if (order.assignedTags && order.assignedTags.length > 0) {
+        order.assignedTags.forEach(item => {
+            if (item.tag?.tagCode) allTags.push({
+                code: item.tag.tagCode,
+                id: item.tag._id
+            });
+        });
+    }
+    if (order.assignedTag && !allTags.some(t => t.id === order.assignedTag._id)) {
+        allTags.push({
+            code: order.assignedTag.tagCode,
+            id: order.assignedTag._id
+        });
+    }
+    
+    const nextStatuses = getNextAllowedStatuses(currentStatus, hasAllRequiredTags);
     const isStatusLocked = currentStatus === "cancelled" || currentStatus === "returned";
-    const canCancel = nextStatuses.includes("cancelled");
+    const canCancelStatus = nextStatuses.includes("cancelled");
     const isUpdating = updatingStatus && statusUpdateOrder === order._id;
 
     const handleStatusChange = (newStatus) => {
@@ -301,9 +329,9 @@ export default function OrderMobileCard({
                                     ? `Next allowed: ${nextStatuses.join(" → ")}`
                                     : "No further status updates allowed"}
                             </p>
-                            {currentStatus === "pending" && !hasTag && (
+                            {currentStatus === "pending" && !hasAllRequiredTags && (
                                 <p className="text-xs text-orange-600 mt-1">
-                                    ⚠️ Assign a tag first to mark as Assigned
+                                    ⚠️ Assign all required tags first to mark as Assigned
                                 </p>
                             )}
                         </div>
@@ -332,19 +360,77 @@ export default function OrderMobileCard({
                             </p>
                         </div>
                     )}
-                    <div className="flex justify-between text-sm flex-wrap gap-1">
-                        <span className="text-gray-500">Tag:</span>
-                        {order.assignedTag ? (
-                            <span className="text-blue-600 font-mono">{order.assignedTag.tagCode}</span>
-                        ) : (
-                            <button
-                                onClick={() => onAssignTag(order)}
-                                className="text-blue-600 text-sm font-medium hover:underline"
-                            >
-                                Assign Tag
-                            </button>
-                        )}
+                    
+                    {/* Tags Section */}
+                    <div className="text-sm">
+                        <span className="text-gray-500">Tags:</span>
+                        <div className="mt-2">
+                            {hasAnyTag ? (
+                                <div className="space-y-2">
+                                    <div className="flex flex-wrap gap-2">
+                                        {allTags.map((tag, idx) => (
+                                            <div key={idx} className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 px-2 py-1 rounded font-mono text-sm">
+                                                <span>{tag.code}</span>
+                                                {tagsEditable && (
+                                                    <div className="flex items-center gap-1 ml-1">
+                                                        <button
+                                                            onClick={() => onReplaceTag(order._id, tag.id, tag.code)}
+                                                            className="hover:text-green-600 transition"
+                                                            title="Replace tag"
+                                                            disabled={processingAction}
+                                                        >
+                                                            <RefreshCw size={12} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => onRemoveTag(order._id, tag.id, tag.code)}
+                                                            className="hover:text-red-600 transition"
+                                                            title="Remove tag"
+                                                            disabled={processingAction}
+                                                        >
+                                                            <X size={12} />
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                    <div className="text-xs text-gray-500">
+                                        {assignedCount} / {requiredCount} tags assigned
+                                        {!hasAllRequiredTags && tagsEditable && (
+                                            <span className="text-orange-500 ml-1">(Need {requiredCount - assignedCount} more)</span>
+                                        )}
+                                    </div>
+                                    {!hasAllRequiredTags && tagsEditable && (
+                                        <button
+                                            onClick={() => onAssignTag(order)}
+                                            className="w-full py-1.5 text-center text-xs text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition"
+                                        >
+                                            <Tag size={12} className="inline mr-1" />
+                                            {hasAnyTag ? `Add Another Tag (${requiredCount - assignedCount} remaining)` : "Assign Tag"}
+                                        </button>
+                                    )}
+                                    {!tagsEditable && (
+                                        <div className="text-xs text-gray-400 italic mt-1">
+                                            ℹ️ Tags cannot be modified in "{order.fulfillmentStatus}" status
+                                        </div>
+                                    )}
+                                </div>
+                            ) : (
+                                tagsEditable ? (
+                                    <button
+                                        onClick={() => onAssignTag(order)}
+                                        className="w-full py-1.5 text-center text-xs text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition"
+                                    >
+                                        <Tag size={12} className="inline mr-1" />
+                                        Assign First Tag
+                                    </button>
+                                ) : (
+                                    <span className="text-xs text-gray-400">No tags assigned (locked)</span>
+                                )
+                            )}
+                        </div>
                     </div>
+                    
                     <div className="flex justify-between text-sm flex-wrap gap-1">
                         <span className="text-gray-500">Created:</span>
                         <span className="text-gray-900">{formatDate(order.createdAt)}</span>
@@ -356,7 +442,7 @@ export default function OrderMobileCard({
                             <span className="text-gray-500">Update Status:</span>
                             <CustomStatusSelect
                                 currentStatus={currentStatus}
-                                hasTag={hasTag}
+                                hasAllRequiredTags={hasAllRequiredTags}
                                 onStatusChange={handleStatusChange}
                                 isUpdating={isUpdating}
                                 orderId={order._id}
@@ -376,17 +462,17 @@ export default function OrderMobileCard({
 
                     {/* Action Buttons Grid for Mobile */}
                     <div className="grid grid-cols-2 gap-2 pt-2">
-                        {!order.assignedTag && order.fulfillmentStatus !== "cancelled" && order.fulfillmentStatus !== "returned" && (
+                        {!hasAllRequiredTags && tagsEditable && order.fulfillmentStatus !== "cancelled" && order.fulfillmentStatus !== "returned" && (
                             <button
                                 onClick={() => onAssignTag(order)}
                                 className="py-2 text-center text-sm text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition"
                             >
                                 <Tag size={14} className="inline mr-1" />
-                                Assign Tag
+                                {hasAnyTag ? "Add Tag" : "Assign Tag"}
                             </button>
                         )}
 
-                        {canCancel && (
+                        {canCancelStatus && (
                             <button
                                 onClick={() => onCancelOrder(order)}
                                 className="py-2 text-center text-sm text-red-600 font-medium border border-red-200 rounded-lg hover:bg-red-50 transition"

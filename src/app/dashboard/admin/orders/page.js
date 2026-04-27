@@ -8,6 +8,7 @@ import { useEffect, useState, useCallback, useRef } from "react";
 import { toast, Toaster } from "react-hot-toast";
 import OrderDetailsModal from "@/components/admin/orders/OrderDetailsModal";
 import AssignTagModal from "@/components/admin/orders/AssignTagModal";
+import ReplaceTagModal from "@/components/admin/orders/ReplaceTagModal";
 import OrderMobileCard from "@/components/admin/orders/OrderMobileCard";
 import OrdersTable from "@/components/admin/orders/OrdersTable";
 import OrderStatsCards from "@/components/admin/orders/OrderStatsCards";
@@ -23,6 +24,7 @@ export default function AdminOrdersPage() {
     const [error, setError] = useState(null);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [showTagModal, setShowTagModal] = useState(false);
+    const [showReplaceModal, setShowReplaceModal] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [showRefundModal, setShowRefundModal] = useState(false);
@@ -33,6 +35,7 @@ export default function AdminOrdersPage() {
     const [updatingStatus, setUpdatingStatus] = useState(false);
     const [statusUpdateOrder, setStatusUpdateOrder] = useState(null);
     const [processingAction, setProcessingAction] = useState(false);
+    const [replaceTagInfo, setReplaceTagInfo] = useState({ orderId: null, oldTagId: null, oldTagCode: null });
 
     // Search and Filters
     const [searchTerm, setSearchTerm] = useState("");
@@ -61,6 +64,11 @@ export default function AdminOrdersPage() {
         delivered: 0, cancelled: 0, returned: 0,
         paid: 0, unpaid: 0, refunded: 0
     });
+
+    // Check if tags are editable based on order status
+    const canEditTags = (orderStatus) => {
+        return ["pending", "assigned"].includes(orderStatus);
+    };
 
     const fetchOrders = useCallback(async () => {
         if (!user || user.role !== "admin") return;
@@ -226,6 +234,11 @@ export default function AdminOrdersPage() {
         setShowTagModal(true);
     };
 
+    const handleOpenReplaceModal = (orderId, oldTagId, oldTagCode) => {
+        setReplaceTagInfo({ orderId, oldTagId, oldTagCode });
+        setShowReplaceModal(true);
+    };
+
     const handleAssignTag = async () => {
         if (!selectedTag) {
             toast.error("Please select a tag");
@@ -233,7 +246,7 @@ export default function AdminOrdersPage() {
         }
         setAssigningTag(true);
         try {
-            await api.patch(`/orders/${selectedOrder._id}`, { assignedTag: selectedTag });
+            await api.post(`/orders/${selectedOrder._id}/tags/add`, { tagId: selectedTag });
             toast.success("Tag assigned successfully");
             setShowTagModal(false);
             setSelectedTag("");
@@ -246,6 +259,45 @@ export default function AdminOrdersPage() {
             }
         } finally {
             setAssigningTag(false);
+        }
+    };
+
+    const handleRemoveTag = async (orderId, tagId, tagCode) => {
+        if (!confirm(`Are you sure you want to remove tag "${tagCode}" from this order?`)) {
+            return;
+        }
+
+        setProcessingAction(true);
+        try {
+            await api.delete(`/orders/${orderId}/tags/${tagId}/remove`);
+            toast.success(`Tag "${tagCode}" removed successfully`);
+            await Promise.all([fetchOrders(), fetchStats(), fetchAvailableTags()]);
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to remove tag");
+        } finally {
+            setProcessingAction(false);
+        }
+    };
+
+    const handleReplaceTag = async (orderId, oldTagId, oldTagCode, newTagId) => {
+        if (!confirm(`Replace tag "${oldTagCode}" with new tag?`)) {
+            return;
+        }
+
+        setProcessingAction(true);
+        try {
+            await api.patch(`/orders/${orderId}/tags/replace`, {
+                oldTagId: oldTagId,
+                newTagId: newTagId
+            });
+            toast.success(`Tag "${oldTagCode}" replaced successfully`);
+            setShowReplaceModal(false);
+            setReplaceTagInfo({ orderId: null, oldTagId: null, oldTagCode: null });
+            await Promise.all([fetchOrders(), fetchStats(), fetchAvailableTags()]);
+        } catch (err) {
+            toast.error(err.response?.data?.message || "Failed to replace tag");
+        } finally {
+            setProcessingAction(false);
         }
     };
 
@@ -276,7 +328,7 @@ export default function AdminOrdersPage() {
             if (err.response?.status === 400) {
                 errorMessage = err.response?.data?.message || "Invalid status transition";
                 if (errorMessage.includes("tag first")) {
-                    errorMessage = "Cannot mark as assigned: Please assign a tag first.";
+                    errorMessage = "Cannot mark as assigned: Please assign all required tags first.";
                 } else if (errorMessage.includes("paid before shipping")) {
                     errorMessage = "Cannot mark as shipped: Payment not confirmed.";
                 }
@@ -360,7 +412,7 @@ export default function AdminOrdersPage() {
 
     return (
         <div className="flex-1 w-full p-4 lg:p-8">
-                <Toaster position="top-right" />
+            <Toaster position="top-right" />
             <div className="mb-6">
                 <div className="flex items-center gap-2 mb-1">
                     <h1 className="text-2xl font-semibold text-gray-900">Orders Management</h1>
@@ -402,8 +454,8 @@ export default function AdminOrdersPage() {
                         onClick={performSearch}
                         disabled={isSearching || !searchTerm || searchTerm.trim() === ""}
                         className={`px-6 py-2 rounded-lg transition cursor-pointer flex items-center gap-2 whitespace-nowrap ${!searchTerm || searchTerm.trim() === ""
-                                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                : "bg-gray-900 text-white hover:bg-gray-800"
+                            ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                            : "bg-gray-900 text-white hover:bg-gray-800"
                             }`}
                     >
                         {isSearching ? (
@@ -434,8 +486,8 @@ export default function AdminOrdersPage() {
                                     setCurrentPage(1);
                                 }}
                                 className={`px-4 py-2 rounded-lg text-sm transition cursor-pointer whitespace-nowrap ${filterStatus === filter.value
-                                        ? "bg-gray-900 text-white"
-                                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                                    ? "bg-gray-900 text-white"
+                                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                                     }`}
                             >
                                 {filter.label}
@@ -490,6 +542,9 @@ export default function AdminOrdersPage() {
                     onProcessRefund={(order) => { setSelectedOrder(order); setShowRefundModal(true); }}
                     onProcessReturn={(order) => { setSelectedOrder(order); setShowReturnModal(true); }}
                     onCompleteReturn={handleCompleteReturn}
+                    onRemoveTag={handleRemoveTag}
+                    onReplaceTag={handleOpenReplaceModal}
+                    canEditTags={canEditTags}
                     updatingStatus={updatingStatus}
                     statusUpdateOrder={statusUpdateOrder}
                     processingAction={processingAction}
@@ -532,8 +587,12 @@ export default function AdminOrdersPage() {
                                 onCancelOrder={(order) => { setSelectedOrder(order); setShowCancelModal(true); }}
                                 onProcessRefund={(order) => { setSelectedOrder(order); setShowRefundModal(true); }}
                                 onProcessReturn={(order) => { setSelectedOrder(order); setShowReturnModal(true); }}
+                                onRemoveTag={handleRemoveTag}
+                                onReplaceTag={handleOpenReplaceModal}
+                                canEditTags={canEditTags}
                                 updatingStatus={updatingStatus}
                                 statusUpdateOrder={statusUpdateOrder}
+                                processingAction={processingAction}
                             />
                         ))}
                         {totalPages > 1 && (
@@ -571,22 +630,63 @@ export default function AdminOrdersPage() {
                 loadingTags={loadingTags}
             />
 
-            <OrderDetailsModal isOpen={showDetailsModal} onClose={() => setShowDetailsModal(false)}
+            <ReplaceTagModal
+                isOpen={showReplaceModal}
+                onClose={() => {
+                    setShowReplaceModal(false);
+                    setReplaceTagInfo({ orderId: null, oldTagId: null, oldTagCode: null });
+                }}
+                orderId={replaceTagInfo.orderId}
+                oldTagId={replaceTagInfo.oldTagId}
+                oldTagCode={replaceTagInfo.oldTagCode}
+                availableTags={availableTags}
+                onReplace={handleReplaceTag}
+                processing={processingAction}
+            />
+
+            <OrderDetailsModal
+                isOpen={showDetailsModal}
+                onClose={() => setShowDetailsModal(false)}
                 order={selectedOrder} onAssignTag={handleOpenTagModal}
-                onCancelOrder={(order) => { setShowDetailsModal(false); setSelectedOrder(order); setShowCancelModal(true); }}
-                onProcessRefund={(order) => { setShowDetailsModal(false); setSelectedOrder(order); setShowRefundModal(true); }}
-                onProcessReturn={(order) => { setShowDetailsModal(false); setSelectedOrder(order); setShowReturnModal(true); }}
-                onCompleteReturn={handleCompleteReturn} processingAction={processingAction} />
+                onCancelOrder={(order) => {
+                    setShowDetailsModal(false);
+                    setSelectedOrder(order); setShowCancelModal(true);
+                }}
+                onProcessRefund={(order) => {
+                    setShowDetailsModal(false);
+                    setSelectedOrder(order); setShowRefundModal(true);
+                }}
+                onProcessReturn={(order) => {
+                    setShowDetailsModal(false);
+                    setSelectedOrder(order); setShowReturnModal(true);
+                }}
+                onCompleteReturn={handleCompleteReturn}
+                processingAction={processingAction}
+            />
 
-            <CancelOrderModal isOpen={showCancelModal} onClose={() => setShowCancelModal(false)}
-                order={selectedOrder} onConfirm={handleCancelOrder} processing={processingAction} />
+            <CancelOrderModal
+                isOpen={showCancelModal}
+                onClose={() => setShowCancelModal(false)}
+                order={selectedOrder}
+                onConfirm={handleCancelOrder}
+                processing={processingAction} />
 
-            <ProcessRefundModal isOpen={showRefundModal} onClose={() => setShowRefundModal(false)}
-                order={selectedOrder} onConfirm={handleProcessRefund} processing={processingAction} />
+            <ProcessRefundModal
+                isOpen={showRefundModal}
+                onClose={() => setShowRefundModal(false)}
+                order={selectedOrder}
+                onConfirm={handleProcessRefund}
+                processing={processingAction}
+            />
 
-            <ProcessReturnModal isOpen={showReturnModal} onClose={() => setShowReturnModal(false)}
-                order={selectedOrder} onConfirm={handleProcessReturn}
-                onCompleteReturn={handleCompleteReturn} processing={processingAction} />
+            <ProcessReturnModal
+                isOpen={showReturnModal}
+                onClose={() => setShowReturnModal(false)}
+                order={selectedOrder}
+                onConfirm={handleProcessReturn}
+                onCompleteReturn={handleCompleteReturn}
+                processing={processingAction}
+            />
         </div>
     );
 }

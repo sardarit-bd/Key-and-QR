@@ -3,7 +3,7 @@ import {
     Calendar, Clock, CreditCard, Eye, Gift, Package,
     RefreshCw, Tag, User, XCircle, Ban, Undo2,
     Truck, CheckCircle, RotateCcw, AlertCircle, Info,
-    ChevronDown, Check
+    ChevronDown, Check, X
 } from "lucide-react";
 import { FulfillmentStatusSelect } from "./FulfillmentStatus";
 import { TableTooltip } from "./TableTooltip";
@@ -56,6 +56,9 @@ export default function OrdersTable({
     onProcessRefund,
     onProcessReturn,
     onCompleteReturn,
+    onRemoveTag,
+    onReplaceTag,
+    canEditTags,
     updatingStatus,
     statusUpdateOrder,
     processingAction
@@ -79,7 +82,7 @@ export default function OrdersTable({
                         <th className="text-left p-4 text-sm font-semibold text-gray-600">Product</th>
                         <th className="text-left p-4 text-sm font-semibold text-gray-600">Purchase Type</th>
                         <th className="text-left p-4 text-sm font-semibold text-gray-600">Payment</th>
-                        <th className="text-left p-4 text-sm font-semibold text-gray-600">Tag</th>
+                        <th className="text-left p-4 text-sm font-semibold text-gray-600">Tags</th>
                         <th className="text-left p-4 text-sm font-semibold text-gray-600">
                             <div className="flex items-center gap-1">
                                 Fulfillment
@@ -96,7 +99,30 @@ export default function OrdersTable({
                     {orders.map((order) => {
                         const currentStatus = order.fulfillmentStatus;
                         const isUpdating = updatingStatus && statusUpdateOrder === order._id;
-                        const hasTag = !!order.assignedTag;
+
+                        // Calculate tag assignment status
+                        const assignedCount = order.assignedTags?.length || (order.assignedTag ? 1 : 0);
+                        const requiredCount = order.quantity || 1;
+                        const hasAllRequiredTags = assignedCount >= requiredCount;
+                        const hasAnyTag = assignedCount > 0;
+                        const tagsEditable = canEditTags(order.fulfillmentStatus);
+
+                        // Get all tag codes
+                        const allTags = [];
+                        if (order.assignedTags && order.assignedTags.length > 0) {
+                            order.assignedTags.forEach(item => {
+                                if (item.tag?.tagCode) allTags.push({
+                                    code: item.tag.tagCode,
+                                    id: item.tag._id
+                                });
+                            });
+                        }
+                        if (order.assignedTag && !allTags.some(t => t.id === order.assignedTag._id)) {
+                            allTags.push({
+                                code: order.assignedTag.tagCode,
+                                id: order.assignedTag._id
+                            });
+                        }
 
                         return (
                             <tr key={order._id} className="hover:bg-gray-50 transition">
@@ -146,18 +172,71 @@ export default function OrdersTable({
                                     </div>
                                 </td>
                                 <td className="p-4">
-                                    {order.assignedTag ? (
-                                        <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-mono">
-                                            {order.assignedTag.tagCode}
-                                        </span>
+                                    {hasAnyTag ? (
+                                        <div className="space-y-2">
+                                            <div className="flex flex-wrap gap-1">
+                                                {allTags.slice(0, 3).map((tag, idx) => (
+                                                    <div key={idx} className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-mono text-xs">
+                                                        <span>{tag.code}</span>
+                                                        {tagsEditable && (
+                                                            <>
+                                                                <button
+                                                                    onClick={() => onReplaceTag(order._id, tag.id, tag.code)}
+                                                                    className="hover:text-green-600 transition ml-0.5 cursor-pointer"
+                                                                    title="Replace tag"
+                                                                    disabled={processingAction}
+                                                                >
+                                                                    <RefreshCw size={10} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => onRemoveTag(order._id, tag.id, tag.code)}
+                                                                    className="hover:text-red-600 transition cursor-pointer"
+                                                                    title="Remove tag"
+                                                                    disabled={processingAction}
+                                                                >
+                                                                    <X size={10} />
+                                                                </button>
+                                                            </>
+                                                        )}
+                                                    </div>
+                                                ))}
+                                                {allTags.length > 3 && (
+                                                    <span className="text-xs text-gray-500">+{allTags.length - 3}</span>
+                                                )}
+                                            </div>
+                                            <div className="text-xs text-gray-500">
+                                                {assignedCount} / {requiredCount} tags
+                                                {!hasAllRequiredTags && tagsEditable && (
+                                                    <span className="text-orange-500 ml-1">(Incomplete)</span>
+                                                )}
+                                            </div>
+                                            {!hasAllRequiredTags && tagsEditable && (
+                                                <button
+                                                    onClick={() => onAssignTag(order)}
+                                                    className="text-xs text-blue-600 hover:underline cursor-pointer"
+                                                    disabled={processingAction}
+                                                >
+                                                    {hasAnyTag ? "Add Tag" : "Assign Tag"}
+                                                </button>
+                                            )}
+                                            {!tagsEditable && hasAnyTag && (
+                                                <div className="text-xs text-gray-400 mt-1">
+                                                    Tags locked ({order.fulfillmentStatus})
+                                                </div>
+                                            )}
+                                        </div>
                                     ) : (
-                                        <button
-                                            onClick={() => onAssignTag(order)}
-                                            className="text-xs text-blue-600 hover:underline cursor-pointer"
-                                            disabled={processingAction}
-                                        >
-                                            Assign Tag
-                                        </button>
+                                        tagsEditable ? (
+                                            <button
+                                                onClick={() => onAssignTag(order)}
+                                                className="text-xs text-blue-600 hover:underline cursor-pointer"
+                                                disabled={processingAction}
+                                            >
+                                                Assign Tag
+                                            </button>
+                                        ) : (
+                                            <span className="text-xs text-gray-400">No tags assigned</span>
+                                        )
                                     )}
                                 </td>
                                 <td className="p-4">
@@ -167,9 +246,9 @@ export default function OrdersTable({
                                             orderId={order._id}
                                             onUpdateStatus={onUpdateStatus}
                                             isUpdating={isUpdating}
-                                            hasTag={hasTag}
+                                            hasAllRequiredTags={hasAllRequiredTags}
                                         />
-                                        
+
                                         {/* Return Status Badges */}
                                         {order.returnStatus === "requested" && (
                                             <div className="mt-1">
@@ -221,11 +300,11 @@ export default function OrdersTable({
                                 </td>
                                 <td className="p-4">
                                     <div className="flex items-center gap-1 flex-wrap">
-                                        {!order.assignedTag && order.fulfillmentStatus !== "cancelled" && order.fulfillmentStatus !== "returned" && (
+                                        {!hasAllRequiredTags && tagsEditable && order.fulfillmentStatus !== "cancelled" && order.fulfillmentStatus !== "returned" && (
                                             <button
                                                 onClick={() => onAssignTag(order)}
                                                 className="p-1.5 hover:bg-gray-100 rounded-lg transition group cursor-pointer"
-                                                title="Assign Tag"
+                                                title={hasAnyTag ? "Add Tag" : "Assign Tag"}
                                                 disabled={processingAction}
                                             >
                                                 <Tag size={16} className="text-gray-500 group-hover:text-blue-600" />
