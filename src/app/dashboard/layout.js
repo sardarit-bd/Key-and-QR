@@ -49,10 +49,10 @@ export default function DashboardLayout({ children }) {
     /********************* Page Settings Submenu Items **************************/
     const pageSettingsItems = [
         { icon: LayoutTemplate, label: 'Hero Section', link: "/dashboard/admin/settings/hero" },
-        { icon: Image, label: 'Banner Images', link: "/dashboard/admin/settings/banners" },
-        { icon: Palette, label: 'Theme Settings', link: "/dashboard/admin/settings/theme" },
-        { icon: FileText, label: 'Pages', link: "/dashboard/admin/settings/pages" },
-        { icon: Eye, label: 'SEO Settings', link: "/dashboard/admin/settings/seo" },
+        // { icon: Image, label: 'Banner Images', link: "/dashboard/admin/settings/banners" },
+        // { icon: Palette, label: 'Theme Settings', link: "/dashboard/admin/settings/theme" },
+        // { icon: FileText, label: 'Pages', link: "/dashboard/admin/settings/pages" },
+        // { icon: Eye, label: 'SEO Settings', link: "/dashboard/admin/settings/seo" },
     ];
 
     /********************* menu item for admin **************************/
