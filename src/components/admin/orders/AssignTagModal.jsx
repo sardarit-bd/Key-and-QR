@@ -1,4 +1,3 @@
-// components/admin/orders/AssignTagModal.jsx
 import CustomSelect from "@/shared/CustomSelect";
 import { useAuthStore } from "@/store/authStore";
 import { Mail, Loader2 } from "lucide-react";
@@ -26,16 +25,13 @@ export default function AssignTagModal({
 
     const providerInfo = getProviderInfo();
 
-    // Calculate assigned count correctly
     const getAssignedCount = () => {
         let count = 0;
         
-        // Count from assignedTags array
         if (order?.assignedTags && Array.isArray(order.assignedTags)) {
             count += order.assignedTags.length;
         }
         
-        // Also count from legacy assignedTag if exists and not already counted
         if (order?.assignedTag && !order?.assignedTags?.some(t => t.tag?._id === order.assignedTag?._id || t.tag === order.assignedTag)) {
             count += 1;
         }
@@ -74,7 +70,7 @@ export default function AssignTagModal({
     if (!isOpen || !order) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
             <div className="bg-white rounded-xl max-w-md w-full shadow-xl">
                 <div className="p-6 border-b border-gray-200">
                     <div className="flex items-center justify-between">
@@ -176,7 +172,7 @@ export default function AssignTagModal({
                     <button
                         onClick={onAssign}
                         disabled={assigning || !selectedTag || loadingTags || remainingCount === 0 || hasAllRequiredTags}
-                        className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                        className="px-4 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                     >
                         {assigning ? "Assigning..." : remainingCount > 1 ? "Assign One More Tag" : "Assign Tag"}
                     </button>

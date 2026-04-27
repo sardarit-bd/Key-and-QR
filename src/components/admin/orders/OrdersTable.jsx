@@ -47,6 +47,66 @@ const canCompleteReturn = (order) => {
     return ["approved", "shipped", "received"].includes(order.returnStatus);
 };
 
+// Helper function to get accurate assigned count
+const getAccurateAssignedCount = (order) => {
+    let count = 0;
+
+    if (order.assignedTags && Array.isArray(order.assignedTags)) {
+        count += order.assignedTags.length;
+    }
+
+    if (order.assignedTag && !order.assignedTags?.some(t => {
+        const tagId = t.tag?._id || t.tag;
+        return tagId?.toString() === order.assignedTag?._id?.toString();
+    })) {
+        count += 1;
+    }
+
+    return count;
+};
+
+const getAllTagsFromOrder = (order) => {
+    const tags = [];
+    const seenIds = new Set();
+
+    if (order.assignedTags && Array.isArray(order.assignedTags)) {
+        order.assignedTags.forEach(item => {
+            let tagObj = null;
+
+            if (item.tag && typeof item.tag === 'object') {
+                tagObj = item.tag;
+            } else if (item.tagId) {
+                tagObj = { _id: item.tagId, tagCode: item.tagCode };
+            } else if (item._id) {
+                tagObj = item;
+            }
+
+            if (tagObj && tagObj.tagCode) {
+                const tagId = tagObj._id?.toString() || tagObj.id?.toString();
+                if (tagId && !seenIds.has(tagId)) {
+                    seenIds.add(tagId);
+                    tags.push({
+                        code: tagObj.tagCode,
+                        id: tagId
+                    });
+                }
+            }
+        });
+    }
+
+    if (order.assignedTag && order.assignedTag.tagCode) {
+        const tagId = order.assignedTag._id?.toString();
+        if (tagId && !seenIds.has(tagId)) {
+            tags.push({
+                code: order.assignedTag.tagCode,
+                id: tagId
+            });
+        }
+    }
+
+    return tags;
+};
+
 export default function OrdersTable({
     orders,
     onAssignTag,
@@ -100,29 +160,12 @@ export default function OrdersTable({
                         const currentStatus = order.fulfillmentStatus;
                         const isUpdating = updatingStatus && statusUpdateOrder === order._id;
 
-                        // Calculate tag assignment status
-                        const assignedCount = order.assignedTags?.length || (order.assignedTag ? 1 : 0);
+                        const assignedCount = getAccurateAssignedCount(order);
                         const requiredCount = order.quantity || 1;
                         const hasAllRequiredTags = assignedCount >= requiredCount;
                         const hasAnyTag = assignedCount > 0;
                         const tagsEditable = canEditTags(order.fulfillmentStatus);
-
-                        // Get all tag codes
-                        const allTags = [];
-                        if (order.assignedTags && order.assignedTags.length > 0) {
-                            order.assignedTags.forEach(item => {
-                                if (item.tag?.tagCode) allTags.push({
-                                    code: item.tag.tagCode,
-                                    id: item.tag._id
-                                });
-                            });
-                        }
-                        if (order.assignedTag && !allTags.some(t => t.id === order.assignedTag._id)) {
-                            allTags.push({
-                                code: order.assignedTag.tagCode,
-                                id: order.assignedTag._id
-                            });
-                        }
+                        const allTags = getAllTagsFromOrder(order);
 
                         return (
                             <tr key={order._id} className="hover:bg-gray-50 transition">
@@ -149,7 +192,7 @@ export default function OrdersTable({
                                     <span className={`inline-flex items-center gap-1 text-xs px-2 py-1 rounded-full ${order.purchaseType === "gift"
                                         ? "bg-purple-100 text-purple-700"
                                         : "bg-gray-100 text-gray-600"
-                                    }`}>
+                                        }`}>
                                         {order.purchaseType === "gift" ? <Gift size={10} /> : <User size={10} />}
                                         <span className="hidden sm:inline">{order.purchaseType === "gift" ? "Gift" : "Self"}</span>
                                     </span>
@@ -175,31 +218,44 @@ export default function OrdersTable({
                                     {hasAnyTag ? (
                                         <div className="space-y-2">
                                             <div className="flex flex-wrap gap-1">
-                                                {allTags.slice(0, 3).map((tag, idx) => (
-                                                    <div key={idx} className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-mono text-xs">
-                                                        <span>{tag.code}</span>
-                                                        {tagsEditable && (
-                                                            <>
-                                                                <button
-                                                                    onClick={() => onReplaceTag(order._id, tag.id, tag.code)}
-                                                                    className="hover:text-green-600 transition ml-0.5 cursor-pointer"
-                                                                    title="Replace tag"
-                                                                    disabled={processingAction}
-                                                                >
-                                                                    <RefreshCw size={10} />
-                                                                </button>
-                                                                <button
-                                                                    onClick={() => onRemoveTag(order._id, tag.id, tag.code)}
-                                                                    className="hover:text-red-600 transition cursor-pointer"
-                                                                    title="Remove tag"
-                                                                    disabled={processingAction}
-                                                                >
-                                                                    <X size={10} />
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                    </div>
-                                                ))}
+                                                {allTags.slice(0, 3).map((tag, idx) => {
+                                                    // Ensure tag.id is a clean string
+                                                    const cleanTagId = tag.id?.toString();
+                                                    console.log(`Tag ${idx}:`, { originalId: tag.id, cleanId: cleanTagId, code: tag.code });
+
+                                                    return (
+                                                        <div key={idx} className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-mono text-xs">
+                                                            <span>{tag.code}</span>
+                                                            {tagsEditable && (
+                                                                <>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            const tagIdString = typeof tag.id === 'object' ? tag.id._id || tag.id.toString() : tag.id;
+                                                                            onReplaceTag(order._id, tagIdString, tag.code);
+                                                                        }}
+                                                                        className="hover:text-green-600 transition ml-0.5 cursor-pointer"
+                                                                        title="Replace tag"
+                                                                        disabled={processingAction}
+                                                                    >
+                                                                        <RefreshCw size={10} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            const tagIdString = typeof tag.id === 'object' ? tag.id._id || tag.id.toString() : tag.id;
+                                                                            console.log("Remove tag - Tag ID:", tagIdString, "Tag Code:", tag.code);
+                                                                            onRemoveTag(order._id, tagIdString, tag.code);
+                                                                        }}
+                                                                        className="hover:text-red-600 transition cursor-pointer"
+                                                                        title="Remove tag"
+                                                                        disabled={processingAction}
+                                                                    >
+                                                                        <X size={10} />
+                                                                    </button>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
                                                 {allTags.length > 3 && (
                                                     <span className="text-xs text-gray-500">+{allTags.length - 3}</span>
                                                 )}
@@ -249,7 +305,6 @@ export default function OrdersTable({
                                             hasAllRequiredTags={hasAllRequiredTags}
                                         />
 
-                                        {/* Return Status Badges */}
                                         {order.returnStatus === "requested" && (
                                             <div className="mt-1">
                                                 <span className="inline-flex items-center gap-1 text-xs bg-orange-100 text-orange-700 px-1 py-0.5 rounded-full">

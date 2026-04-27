@@ -22,12 +22,23 @@ export default function ReplaceTagModal({
         }
     }, [isOpen]);
 
-    const tagOptions = availableTags
-        .filter(tag => tag._id !== oldTagId)
-        .map(tag => ({
-            value: tag._id,
-            label: tag.tagCode
-        }));
+    const getTagOptions = () => {
+        if (!availableTags || !Array.isArray(availableTags)) {
+            return [];
+        }
+        
+        return availableTags
+            .filter(tag => {
+                if (tag._id === oldTagId) return false;
+                return tag && !tag.owner && tag.isActive === true && tag.isActivated === false;
+            })
+            .map(tag => ({
+                value: tag._id,
+                label: `${tag.tagCode} ${tag.subscriptionType === 'subscriber' ? '⭐' : ''}`
+            }));
+    };
+
+    const tagOptions = getTagOptions();
 
     const handleSubmit = () => {
         if (!selectedNewTag) {
@@ -35,12 +46,13 @@ export default function ReplaceTagModal({
             return;
         }
         onReplace(orderId, oldTagId, oldTagCode, selectedNewTag);
+        onClose();
     };
 
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
             <div className="bg-white rounded-xl max-w-md w-full shadow-xl">
                 <div className="p-6 border-b border-gray-200">
                     <div className="flex items-center justify-between">
@@ -75,18 +87,10 @@ export default function ReplaceTagModal({
                         clearable={true}
                     />
                     
-                    {availableTags.length === 0 && (
+                    {tagOptions.length === 0 && (
                         <div className="mt-3 p-3 bg-yellow-50 rounded-lg">
                             <p className="text-sm text-yellow-700">
                                 No available tags to replace with. Please create more tags.
-                            </p>
-                        </div>
-                    )}
-                    
-                    {tagOptions.length === 0 && availableTags.length > 0 && (
-                        <div className="mt-3 p-3 bg-yellow-50 rounded-lg">
-                            <p className="text-sm text-yellow-700">
-                                No other tags available. This tag is the only unused tag.
                             </p>
                         </div>
                     )}

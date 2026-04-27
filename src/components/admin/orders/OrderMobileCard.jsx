@@ -72,20 +72,82 @@ const canCompleteReturn = (order) => {
     return ["approved", "shipped", "received"].includes(order.returnStatus);
 };
 
+// Helper function to get accurate assigned count
+const getAccurateAssignedCount = (order) => {
+    let count = 0;
+
+    if (order.assignedTags && Array.isArray(order.assignedTags)) {
+        count += order.assignedTags.length;
+    }
+
+    if (order.assignedTag && !order.assignedTags?.some(t => {
+        const tagId = t.tag?._id || t.tag;
+        return tagId?.toString() === order.assignedTag?._id?.toString();
+    })) {
+        count += 1;
+    }
+
+    return count;
+};
+
+const getAllTagsFromOrder = (order) => {
+    const tags = [];
+    const seenIds = new Set();
+
+    // Get from assignedTags array
+    if (order.assignedTags && Array.isArray(order.assignedTags)) {
+        order.assignedTags.forEach(item => {
+            // Extract tag object correctly
+            let tagObj = null;
+
+            if (item.tag && typeof item.tag === 'object') {
+                tagObj = item.tag;
+            } else if (item.tagId) {
+                tagObj = { _id: item.tagId, tagCode: item.tagCode };
+            } else if (item._id) {
+                tagObj = item;
+            }
+
+            if (tagObj && tagObj.tagCode) {
+                const tagId = tagObj._id?.toString() || tagObj.id?.toString();
+                if (tagId && !seenIds.has(tagId)) {
+                    seenIds.add(tagId);
+                    tags.push({
+                        code: tagObj.tagCode,
+                        id: tagId
+                    });
+                }
+            }
+        });
+    }
+
+    if (order.assignedTag && order.assignedTag.tagCode) {
+        const tagId = order.assignedTag._id?.toString();
+        if (tagId && !seenIds.has(tagId)) {
+            tags.push({
+                code: order.assignedTag.tagCode,
+                id: tagId
+            });
+        }
+    }
+
+    return tags;
+};
+
 function CustomStatusSelect({ currentStatus, hasAllRequiredTags, onStatusChange, isUpdating, orderId }) {
     const [isOpen, setIsOpen] = useState(false);
     const dropdownRef = useRef(null);
-    
+
     const statuses = [
         { value: "pending", label: "Pending", icon: Clock, color: "bg-yellow-100 text-yellow-700" },
         { value: "assigned", label: "Assigned", icon: Tag, color: "bg-purple-100 text-purple-700" },
         { value: "shipped", label: "Shipped", icon: Truck, color: "bg-blue-100 text-blue-700" },
         { value: "delivered", label: "Delivered", icon: CheckCircle, color: "bg-green-100 text-green-700" }
     ];
-    
+
     const nextStatuses = getNextAllowedStatuses(currentStatus, hasAllRequiredTags);
     const currentStatusIndex = statuses.findIndex(s => s.value === currentStatus);
-    
+
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -95,13 +157,13 @@ function CustomStatusSelect({ currentStatus, hasAllRequiredTags, onStatusChange,
         document.addEventListener("mousedown", handleClickOutside);
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, []);
-    
+
     const canSelectStatus = (statusValue) => {
         const statusIndex = statuses.findIndex(s => s.value === statusValue);
         if (statusIndex <= currentStatusIndex) return false;
         return nextStatuses.includes(statusValue);
     };
-    
+
     const handleSelect = (statusValue) => {
         if (statusValue === "assigned" && !hasAllRequiredTags) {
             toast.error("Cannot change status: Assign all required tags first.", {
@@ -111,7 +173,7 @@ function CustomStatusSelect({ currentStatus, hasAllRequiredTags, onStatusChange,
             setIsOpen(false);
             return;
         }
-        
+
         if (canSelectStatus(statusValue)) {
             onStatusChange(statusValue);
             setIsOpen(false);
@@ -121,10 +183,10 @@ function CustomStatusSelect({ currentStatus, hasAllRequiredTags, onStatusChange,
             });
         }
     };
-    
+
     const currentStatusConfig = statuses.find(s => s.value === currentStatus);
     const CurrentIcon = currentStatusConfig?.icon || Clock;
-    
+
     return (
         <div className="relative" ref={dropdownRef}>
             <button
@@ -137,7 +199,7 @@ function CustomStatusSelect({ currentStatus, hasAllRequiredTags, onStatusChange,
                 {!isUpdating && <ChevronDown size={14} className="ml-1" />}
                 {isUpdating && <RefreshCw size={14} className="animate-spin" />}
             </button>
-            
+
             {isOpen && !isUpdating && (
                 <div className="absolute top-full right-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[160px] overflow-hidden">
                     <div className="py-1">
@@ -145,7 +207,7 @@ function CustomStatusSelect({ currentStatus, hasAllRequiredTags, onStatusChange,
                             const isDisabled = !canSelectStatus(status.value);
                             const StatusIcon = status.icon;
                             const isCurrent = status.value === currentStatus;
-                            
+
                             if (isCurrent) {
                                 return (
                                     <div key={status.value} className="px-3 py-2 text-xs text-gray-400 bg-gray-50 flex items-center justify-between">
@@ -157,7 +219,7 @@ function CustomStatusSelect({ currentStatus, hasAllRequiredTags, onStatusChange,
                                     </div>
                                 );
                             }
-                            
+
                             if (isDisabled) {
                                 return (
                                     <div key={status.value} className="px-3 py-2 text-xs text-gray-400 bg-gray-50 flex items-center gap-2 cursor-not-allowed">
@@ -167,7 +229,7 @@ function CustomStatusSelect({ currentStatus, hasAllRequiredTags, onStatusChange,
                                     </div>
                                 );
                             }
-                            
+
                             return (
                                 <button
                                     key={status.value}
@@ -206,31 +268,14 @@ export default function OrderMobileCard({
     const [showStatusInfo, setShowStatusInfo] = useState(false);
 
     const currentStatus = order.fulfillmentStatus;
-    
-    // Calculate tag assignment status
-    const assignedCount = order.assignedTags?.length || (order.assignedTag ? 1 : 0);
+
+    const assignedCount = getAccurateAssignedCount(order);
     const requiredCount = order.quantity || 1;
     const hasAllRequiredTags = assignedCount >= requiredCount;
     const hasAnyTag = assignedCount > 0;
     const tagsEditable = canEditTags(order.fulfillmentStatus);
-    
-    // Get all tag codes
-    const allTags = [];
-    if (order.assignedTags && order.assignedTags.length > 0) {
-        order.assignedTags.forEach(item => {
-            if (item.tag?.tagCode) allTags.push({
-                code: item.tag.tagCode,
-                id: item.tag._id
-            });
-        });
-    }
-    if (order.assignedTag && !allTags.some(t => t.id === order.assignedTag._id)) {
-        allTags.push({
-            code: order.assignedTag.tagCode,
-            id: order.assignedTag._id
-        });
-    }
-    
+    const allTags = getAllTagsFromOrder(order);
+
     const nextStatuses = getNextAllowedStatuses(currentStatus, hasAllRequiredTags);
     const isStatusLocked = currentStatus === "cancelled" || currentStatus === "returned";
     const canCancelStatus = nextStatuses.includes("cancelled");
@@ -279,7 +324,6 @@ export default function OrderMobileCard({
                                 Refund Req
                             </span>
                         )}
-                        {/* Return Status Badges */}
                         {order.returnStatus === "requested" && (
                             <span className="text-xs bg-orange-100 text-orange-700 px-1.5 py-0.5 rounded-full inline-flex items-center gap-1">
                                 <Clock size={10} />
@@ -360,7 +404,7 @@ export default function OrderMobileCard({
                             </p>
                         </div>
                     )}
-                    
+
                     {/* Tags Section */}
                     <div className="text-sm">
                         <span className="text-gray-500">Tags:</span>
@@ -368,31 +412,34 @@ export default function OrderMobileCard({
                             {hasAnyTag ? (
                                 <div className="space-y-2">
                                     <div className="flex flex-wrap gap-2">
-                                        {allTags.map((tag, idx) => (
-                                            <div key={idx} className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 px-2 py-1 rounded font-mono text-sm">
-                                                <span>{tag.code}</span>
-                                                {tagsEditable && (
-                                                    <div className="flex items-center gap-1 ml-1">
-                                                        <button
-                                                            onClick={() => onReplaceTag(order._id, tag.id, tag.code)}
-                                                            className="hover:text-green-600 transition"
-                                                            title="Replace tag"
-                                                            disabled={processingAction}
-                                                        >
-                                                            <RefreshCw size={12} />
-                                                        </button>
-                                                        <button
-                                                            onClick={() => onRemoveTag(order._id, tag.id, tag.code)}
-                                                            className="hover:text-red-600 transition"
-                                                            title="Remove tag"
-                                                            disabled={processingAction}
-                                                        >
-                                                            <X size={12} />
-                                                        </button>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ))}
+                                        {allTags.map((tag, idx) => {
+                                            const cleanTagId = tag.id?.toString();
+                                            return (
+                                                <div key={idx} className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 px-2 py-1 rounded font-mono text-sm">
+                                                    <span>{tag.code}</span>
+                                                    {tagsEditable && (
+                                                        <div className="flex items-center gap-1 ml-1">
+                                                            <button
+                                                                onClick={() => onReplaceTag(order._id, cleanTagId, tag.code)}
+                                                                className="hover:text-green-600 transition cursor-pointer"
+                                                                title="Replace tag"
+                                                                disabled={processingAction}
+                                                            >
+                                                                <RefreshCw size={12} />
+                                                            </button>
+                                                            <button
+                                                                onClick={() => onRemoveTag(order._id, cleanTagId, tag.code)}
+                                                                className="hover:text-red-600 transition cursor-pointer"
+                                                                title="Remove tag"
+                                                                disabled={processingAction}
+                                                            >
+                                                                <X size={12} />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
                                     </div>
                                     <div className="text-xs text-gray-500">
                                         {assignedCount} / {requiredCount} tags assigned
@@ -403,7 +450,7 @@ export default function OrderMobileCard({
                                     {!hasAllRequiredTags && tagsEditable && (
                                         <button
                                             onClick={() => onAssignTag(order)}
-                                            className="w-full py-1.5 text-center text-xs text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition"
+                                            className="w-full py-1.5 text-center text-xs text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition cursor-pointer"
                                         >
                                             <Tag size={12} className="inline mr-1" />
                                             {hasAnyTag ? `Add Another Tag (${requiredCount - assignedCount} remaining)` : "Assign Tag"}
@@ -419,7 +466,7 @@ export default function OrderMobileCard({
                                 tagsEditable ? (
                                     <button
                                         onClick={() => onAssignTag(order)}
-                                        className="w-full py-1.5 text-center text-xs text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition"
+                                        className="w-full py-1.5 text-center text-xs text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition cursor-pointer"
                                     >
                                         <Tag size={12} className="inline mr-1" />
                                         Assign First Tag
@@ -430,7 +477,7 @@ export default function OrderMobileCard({
                             )}
                         </div>
                     </div>
-                    
+
                     <div className="flex justify-between text-sm flex-wrap gap-1">
                         <span className="text-gray-500">Created:</span>
                         <span className="text-gray-900">{formatDate(order.createdAt)}</span>
@@ -465,7 +512,7 @@ export default function OrderMobileCard({
                         {!hasAllRequiredTags && tagsEditable && order.fulfillmentStatus !== "cancelled" && order.fulfillmentStatus !== "returned" && (
                             <button
                                 onClick={() => onAssignTag(order)}
-                                className="py-2 text-center text-sm text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition"
+                                className="py-2 text-center text-sm text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition cursor-pointer"
                             >
                                 <Tag size={14} className="inline mr-1" />
                                 {hasAnyTag ? "Add Tag" : "Assign Tag"}
@@ -475,7 +522,7 @@ export default function OrderMobileCard({
                         {canCancelStatus && (
                             <button
                                 onClick={() => onCancelOrder(order)}
-                                className="py-2 text-center text-sm text-red-600 font-medium border border-red-200 rounded-lg hover:bg-red-50 transition"
+                                className="py-2 text-center text-sm text-red-600 font-medium border border-red-200 rounded-lg hover:bg-red-50 transition cursor-pointer"
                             >
                                 <Ban size={14} className="inline mr-1" />
                                 Cancel Order
@@ -485,7 +532,7 @@ export default function OrderMobileCard({
                         {canRefund(order) && (
                             <button
                                 onClick={() => onProcessRefund(order)}
-                                className="py-2 text-center text-sm text-purple-600 font-medium border border-purple-200 rounded-lg hover:bg-purple-50 transition"
+                                className="py-2 text-center text-sm text-purple-600 font-medium border border-purple-200 rounded-lg hover:bg-purple-50 transition cursor-pointer"
                             >
                                 <RotateCcw size={14} className="inline mr-1" />
                                 Process Refund
@@ -495,7 +542,7 @@ export default function OrderMobileCard({
                         {canReturn(order) && (
                             <button
                                 onClick={() => onProcessReturn(order)}
-                                className="py-2 text-center text-sm text-orange-600 font-medium border border-orange-200 rounded-lg hover:bg-orange-50 transition"
+                                className="py-2 text-center text-sm text-orange-600 font-medium border border-orange-200 rounded-lg hover:bg-orange-50 transition cursor-pointer"
                             >
                                 <Undo2 size={14} className="inline mr-1" />
                                 Process Return
@@ -505,7 +552,7 @@ export default function OrderMobileCard({
                         {canCompleteReturn(order) && (
                             <button
                                 onClick={() => onCompleteReturn(order._id)}
-                                className="py-2 text-center text-sm text-green-600 font-medium border border-green-200 rounded-lg hover:bg-green-50 transition"
+                                className="py-2 text-center text-sm text-green-600 font-medium border border-green-200 rounded-lg hover:bg-green-50 transition cursor-pointer"
                             >
                                 <CheckCircle size={14} className="inline mr-1" />
                                 Complete Return
@@ -516,7 +563,7 @@ export default function OrderMobileCard({
                     <div className="pt-1">
                         <button
                             onClick={() => onViewDetails(order)}
-                            className="w-full py-2 text-center text-sm text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition"
+                            className="w-full py-2 text-center text-sm text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition cursor-pointer"
                         >
                             <Eye size={14} className="inline mr-1" />
                             View Full Details
