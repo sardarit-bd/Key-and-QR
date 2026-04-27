@@ -1,21 +1,24 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { ArrowLeft, Search, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowLeft, Search, ChevronLeft, ChevronRight } from "lucide-react";
 import api from "@/lib/api";
 import { toast } from "react-hot-toast";
+import DeleteConfirmModal from "./DeleteConfirmModal";
+import MobilePreview from "./ViewAllQuotes/MobilePreview";
+import QuoteEditModal from "./ViewAllQuotes/QuoteEditModal";
+import QuoteCard from "./ViewAllQuotes/QuoteCard";
 
 export default function ViewAllQuotes({ onClose }) {
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("all");
+  const [editingQuote, setEditingQuote] = useState(null);
   const [deleteConfirm, setDeleteConfirm] = useState(null);
-  const [deleting, setDeleting] = useState(false);
-  
-  // Pagination states
+  const [showMobilePreview, setShowMobilePreview] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
+  const itemsPerPage = 12;
 
   useEffect(() => {
     fetchQuotes();
@@ -27,7 +30,7 @@ export default function ViewAllQuotes({ onClose }) {
       const response = await api.get("/quotes?limit=500");
       const quoteData = response.data?.data?.data || response.data?.data || [];
       setQuotes(Array.isArray(quoteData) ? quoteData : []);
-      setCurrentPage(1); // Reset to first page when new data loads
+      setCurrentPage(1);
     } catch (error) {
       console.error("Error fetching quotes:", error);
       toast.error("Failed to load quotes");
@@ -35,19 +38,21 @@ export default function ViewAllQuotes({ onClose }) {
       setLoading(false);
     }
   };
+  
+  const handleUpdateQuote = async () => {
+    await fetchQuotes();
+    setEditingQuote(null);
+  };
 
   const handleDelete = async (id) => {
-    setDeleting(true);
     try {
       await api.delete(`/quotes/${id}`);
       toast.success("Quote deleted successfully");
-      setDeleteConfirm(null);
-      fetchQuotes();
+      await fetchQuotes();
     } catch (error) {
       toast.error(error.response?.data?.message || "Failed to delete quote");
-    } finally {
-      setDeleting(false);
     }
+    setDeleteConfirm(null);
   };
 
   const categories = [
@@ -59,63 +64,46 @@ export default function ViewAllQuotes({ onClose }) {
     { value: "motivation", label: "Motivation" },
   ];
 
-  // Filter quotes based on search and category
   const filteredQuotes = quotes.filter(quote => {
-    const matchesSearch = search === "" || 
+    const matchesSearch = search === "" ||
       quote.text?.toLowerCase().includes(search.toLowerCase()) ||
       quote.author?.toLowerCase().includes(search.toLowerCase());
-    
     const matchesCategory = category === "all" || quote.category === category;
-    
     return matchesSearch && matchesCategory;
   });
 
-  // Pagination logic
   const totalItems = filteredQuotes.length;
   const totalPages = Math.ceil(totalItems / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
-  const endIndex = startIndex + itemsPerPage;
-  const currentQuotes = filteredQuotes.slice(startIndex, endIndex);
+  const currentQuotes = filteredQuotes.slice(startIndex, startIndex + itemsPerPage);
 
-  // Handle page change
-  const goToPreviousPage = () => {
-    if (currentPage > 1) {
-      setCurrentPage(currentPage - 1);
-    }
-  };
-
-  const goToNextPage = () => {
-    if (currentPage < totalPages) {
-      setCurrentPage(currentPage + 1);
-    }
-  };
-
-  // Reset to first page when filters change
   useEffect(() => {
     setCurrentPage(1);
   }, [search, category]);
 
   return (
-    <div className="flex-1 w-full min-h-screen ">
-      <div className=" p-4 lg:p-8">
+    <div className="flex-1 w-full min-h-screen bg-gray-50">
+      <div className="p-4 lg:p-8">
         {/* Header */}
-        <div className="flex items-center gap-4 mb-6">
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition cursor-pointer"
-          >
-            <ArrowLeft size={20} className="text-gray-600" />
-          </button>
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900">All Quotes</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              Total {totalItems} quote{totalItems !== 1 ? "s" : ""}
-            </p>
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onClose}
+              className="p-2 hover:bg-gray-200 rounded-lg transition cursor-pointer"
+            >
+              <ArrowLeft size={20} className="text-gray-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">All Quotes</h1>
+              <p className="text-sm text-gray-500 mt-1">
+                Total {totalItems} quote{totalItems !== 1 ? "s" : ""}
+              </p>
+            </div>
           </div>
         </div>
 
         {/* Filters */}
-        {/* <div className="mb-6 flex flex-col sm:flex-row gap-4">
+        <div className="mb-6 flex flex-col sm:flex-row gap-4">
           <div className="flex-1 relative">
             <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
@@ -138,7 +126,7 @@ export default function ViewAllQuotes({ onClose }) {
               </option>
             ))}
           </select>
-        </div> */}
+        </div>
 
         {/* Quotes Grid */}
         {loading ? (
@@ -151,66 +139,15 @@ export default function ViewAllQuotes({ onClose }) {
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {currentQuotes.map((quote) => (
-                <div
+                <QuoteCard
                   key={quote._id}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-lg transition bg-white"
-                >
-                  {/* Quote Image */}
-                  {quote.image?.url && (
-                    <div className="mb-3 rounded-lg overflow-hidden h-32 relative">
-                      <img
-                        src={quote.image.url}
-                        alt="Quote"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                  )}
-                  
-                  {/* Quote Text */}
-                  <p className="text-gray-900 text-sm mb-2 line-clamp-3">
-                    "{quote.text}"
-                  </p>
-                  
-                  {/* Author & Category */}
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {quote.author && quote.author !== "InspireTag" && (
-                      <span className="text-xs text-gray-500">— {quote.author}</span>
-                    )}
-                    <span className="text-xs px-2 py-0.5 bg-gray-100 rounded-full">
-                      {quote.category}
-                    </span>
-                    {!quote.allowReuse && (
-                      <span className="text-xs px-2 py-0.5 bg-orange-100 text-orange-700 rounded-full">
-                        One-time use
-                      </span>
-                    )}
-                    {!quote.isActive && (
-                      <span className="text-xs px-2 py-0.5 bg-red-100 text-red-700 rounded-full">
-                        Inactive
-                      </span>
-                    )}
-                  </div>
-                  
-                  {/* Description */}
-                  {quote.description && (
-                    <p className="text-xs text-gray-500 mb-3 line-clamp-2">
-                      {quote.description}
-                    </p>
-                  )}
-                  
-                  {/* Actions */}
-                  <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
-                    <button
-                      onClick={() => setDeleteConfirm(quote)}
-                      className="p-1.5 text-red-600 hover:bg-red-50 rounded transition cursor-pointer"
-                      title="Delete quote"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </div>
+                  quote={quote}
+                  onEdit={() => setEditingQuote(quote)}
+                  onDelete={() => setDeleteConfirm(quote)}
+                  onPreview={() => setShowMobilePreview(quote)}
+                />
               ))}
             </div>
 
@@ -218,9 +155,9 @@ export default function ViewAllQuotes({ onClose }) {
             {totalPages > 1 && (
               <div className="flex justify-center items-center gap-4 mt-8">
                 <button
-                  onClick={goToPreviousPage}
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                   disabled={currentPage === 1}
-                  className="flex items-center gap-2 px-4 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 cursor-pointer"
                 >
                   <ChevronLeft size={18} />
                   Previous
@@ -229,9 +166,9 @@ export default function ViewAllQuotes({ onClose }) {
                   Page {currentPage} of {totalPages}
                 </span>
                 <button
-                  onClick={goToNextPage}
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                   disabled={currentPage === totalPages}
-                  className="flex items-center gap-2 px-4 py-1 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                  className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 cursor-pointer"
                 >
                   Next
                   <ChevronRight size={18} />
@@ -242,32 +179,28 @@ export default function ViewAllQuotes({ onClose }) {
         )}
       </div>
 
-      {/* Delete Confirmation Modal */}
+      {/* Modals */}
+      {editingQuote && (
+        <QuoteEditModal
+          quote={editingQuote}
+          onClose={() => setEditingQuote(null)}
+          onSave={handleUpdateQuote}
+        />
+      )}
+
       {deleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 bg-opacity-50">
-          <div className="bg-white rounded-lg max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Quote</h3>
-            <p className="text-gray-600 mb-4">
-              Are you sure you want to delete "{deleteConfirm.text.substring(0, 100)}..."?
-              This action cannot be undone.
-            </p>
-            <div className="flex justify-end gap-3">
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition cursor-pointer"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => handleDelete(deleteConfirm._id)}
-                disabled={deleting}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50 cursor-pointer"
-              >
-                {deleting ? "Deleting..." : "Delete"}
-              </button>
-            </div>
-          </div>
-        </div>
+        <DeleteConfirmModal
+          quote={deleteConfirm}
+          onConfirm={() => handleDelete(deleteConfirm._id)}
+          onCancel={() => setDeleteConfirm(null)}
+        />
+      )}
+
+      {showMobilePreview && (
+        <MobilePreview
+          quote={showMobilePreview}
+          onClose={() => setShowMobilePreview(null)}
+        />
       )}
     </div>
   );
