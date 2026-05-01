@@ -80,9 +80,8 @@ export default function QuoteAssignmentsPage() {
 
   const handleQuoteCreated = (newQuote) => {
     if (newQuote && newQuote._id) {
-      setEditingAssignment(null);
-      setShowCreatePage(false);
-      setShowViewQuotesPage(true);
+      setShowNewQuoteModal(false);
+      fetchAssignments();
 
       toast.success(
         `Quote "${newQuote.text.substring(0, 50)}..." created successfully!`

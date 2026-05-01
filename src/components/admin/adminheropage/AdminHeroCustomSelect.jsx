@@ -3,18 +3,21 @@
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, Check } from "lucide-react";
 
-export default function AdminHeroCustomSelect({ 
-  options, 
-  value, 
-  onChange, 
+export default function AdminHeroCustomSelect({
+  options,
+  value,
+  onChange,
   label,
   renderOption,
   renderValue,
   placeholder = "Select...",
-  className = ""
+  className = "",
 }) {
   const [isOpen, setIsOpen] = useState(false);
+  const [openUpward, setOpenUpward] = useState(false);
   const dropdownRef = useRef(null);
+
+  const DROPDOWN_HEIGHT = 240;
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -22,16 +25,46 @@ export default function AdminHeroCustomSelect({
         setIsOpen(false);
       }
     };
+
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const selectedOption = options.find(opt => {
-    if (typeof value === 'object') {
-      return opt.value === value.value;
+  useEffect(() => {
+    if (!isOpen || !dropdownRef.current) return;
+
+    const rect = dropdownRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+
+    if (spaceBelow < DROPDOWN_HEIGHT && spaceAbove > spaceBelow) {
+      setOpenUpward(true);
+    } else {
+      setOpenUpward(false);
     }
+  }, [isOpen]);
+
+  const selectedOption = options.find((opt) => {
+    if (typeof value === "object" && value !== null) {
+      return (
+        opt.value === value.value ||
+        (opt.bgColor === value.bgColor && opt.iconColor === value.iconColor)
+      );
+    }
+
     return opt.value === value;
   });
+
+  const isSelected = (option) => {
+    if (typeof value === "object" && value !== null) {
+      return (
+        option.value === value.value ||
+        (option.bgColor === value.bgColor && option.iconColor === value.iconColor)
+      );
+    }
+
+    return option.value === value;
+  };
 
   const handleSelect = (option) => {
     onChange(option);
@@ -39,18 +72,17 @@ export default function AdminHeroCustomSelect({
   };
 
   return (
-    <div className={`relative ${className}`} ref={dropdownRef}>
+    <div className={`relative overflow-visible ${className}`} ref={dropdownRef}>
       {label && (
         <label className="block text-sm font-medium text-gray-700 mb-1">
           {label}
         </label>
       )}
-      
-      {/* Select Button */}
+
       <button
         type="button"
-        onClick={() => setIsOpen(!isOpen)}
-        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent flex items-center justify-between hover:bg-gray-50 transition"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="w-full px-3 py-2 bg-white border border-gray-300 rounded-lg focus:ring-2 focus:ring-black focus:border-transparent flex items-center justify-between hover:bg-gray-50 transition cursor-pointer"
       >
         {renderValue ? (
           renderValue(selectedOption)
@@ -64,22 +96,28 @@ export default function AdminHeroCustomSelect({
             </span>
           </div>
         )}
-        <ChevronDown 
-          size={16} 
-          className={`text-gray-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+
+        <ChevronDown
+          size={16}
+          className={`text-gray-400 transition-transform ${
+            isOpen ? "rotate-180" : ""
+          }`}
         />
       </button>
 
-      {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <div
+          className={`absolute left-0 z-[9999] w-full bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-y-auto ${
+            openUpward ? "bottom-full mb-1" : "top-full mt-1"
+          }`}
+        >
           {options.map((option, index) => (
             <button
               key={index}
               type="button"
               onClick={() => handleSelect(option)}
-              className={`w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center justify-between transition ${
-                ((typeof value === 'object' && option.value === value.value) || option.value === value)
+              className={`w-full px-3 py-2 text-left hover:bg-gray-50 flex items-center justify-between transition cursor-pointer ${
+                isSelected(option)
                   ? "bg-gray-50 text-black"
                   : "text-gray-700"
               }`}
@@ -92,7 +130,8 @@ export default function AdminHeroCustomSelect({
                   <span>{option.label}</span>
                 </div>
               )}
-              {((typeof value === 'object' && option.value === value.value) || option.value === value) && (
+
+              {isSelected(option) && (
                 <Check size={16} className="text-green-600" />
               )}
             </button>
