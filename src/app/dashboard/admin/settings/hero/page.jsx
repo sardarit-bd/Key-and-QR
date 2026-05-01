@@ -199,7 +199,7 @@ export default function AdminHeroPage() {
   };
 
   if (loading) {
-    return <Loader text="Loading..." size={50} fullScreen />;
+    return <Loader text="QKey..." size={50} fullScreen />;
   }
 
   if (!heroData) {
