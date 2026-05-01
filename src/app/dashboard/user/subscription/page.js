@@ -72,7 +72,7 @@ export default function UserSubscriptionsPage() {
 
                     {/* Security Notice - Black & White */}
                     <div className="flex items-center gap-2 px-3 py-1.5 bg-gray-100 rounded-full text-xs text-gray-700">
-                        <Shield size={14} />
+                        <Shield size={14} className="text-green-500" />
                         <span>Secured by Stripe</span>
                     </div>
                 </div>
@@ -138,7 +138,7 @@ export default function UserSubscriptionsPage() {
                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 flex-wrap mb-2">
-                                            <Crown size={16} className="text-gray-700" />
+                                            <Crown size={16} className="text-yellow-500" />
                                             <span className="font-mono font-semibold text-black">{sub.tag?.tagCode}</span>
                                             <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full capitalize">
                                                 {sub.status}

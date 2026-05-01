@@ -152,14 +152,6 @@ export default function CreateNewQuoteModal({ isOpen, onClose, onSuccess }) {
         formDataToSend.append("image", imageFile);
       }
 
-      console.log("Sending data:", {
-        text: formData.text,
-        category: formData.category,
-        author: formData.author,
-        allowReuse: formData.allowReuse,
-        hasImage: !!imageFile
-      });
-
       const res = await api.post("/quotes", formDataToSend, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -168,7 +160,7 @@ export default function CreateNewQuoteModal({ isOpen, onClose, onSuccess }) {
       
       const newQuote = res.data?.data;
       
-      toast.success("Quote created successfully!");
+      // toast.success("Quote created successfully!");
       onSuccess(newQuote);
       handleClose();
     } catch (error) {

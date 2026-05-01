@@ -155,9 +155,8 @@ export default function DashboardLayout({ children }) {
 
             {/* Mobile Sidebar */}
             <aside
-                className={`lg:hidden fixed inset-y-0 left-0 z-50 w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${
-                    isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
-                }`}
+                className={`lg:hidden fixed inset-y-0 left-0 z-50 w-80 bg-white shadow-xl transform transition-transform duration-300 ease-in-out ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+                    }`}
             >
                 {/* Sidebar Header with Close Button */}
                 <div className="flex items-center justify-between p-4 border-b border-gray-200">
@@ -217,24 +216,23 @@ export default function DashboardLayout({ children }) {
                                 <div key={index}>
                                     <button
                                         onClick={() => setIsPageSettingsOpen(!isPageSettingsOpen)}
-                                        className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-sm transition-colors cursor-pointer ${
-                                            isPageSettingsOpen ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-100'
-                                        }`}
+                                        className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-sm transition-colors cursor-pointer ${isPageSettingsOpen ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-100'
+                                            }`}
                                     >
                                         <div className="flex items-center gap-3">
                                             <item.icon size={18} />
                                             <span>{item.label}</span>
                                         </div>
-                                        <svg 
+                                        <svg
                                             className={`w-4 h-4 transition-transform duration-200 ${isPageSettingsOpen ? 'rotate-180' : ''}`}
-                                            fill="none" 
-                                            stroke="currentColor" 
+                                            fill="none"
+                                            stroke="currentColor"
                                             viewBox="0 0 24 24"
                                         >
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                         </svg>
                                     </button>
-                                    
+
                                     {/* Submenu Items */}
                                     {isPageSettingsOpen && (
                                         <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-200 pl-3">
@@ -245,11 +243,10 @@ export default function DashboardLayout({ children }) {
                                                         href={subItem.link}
                                                         key={subIndex}
                                                         onClick={() => setIsSidebarOpen(false)}
-                                                        className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${
-                                                            isActive 
-                                                                ? 'bg-gray-200 text-gray-900 font-medium' 
+                                                        className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${isActive
+                                                                ? 'bg-gray-200 text-gray-900 font-medium'
                                                                 : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         <subItem.icon size={16} />
                                                         <span>{subItem.label}</span>
@@ -261,18 +258,17 @@ export default function DashboardLayout({ children }) {
                                 </div>
                             );
                         }
-                        
+
                         // Regular menu item
                         return (
                             <Link
                                 href={item.link}
                                 key={index}
                                 onClick={() => setIsSidebarOpen(false)}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors cursor-pointer ${
-                                    item.link === pathname 
-                                        ? 'bg-gray-200 text-gray-900 font-medium' 
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors cursor-pointer ${item.link === pathname
+                                        ? 'bg-gray-200 text-gray-900 font-medium'
                                         : 'text-gray-600 hover:bg-gray-100'
-                                }`}
+                                    }`}
                             >
                                 <item.icon size={18} />
                                 <span>{item.label}</span>
@@ -294,7 +290,7 @@ export default function DashboardLayout({ children }) {
             </aside>
 
             {/* Desktop Sidebar */}
-            <aside className="hidden lg:block sticky top-0 h-screen w-64 bg-white border-r border-gray-200 p-6 overflow-y-auto">
+            <aside className="hidden lg:flex fixed left-0 top-11 bottom-11 h-screen w-64 bg-white border-r border-gray-200 p-6 overflow-y-auto z-40 flex-col">
                 {/* Profile Section - Using Avatar Component */}
                 <div className="flex flex-col items-center mb-8">
                     <div className="p-[2px] rounded-full bg-gradient-to-r from-purple-500 to-pink-500 mb-4">
@@ -330,24 +326,23 @@ export default function DashboardLayout({ children }) {
                                 <div key={index}>
                                     <button
                                         onClick={() => setIsPageSettingsOpen(!isPageSettingsOpen)}
-                                        className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${
-                                            isPageSettingsOpen ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-100'
-                                        }`}
+                                        className={`w-full flex items-center justify-between gap-3 px-4 py-3 rounded-lg text-sm transition-colors cursor-pointer ${isPageSettingsOpen ? 'bg-gray-100 text-gray-900' : 'text-gray-600 hover:bg-gray-100'
+                                            }`}
                                     >
                                         <div className="flex items-center gap-3">
                                             <item.icon size={18} />
                                             <span>{item.label}</span>
                                         </div>
-                                        <svg 
+                                        <svg
                                             className={`w-4 h-4 transition-transform duration-200 ${isPageSettingsOpen ? 'rotate-180' : ''}`}
-                                            fill="none" 
-                                            stroke="currentColor" 
+                                            fill="none"
+                                            stroke="currentColor"
                                             viewBox="0 0 24 24"
                                         >
                                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                         </svg>
                                     </button>
-                                    
+
                                     {/* Submenu Items */}
                                     {isPageSettingsOpen && (
                                         <div className="ml-6 mt-1 space-y-1 border-l-2 border-gray-200 pl-3">
@@ -357,11 +352,10 @@ export default function DashboardLayout({ children }) {
                                                     <Link
                                                         href={subItem.link}
                                                         key={subIndex}
-                                                        className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${
-                                                            isActive 
-                                                                ? 'bg-gray-200 text-gray-900 font-medium' 
+                                                        className={`flex items-center gap-3 px-4 py-2 rounded-lg text-sm transition-colors ${isActive
+                                                                ? 'bg-gray-200 text-gray-900 font-medium'
                                                                 : 'text-gray-500 hover:bg-gray-50 hover:text-gray-700'
-                                                        }`}
+                                                            }`}
                                                     >
                                                         <subItem.icon size={16} />
                                                         <span>{subItem.label}</span>
@@ -373,17 +367,16 @@ export default function DashboardLayout({ children }) {
                                 </div>
                             );
                         }
-                        
+
                         // Regular menu item
                         return (
                             <Link
                                 href={item.link}
                                 key={index}
-                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${
-                                    item.link === pathname
+                                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm transition-colors ${item.link === pathname
                                         ? 'bg-gray-200 text-gray-900 font-medium'
                                         : 'text-gray-600 hover:bg-gray-100'
-                                }`}
+                                    }`}
                             >
                                 <item.icon size={18} />
                                 <span>{item.label}</span>
@@ -403,7 +396,7 @@ export default function DashboardLayout({ children }) {
             </aside>
 
             {/* Main Content */}
-            <main className={`flex-1 w-full ${isMobile ? 'mt-14' : ''}`}>
+            <main className={`flex-1 w-full ${isMobile ? "mt-14" : "lg:ml-64"}`}>
                 <div className="p-4 lg:p-3">
                     {children}
                 </div>
