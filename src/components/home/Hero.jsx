@@ -6,6 +6,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { X, CheckCircle, ShoppingBag, QrCode, Scan, Sparkles } from "lucide-react";
 import api from "@/lib/api";
+import Loader from "@/shared/Loader";
 
 const iconComponents = {
   ShoppingBag: ShoppingBag,
@@ -44,13 +45,7 @@ export default function Hero() {
   };
 
   if (loading || !heroData) {
-    return (
-      <div className="bg-white text-black py-16 md:py-24">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <div className="animate-pulse">Loading...</div>
-        </div>
-      </div>
-    );
+    return <Loader text="QKey..." size={50} fullScreen />;
   }
 
   const steps = heroData.steps.map((step, idx) => ({
