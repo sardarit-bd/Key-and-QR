@@ -54,7 +54,7 @@ export default function AdminProfilePage() {
     // File input ref
     const fileInputRef = useRef(null);
 
-    // 🔥 Helper function to get profile image URL (handles both string and object)
+    // Helper function to get profile image URL (handles both string and object)
     const getProfileImageUrl = () => {
         if (!user?.profileImage) return null;
         if (typeof user.profileImage === 'string') return user.profileImage;
@@ -69,7 +69,7 @@ export default function AdminProfilePage() {
                 name: user.name || "",
                 email: user.email || "",
             });
-            // 🔥 FIX: Handle both string and object profileImage
+
             const imageUrl = getProfileImageUrl();
             setImagePreview(imageUrl);
 
@@ -127,7 +127,6 @@ export default function AdminProfilePage() {
             toast.success("Profile picture updated!");
             return imageData;
         } catch (error) {
-            console.error("Error uploading image:", error);
             toast.error(error.response?.data?.message || "Failed to upload image");
             return null;
         } finally {
@@ -292,7 +291,6 @@ export default function AdminProfilePage() {
                     <div className="lg:col-span-1">
                         <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6 sticky top-6">
                             <div className="flex flex-col items-center text-center">
-                                {/* 🔥 FIXED: Avatar with proper image handling */}
                                 <div className="relative">
                                     <div className="w-32 h-32 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-0.5">
                                         <div className="w-full h-full rounded-full bg-white p-0.5">

@@ -17,8 +17,6 @@ export default function CallbackPage() {
     const userParam = searchParams.get("user");
     const error = searchParams.get("error");
 
-    console.log("Callback received:", { success, hasToken: !!accessToken, error });
-
     if (error) {
       console.error("Auth error:", error);
       router.push("/login?error=" + error);

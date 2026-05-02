@@ -53,11 +53,6 @@ export default function QuotePage() {
 
                         {/* Action Buttons */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-8">
-                            {/* <button className="flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-all hover:shadow-md active:scale-[0.98]">
-                                <Crown size={18} />
-                                <span className="text-sm font-medium">Discover Your Archetype</span>
-                            </button> */}
-
                             <button className="flex items-center justify-center gap-2 bg-gray-900 text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition-all hover:shadow-md active:scale-[0.98]">
                                 <Sparkles size={18} />
                                 <span className="text-sm font-medium">Subscribe for Daily Quotes</span>

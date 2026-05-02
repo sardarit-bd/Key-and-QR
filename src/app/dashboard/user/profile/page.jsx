@@ -339,7 +339,6 @@ export default function UserProfilePage() {
                                 <div className="relative">
                                     <div className="w-32 h-32 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 p-0.5">
                                         <div className="w-full h-full rounded-full bg-white p-0.5">
-                                            {/* 🔥 FIXED: Better image rendering with error handling */}
                                             {imagePreview ? (
                                                 <img
                                                     src={imagePreview}

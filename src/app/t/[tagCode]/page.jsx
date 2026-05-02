@@ -64,10 +64,6 @@ export default function TagPage() {
         }
     }, [tagCode]);
 
-    // if (loading) {
-    //     return <MessageLoadingScreen category="faith" />;
-    // }
-
     if (error) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">

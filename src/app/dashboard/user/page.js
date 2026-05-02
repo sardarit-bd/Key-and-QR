@@ -122,9 +122,6 @@ export default function UserDashboard() {
         api.get("/scan/history").catch(() => ({ data: { data: [] } })),
       ]);
 
-      console.log("Orders response:", ordersRes.data);
-      console.log("Favorites response:", favoritesRes.data);
-      console.log("Scans response:", scansRes.data);
 
       // Handle different response structures
       const orders = ordersRes.data?.data || ordersRes.data || [];
@@ -367,13 +364,6 @@ export default function UserDashboard() {
               <ShoppingBag size={18} />
               Recent Orders
             </h2>
-            {/* <button
-              onClick={() => router.push("/account/orders")}
-              className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1 transition-colors duration-200 cursor-pointer"
-            >
-              View All
-              <Eye size={14} />
-            </button> */}
           </div>
 
           {recentOrders.length === 0 ? (
@@ -476,12 +466,6 @@ export default function UserDashboard() {
                             {order.fulfillmentStatus || "pending"}
                           </span>
                         </div>
-                        {/* <button
-                          onClick={() => router.push(`/account/orders/${order._id}`)}
-                          className="w-full mt-2 py-2 text-center text-sm text-blue-600 font-medium border border-blue-200 rounded-lg hover:bg-blue-50 transition-all duration-200 cursor-pointer"
-                        >
-                          View Details
-                        </button> */}
                       </div>
                     )}
                   </div>
@@ -507,21 +491,6 @@ export default function UserDashboard() {
               </div>
             </div>
           </button>
-
-          {/* <button
-            onClick={() => router.push("/account/settings")}
-            className="bg-white rounded-lg p-4 lg:p-6 border border-gray-200 hover:border-gray-300 transition-all duration-300 hover:shadow-md hover:scale-[1.02] active:scale-95 cursor-pointer group"
-          >
-            <div className="flex items-center gap-4">
-              <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:bg-gray-200 transition-colors duration-300">
-                <Settings size={24} className="text-gray-600" />
-              </div>
-              <div className="text-left">
-                <h3 className="font-semibold text-gray-900 mb-1">Account Settings</h3>
-                <p className="text-sm text-gray-500">Manage your profile</p>
-              </div>
-            </div>
-          </button> */}
         </div>
       </div>
     </main>
