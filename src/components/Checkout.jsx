@@ -1,4 +1,3 @@
-// components/Checkout.jsx
 "use client";
 
 import { orderService } from "@/services/order.service";
@@ -45,7 +44,6 @@ export default function Checkout() {
 
     // Debug: Check cart data
     useEffect(() => {
-        console.log("Cart data in Checkout:", cart);
         setCartLoaded(true);
     }, [cart]);
 
@@ -101,7 +99,7 @@ export default function Checkout() {
             ];
         }
 
-        // ✅ Return cart items with their quantities
+        // Return cart items with their quantities
         if (cart && cart.length > 0) {
             return cart.map(item => ({
                 id: item.id,
@@ -184,7 +182,7 @@ export default function Checkout() {
                     country: formData.country,
                 });
             } else {
-                // ✅ Make sure we have a valid product
+                // Make sure we have a valid product
                 if (!firstItem || !firstItem.id) {
                     toast.error("No product found in cart");
                     setLoading(false);

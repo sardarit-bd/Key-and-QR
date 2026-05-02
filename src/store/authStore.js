@@ -39,7 +39,6 @@ export const useAuthStore = create(
 
       // Direct setter for user (for Google callback)
       setUser: (userData) => {
-        console.log("setUser called with:", userData);
         const filteredUser = filterUserData(userData);
         set({ user: filteredUser });
         if (typeof window !== "undefined" && filteredUser) {
@@ -49,7 +48,6 @@ export const useAuthStore = create(
 
       // Direct setter for isInitialized
       setIsInitialized: (status) => {
-        console.log("setIsInitialized called with:", status);
         set({ isInitialized: status });
       },
 
@@ -71,8 +69,6 @@ export const useAuthStore = create(
           console.log("Already loading auth");
           return;
         }
-
-        console.log("🟢 Initializing auth...");
         set({ loading: true, isLoading: true });
 
         try {
@@ -93,7 +89,6 @@ export const useAuthStore = create(
           }
 
           if (storedUser && (storedToken || storedRefreshToken)) {
-            console.log("🟢 Using stored user from localStorage");
             const filteredUser = filterUserData(storedUser);
 
             if (typeof window !== "undefined") {
@@ -142,7 +137,6 @@ export const useAuthStore = create(
           }
 
           if ((storedToken || storedRefreshToken) && !storedUser) {
-            console.log("Token exists, fetching user from server");
             const response = await api.get("/auth/me");
             const user = response.data?.data;
 
@@ -206,7 +200,6 @@ export const useAuthStore = create(
 
           return user;
         } catch (error) {
-          console.error("Fetch me error:", error);
           set({ user: null, error: null });
           return null;
         }

@@ -51,7 +51,6 @@ export default function DashboardFavorites() {
             params.append("limit", itemsPerPage);
 
             const response = await api.get(`/favorites?${params.toString()}`);
-            console.log("Favorites response:", response.data);
 
             // Handle different response structures
             const favoritesData = response.data?.data || response.data || [];
