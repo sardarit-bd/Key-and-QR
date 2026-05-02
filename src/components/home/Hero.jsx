@@ -86,7 +86,7 @@ export default function Hero() {
               </Link>
               <button
                 onClick={() => setIsModalOpen(true)}
-                className="px-4 sm:px-6 py-2.5 sm:py-3 border border-black text-black rounded-md font-medium hover:bg-gray-700 hover:text-white transition text-sm sm:text-base"
+                className="px-4 sm:px-6 py-2.5 sm:py-3 border border-black text-black rounded-md font-medium hover:bg-gray-700 hover:text-white transition text-sm sm:text-base cursor-pointer"
               >
                 {heroData.secondaryButtonText}
               </button>

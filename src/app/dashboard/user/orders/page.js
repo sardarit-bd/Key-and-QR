@@ -86,8 +86,6 @@ export default function OrdersPage() {
                 limit: itemsPerPage
             });
 
-            console.log("Full response:", response);
-
             if (response?.data?.orders) {
                 setOrders(response.data.orders);
                 setTotalPages(response.data.pagination?.totalPages || 1);

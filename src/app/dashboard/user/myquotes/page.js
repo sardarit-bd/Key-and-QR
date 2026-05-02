@@ -62,7 +62,6 @@ export default function QuotePage() {
 
             // API call to get random quote by category
             const response = await api.get(`/quotes/random?category=${categoryParam}`);
-            console.log("Quote response:", response.data);
 
             // Handle different response structures
             const quoteData = response.data?.data || response.data;
@@ -111,7 +110,7 @@ export default function QuotePage() {
                 params: { quoteId: quoteId }
             });
 
-            console.log("Check favorite response:", response.data);
+            // console.log("Check favorite response:", response.data);
 
             const result = response.data?.data || response.data;
             const { isFavorite, favoriteId } = result || {};
