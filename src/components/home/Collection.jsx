@@ -1,136 +1,100 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useEffect } from "react";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import Link from "next/link";
+import { useProductStore } from "@/store/productStore";
+import Loader from "@/shared/Loader";
 
-const images = [
-    "/home/chabi1.png",
-    "/home/chabi2.png",
-    "/home/chabi1.png",
-    "/home/chabi2.png",
-    "/home/chabi1.png",
-    "/home/chabi2.png",
-];
+export default function CollectionSection() {
+  const { products, fetchProducts, loading } = useProductStore();
 
-export default function Collection() {
-    const VISIBLE_COUNT = 4;
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const totalImages = images.length;
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
-    // Navigation bounds (loop correctly)
-    const nextSlide = () => {
-        setCurrentIndex((prev) =>
-            prev + 1 > totalImages - VISIBLE_COUNT ? 0 : prev + 1
-        );
-    };
+  // Latest 3 Products
+  const latestProducts = [...products]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+    )
+    .slice(0, 3);
 
-    const prevSlide = () => {
-        setCurrentIndex((prev) =>
-            prev - 1 < 0 ? totalImages - VISIBLE_COUNT : prev - 1
-        );
-    };
+  if (loading && products.length === 0) {
+    return <Loader text="Loading Collection..." size={50} />;
+  }
 
-    // Visible images calculation
-    const visibleImages = useMemo(() => {
-        return images.slice(currentIndex, currentIndex + VISIBLE_COUNT).length ===
-            VISIBLE_COUNT
-            ? images.slice(currentIndex, currentIndex + VISIBLE_COUNT)
-            : [
-                ...images.slice(currentIndex),
-                ...images.slice(0, VISIBLE_COUNT - (totalImages - currentIndex)),
-            ];
-    }, [currentIndex, totalImages]);
+  return (
+    <section className="mx-auto max-w-[1800px]">
+      <div className="rounded-[20px] bg-[#FAF9F7] px-8 py-20 lg:px-60">
+        <div className="  p-8 lg:p-10">
+          <div className="grid gap-8 lg:grid-cols-[400px_1fr]">
+            {/* Left Content */}
+            <div className="flex flex-col justify-center">
+              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-[#666666]">
+                Our Collection
+              </p>
 
-    return (
-        <section className="bg-white text-black py-20 overflow-hidden">
-            <div className="max-w-7xl mx-auto text-center relative px-4">
-                {/* Heading */}
-                <motion.h2
-                    className="text-3xl md:text-5xl font-bold mb-4"
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    viewport={{ once: true }}
-                >
-                    Our Collection
-                </motion.h2>
+              <h2 className="font-serif text-[42px] leading-[1.05] text-black">
+                Timeless charms.
+                <br />
+                Made to inspire.
+              </h2>
 
-                <motion.p
-                    className="text-gray-600 mb-12 text-base md:text-lg"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                    viewport={{ once: true }}
-                >
-                    Choose your perfect keychain. Each one comes with a unique QR <br />code and inspirational quote.
-                </motion.p>
+              <Link
+                href="/shop"
+                className="mt-8 inline-flex w-fit items-center justify-center rounded-lg bg-black px-8 py-4 text-white transition-all duration-300 hover:scale-[1.02]"
+              >
+                Explore Collection
+              </Link>
+            </div>
 
-                {/* Carousel */}
-                <div className="relative w-full flex items-center justify-center">
-                    {/* Left Arrow */}
-                    <button
-                        aria-label="Previous slide"
-                        onClick={prevSlide}
-                        className="absolute left-2 md:-left-5 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm shadow-xl p-3 rounded-lg hover:scale-110 transition-transform duration-300 curosr-pointer"
-                    >
-                        <ArrowLeft className="w-5 h-5 text-gray-800" />
-                    </button>
-
-                    {/* Image Wrapper */}
-                    <div className="overflow-hidden rounded-lg w-full md:w-[100%] mx-auto">
-                        <motion.div
-                            key={currentIndex}
-                            initial={{ x: 80, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            exit={{ x: -80, opacity: 0 }}
-                            transition={{ duration: 0.8, ease: "easeInOut" }}
-                            className="flex justify-center gap-4 sm:gap-6"
-                        >
-                            {visibleImages.map((src, i) => (
-                                <div
-                                    key={`${src}-${i}`}
-                                    className="flex-shrink-0 w-[45%] sm:w-1/3 md:w-1/4 bg-gray-50 rounded-2xl shadow-sm hover:shadow-md transform hover:scale-[1.03] transition-all duration-300 ease-in-out"
-                                >
-                                    <Image
-                                        src={src}
-                                        alt={`Keychain ${i + 1}`}
-                                        width={400}
-                                        height={400}
-                                        className="rounded-2xl object-cover w-full h-auto grayscale hover:grayscale-0 transition duration-300"
-                                    />
-                                </div>
-                            ))}
-                        </motion.div>
+            {/* Products */}
+            {latestProducts.length === 0 ? (
+              <div className="flex items-center justify-center rounded-2xl border border-dashed border-gray-300 p-10">
+                <p className="text-gray-500">No products available</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                {latestProducts.map((product) => (
+                  <Link
+                    key={product._id}
+                    href={`/shop/${product._id}`}
+                    className="group overflow-hidden rounded-2xl border border-[#F0ECE6] bg-white transition-all duration-300 hover:shadow-lg"
+                  >
+                    {/* Product Image */}
+                    <div className="aspect-[4/3] overflow-hidden bg-[#F7F4EF]">
+                      <Image
+                        src={
+                          product.image?.url ||
+                          product.image ||
+                          "/placeholder.jpg"
+                        }
+                        alt={product.name}
+                        width={600}
+                        height={450}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
                     </div>
 
-                    {/* Right Arrow */}
-                    <button
-                        aria-label="Next slide"
-                        onClick={nextSlide}
-                        className="absolute right-2 md:-right-5 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm p-3 rounded-lg hover:scale-110 shadow-xl transition-transform duration-300 curosr-pointer"
-                    >
-                        <ArrowRight className="w-5 h-5 text-gray-800" />
-                    </button>
-                </div>
+                    {/* Product Info */}
+                    <div className="p-5">
+                      <h3 className="font-serif text-[18px] text-black">
+                        {product.name}
+                      </h3>
 
-                {/* Dots */}
-                <div className="flex justify-center mt-8 space-x-2">
-                    {Array.from({ length: totalImages }).map((_, index) => {
-                        const isActive = index === currentIndex;
-                        return (
-                            <button
-                                key={index}
-                                onClick={() => setCurrentIndex(index)}
-                                className={`w-3 h-3 rounded-full transition-all ${isActive ? "bg-black scale-110" : "bg-gray-300"
-                                    }`}
-                                aria-label={`Go to slide ${index + 1}`}
-                            />
-                        );
-                    })}
-                </div>
-            </div>
-        </section>
-    );
+                      <p className="mt-2 text-[18px] font-medium text-black">
+                        ${Number(product.price).toFixed(2)}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
 }

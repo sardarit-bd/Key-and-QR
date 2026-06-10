@@ -140,7 +140,7 @@ export default function HowItWorksSection() {
       className="py-8 px-6"
     >
       <div className="mx-auto max-w-[1800px]">
-        <div className="rounded-[20px] bg-[#FAF9F7] px-8 py-20 lg:px-60">
+        <div className="rounded-[20px] bg-[#FAF9F7] px-8 py-20 lg:px-80">
           {/* Heading */}
           <div className="text-center">
             <motion.div
@@ -194,7 +194,7 @@ export default function HowItWorksSection() {
                     )}
 
                     {/* Number */}
-                    <div className="absolute left-16 top-0 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-black text-sm font-semibold text-white">
+                    <div className="absolute left-20 top-0 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black text-sm font-semibold text-white">
                       {step.id}
                     </div>
 
@@ -202,11 +202,11 @@ export default function HowItWorksSection() {
                     <motion.div
                       variants={iconVariants}
                       whileHover="hover"
-                      className="mx-auto flex h-26 w-26 items-center justify-center rounded-full bg-[#F2EFEB]"
+                      className="mx-auto flex h-18 w-18 items-center justify-center rounded-full bg-[#F2EFEB]"
                     >
                       <Icon
                         strokeWidth={1.5}
-                        className="h-12 w-12 text-black"
+                        className="h-8 w-8 text-black"
                       />
                     </motion.div>
 
