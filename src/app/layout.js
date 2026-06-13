@@ -36,7 +36,7 @@ export const metadata = {
   description:
     "Discover QKey, your ultimate destination for cutting-edge digital solutions. Explore our innovative products and services designed to elevate your business in the digital age.",
   icons: {
-    icon: "/favicon.jpg",
+    icon: "/favicon.png",
   },
 };
 

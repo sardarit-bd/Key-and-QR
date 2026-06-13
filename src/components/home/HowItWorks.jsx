@@ -37,10 +37,7 @@ const sectionVariants = {
   hidden: { opacity: 0 },
   visible: {
     opacity: 1,
-    transition: {
-      duration: 0.6,
-      ease: "easeOut",
-    },
+    transition: { duration: 0.6, ease: "easeOut" },
   },
 };
 
@@ -49,10 +46,7 @@ const headingVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: {
-      duration: 0.7,
-      ease: [0.25, 0.1, 0.1, 1],
-    },
+    transition: { duration: 0.7, ease: [0.25, 0.1, 0.1, 1] },
   },
 };
 
@@ -61,10 +55,7 @@ const badgeVariants = {
   visible: {
     opacity: 1,
     scale: 1,
-    transition: {
-      duration: 0.5,
-      ease: "easeOut",
-    },
+    transition: { duration: 0.5, ease: "easeOut" },
   },
 };
 
@@ -73,11 +64,7 @@ const desktopCardVariants = {
   visible: (i) => ({
     opacity: 1,
     y: 0,
-    transition: {
-      duration: 0.6,
-      delay: i * 0.12,
-      ease: [0.25, 0.1, 0.1, 1],
-    },
+    transition: { duration: 0.6, delay: i * 0.12, ease: [0.25, 0.1, 0.1, 1] },
   }),
 };
 
@@ -86,11 +73,7 @@ const mobileItemVariants = {
   visible: (i) => ({
     opacity: 1,
     x: 0,
-    transition: {
-      duration: 0.5,
-      delay: i * 0.1,
-      ease: [0.25, 0.1, 0.1, 1],
-    },
+    transition: { duration: 0.5, delay: i * 0.1, ease: [0.25, 0.1, 0.1, 1] },
   }),
 };
 
@@ -99,37 +82,24 @@ const ctaVariants = {
   visible: {
     opacity: 1,
     y: 0,
-    transition: {
-      duration: 0.5,
-      delay: 0.4,
-      ease: "easeOut",
-    },
-  },
-  hover: {
-    scale: 1.02,
-    transition: {
-      duration: 0.2,
-      ease: "easeOut",
-    },
-  },
-  tap: {
-    scale: 0.98,
+    transition: { duration: 0.5, delay: 0.4, ease: "easeOut" },
   },
 };
 
 const iconVariants = {
   hover: {
     scale: 1.08,
-    transition: {
-      duration: 0.3,
-      ease: "easeOut",
-    },
+    transition: { duration: 0.3, ease: "easeOut" },
   },
 };
 
 export default function HowItWorksSection() {
   const sectionRef = useRef(null);
-  const isInView = useInView(sectionRef, { once: true, margin: "-100px" });
+
+  const isInView = useInView(sectionRef, { 
+    once: false, 
+    amount: 0.2 
+  });
 
   return (
     <motion.section
@@ -137,10 +107,11 @@ export default function HowItWorksSection() {
       variants={sectionVariants}
       initial="hidden"
       animate={isInView ? "visible" : "hidden"}
-      className="py-8 px-6"
+      className="py-12 px-6 bg-[#FAF9F7]"
     >
-      <div className="mx-auto max-w-[1800px]">
-        <div className="rounded-[20px] bg-[#FAF9F7] px-8 py-20 lg:px-80">
+      <div className="mx-auto max-w-[1440px] px-0 md:px-6 lg:px-16 xl:px-24">
+        <div className="py-12">
+          
           {/* Heading */}
           <div className="text-center">
             <motion.div
@@ -168,7 +139,7 @@ export default function HowItWorksSection() {
 
           {/* Desktop */}
           <div className="relative mt-20 hidden lg:block">
-            <div className="grid grid-cols-4 gap-12">
+            <div className="grid grid-cols-4 gap-6 xl:gap-12">
               {steps.map((step, index) => {
                 const Icon = step.icon;
 
@@ -183,10 +154,9 @@ export default function HowItWorksSection() {
                   >
                     {/* Connector */}
                     {index < steps.length - 1 && (
-                      <div className="absolute left-[74%] top-[58px] w-[68%]">
+                      <div className="absolute left-[65%] xl:left-[74%] top-[38px] w-[70%] xl:w-[68%]">
                         <div className="relative border-t border-dashed border-[#E6DCC7]">
                           <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 text-[#D6B77A]">
-                            {/* ✦ */}
                             <PiStarFourFill />
                           </div>
                         </div>
@@ -194,7 +164,7 @@ export default function HowItWorksSection() {
                     )}
 
                     {/* Number */}
-                    <div className="absolute left-20 top-0 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black text-sm font-semibold text-white">
+                    <div className="absolute left-28 -translate-x-1/2 -top-3 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black text-sm font-semibold text-white">
                       {step.id}
                     </div>
 
@@ -210,11 +180,11 @@ export default function HowItWorksSection() {
                       />
                     </motion.div>
 
-                    <h3 className="mt-8 text-3xl font-serif text-black">
+                    <h3 className="mt-8 text-2xl xl:text-3xl font-serif text-black">
                       {step.title}
                     </h3>
 
-                    <p className="mx-auto mt-4 max-w-[220px] text-lg leading-relaxed text-[#444]">
+                    <p className="mx-auto mt-4 max-w-[220px] text-base xl:text-lg leading-relaxed text-[#444]">
                       {step.description}
                     </p>
                   </motion.div>
@@ -313,7 +283,7 @@ export default function HowItWorksSection() {
                 <motion.button
                   variants={iconVariants}
                   whileHover="hover"
-                  whileTap="tap"
+                  whileTap={{ scale: 0.98 }}
                   className="rounded-xl bg-black px-10 py-4 text-white shadow-lg"
                 >
                   Shop Collection
@@ -321,6 +291,7 @@ export default function HowItWorksSection() {
               </motion.div>
             </div>
           </div>
+
         </div>
       </div>
     </motion.section>
