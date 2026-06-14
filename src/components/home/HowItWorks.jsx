@@ -1,0 +1,303 @@
+"use client";
+
+import { motion, useInView } from "framer-motion";
+import { useRef } from "react";
+import { ScanLine, SunMedium, Bookmark, Send } from "lucide-react";
+import { PiStarFourFill } from "react-icons/pi";
+
+const steps = [
+  {
+    id: 1,
+    title: "Scan",
+    description: "Use your phone to scan the tag inside the shell charm.",
+    icon: ScanLine,
+  },
+  {
+    id: 2,
+    title: "Discover",
+    description: "Get a new quote, message, or daily inspiration.",
+    icon: SunMedium,
+  },
+  {
+    id: 3,
+    title: "Save",
+    description: "Save your favorites and write reflections that matter.",
+    icon: Bookmark,
+  },
+  {
+    id: 4,
+    title: "Inspire",
+    description: "Share inspiration or send a message to someone special.",
+    icon: Send,
+  },
+];
+
+const sectionVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { duration: 0.6, ease: "easeOut" },
+  },
+};
+
+const headingVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.7, ease: [0.25, 0.1, 0.1, 1] },
+  },
+};
+
+const badgeVariants = {
+  hidden: { opacity: 0, scale: 0.95 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.5, ease: "easeOut" },
+  },
+};
+
+const desktopCardVariants = {
+  hidden: { opacity: 0, y: 40 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.6, delay: i * 0.12, ease: [0.25, 0.1, 0.1, 1] },
+  }),
+};
+
+const tabletItemVariants = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.55, delay: i * 0.1, ease: [0.25, 0.1, 0.1, 1] },
+  }),
+};
+
+const mobileItemVariants = {
+  hidden: { opacity: 0, x: -30 },
+  visible: (i) => ({
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.5, delay: i * 0.1, ease: [0.25, 0.1, 0.1, 1] },
+  }),
+};
+
+const ctaVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.5, delay: 0.4, ease: "easeOut" },
+  },
+};
+
+const iconVariants = {
+  hover: {
+    scale: 1.08,
+    transition: { duration: 0.3, ease: "easeOut" },
+  },
+};
+
+export default function HowItWorksSection() {
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: false, amount: 0.15 });
+
+  return (
+    <motion.section
+      ref={sectionRef}
+      variants={sectionVariants}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      className="py-12 px-6 bg-[#FAF9F7]"
+    >
+      <div className="mx-auto max-w-[1440px] px-0 md:px-6 lg:px-16 xl:px-24">
+        <div className="py-12">
+          
+          {/* Heading */}
+          <div className="text-center">
+            <motion.div
+              variants={badgeVariants}
+              initial="hidden"
+              animate={isInView ? "visible" : "hidden"}
+              className="mb-4 flex items-center justify-center gap-4"
+            >
+              <div className="h-px w-12 bg-[#D9C7A1]" />
+              <span className="text-xs font-semibold uppercase tracking-[0.25em] text-[#5A5A5A]">
+                How It Works
+              </span>
+              <div className="h-px w-12 bg-[#D9C7A1]" />
+            </motion.div>
+
+            <motion.h2
+              variants={headingVariants}
+              initial="hidden"
+              animate={isInView ? "visible" : "hidden"}
+              className="font-serif text-3xl md:text-4xl lg:text-5xl text-black"
+            >
+              Simple steps. Meaningful moments.
+            </motion.h2>
+          </div>
+
+          {/* Desktop View */}
+          <div className="relative mt-20 hidden lg:block">
+            <div className="grid grid-cols-4 gap-6 xl:gap-12">
+              {steps.map((step, index) => {
+                const Icon = step.icon;
+
+                return (
+                  <motion.div
+                    key={step.id}
+                    custom={index}
+                    variants={desktopCardVariants}
+                    initial="hidden"
+                    animate={isInView ? "visible" : "hidden"}
+                    className="relative text-center"
+                  >
+                    {index < steps.length - 1 && (
+                      <div className="absolute left-[74%] top-[38px] w-[68%]">
+                        <div className="relative border-t border-dashed border-[#E6DCC7]">
+                          <div className="absolute left-1/2 top-0 -translate-x-1/2 -translate-y-1/2 text-[#D6B77A]">
+                            <PiStarFourFill />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="absolute left-1/2 -translate-x-1/2 -top-3 z-10 flex h-6 w-6 items-center justify-center rounded-full bg-black text-sm font-semibold text-white">
+                      {step.id}
+                    </div>
+
+                    <motion.div
+                      variants={iconVariants}
+                      whileHover="hover"
+                      className="mx-auto flex h-18 w-18 items-center justify-center rounded-full bg-[#F2EFEB]"
+                    >
+                      <Icon strokeWidth={1.5} className="h-8 w-8 text-black" />
+                    </motion.div>
+
+                    <h3 className="mt-8 text-2xl xl:text-3xl font-serif text-black">
+                      {step.title}
+                    </h3>
+
+                    <p className="mx-auto mt-4 max-w-[220px] text-base xl:text-lg leading-relaxed text-[#444]">
+                      {step.description}
+                    </p>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Tablet View */}
+          <div className="relative mt-16 hidden md:block lg:hidden">
+            <div className="grid grid-cols-2 gap-x-8 gap-y-12 max-w-[700px] mx-auto">
+              {steps.map((step, index) => {
+                const Icon = step.icon;
+
+                return (
+                  <motion.div
+                    key={step.id}
+                    custom={index}
+                    variants={tabletItemVariants}
+                    initial="hidden"
+                    animate={isInView ? "visible" : "hidden"}
+                    className="relative text-center bg-white border border-[#F0ECE6] rounded-2xl p-8 shadow-sm"
+                  >
+                    <div className="absolute left-6 top-6 flex h-7 w-7 items-center justify-center rounded-full bg-black text-xs font-semibold text-white">
+                      {step.id}
+                    </div>
+
+                    <motion.div
+                      variants={iconVariants}
+                      whileHover="hover"
+                      className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-[#F2EFEB]"
+                    >
+                      <Icon strokeWidth={1.5} className="h-7 w-7 text-black" />
+                    </motion.div>
+
+                    <h3 className="mt-5 text-xl font-serif text-black">
+                      {step.title}
+                    </h3>
+
+                    <p className="mx-auto mt-3 max-w-[240px] text-sm leading-relaxed text-[#555]">
+                      {step.description}
+                    </p>
+                  </motion.div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Mobile View */}
+          <div className="mt-14 px-4 md:hidden">
+            <div className="relative mt-14">
+              <div className="absolute left-[44px] top-12 bottom-55 w-px bg-[#E6DCC7]" />
+
+              <div className="space-y-12">
+                {steps.map((step, index) => {
+                  const Icon = step.icon;
+
+                  return (
+                    <motion.div
+                      key={step.id}
+                      custom={index}
+                      variants={mobileItemVariants}
+                      initial="hidden"
+                      animate={isInView ? "visible" : "hidden"}
+                      className="relative flex items-start gap-5"
+                    >
+                      <div className="relative shrink-0">
+                        <div className="absolute -left-6 top-0 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-black text-xs font-semibold text-white">
+                          {step.id}
+                        </div>
+
+                        <motion.div
+                          variants={iconVariants}
+                          whileHover="hover"
+                          className="flex h-20 w-20 items-center justify-center rounded-full bg-[#F2EFEB]"
+                        >
+                          <Icon strokeWidth={1.5} className="h-8 w-8 text-black" />
+                        </motion.div>
+                      </div>
+
+                      <div className="pt-3">
+                        <h3 className="font-serif text-2xl text-black">
+                          {step.title}
+                        </h3>
+
+                        <p className="mt-2 max-w-[170px] text-[15px] leading-7 text-[#555]">
+                          {step.description}
+                        </p>
+                      </div>
+                    </motion.div>
+                  );
+                })}
+              </div>
+
+              {/* CTA Button */}
+              <motion.div
+                variants={ctaVariants}
+                initial="hidden"
+                animate={isInView ? "visible" : "hidden"}
+                className="mt-16 text-center"
+              >
+                <motion.button
+                  variants={iconVariants}
+                  whileHover="hover"
+                  whileTap={{ scale: 0.98 }}
+                  className="rounded-xl bg-black px-10 py-4 text-white shadow-lg"
+                >
+                  Shop Collection
+                </motion.button>
+              </motion.div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </motion.section>
+  );
+}

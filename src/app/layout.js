@@ -1,9 +1,10 @@
 import AuthProvider from "@/components/auth/AuthProvider";
-import { Geist, Geist_Mono, Inter } from "next/font/google";
-import Footer from "../shared/Footer";
+import ConditionalFooter from "@/shared/ConditionalFooter";
+import TopHeader from "@/shared/TopHeader";
 import Header from "../shared/Header";
 import "./globals.css";
-import ConditionalFooter from "@/shared/ConditionalFooter";
+
+import { Geist, Geist_Mono, Inter, Playfair_Display } from "next/font/google";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -23,12 +24,19 @@ const inter = Inter({
   display: "swap",
 });
 
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
 export const metadata = {
   title: "QKey - Your Gateway to Digital Solutions",
   description:
     "Discover QKey, your ultimate destination for cutting-edge digital solutions. Explore our innovative products and services designed to elevate your business in the digital age.",
   icons: {
-    icon: "/favicon.jpg",
+    icon: "/favicon.png",
   },
 };
 
@@ -36,10 +44,20 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} ${inter.variable} font-sans antialiased bg-white text-black`}
-        suppressHydrationWarning={true}
+        className={`
+          ${geistSans.variable}
+          ${geistMono.variable}
+          ${inter.variable}
+          ${playfair.variable}
+          font-sans
+          antialiased
+          bg-white
+          text-black
+        `}
+        suppressHydrationWarning
       >
         <AuthProvider>
+          <TopHeader />
           <Header />
           {children}
           <ConditionalFooter />

@@ -1,136 +1,154 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { ArrowLeft, ArrowRight } from "lucide-react";
+import { useEffect, useRef } from "react";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import Link from "next/link";
+import { motion, useInView } from "framer-motion";
+import { useProductStore } from "@/store/productStore";
+import Loader from "@/shared/Loader";
 
-const images = [
-    "/home/chabi1.png",
-    "/home/chabi2.png",
-    "/home/chabi1.png",
-    "/home/chabi2.png",
-    "/home/chabi1.png",
-    "/home/chabi2.png",
-];
+const sectionVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { duration: 0.6, ease: "easeOut" },
+  },
+};
 
-export default function Collection() {
-    const VISIBLE_COUNT = 4;
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const totalImages = images.length;
+const leftContentVariants = {
+  hidden: { opacity: 0, x: -40 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { duration: 0.7, ease: [0.25, 0.1, 0.1, 1] },
+  },
+};
 
-    // Navigation bounds (loop correctly)
-    const nextSlide = () => {
-        setCurrentIndex((prev) =>
-            prev + 1 > totalImages - VISIBLE_COUNT ? 0 : prev + 1
-        );
-    };
+const productCardVariants = {
+  hidden: { opacity: 0, y: 40 },
+  visible: (i) => ({
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.6,
+      delay: i * 0.12,
+      ease: [0.25, 0.1, 0.1, 1],
+    },
+  }),
+};
 
-    const prevSlide = () => {
-        setCurrentIndex((prev) =>
-            prev - 1 < 0 ? totalImages - VISIBLE_COUNT : prev - 1
-        );
-    };
+export default function CollectionSection() {
+  const { products, fetchProducts, loading } = useProductStore();
+  const sectionRef = useRef(null);
 
-    // Visible images calculation
-    const visibleImages = useMemo(() => {
-        return images.slice(currentIndex, currentIndex + VISIBLE_COUNT).length ===
-            VISIBLE_COUNT
-            ? images.slice(currentIndex, currentIndex + VISIBLE_COUNT)
-            : [
-                ...images.slice(currentIndex),
-                ...images.slice(0, VISIBLE_COUNT - (totalImages - currentIndex)),
-            ];
-    }, [currentIndex, totalImages]);
+  const isInView = useInView(sectionRef, { once: false, amount: 0.2 });
 
-    return (
-        <section className="bg-white text-black py-20 overflow-hidden">
-            <div className="max-w-7xl mx-auto text-center relative px-4">
-                {/* Heading */}
-                <motion.h2
-                    className="text-3xl md:text-5xl font-bold mb-4"
-                    initial={{ opacity: 0, y: 40 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, ease: "easeOut" }}
-                    viewport={{ once: true }}
-                >
-                    Our Collection
-                </motion.h2>
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
 
-                <motion.p
-                    className="text-gray-600 mb-12 text-base md:text-lg"
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
-                    viewport={{ once: true }}
-                >
-                    Choose your perfect keychain. Each one comes with a unique QR <br />code and inspirational quote.
-                </motion.p>
+  // Latest 3 Products
+  const latestProducts = [...products]
+    .sort(
+      (a, b) =>
+        new Date(b.createdAt || 0) - new Date(a.createdAt || 0)
+    )
+    .slice(0, 3);
 
-                {/* Carousel */}
-                <div className="relative w-full flex items-center justify-center">
-                    {/* Left Arrow */}
-                    <button
-                        aria-label="Previous slide"
-                        onClick={prevSlide}
-                        className="absolute left-2 md:-left-5 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm shadow-xl p-3 rounded-lg hover:scale-110 transition-transform duration-300 curosr-pointer"
+  if (loading && products.length === 0) {
+    return <Loader text="Loading Collection..." size={50} />;
+  }
+
+  return (
+    <motion.section
+      ref={sectionRef}
+      variants={sectionVariants}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      className="w-full bg-[#FAF9F7] py-16 md:py-24 px-6 md:px-12"
+    >
+      <div className="mx-auto max-w-[1200px] xl:max-w-[1440px] xl:px-13 2xl:px-23">
+        <div className="py-4">
+          <div className="grid gap-12 lg:grid-cols-[350px_1fr] xl:grid-cols-[400px_1fr] items-center">
+            
+            {/* Left Content with Animation */}
+            <motion.div 
+              variants={leftContentVariants}
+              initial="hidden"
+              animate={isInView ? "visible" : "hidden"}
+              className="flex flex-col justify-center text-center lg:text-left items-center lg:items-start"
+            >
+              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.25em] text-[#666666]">
+                Our Collection
+              </p>
+
+              <h2 className="font-serif text-[36px] md:text-[42px] leading-[1.1] text-black">
+                Timeless charms.
+                <br />
+                Made to inspire.
+              </h2>
+
+              <Link
+                href="/shop"
+                className="mt-8 inline-flex w-fit items-center justify-center rounded-xl bg-black px-8 py-4 text-sm text-white font-medium shadow-md transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Explore Collection
+              </Link>
+            </motion.div>
+
+            {/* Products Grid with Staggered Animation */}
+            {latestProducts.length === 0 ? (
+              <div className="flex items-center justify-center rounded-2xl border border-dashed border-gray-300 p-10 bg-white">
+                <p className="text-gray-500">No products available</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+                {latestProducts.map((product, index) => (
+                  <motion.div
+                    key={product._id}
+                    custom={index}
+                    variants={productCardVariants}
+                    initial="hidden"
+                    animate={isInView ? "visible" : "hidden"}
+                  >
+                    <Link
+                      href={`/shop/${product._id}`}
+                      className="group block overflow-hidden rounded-2xl border border-[#F0ECE6] bg-white transition-all duration-300 hover:shadow-xl"
                     >
-                        <ArrowLeft className="w-5 h-5 text-gray-800" />
-                    </button>
+                      {/* Product Image */}
+                      <div className="aspect-[4/3] overflow-hidden bg-[#F7F4EF]">
+                        <Image
+                          src={
+                            product.image?.url ||
+                            product.image ||
+                            "/placeholder.jpg"
+                          }
+                          alt={product.name}
+                          width={600}
+                          height={450}
+                          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      </div>
 
-                    {/* Image Wrapper */}
-                    <div className="overflow-hidden rounded-lg w-full md:w-[100%] mx-auto">
-                        <motion.div
-                            key={currentIndex}
-                            initial={{ x: 80, opacity: 0 }}
-                            animate={{ x: 0, opacity: 1 }}
-                            exit={{ x: -80, opacity: 0 }}
-                            transition={{ duration: 0.8, ease: "easeInOut" }}
-                            className="flex justify-center gap-4 sm:gap-6"
-                        >
-                            {visibleImages.map((src, i) => (
-                                <div
-                                    key={`${src}-${i}`}
-                                    className="flex-shrink-0 w-[45%] sm:w-1/3 md:w-1/4 bg-gray-50 rounded-2xl shadow-sm hover:shadow-md transform hover:scale-[1.03] transition-all duration-300 ease-in-out"
-                                >
-                                    <Image
-                                        src={src}
-                                        alt={`Keychain ${i + 1}`}
-                                        width={400}
-                                        height={400}
-                                        className="rounded-2xl object-cover w-full h-auto grayscale hover:grayscale-0 transition duration-300"
-                                    />
-                                </div>
-                            ))}
-                        </motion.div>
-                    </div>
+                      {/* Product Info */}
+                      <div className="p-5 bg-white">
+                        <h3 className="font-serif text-[18px] text-black group-hover:text-[#666] transition-colors duration-300">
+                          {product.name}
+                        </h3>
 
-                    {/* Right Arrow */}
-                    <button
-                        aria-label="Next slide"
-                        onClick={nextSlide}
-                        className="absolute right-2 md:-right-5 top-1/2 -translate-y-1/2 z-20 bg-white/90 backdrop-blur-sm p-3 rounded-lg hover:scale-110 shadow-xl transition-transform duration-300 curosr-pointer"
-                    >
-                        <ArrowRight className="w-5 h-5 text-gray-800" />
-                    </button>
-                </div>
+                        <p className="mt-2 text-[16px] md:text-[18px] font-medium text-black">
+                          ${Number(product.price).toFixed(2)}
+                        </p>
+                      </div>
+                    </Link>
+                  </motion.div>
+                ))}
+              </div>
+            )}
 
-                {/* Dots */}
-                <div className="flex justify-center mt-8 space-x-2">
-                    {Array.from({ length: totalImages }).map((_, index) => {
-                        const isActive = index === currentIndex;
-                        return (
-                            <button
-                                key={index}
-                                onClick={() => setCurrentIndex(index)}
-                                className={`w-3 h-3 rounded-full transition-all ${isActive ? "bg-black scale-110" : "bg-gray-300"
-                                    }`}
-                                aria-label={`Go to slide ${index + 1}`}
-                            />
-                        );
-                    })}
-                </div>
-            </div>
-        </section>
-    );
+          </div>
+        </div>
+      </div>
+    </motion.section>
+  );
 }

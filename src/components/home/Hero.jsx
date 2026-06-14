@@ -1,24 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import { motion, useInView } from "framer-motion";
 import Image from "next/image";
 import Link from "next/link";
-import { X, CheckCircle, ShoppingBag, QrCode, Scan, Sparkles } from "lucide-react";
-import api from "@/lib/api";
-import Loader from "@/shared/Loader";
+import { Gift, Heart, Sun } from "lucide-react";
 
-const iconComponents = {
-  ShoppingBag: ShoppingBag,
-  QrCode: QrCode,
-  Scan: Scan,
-};
-
-export default function Hero() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+export default function HeroSection({
+  ctaLink = "/shop",
+  secondaryCtaLink = "/how-it-works",
+}) {
+  const sectionRef = useRef(null);
+  const isInView = useInView(sectionRef, { once: false, amount: 0.15 });
   const [isMobile, setIsMobile] = useState(false);
-  const [heroData, setHeroData] = useState(null);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -29,193 +23,159 @@ export default function Hero() {
     return () => window.removeEventListener("resize", checkMobile);
   }, []);
 
-  useEffect(() => {
-    fetchHeroContent();
-  }, []);
+  const features = [
+    {
+      id: 1,
+      icon: Gift,
+      title: "Gift a Personal Message",
+    },
+    {
+      id: 2,
+      icon: Sun,
+      title: "Discover Daily Inspiration",
+    },
+    {
+      id: 3,
+      icon: Heart,
+      title: "Keep What Matters",
+    },
+  ];
 
-  const fetchHeroContent = async () => {
-    try {
-      const response = await api.get("/hero");
-      setHeroData(response.data?.data);
-    } catch (error) {
-      console.error("Error fetching hero:", error);
-    } finally {
-      setLoading(false);
-    }
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.12,
+        delayChildren: 0.1,
+      },
+    },
   };
 
-  if (loading || !heroData) {
-    return <Loader text="QKey..." size={50} fullScreen />;
-  }
-
-  const steps = heroData.steps.map((step, idx) => ({
-    id: idx + 1,
-    title: step.title,
-    description: step.description,
-    icon: iconComponents[step.icon] || ShoppingBag,
-    bgColor: step.bgColor,
-    iconColor: step.iconColor,
-  }));
+  const itemVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.65, ease: [0.25, 0.1, 0.1, 1] },
+    },
+  };
 
   return (
-    <>
-      <section className="bg-white text-black py-16 md:py-24 overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col-reverse md:flex-row items-center justify-between gap-6 md:gap-10">
-          {/* Left Content */}
-          <motion.div
-            className="w-full md:w-1/2 space-y-4 md:space-y-6 text-center md:text-left"
-            initial={{ opacity: 0, y: 40 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
-            viewport={{ once: true }}
-          >
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold uppercase leading-tight md:leading-[1.2] lg:leading-[80px]">
-              {heroData.title}
-            </h1>
-
-            <p className="text-gray-700 text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed max-w-xl mx-auto md:mx-0">
-              {heroData.subtitle}
-            </p>
-
-            <div className="mt-4 md:mt-6 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center md:justify-start">
-              <Link
-                href="/signup"
-                className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gray-800 text-white rounded-md font-medium hover:bg-gray-900 transition text-sm sm:text-base text-center"
-              >
-                {heroData.buttonText}
-              </Link>
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="px-4 sm:px-6 py-2.5 sm:py-3 border border-black text-black rounded-md font-medium hover:bg-gray-700 hover:text-white transition text-sm sm:text-base cursor-pointer"
-              >
-                {heroData.secondaryButtonText}
-              </button>
-            </div>
-          </motion.div>
-
-          {/* Right Image */}
-          <motion.div
-            className="w-full md:w-1/2 flex justify-center items-center"
-            initial={{ opacity: 0, scale: 0.9, y: 50 }}
-            whileInView={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut", delay: 0.2 }}
-            viewport={{ once: true }}
-          >
-            <div className="relative w-full max-w-md md:max-w-full">
-              <Image
-                src={heroData.imageUrl}
-                alt="Hero Image"
-                width={1000}
-                height={1000}
-                className="w-full h-auto"
-                priority
-              />
-            </div>
-          </motion.div>
+    <motion.section
+      ref={sectionRef}
+      initial="hidden"
+      animate={isInView ? "visible" : "hidden"}
+      className="relative w-full min-h-[80vh] md:min-h-[85vh] lg:min-h-[80vh] xl:min-h-[75vh] flex items-center overflow-hidden bg-[#FAF9F7]"
+    >
+      {/* Background Image Container */}
+      <div className="absolute inset-0 w-full h-full">
+        <div className="relative w-full h-full">
+          <Image
+            src="/hero/hero-bg.png"
+            alt="Luxury QR keychain memory charm - Elegant shell design with pearl finish"
+            fill
+            className="object-cover object-[75%_center] md:object-[80%_center] lg:object-[85%_center] xl:object-[90%_center]"
+            priority
+            quality={95}
+          />
         </div>
-      </section>
+      </div>
 
-      {/* Modal - same as before but using dynamic data */}
-      <AnimatePresence>
-        {isModalOpen && (
+      {/* Dynamic Overlay Layers */}
+      <div className="absolute inset-0 bg-gradient-to-r from-[#FAF9F7] via-[#FAF9F7]/95 to-transparent hidden md:block md:w-[70%] lg:w-[60%]" />
+      <div className="absolute inset-0 bg-[#FAF9F7]/90 sm:bg-[#FAF9F7]/85 md:hidden" />
+
+      {/* Content Container */}
+      <div className="relative z-10 w-full max-w-[1440px] mx-auto px-6 sm:px-12 md:px-16 lg:px-24 py-16 md:py-24">
+        <div className="w-full md:w-[60%] lg:w-[55%] xl:w-[750px]">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setIsModalOpen(false)}
-            className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-3 sm:p-4"
+            className="space-y-6 md:space-y-8"
+            variants={containerVariants}
           >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0, y: 20 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-[95%] sm:max-w-lg md:max-w-2xl lg:max-w-4xl bg-white rounded-2xl shadow-2xl overflow-hidden mx-auto"
-            >
-              <div className="relative bg-gray-900 text-white px-4 sm:px-6 py-4 sm:py-5">
-                <div className="flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2 sm:gap-3">
-                    <Sparkles size={20} className="text-gray-400 sm:w-6 sm:h-6" />
-                    <h2 className="text-lg sm:text-xl md:text-2xl font-bold">
-                      How It Works
-                    </h2>
-                  </div>
-                  <button
-                    onClick={() => setIsModalOpen(false)}
-                    className="p-1.5 sm:p-2 hover:bg-gray-800 rounded-full transition cursor-pointer"
-                  >
-                    <X size={18} className="sm:w-5 sm:h-5" />
-                  </button>
-                </div>
-                <p className="text-gray-400 text-xs sm:text-sm mt-1">
-                  Three simple steps to carry inspiration wherever you go
-                </p>
-              </div>
-
-              <div className="p-4 sm:p-6 md:p-8 max-h-[80vh] overflow-y-auto">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
-                  {steps.map((step, index) => {
-                    const IconComponent = step.icon;
-                    return (
-                      <motion.div
-                        key={step.id}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="text-center group border border-gray-200 rounded-xl sm:rounded-2xl p-4 sm:p-6 hover:shadow-lg transition cursor-pointer"
-                      >
-                        <div className="relative mb-3 sm:mb-4">
-                          <div className={`w-14 h-14 sm:w-16 sm:h-16 mx-auto ${step.bgColor} rounded-xl sm:rounded-2xl flex items-center justify-center group-hover:scale-105 transition`}>
-                            <IconComponent size={24} className={`${step.iconColor} sm:w-7 sm:h-7`} />
-                          </div>
-                          <div className="absolute -top-2 -right-2 w-5 h-5 sm:w-6 sm:h-6 bg-gray-800 text-white rounded-full flex items-center justify-center text-[10px] sm:text-xs font-bold">
-                            {step.id}
-                          </div>
-                        </div>
-                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">
-                          {step.title}
-                        </h3>
-                        <p className="text-gray-500 text-xs sm:text-sm leading-relaxed">
-                          {step.description}
-                        </p>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-
-                {!isMobile && (
-                  <div className="relative my-6 sm:my-8">
-                    <div className="absolute inset-0 flex items-center">
-                      <div className="w-full border-t border-gray-200"></div>
-                    </div>
-                    <div className="relative flex justify-center">
-                      <div className="bg-gray-100 rounded-full p-2">
-                        <CheckCircle size={20} className="text-gray-600" />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {isMobile && (
-                  <div className="my-5 border-t border-gray-200"></div>
-                )}
-
-                <div className="text-center mt-4 sm:mt-6">
-                  <Link
-                    href="/signup"
-                    onClick={() => setIsModalOpen(false)}
-                    className="inline-flex items-center justify-center gap-2 px-5 sm:px-6 py-2.5 sm:py-3 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition text-sm sm:text-base w-full sm:w-auto"
-                  >
-                    {heroData.buttonText}
-                    <Sparkles size={14} className="sm:w-4 sm:h-4" />
-                  </Link>
-                </div>
+            {/* Luxury Badge */}
+            <motion.div variants={itemVariants}>
+              <div className="inline-flex items-center gap-2">
+                <span className="text-[#C8A06B] text-base md:text-lg">✦</span>
+                <span className="text-[10px] sm:text-xs tracking-[0.25em] text-[#C8A06B] font-bold uppercase">
+                  ONE SCAN. A BETTER YOU.
+                </span>
               </div>
             </motion.div>
+
+            {/* Serif Headline */}
+            <motion.h1
+              variants={itemVariants}
+              className="font-serif text-4xl sm:text-5xl md:text-6xl xl:text-[64px] leading-[1.15] tracking-[-0.01em] text-gray-900"
+            >
+              Carry inspiration.
+              <br />
+              Share what matters.
+            </motion.h1>
+
+            {/* Supporting Text */}
+            <motion.p
+              variants={itemVariants}
+              className="text-gray-600 text-sm sm:text-base md:text-lg leading-relaxed max-w-md md:max-w-lg"
+            >
+              A meaningful shell charm with a surprise inside. Scan to discover
+              daily inspiration, heartfelt messages, and moments that stay with
+              you.
+            </motion.p>
+
+            {/* CTA Buttons */}
+            <motion.div
+              variants={itemVariants}
+              className="flex flex-col sm:flex-row gap-4 pt-2"
+            >
+              <Link
+                href={ctaLink}
+                className="px-8 py-4 bg-gray-900 text-white text-sm font-medium tracking-wide rounded-xl transition-all duration-300 hover:bg-gray-800 hover:shadow-xl text-center active:scale-[0.98]"
+              >
+                Shop Collection
+              </Link>
+
+              <Link
+                href={secondaryCtaLink}
+                className="px-8 py-4 border border-gray-300 text-gray-800 text-sm font-medium tracking-wide rounded-xl transition-all duration-300 hover:border-gray-800 hover:text-gray-900 hover:bg-white text-center backdrop-blur-sm active:scale-[0.98]"
+              >
+                How It Works
+              </Link>
+            </motion.div>
+
+            {/* Responsive Features Grid */}
+            <motion.div
+              variants={itemVariants}
+              className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-4 md:gap-8 pt-8 max-w-[650px]"
+            >
+              {features.map((feature) => {
+                const IconComponent = feature.icon;
+
+                return (
+                  <div
+                    key={feature.id}
+                    className="flex flex-row sm:flex-col items-center sm:text-center gap-4 sm:gap-2"
+                  >
+                    <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white shadow-sm sm:shadow-none sm:bg-transparent sm:h-auto sm:w-auto sm:mb-2">
+                      <IconComponent
+                        strokeWidth={1.5}
+                        className="h-6 w-6 sm:h-8 sm:w-8 text-black"
+                      />
+                    </div>
+
+                    <span className="text-sm md:text-base font-serif font-medium leading-tight text-gray-900 max-w-[150px]">
+                      {feature.title}
+                    </span>
+                  </div>
+                );
+              })}
+            </motion.div>
           </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+        </div>
+      </div>
+
+      {/* Decorative Bottom Line */}
+      <div className="absolute bottom-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-gray-300/40 to-transparent" />
+    </motion.section>
   );
 }
