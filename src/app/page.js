@@ -12,7 +12,7 @@ export default function page() {
       <Collection />
       <Howwork />
       {/* <Testimonial /> */}
-      <Cta />
+      {/* <Cta /> */}
     </>
   );
 }

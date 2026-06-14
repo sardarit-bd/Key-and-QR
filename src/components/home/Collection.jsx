@@ -67,7 +67,7 @@ export default function CollectionSection() {
       animate={isInView ? "visible" : "hidden"}
       className="w-full bg-[#FAF9F7] py-16 md:py-24 px-6 md:px-12"
     >
-      <div className="mx-auto max-w-[1200px] xl:max-w-[1440px] px-0">
+      <div className="mx-auto max-w-[1200px] xl:max-w-[1440px] xl:px-13 2xl:px-23">
         <div className="py-4">
           <div className="grid gap-12 lg:grid-cols-[350px_1fr] xl:grid-cols-[400px_1fr] items-center">
             
