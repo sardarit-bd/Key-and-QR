@@ -461,7 +461,7 @@ export default function UserDashboard() {
                 >
                   <div className="flex items-center gap-4 flex-1 overflow-hidden">
                     <div
-                      className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${categoryConfig.bg} ${categoryConfig.color}`}
+                      className={`w-6 h-6 rounded-xl flex items-center justify-center flex-shrink-0 ${categoryConfig.bg} ${categoryConfig.color}`}
                     >
                       <Icon size={18} />
                     </div>
@@ -501,45 +501,82 @@ export default function UserDashboard() {
             Inspiration Streak
           </h2>
 
-          <div className="relative w-48 h-48 mb-6 z-10 flex items-center justify-center">
-            {/* Glowing outer ring */}
+          <div className="relative w-[250px] h-[250px] mb-6 z-10 flex items-center justify-center">
             <svg
-              className="w-full h-full transform -rotate-90 absolute inset-0"
+              className="absolute rounded-full inset-0 w-full h-full -rotate-90"
               viewBox="0 0 100 100"
             >
+              <defs>
+                <linearGradient
+                  id="goldGradient"
+                  x1="0%"
+                  y1="0%"
+                  x2="100%"
+                  y2="50%"
+                >
+                  <stop offset="0%" stopColor="#FFD58A" />
+                  <stop offset="40%" stopColor="#FFB74D" />
+                  <stop offset="100%" stopColor="#C97A1A" />
+                </linearGradient>
+
+                <filter
+                  id="goldGlow"
+                  x="-50%"
+                  y="-50%"
+                  width="200%"
+                  height="200%"
+                >
+                  <feGaussianBlur stdDeviation="2.8" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Outer glow */}
               <circle
                 cx="50"
                 cy="50"
                 r="46"
-                fill="transparent"
-                stroke="rgba(255,255,255,0.05)"
-                strokeWidth="2"
+                fill="none"
+                stroke="#FFB347"
+                strokeWidth="1"
+                opacity="0.18"
+                filter="url(#goldGlow)"
               />
+
+              {/* Background ring */}
               <circle
                 cx="50"
                 cy="50"
                 r="46"
-                fill="transparent"
-                stroke="url(#gradient)"
-                strokeWidth="4"
+                fill="none"
+                stroke="rgba(255,255,255,.08)"
+                strokeWidth="1.5"
+              />
+
+              {/* Progress ring */}
+              <circle
+                cx="50"
+                cy="50"
+                r="46"
+                fill="none"
+                stroke="url(#goldGradient)"
+                strokeWidth="2.2"
+                strokeLinecap="round"
                 strokeDasharray="289"
                 strokeDashoffset="72"
-                className="drop-shadow-[0_0_10px_rgba(234,179,8,0.5)]"
-                strokeLinecap="round"
+                filter="url(#goldGlow)"
               />
-              <defs>
-                <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#f59e0b" />
-                  <stop offset="100%" stopColor="#ef4444" />
-                </linearGradient>
-              </defs>
             </svg>
 
-            <div className="text-center">
-              <span className="text-6xl font-serif text-white tracking-tighter">
+            <div className="flex flex-col items-center">
+              <span className="font-serif text-[88px] leading-none text-[#F5C97A]">
                 7
               </span>
-              <span className="block text-yellow-500 text-sm font-medium mt-1">
+
+              <span className="mt-2 font-serif text-[22px] text-[#E9C27B]">
                 Days
               </span>
             </div>
