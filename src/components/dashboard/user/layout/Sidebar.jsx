@@ -43,7 +43,8 @@ export default function Sidebar({ user, isCollapsed = false, onToggle }) {
   const sidebarClasses = `
     fixed top-0 left-0 z-50 h-full 
     ${isDesktopCollapsed ? COLLAPSED_WIDTH : SIDEBAR_WIDTH}
-    bg-[#070911] 
+    bg-[#070911]
+    bg-[#1e2335]
     border-none
     transition-all duration-300 ease-in-out
     ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -70,7 +71,7 @@ export default function Sidebar({ user, isCollapsed = false, onToggle }) {
       </button>
 
       <aside className={sidebarClasses} aria-label="Dashboard navigation">
-        <div className="flex-1 overflow-y-auto overflow-x-hidden scrollbar-none pb-6">
+      <div className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar pb-6">
           <SidebarHeader isCollapsed={isDesktopCollapsed} />
           
           <div className="mt-4">

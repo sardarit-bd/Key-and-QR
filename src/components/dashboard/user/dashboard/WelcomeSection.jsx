@@ -2,13 +2,36 @@
 
 export default function WelcomeSection({ userName = "Dd" }) {
   return (
-    <div className="flex flex-col justify-center h-full py-4">
-      <h1 className="text-3xl md:text-4xl lg:text-5xl font-serif text-white tracking-wide mb-3 flex items-center gap-2">
-        Good Evening, {userName}! <span className="text-[#e3ba85]">✨</span>
-      </h1>
-      <p className="text-[#a1a1aa] text-sm md:text-base">
-        Welcome back to your inspiration journey.
-      </p>
-    </div>
+    <section className="flex flex-col justify-center w-full h-full">
+      <div className="max-w-xl">
+        <h1
+          className="
+            font-serif
+            text-[36px]
+            md:text-[42px]
+            leading-[1.2]
+            tracking-wide
+            text-[#F8F3EA]
+          "
+        >
+          Good Evening, {userName}!
+          <span className="ml-2 inline-block text-[#FDB65C]">
+            ✨
+          </span>
+        </h1>
+
+        <p
+          className="
+            mt-3
+            text-[16px]
+            md:text-[17px]
+            font-normal
+            text-[#B78D69]
+          "
+        >
+          Welcome back to your inspiration journey.
+        </p>
+      </div>
+    </section>
   );
 }

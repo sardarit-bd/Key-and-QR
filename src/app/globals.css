@@ -142,32 +142,17 @@ body {
 }
 
 
-/* globals.css - Add these utilities */
+/* Hide Scrollbar (Chrome, Edge, Safari) */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
 
-@layer utilities {
-  /* Custom scrollbar for sidebar */
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 4px;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: #d1d5db;
-    border-radius: 9999px;
-  }
-  
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
-  }
-  
-  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
-    background: #374151;
-  }
-  
-  .dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background: #4b5563;
-  }
+/* Hide Scrollbar (Firefox) */
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
+/* Hide Scrollbar (IE/Old Edge) */
+.hide-scrollbar {
+  -ms-overflow-style: none;
 }
