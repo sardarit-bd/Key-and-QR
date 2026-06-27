@@ -3,12 +3,7 @@
 import { motion } from "framer-motion";
 import Link from "next/link";
 import dynamic from "next/dynamic";
-
-// Dynamically import Lottie to prevent SSR (Server-Side Rendering) issues
 const Lottie = dynamic(() => import("lottie-react"), { ssr: false });
-
-// Import your downloaded Lottie JSON file here
-// import notFoundAnim from "@/assets/not-found-animation.json"; 
 import notFoundAnim from "@/lib/assets/not-found-animation.json"
 
 const containerVariants = {
@@ -33,7 +28,7 @@ const itemVariants = {
 
 export default function NotFound() {
   return (
-    <section className="w-full min-h-[85vh] flex items-center justify-center bg-[#FAF9F7] px-6 py-12">
+    <section className="w-full min-h-screen flex items-center justify-center bg-[#FAF9F7] px-6 py-12">
       <div className="mx-auto max-w-[1200px] xl:max-w-[1440px] px-6 sm:px-12 md:px-20 2xl:px-60 w-full flex items-center justify-center">
         
         <motion.div

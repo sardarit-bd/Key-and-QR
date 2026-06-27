@@ -394,7 +394,7 @@ export default function DashboardLayout({ children }) {
             {/* Main Content */}
             <main className={`flex-1 w-full ${isMobile ? "mt-14" : "lg:ml-64"}`}>
                 <div className="p-4 lg:p-3">
-                    {children}
+                    {/* {children} */}
                 </div>
             </main>
         </div>

@@ -57,10 +57,7 @@ export default function RootLayout({ children }) {
         suppressHydrationWarning
       >
         <AuthProvider>
-          <TopHeader />
-          <Header />
           {children}
-          <ConditionalFooter />
         </AuthProvider>
       </body>
     </html>
