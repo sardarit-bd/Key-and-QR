@@ -8,8 +8,6 @@ import CategorySection from './CategorySection';
 import DailyQuoteBanner from './DailyQuoteBanner';
 import WelcomeSection from './WelcomeSection';
 
-
-// Mock Data defined at the top level
 const MOCK_RECENT_QUOTES = [
   { 
     id: 1, 
@@ -70,10 +68,10 @@ const MOCK_RECENT_QUOTES = [
 
 export default function DashboardHome() {
   return (
-    <div className="min-h-screen p-4 md:p-6 lg:p-8 space-y-6">
+    <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6">
       
       {/* Row 1: Welcome & Daily Quote */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 min-h-[220px]">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6 min-h-[180px] sm:min-h-[200px] lg:min-h-[220px]">
         <WelcomeSection userName="Dd" />
         <DailyQuoteBanner />
       </div>
@@ -84,7 +82,7 @@ export default function DashboardHome() {
       </section>
 
       {/* Row 3: Recent Quotes & Streak */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
         <div className="xl:col-span-2">
           <RecentQuotesCard quotes={MOCK_RECENT_QUOTES} />
         </div>

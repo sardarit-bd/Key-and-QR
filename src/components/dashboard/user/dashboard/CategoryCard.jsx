@@ -11,7 +11,14 @@ export default function CategoryCard({
   return (
     <button
       onClick={onClick}
-      className={`relative flex h-[88px] w-[94px] flex-col items-center justify-center overflow-hidden rounded-[18px] border transition-all duration-300
+      className={`
+        relative flex 
+        h-[72px] sm:h-[80px] md:h-[88px] 
+        w-[78px] sm:w-[85px] md:w-[94px] 
+        flex-col items-center justify-center 
+        overflow-hidden rounded-[14px] sm:rounded-[16px] md:rounded-[18px] 
+        border transition-all duration-300
+        flex-shrink-0
         ${isActive 
           ? `border-violet-500/60 bg-gradient-to-b from-[#4a2a6a] via-[#2a1a45] to-[#1a1a2a] shadow-[0_0_30px_rgba(168,85,247,0.3)] scale-[1.02] ring-1 ring-violet-500/30`
           :
@@ -41,6 +48,7 @@ export default function CategoryCard({
           size={20}
           strokeWidth={2.2}
           className={`
+            w-4 h-4 sm:w-[18px] sm:h-[18px] md:w-5 md:h-5
             transition-all duration-300
             ${isActive 
               ? 'text-[#E6BE84]' 
@@ -51,7 +59,9 @@ export default function CategoryCard({
 
         <span 
           className={`
-            mt-2 text-[13px] font-semibold transition-all duration-300
+            mt-1.5 sm:mt-2 
+            text-[11px] sm:text-[12px] md:text-[13px] 
+            font-semibold transition-all duration-300
             ${isActive 
               ? 'text-white' 
               : 'text-[#ECEEF3]'
@@ -64,7 +74,9 @@ export default function CategoryCard({
         {subtitle ? (
           <span 
             className={`
-              mt-0.5 text-[11px] transition-all duration-300
+              mt-0.5 
+              text-[10px] sm:text-[11px] 
+              transition-all duration-300
               ${isActive 
                 ? 'text-[#A8ABB6]' 
                 : 'text-[#8E919C]'
