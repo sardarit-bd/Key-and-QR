@@ -85,7 +85,8 @@ export default function CategorySection() {
 
         {/* Categories */}
         <div className="flex-1 overflow-x-auto scrollbar-none -mx-4 sm:mx-0 px-4 sm:px-0">
-          <div className="flex min-w-max items-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 py-4 sm:py-6 md:py-8 lg:py-10">
+          {/* Replaced hardcoded px-12 with responsive px-4 sm:px-6 lg:px-12 */}
+          <div className="flex min-w-max items-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 py-4 sm:py-6 md:py-8 lg:py-10 px-4 sm:px-6 lg:px-12">
             {CATEGORIES.map((category) => (
               <CategoryCard
                 key={category.id}

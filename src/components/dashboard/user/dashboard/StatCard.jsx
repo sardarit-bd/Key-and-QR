@@ -40,8 +40,8 @@ export default function StatCard({
   const theme = themeMap[colorTheme] || themeMap.purple;
 
   return (
-    <Card className="p-4 sm:p-5 md:p-6 hover:bg-[#12141d] transition-colors cursor-default">
-      <div className="flex items-center justify-start sm:justify-center gap-4 sm:gap-5">
+    <Card className="p-4 sm:p-5 md:p-6 hover:bg-[#12141d] transition-colors cursor-default cursor-pointer">
+      <div className="flex items-center justify-between gap-4 sm:gap-5 px-10">
         <div className={`relative w-[44px] sm:w-[48px] md:w-[52px] h-[44px] sm:h-[48px] md:h-[52px] rounded-full border ${theme.border} ${theme.bg} ${theme.glow} flex items-center justify-center flex-shrink-0`}>
           {customIconRender ? (
             customIconRender()
@@ -50,7 +50,7 @@ export default function StatCard({
           )}
         </div>
 
-        <div>
+        <div className="text-center">
           <p className="text-gray-400 text-[10px] sm:text-[11px] md:text-xs font-medium">
             {title}
           </p>

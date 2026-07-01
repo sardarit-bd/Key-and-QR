@@ -15,22 +15,17 @@ const DAYS = [
 
 export default function InspirationStreak({ streak = 7 }) {
   return (
-    <Card className="relative overflow-hidden rounded-[26px] border border-[#4d3523]  p-6 h-full">
-      {/* Background Glow */}
-      {/* <div className="absolute inset-0">
-        <div className="absolute left-1/2 top-[45%] h-[320px] w-[320px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-[#ffb86a]/10 blur-[120px]" />
-        <div className="absolute bottom-10 left-1/2 h-40 w-72 -translate-x-1/2 rounded-full bg-[#ff9f43]/10 blur-[80px]" />
-      </div> */}
-
-      <div className="relative z-10 flex h-full flex-col items-center">
-        <h2 className="text-[34px] font-serif text-[#f3ede6]">
+    <Card className="relative overflow-hidden rounded-[26px] border border-[#4d3523] p-5 sm:p-6 h-full">
+      <div className="relative z-10 flex h-full flex-col items-center justify-center">
+        <h2 className="text-[28px] sm:text-[34px] font-serif text-[#f3ede6] text-center">
           Inspiration Streak
         </h2>
 
-        <div className="relative mt-8 flex h-[220px] w-[220px] items-center justify-center">
+        {/* Added scale-[0.85] sm:scale-100 to gracefully shrink the fixed 220px SVG on small mobile viewports */}
+        <div className="relative mt-6 sm:mt-8 flex h-[220px] w-[220px] items-center justify-center scale-[0.85] sm:scale-100">
           <div className="absolute h-[170px] w-[170px] rounded-full bg-[#ffb45d]/20 blur-[20px]" />
 
-          <div className="absolute h-[155px] w-[155px] rounded-full bg-[#0d111b] blur-[3px]  z-20" />
+          <div className="absolute h-[155px] w-[155px] rounded-full bg-[#0d111b] blur-[3px] z-20" />
 
           <svg
             className="absolute inset-0 -rotate-90 z-10"
@@ -104,18 +99,19 @@ export default function InspirationStreak({ streak = 7 }) {
           </div>
         </div>
 
-        <p className="mt-6 font-serif text-[20px] text-[#efe8df]">
+        <p className="mt-4 sm:mt-6 font-serif text-[18px] sm:text-[20px] text-[#efe8df] text-center">
           Keep your streak going!
         </p>
 
-        <div className="mt-8 w-full rounded-[18px] bg-[#121722]/90 px-5 py-4">
+        {/* Adjusted mobile padding (px-3 py-3) for the days container */}
+        <div className="mt-6 sm:mt-8 w-full rounded-[18px] bg-[#121722]/90 px-3 sm:px-5 py-3 sm:py-4">
           <div className="flex justify-between">
             {DAYS.map((item, i) => (
-              <div key={i} className="flex flex-col items-center gap-3">
-                <span className="text-sm text-[#ece8e2]">{item.day}</span>
+              <div key={i} className="flex flex-col items-center gap-2 sm:gap-3">
+                <span className="text-xs sm:text-sm text-[#ece8e2]">{item.day}</span>
 
                 <div
-                  className={`flex h-7 w-7 items-center justify-center rounded-full border ${
+                  className={`flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full border ${
                     item.active
                       ? "border-[#f3b25f] bg-[#f3b25f]"
                       : "border-[#5b5d66] bg-transparent"
@@ -125,7 +121,7 @@ export default function InspirationStreak({ streak = 7 }) {
                     <Check
                       size={14}
                       strokeWidth={3}
-                      className="text-[#0d1018]"
+                      className="text-[#0d1018] w-3 h-3 sm:w-[14px] sm:h-[14px]"
                     />
                   )}
                 </div>

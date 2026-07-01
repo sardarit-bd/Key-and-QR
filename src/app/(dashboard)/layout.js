@@ -10,7 +10,8 @@ export default function DashboardLayout({ children }) {
       <div className="min-h-screen flex">
         <Sidebar />
 
-        <main className="flex-1 lg:ml-[288px]">
+        {/* Added min-w-0 to prevent flex container blowout on mobile */}
+        <main className="flex-1 lg:ml-[288px] min-w-0">
           <div className="min-h-screen">
             {children}
           </div>

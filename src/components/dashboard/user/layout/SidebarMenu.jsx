@@ -14,8 +14,8 @@ import {
 import SidebarItem from './SidebarItem';
 
 const MENU_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/dashboard/user', exact: true },
-  { id: 'my-quotes', label: 'My Quotes', icon: Quote, href: '/dashboard/user/myquotes' },
+  { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/new-dashboard/user', exact: true },
+  { id: 'my-quotes', label: 'My Quotes', icon: Quote, href: '/new-dashboard/user/my-quotes' },
   { id: 'reflections', label: 'Reflections', icon: Sparkles, href: '/dashboard/user/reflections' },
   { id: 'scan-history', label: 'Scan History', icon: QrCode, href: '/dashboard/user/scan-history' },
   { id: 'favorites', label: 'Favorites', icon: Heart, href: '/dashboard/user/favorites' },
