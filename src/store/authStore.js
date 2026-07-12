@@ -2,513 +2,539 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import api, {
-  setTokens,
-  clearTokens,
-  getUser,
-  getAccessToken,
-  getRefreshToken,
-  startTokenRefreshTimer,
-  stopTokenRefreshTimer
+import authService from "@/services/auth.service";
+import {
+    getAccessToken,
+    getRefreshToken,
+    setTokens,
+    clearTokens,
+    getUser,
+    setUser as setUserStorage,
+    startTokenRefreshTimer,
+    stopTokenRefreshTimer,
+    isTokenExpired,
 } from "@/lib/api";
 
-const filterUserData = (user) => {
-  if (!user) return null;
+// ============================================================
+// INTERNAL HELPERS
+// ============================================================
 
-  return {
-    _id: user._id,
-    name: user.name,
-    email: user.email,
-    role: user.role,
-    profileImage: user.profileImage?.url || user.profileImage || null,
-    provider: user.provider,
-    createdAt: user.createdAt || null,
-    updatedAt: user.updatedAt || null,
-    isEmailVerified: user.isEmailVerified || false,
-  };
+const filterUserData = (user) => {
+    if (!user) return null;
+    return {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        profileImage: user.profileImage?.url || user.profileImage || null,
+        provider: user.provider,
+        createdAt: user.createdAt || null,
+        updatedAt: user.updatedAt || null,
+        isEmailVerified: user.isEmailVerified || false,
+        stripeCustomerId: user.stripeCustomerId || null,
+    };
 };
 
-export const useAuthStore = create(
-  persist(
-    (set, get) => ({
-      user: null,
-      loading: false,
-      isLoading: false,
-      isInitialized: false,
-      error: null,
-
-      // Direct setter for user (for Google callback)
-      setUser: (userData) => {
-        const filteredUser = filterUserData(userData);
-        set({ user: filteredUser });
-        if (typeof window !== "undefined" && filteredUser) {
-          localStorage.setItem("user", JSON.stringify(filteredUser));
-        }
-      },
-
-      // Direct setter for isInitialized
-      setIsInitialized: (status) => {
-        set({ isInitialized: status });
-      },
-
-      // Set loading state
-      setLoading: (loadingStatus) => {
-        set({ loading: loadingStatus, isLoading: loadingStatus });
-      },
-
-      // Initialize auth
-      initializeAuth: async () => {
-        const state = get();
-
-        if (state.isInitialized) {
-          console.log("Already initialized, user:", state.user);
-          return;
-        }
-
-        if (state.loading || state.isLoading) {
-          console.log("Already loading auth");
-          return;
-        }
-        set({ loading: true, isLoading: true });
-
-        try {
-          const storedUser = getUser();
-          const storedToken = getAccessToken();
-          const storedRefreshToken = getRefreshToken();
-
-          // No token at all
-          if (!storedToken && !storedRefreshToken) {
-            set({
-              user: null,
-              isInitialized: true,
-              loading: false,
-              isLoading: false,
-              error: null,
-            });
-            return;
-          }
-
-          if (storedUser && (storedToken || storedRefreshToken)) {
-            const filteredUser = filterUserData(storedUser);
-
-            if (typeof window !== "undefined") {
-              if (storedToken && !document.cookie.includes("accessToken")) {
-                document.cookie = `accessToken=${storedToken}; path=/; max-age=900; SameSite=Lax`;
-              }
-
-              if (storedRefreshToken && !document.cookie.includes("refreshToken")) {
-                document.cookie = `refreshToken=${storedRefreshToken}; path=/; max-age=604800; SameSite=Lax`;
-              }
-
-              if (!document.cookie.includes("userRole") && filteredUser?.role) {
-                document.cookie = `userRole=${filteredUser.role}; path=/; max-age=604800; SameSite=Lax`;
-              }
-
-              // Start token refresh timer
-              startTokenRefreshTimer();
-            }
-
-            set({
-              user: filteredUser,
-              isInitialized: true,
-              loading: false,
-              isLoading: false,
-              error: null,
-            });
-
-            // Background verification
-            api
-              .get("/auth/me")
-              .then((response) => {
-                const freshUser = response.data?.data;
-                if (freshUser) {
-                  const filteredFreshUser = filterUserData(freshUser);
-                  set({ user: filteredFreshUser });
-                  if (typeof window !== "undefined") {
-                    localStorage.setItem("user", JSON.stringify(filteredFreshUser));
-                  }
-                }
-              })
-              .catch(() => {
-                console.log("Background verification failed, but user stays logged in");
-              });
-
-            return;
-          }
-
-          if ((storedToken || storedRefreshToken) && !storedUser) {
-            const response = await api.get("/auth/me");
-            const user = response.data?.data;
-
-            if (user) {
-              const filteredUser = filterUserData(user);
-              set({ user: filteredUser });
-
-              if (typeof window !== "undefined") {
-                localStorage.setItem("user", JSON.stringify(filteredUser));
-
-                if (storedToken && !document.cookie.includes("accessToken")) {
-                  document.cookie = `accessToken=${storedToken}; path=/; max-age=900; SameSite=Lax`;
-                }
-
-                if (storedRefreshToken && !document.cookie.includes("refreshToken")) {
-                  document.cookie = `refreshToken=${storedRefreshToken}; path=/; max-age=604800; SameSite=Lax`;
-                }
-
-                if (!document.cookie.includes("userRole") && filteredUser?.role) {
-                  document.cookie = `userRole=${filteredUser.role}; path=/; max-age=604800; SameSite=Lax`;
-                }
-              }
-
-              // Start token refresh timer
-              startTokenRefreshTimer();
-            }
-          }
-
-          set({
-            isInitialized: true,
-            loading: false,
-            isLoading: false,
-            error: null,
-          });
-        } catch (error) {
-          console.error("Init auth error:", error);
-          set({
-            user: null,
-            isInitialized: true,
-            loading: false,
-            isLoading: false,
-            error: error.message,
-          });
-        }
-      },
-
-      // Fetch me
-      fetchMe: async () => {
-        try {
-          const response = await api.get("/auth/me");
-          const user = response.data?.data ?? null;
-
-          if (user) {
-            const filteredUser = filterUserData(user);
-            set({ user: filteredUser, error: null });
-
-            if (typeof window !== "undefined") {
-              localStorage.setItem("user", JSON.stringify(filteredUser));
-            }
-          }
-
-          return user;
-        } catch (error) {
-          set({ user: null, error: null });
-          return null;
-        }
-      },
-
-      // Register
-      register: async (payload) => {
-        set({ loading: true, isLoading: true, error: null });
-
-        try {
-          const response = await api.post("/auth/register", payload);
-          const user = response.data?.data?.user ?? null;
-          const accessToken = response.data?.data?.accessToken;
-          const refreshToken = response.data?.data?.refreshToken;
-
-          if (accessToken) {
-            setTokens(accessToken, refreshToken);
-          }
-
-          let filteredUser = null;
-          if (user) {
-            filteredUser = filterUserData(user);
-            set({ user: filteredUser });
-
-            if (typeof window !== "undefined") {
-              localStorage.setItem("user", JSON.stringify(filteredUser));
-            }
-          }
-
-          if (typeof window !== "undefined") {
-            if (accessToken) {
-              document.cookie = `accessToken=${accessToken}; path=/; max-age=900; SameSite=Lax`;
-            }
-            if (refreshToken) {
-              document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
-            }
-            if (filteredUser?.role) {
-              document.cookie = `userRole=${filteredUser.role}; path=/; max-age=604800; SameSite=Lax`;
-            }
-
-            startTokenRefreshTimer();
-          }
-
-          set({
-            loading: false,
-            isLoading: false,
-            error: null,
-            isInitialized: true,
-          });
-
-          return { success: true, user: filteredUser };
-        } catch (error) {
-          const message = error.response?.data?.message || "Registration failed";
-          set({ loading: false, isLoading: false, error: message });
-          return { success: false, error: message };
-        }
-      },
-
-      // Login
-      login: async (payload) => {
-        set({ loading: true, isLoading: true, error: null });
-
-        try {
-          const response = await api.post("/auth/login", payload);
-
-          if (response.data?.success !== true) {
-            const errorMsg = response.data?.message || "Login failed";
-            set({ loading: false, isLoading: false, error: errorMsg });
-            return { success: false, error: errorMsg };
-          }
-
-          const user = response.data?.data?.user;
-          const accessToken = response.data?.data?.accessToken;
-          const refreshToken = response.data?.data?.refreshToken;
-
-          if (!accessToken || !user) {
-            set({
-              loading: false,
-              isLoading: false,
-              error: "Invalid server response",
-            });
-            return { success: false, error: "Invalid server response" };
-          }
-
-          // Save tokens
-          setTokens(accessToken, refreshToken);
-
-          const filteredUser = filterUserData(user);
-          set({ user: filteredUser });
-
-          if (typeof window !== "undefined") {
-            localStorage.setItem("user", JSON.stringify(filteredUser));
-
-            if (accessToken) {
-              document.cookie = `accessToken=${accessToken}; path=/; max-age=900; SameSite=Lax`;
-            }
-            if (refreshToken) {
-              document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
-            }
-            if (filteredUser?.role) {
-              document.cookie = `userRole=${filteredUser.role}; path=/; max-age=604800; SameSite=Lax`;
-            }
-
-            startTokenRefreshTimer();
-          }
-
-          set({
-            loading: false,
-            isLoading: false,
-            error: null,
-            isInitialized: true,
-          });
-
-          // Redirect after state update
-          setTimeout(() => {
-            if (filteredUser.role === "admin") {
-              window.location.href = "/dashboard/admin";
-            } else {
-              window.location.href = "/dashboard/user";
-            }
-          }, 100);
-
-          return { success: true, user: filteredUser };
-        } catch (error) {
-          console.error("Login error:", error);
-          const message =
-            error.response?.data?.message || "Login failed. Please try again.";
-          set({ loading: false, isLoading: false, error: message });
-          return { success: false, error: message };
-        }
-      },
-
-      // Logout
-      logout: async () => {
-        set({ loading: true, isLoading: true });
-
-        try {
-          await api.post("/auth/logout");
-        } catch (error) {
-          console.error("Logout error:", error);
-        } finally {
-          clearTokens();
-
-          // Stop token refresh timer
-          stopTokenRefreshTimer();
-
-          if (typeof window !== "undefined") {
-            document.cookie =
-              "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-            document.cookie =
-              "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-            document.cookie =
-              "userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-            localStorage.removeItem("user");
-          }
-
-          set({
-            user: null,
-            isInitialized: true,
-            error: null,
-            loading: false,
-            isLoading: false,
-          });
-
-          if (typeof window !== "undefined") {
-            window.location.href = "/login";
-          }
-        }
-      },
-
-      // Check and refresh token
-      checkAndRefreshToken: async () => {
-        const token = getAccessToken();
-        const refreshToken = getRefreshToken();
-
-        if (!token && !refreshToken) {
-          return false;
-        }
-
-        return true;
-      },
-
-      // Forgot password
-      forgotPassword: async (email) => {
-        set({ loading: true, isLoading: true, error: null });
-
-        try {
-          const response = await api.post("/auth/forgot-password", { email });
-          set({ loading: false, isLoading: false });
-          return {
-            success: true,
-            message: response.data?.message || "Reset email sent",
-          };
-        } catch (error) {
-          const message =
-            error.response?.data?.message || "Failed to send reset email";
-          set({ loading: false, isLoading: false, error: message });
-          return { success: false, error: message };
-        }
-      },
-
-      // Reset password
-      resetPassword: async (token, newPassword) => {
-        set({ loading: true, isLoading: true, error: null });
-
-        try {
-          const response = await api.post("/auth/reset-password", {
-            token,
-            newPassword,
-          });
-          set({ loading: false, isLoading: false });
-          return {
-            success: true,
-            message: response.data?.message || "Password reset successfully",
-          };
-        } catch (error) {
-          const message =
-            error.response?.data?.message || "Password reset failed";
-          set({ loading: false, isLoading: false, error: message });
-          return { success: false, error: message };
-        }
-      },
-
-      // Change password
-      changePassword: async (oldPassword, newPassword) => {
-        set({ loading: true, isLoading: true, error: null });
-
-        try {
-          const response = await api.post("/auth/change-password", {
-            oldPassword,
-            newPassword,
-          });
-          set({ loading: false, isLoading: false });
-          return {
-            success: true,
-            message: response.data?.message || "Password changed successfully",
-          };
-        } catch (error) {
-          const message =
-            error.response?.data?.message || "Password change failed";
-          set({ loading: false, isLoading: false, error: message });
-          return { success: false, error: message };
-        }
-      },
-
-      // Update user
-      updateUser: (updatedUserData) => {
-        set((state) => ({
-          user: state.user ? { ...state.user, ...updatedUserData } : null,
-        }));
-        const currentUser = get().user;
-        if (currentUser) {
-          const filteredUser = filterUserData(currentUser);
-          if (typeof window !== "undefined") {
-            localStorage.setItem("user", JSON.stringify(filteredUser));
-          }
-        }
-      },
-
-      // Update user partial
-      updateUserPartial: (updates) => {
-        set((state) => ({
-          user: state.user ? { ...state.user, ...updates } : null,
-        }));
-        const currentUser = get().user;
-        if (currentUser) {
-          const filteredUser = filterUserData(currentUser);
-          if (typeof window !== "undefined") {
-            localStorage.setItem("user", JSON.stringify(filteredUser));
-          }
-        }
-      },
-
-      // Check if authenticated
-      isAuthenticated: () => {
-        const token = getAccessToken();
-        const user = get().user;
-        if (!token || !user) return false;
-
-        try {
-          const payload = JSON.parse(atob(token.split(".")[1]));
-          return payload.exp * 1000 > Date.now();
-        } catch {
-          return false;
-        }
-      },
-
-      // Check if admin
-      isAdmin: () => get().user?.role === "admin",
-
-      // Get user
-      getUser: () => get().user,
-    }),
-    {
-      name: "auth-storage",
-      getStorage: () => {
-        if (typeof window !== "undefined") {
-          return localStorage;
-        }
-        return {
-          getItem: () => null,
-          setItem: () => {},
-          removeItem: () => {},
-        };
-      },
-      partialize: (state) => ({
-        user: state.user ? filterUserData(state.user) : null,
-        isInitialized: state.isInitialized,
-      }),
+const syncCookies = (user, accessToken, refreshToken) => {
+    if (typeof window === "undefined") return;
+    
+    if (accessToken) {
+        document.cookie = `accessToken=${accessToken}; path=/; max-age=900; SameSite=Lax`;
     }
-  )
+    if (refreshToken) {
+        document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
+    }
+    if (user?.role) {
+        document.cookie = `userRole=${user.role}; path=/; max-age=604800; SameSite=Lax`;
+    }
+};
+
+const clearCookies = () => {
+    if (typeof window === "undefined") return;
+    document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    document.cookie = "userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+};
+
+const saveUserToStorage = (user) => {
+    if (typeof window !== "undefined" && user) {
+        localStorage.setItem("user", JSON.stringify(user));
+    }
+};
+
+// ============================================================
+// AUTH STORE
+// ============================================================
+
+export const useAuthStore = create(
+    persist(
+        (set, get) => ({
+            // ============================================================
+            // STATE
+            // ============================================================
+            
+            user: null,
+            loading: false,
+            isLoading: false,
+            isInitialized: false,
+            error: null,
+            isGuestClaimed: false,
+
+            // ============================================================
+            // DIRECT SETTERS (for OAuth callback)
+            // ============================================================
+            
+            setUser: (userData) => {
+                const filteredUser = filterUserData(userData);
+                set({ user: filteredUser });
+                saveUserToStorage(filteredUser);
+            },
+
+            setIsInitialized: (status) => {
+                set({ isInitialized: status });
+            },
+
+            setLoading: (loadingStatus) => {
+                set({ loading: loadingStatus, isLoading: loadingStatus });
+            },
+
+            // ============================================================
+            // INITIALIZATION
+            // ============================================================
+            
+            initializeAuth: async () => {
+                const state = get();
+
+                // ✅ Already initialized
+                if (state.isInitialized) {
+                    console.log("✅ Auth already initialized");
+                    return;
+                }
+
+                // ✅ Already loading
+                if (state.loading || state.isLoading) {
+                    console.log("⏳ Auth already loading");
+                    return;
+                }
+
+                set({ loading: true, isLoading: true });
+
+                try {
+                    const storedUser = getUser();
+                    const storedToken = getAccessToken();
+                    const storedRefreshToken = getRefreshToken();
+
+                    // ✅ No tokens - fresh session
+                    if (!storedToken && !storedRefreshToken) {
+                        set({
+                            user: null,
+                            isInitialized: true,
+                            loading: false,
+                            isLoading: false,
+                            error: null,
+                        });
+                        return;
+                    }
+
+                    // ✅ Have stored user + tokens - restore session
+                    if (storedUser && (storedToken || storedRefreshToken)) {
+                        const filteredUser = filterUserData(storedUser);
+                        
+                        // Sync cookies
+                        syncCookies(filteredUser, storedToken, storedRefreshToken);
+                        
+                        // Start refresh timer
+                        startTokenRefreshTimer();
+
+                        set({
+                            user: filteredUser,
+                            isInitialized: true,
+                            loading: false,
+                            isLoading: false,
+                            error: null,
+                        });
+
+                        // ✅ Background verification (non-blocking)
+                        try {
+                            const response = await authService.getCurrentUser();
+                            const freshUser = response?.data;
+                            if (freshUser) {
+                                const filteredFreshUser = filterUserData(freshUser);
+                                set({ user: filteredFreshUser });
+                                saveUserToStorage(filteredFreshUser);
+                            }
+                        } catch (error) {
+                            // Silent fail - user stays logged in
+                            console.debug("Background verification failed, user stays logged in");
+                        }
+
+                        return;
+                    }
+
+                    // ✅ Have token but no user - fetch user
+                    if ((storedToken || storedRefreshToken) && !storedUser) {
+                        try {
+                            const response = await authService.getCurrentUser();
+                            const user = response?.data;
+
+                            if (user) {
+                                const filteredUser = filterUserData(user);
+                                set({ user: filteredUser });
+                                saveUserToStorage(filteredUser);
+                                syncCookies(filteredUser, storedToken, storedRefreshToken);
+                                startTokenRefreshTimer();
+                            } else {
+                                // No user found - clear invalid session
+                                clearTokens();
+                                set({ user: null });
+                            }
+                        } catch (error) {
+                            console.warn("Failed to fetch user during init:", error.message);
+                            clearTokens();
+                            set({ user: null });
+                        }
+                    }
+
+                    set({
+                        isInitialized: true,
+                        loading: false,
+                        isLoading: false,
+                        error: null,
+                    });
+                } catch (error) {
+                    console.error("❌ Auth initialization error:", error);
+                    set({
+                        user: null,
+                        isInitialized: true,
+                        loading: false,
+                        isLoading: false,
+                        error: error.message,
+                    });
+                }
+            },
+
+            // ============================================================
+            // GUEST RESOURCE CLAIM
+            // ============================================================
+            
+            claimGuestResourcesIfAvailable: async () => {
+                try {
+                    const checkResponse = await authService.checkGuestResources();
+                    const hasResources = checkResponse?.data?.hasResources || false;
+
+                    if (hasResources) {
+                        const claimResponse = await authService.claimGuestResources();
+                        const { ordersClaimed, tagsClaimed } = claimResponse?.data || {};
+
+                        set({ isGuestClaimed: true });
+
+                        return {
+                            claimed: true,
+                            orders: ordersClaimed || 0,
+                            tags: tagsClaimed || 0,
+                        };
+                    }
+
+                    return { claimed: false };
+                } catch (error) {
+                    console.warn("Guest claim check failed:", error.message);
+                    return { claimed: false, error: error.message };
+                }
+            },
+
+            // ============================================================
+            // AUTH METHODS
+            // ============================================================
+            
+            register: async (payload) => {
+                set({ loading: true, isLoading: true, error: null });
+
+                try {
+                    const response = await authService.register(payload);
+                    const { user, accessToken, refreshToken } = response?.data || {};
+
+                    if (!accessToken || !user) {
+                        set({ loading: false, isLoading: false, error: "Invalid server response" });
+                        return { success: false, error: "Invalid server response" };
+                    }
+
+                    // Save tokens
+                    setTokens(accessToken, refreshToken);
+
+                    // Save user
+                    const filteredUser = filterUserData(user);
+                    setUserStorage(user);
+                    set({ user: filteredUser });
+
+                    // Sync cookies
+                    syncCookies(filteredUser, accessToken, refreshToken);
+                    startTokenRefreshTimer();
+
+                    set({
+                        loading: false,
+                        isLoading: false,
+                        error: null,
+                        isInitialized: true,
+                    });
+
+                    // Claim guest resources
+                    const claimResult = await get().claimGuestResourcesIfAvailable();
+
+                    return {
+                        success: true,
+                        user: filteredUser,
+                        guestClaimed: claimResult?.claimed || false,
+                    };
+                } catch (error) {
+                    const message = error.response?.data?.message || "Registration failed";
+                    set({ loading: false, isLoading: false, error: message });
+                    return { success: false, error: message };
+                }
+            },
+
+            login: async (payload) => {
+                set({ loading: true, isLoading: true, error: null });
+
+                try {
+                    const response = await authService.login(payload);
+
+                    if (response?.success !== true) {
+                        const errorMsg = response?.message || "Login failed";
+                        set({ loading: false, isLoading: false, error: errorMsg });
+                        return { success: false, error: errorMsg };
+                    }
+
+                    const { user, accessToken, refreshToken } = response?.data || {};
+
+                    if (!accessToken || !user) {
+                        set({ loading: false, isLoading: false, error: "Invalid server response" });
+                        return { success: false, error: "Invalid server response" };
+                    }
+
+                    // Save tokens
+                    setTokens(accessToken, refreshToken);
+
+                    // Save user
+                    const filteredUser = filterUserData(user);
+                    setUserStorage(user);
+                    set({ user: filteredUser });
+
+                    // Sync cookies
+                    syncCookies(filteredUser, accessToken, refreshToken);
+                    startTokenRefreshTimer();
+
+                    set({
+                        loading: false,
+                        isLoading: false,
+                        error: null,
+                        isInitialized: true,
+                    });
+
+                    // Claim guest resources
+                    const claimResult = await get().claimGuestResourcesIfAvailable();
+
+                    return {
+                        success: true,
+                        user: filteredUser,
+                        guestClaimed: claimResult?.claimed || false,
+                        guestOrders: claimResult?.orders || 0,
+                        guestTags: claimResult?.tags || 0,
+                    };
+                } catch (error) {
+                    console.error("Login error:", error);
+                    const message = error.response?.data?.message || "Login failed. Please try again.";
+                    set({ loading: false, isLoading: false, error: message });
+                    return { success: false, error: message };
+                }
+            },
+
+            logout: async () => {
+                set({ loading: true, isLoading: true });
+
+                try {
+                    await authService.logout();
+                } catch (error) {
+                    console.warn("Logout API error:", error.message);
+                } finally {
+                    // Clear all tokens and user data
+                    clearTokens();
+                    stopTokenRefreshTimer();
+                    clearCookies();
+                    localStorage.removeItem("user");
+
+                    set({
+                        user: null,
+                        isInitialized: true,
+                        error: null,
+                        loading: false,
+                        isLoading: false,
+                        isGuestClaimed: false,
+                    });
+
+                    if (typeof window !== "undefined") {
+                        window.location.href = "/login";
+                    }
+                }
+            },
+
+            // ============================================================
+            // PROFILE METHODS
+            // ============================================================
+            
+            fetchMe: async () => {
+                try {
+                    const response = await authService.getCurrentUser();
+                    const user = response?.data ?? null;
+
+                    if (user) {
+                        const filteredUser = filterUserData(user);
+                        set({ user: filteredUser, error: null });
+                        saveUserToStorage(filteredUser);
+                    }
+
+                    return user;
+                } catch (error) {
+                    set({ user: null, error: null });
+                    return null;
+                }
+            },
+
+            updateUser: (updatedUserData) => {
+                set((state) => ({
+                    user: state.user ? { ...state.user, ...updatedUserData } : null,
+                }));
+                const currentUser = get().user;
+                if (currentUser) {
+                    saveUserToStorage(currentUser);
+                }
+            },
+
+            updateUserPartial: (updates) => {
+                set((state) => ({
+                    user: state.user ? { ...state.user, ...updates } : null,
+                }));
+                const currentUser = get().user;
+                if (currentUser) {
+                    saveUserToStorage(currentUser);
+                }
+            },
+
+            // ============================================================
+            // PASSWORD METHODS
+            // ============================================================
+            
+            forgotPassword: async (email) => {
+                set({ loading: true, isLoading: true, error: null });
+
+                try {
+                    const response = await authService.forgotPassword({ email });
+                    set({ loading: false, isLoading: false });
+                    return {
+                        success: true,
+                        message: response?.message || "Reset email sent",
+                    };
+                } catch (error) {
+                    const message = error.response?.data?.message || "Failed to send reset email";
+                    set({ loading: false, isLoading: false, error: message });
+                    return { success: false, error: message };
+                }
+            },
+
+            resetPassword: async (token, newPassword) => {
+                set({ loading: true, isLoading: true, error: null });
+
+                try {
+                    const response = await authService.resetPassword({ token, newPassword });
+                    set({ loading: false, isLoading: false });
+                    return {
+                        success: true,
+                        message: response?.message || "Password reset successfully",
+                    };
+                } catch (error) {
+                    const message = error.response?.data?.message || "Password reset failed";
+                    set({ loading: false, isLoading: false, error: message });
+                    return { success: false, error: message };
+                }
+            },
+
+            changePassword: async (oldPassword, newPassword) => {
+                set({ loading: true, isLoading: true, error: null });
+
+                try {
+                    const response = await authService.changePassword({ oldPassword, newPassword });
+                    set({ loading: false, isLoading: false });
+                    return {
+                        success: true,
+                        message: response?.message || "Password changed successfully",
+                    };
+                } catch (error) {
+                    const message = error.response?.data?.message || "Password change failed";
+                    set({ loading: false, isLoading: false, error: message });
+                    return { success: false, error: message };
+                }
+            },
+
+            // ============================================================
+            // HELPERS / GETTERS
+            // ============================================================
+            
+            isAuthenticated: () => {
+                const token = getAccessToken();
+                const user = get().user;
+                if (!token || !user) return false;
+                return !isTokenExpired(token);
+            },
+
+            isAdmin: () => {
+                return get().user?.role === "admin";
+            },
+
+            getUser: () => {
+                return get().user;
+            },
+
+            getToken: () => {
+                return getAccessToken();
+            },
+
+            checkAndRefreshToken: async () => {
+                const token = getAccessToken();
+                const refreshToken = getRefreshToken();
+                return !!(token || refreshToken);
+            },
+
+            reset: () => {
+                clearTokens();
+                stopTokenRefreshTimer();
+                clearCookies();
+                localStorage.removeItem("user");
+                set({
+                    user: null,
+                    loading: false,
+                    isLoading: false,
+                    isInitialized: false,
+                    error: null,
+                    isGuestClaimed: false,
+                });
+            },
+        }),
+        {
+            name: "auth-storage",
+            getStorage: () => {
+                if (typeof window !== "undefined") {
+                    return localStorage;
+                }
+                return {
+                    getItem: () => null,
+                    setItem: () => {},
+                    removeItem: () => {},
+                };
+            },
+            partialize: (state) => ({
+                user: state.user ? filterUserData(state.user) : null,
+                isInitialized: state.isInitialized,
+                isGuestClaimed: state.isGuestClaimed,
+            }),
+        }
+    )
 );

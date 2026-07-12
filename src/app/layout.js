@@ -1,5 +1,4 @@
 import AuthProvider from "@/components/auth/AuthProvider";
-import Providers from "@/providers/Providers";
 
 import "./globals.css";
 
@@ -9,6 +8,7 @@ import {
   Inter,
   Playfair_Display,
 } from "next/font/google";
+import { Providers } from "@/providers/Providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
