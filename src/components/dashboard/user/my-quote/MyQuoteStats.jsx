@@ -1,35 +1,40 @@
+"use client";
+
 import { Quote, Heart, Bookmark, Calendar } from "lucide-react";
 
-export default function MyQuoteStats({ stats }) {
+export default function MyQuoteStats({
+  favoriteCount = 0,
+  currentCategory = "Random",
+}) {
   const statConfig = [
     {
-      label: "Total Quotes",
-      value: stats?.total ?? 0,
-      sub: "All time",
+      label: "Current Quote",
+      value: 1,
+      sub: "Showing now",
       icon: Quote,
       color: "text-violet-400",
       bg: "bg-violet-500/10",
     },
     {
       label: "Favorites",
-      value: stats?.favorites ?? 0,
-      sub: "Quotes",
+      value: favoriteCount,
+      sub: "Saved quotes",
       icon: Heart,
       color: "text-rose-400",
       bg: "bg-rose-500/10",
     },
     {
-      label: "Categories",
-      value: stats?.categories ?? 0,
-      sub: "Active",
+      label: "Category",
+      value: currentCategory,
+      sub: "Selected",
       icon: Bookmark,
       color: "text-emerald-400",
       bg: "bg-emerald-500/10",
     },
     {
-      label: "This Month",
-      value: stats?.thisMonth ?? 0,
-      sub: "New quotes",
+      label: "Today's Quote",
+      value: "✓",
+      sub: "Available",
       icon: Calendar,
       color: "text-blue-400",
       bg: "bg-blue-500/10",

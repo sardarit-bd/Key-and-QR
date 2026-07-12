@@ -1,6 +1,6 @@
 'use client';
 
-export default function WelcomeSection({ userName = "Dd" }) {
+export default function WelcomeSection({ userName = "Sardar IT" }) {
   return (
     <section className="flex flex-col justify-center w-full h-full">
       <div className="max-w-xl">

@@ -72,7 +72,7 @@ export default function DashboardHome() {
       
       {/* Row 1: Welcome & Daily Quote */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6 min-h-[180px] sm:min-h-[200px] lg:min-h-[220px]">
-        <WelcomeSection userName="Dd" />
+        <WelcomeSection userName="Sardar IT" />
         <DailyQuoteBanner />
       </div>
 

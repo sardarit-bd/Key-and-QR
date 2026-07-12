@@ -1,36 +1,39 @@
 import api from "@/lib/api";
 
-export const fetchQuotes = async (filters) => {
-  const { data } = await api.get("/quotes", {
+// Get random quote (Public API)
+export const fetchQuote = async (category = "random") => {
+  const { data } = await api.get("/quotes/random", {
     params: {
-      page: filters.page,
-      limit: 12,
-      search: filters.search,
-      category:
-        filters.category !== "all" ? filters.category : undefined,
-      sort: filters.sort,
+      category,
     },
   });
 
-  return data;
+  return data?.data || data;
 };
 
-export const fetchStats = async () => {
-  const { data } = await api.get("/quotes/stats");
-  return data;
+// Check if quote is favorite (Login required)
+export const checkFavoriteApi = async (quoteId) => {
+  const { data } = await api.get("/favorites/check", {
+    params: {
+      quoteId,
+    },
+  });
+
+  return data?.data || data;
 };
 
-export const fetchCategories = async () => {
-  const { data } = await api.get("/quotes/categories");
-  return data;
+// Add quote to favorites (Login required)
+export const addFavoriteApi = async (quoteId) => {
+  const { data } = await api.post("/favorites", {
+    quoteId,
+  });
+
+  return data?.data || data;
 };
 
-export const toggleFavoriteApi = async (id) => {
-  const { data } = await api.post(`/quotes/${id}/favorite`);
-  return data;
-};
+// Remove favorite (Login required)
+export const removeFavoriteApi = async (favoriteId) => {
+  const { data } = await api.delete(`/favorites/${favoriteId}`);
 
-export const deleteQuoteApi = async (id) => {
-  const { data } = await api.delete(`/quotes/${id}`);
-  return data;
+  return data?.data || data;
 };
