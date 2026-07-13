@@ -5,10 +5,6 @@ import {
     isProtectedRoute,
     isAdminRoute,
     isApiRoute,
-    publicRoutePatterns,
-    guestOnlyPatterns,
-    protectedPatterns,
-    adminPatterns,
 } from "@/config/routes";
 
 /**
@@ -47,10 +43,8 @@ export function middleware(request) {
     const userRole = request.cookies.get("userRole")?.value;
     const { pathname } = request.nextUrl;
 
-    // ============================================================
-    // PUBLIC ROUTES - Always accessible
-    // ============================================================
-    
+    // ************* PUBLIC ROUTES - Always accessible *************
+
     if (isPublicRoute(pathname)) {
         // Guest-only routes redirect authenticated users
         if (isGuestOnlyRoute(pathname)) {
@@ -63,18 +57,14 @@ export function middleware(request) {
         return NextResponse.next();
     }
 
-    // ============================================================
-    // API ROUTES - Pass through (backend handles auth)
-    // ============================================================
-    
+    // ************* API ROUTES - Pass through (backend handles auth) *************
+
     if (isApiRoute(pathname)) {
         return NextResponse.next();
     }
 
-    // ============================================================
-    // PROTECTED ROUTES - Require authentication
-    // ============================================================
-    
+    // ************* PROTECTED ROUTES - Require authentication *************
+
     if (isProtectedRoute(pathname)) {
         const hasAccessToken = Boolean(accessToken);
         const hasRefreshToken = Boolean(refreshToken);
@@ -108,10 +98,8 @@ export function middleware(request) {
         return NextResponse.redirect(url);
     }
 
-    // ============================================================
-    // DEFAULT - Allow all other routes
-    // ============================================================
-    
+    // ************* DEFAULT - Allow all other routes *************
+
     return NextResponse.next();
 }
 
@@ -141,5 +129,7 @@ export const config = {
         "/privacy",
         "/terms",
         "/shipping",
+        "/success",
+        "/cancel",
     ],
 };

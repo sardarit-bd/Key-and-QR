@@ -275,6 +275,7 @@ export default function Header() {
             <Link
               href="/cart"
               className="relative mt-0.5 text-gray-600 hover:text-gray-900 transition-colors duration-300"
+              aria-label="Cart"
             >
               <ShoppingBag size={25} strokeWidth={1.5} />
               {cartCount > 0 && (
@@ -470,6 +471,7 @@ export default function Header() {
             <Link
               href="/cart"
               className="relative p-2 -mr-2 text-gray-700 hover:text-gray-900 transition-colors"
+              aria-label="Cart"
             >
               <ShoppingBag size={22} strokeWidth={1.5} />
               {cartCount > 0 && (

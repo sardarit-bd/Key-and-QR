@@ -4,7 +4,7 @@
 // import { useDebounce } from "@/hooks/useDebounce";
 import { ProductImage } from "@/components/ui/ProductImage";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import Loader from "@/shared/Loader";
 import { useCategories } from "@/hooks/dynamic-categories/useCategories";
 import { useProducts } from "@/hooks/product-service/useProducts";
@@ -351,7 +351,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
             </button>
 
             {pageNumbers.map((page, index) => (
-                <React.Fragment key={index}>
+                <Fragment key={index}>
                     {page === '...' ? (
                         <span className="w-8 h-8 flex items-center justify-center text-gray-500">
                             ...
@@ -370,7 +370,7 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
                             {page}
                         </button>
                     )}
-                </React.Fragment>
+                </Fragment>
             ))}
 
             <button

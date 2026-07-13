@@ -1,19 +1,41 @@
+/**
+ * Centralized Route Configuration
+ * All routes in one place for maintainability
+ */
+
 // ============================================================
 // PUBLIC ROUTES - No authentication required
 // ============================================================
 
 export const publicRoutePatterns = [
+    // Main pages
     "/",
     "/shop",
     "/shop/:path*",
     "/how-it-works",
     "/inspiration",
+
+    // Auth pages
     "/login",
     "/signup",
     "/forgot-password",
     "/reset-password",
     "/callback",
+
+    // QR scan
     "/t/:path*",
+
+    // CHECKOUT FLOW - Guest accessible
+    "/cart",
+    "/checkout",
+    "/checkout/:path*",
+    "/payment/:path*",
+    "/payment/success",
+    "/payment/cancel",
+    "/success",
+    "/cancel",
+
+    // Static pages
     "/about",
     "/contact",
     "/faq",
@@ -36,15 +58,35 @@ export const guestOnlyPatterns = [
 // ============================================================
 
 export const protectedPatterns = [
+    // Dashboard
     "/dashboard",
     "/dashboard/:path*",
+
+    // Profile
+    "/profile",
     "/profile/:path*",
-    "/checkout",
-    "/checkout/:path*",
-    "/cart",
-    "/payment/:path*",
-    "/subscription/:path*",
+
+    // Favorites (authenticated only)
+    "/favorites",
+    "/favorites/:path*",
+
+    // Orders (authenticated only)
+    "/orders",
     "/orders/:path*",
+
+    // Subscription management (authenticated only)
+    "/subscription",
+    "/subscription/:path*",
+
+    // User quotes
+    "/my-quotes",
+    "/my-quotes/:path*",
+    "/saved-quotes",
+    "/saved-quotes/:path*",
+
+    // User library
+    "/library",
+    "/library/:path*",
 ];
 
 // ============================================================
@@ -54,6 +96,8 @@ export const protectedPatterns = [
 export const adminPatterns = [
     "/dashboard/admin",
     "/dashboard/admin/:path*",
+    "/admin",
+    "/admin/:path*",
 ];
 
 // ============================================================

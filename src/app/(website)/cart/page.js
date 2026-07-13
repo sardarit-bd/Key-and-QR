@@ -1,5 +1,5 @@
+import Cart from "@/components/cart/Cart";
 import Banner from "@/shared/Banner";
-import Cart from "@/components/Cart";
 export default function page() {
     return (
         <>

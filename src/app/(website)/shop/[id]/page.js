@@ -8,7 +8,7 @@ export default async function ProductDetailsPage({ params }) {
     const { id } = await params;
     const queryClient = new QueryClient();
 
-    // ✅ Prefetch product details on the server
+    // Prefetch product details on the server
     await queryClient.prefetchQuery({
         queryKey: productKeys.detail(id),
         queryFn: () => productService.getProductById(id),
