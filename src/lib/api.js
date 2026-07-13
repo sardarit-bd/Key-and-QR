@@ -1,12 +1,16 @@
 import axios from "axios";
-import { 
-    getAccessToken, 
-    getRefreshToken, 
-    setTokens, 
-    clearTokens, 
-    getUser, 
+import {
+    getAccessToken,
+    getRefreshToken,
+    setTokens,
+    clearTokens,
+    getUser,
     setUser,
     isTokenExpired,
+    getRefreshState,
+    setRefreshState,
+    getRefreshQueue,
+    setRefreshQueue,
 } from "./auth-utils";
 
 // ============================================================
@@ -17,64 +21,11 @@ const getBaseURL = () => {
     if (typeof window !== "undefined") {
         const hostname = window.location.hostname;
         if (hostname === "localhost" || hostname === "127.0.0.1") {
-            return process.env.NEXT_PUBLIC_API_URL;
+            return process.env.NEXT_PUBLIC_API_URL || "http://localhost:5001/api/v1";
         }
-        return process.env.NEXT_PUBLIC_API_URL;
+        return process.env.NEXT_PUBLIC_API_URL || "https://your-backend.vercel.app/api/v1";
     }
-    return process.env.NEXT_PUBLIC_API_URL;
-};
-
-// ============================================================
-// COOKIE UTILITIES
-// ============================================================
-
-const getCookieValue = (name) => {
-    if (typeof document === "undefined") return null;
-    const match = document.cookie
-        .split("; ")
-        .find((row) => row.startsWith(`${name}=`));
-    return match ? decodeURIComponent(match.split("=")[1]) : null;
-};
-
-const setCookie = (name, value, maxAge, secure = false) => {
-    if (typeof document === "undefined" || !value) return;
-    const sameSite = secure ? "None" : "Lax";
-    document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=${sameSite}${secure ? "; Secure" : ""}`;
-};
-
-const clearCookie = (name) => {
-    if (typeof document === "undefined") return;
-    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
-};
-
-// ============================================================
-// TOKEN REFRESH MANAGEMENT
-// ============================================================
-
-let isRefreshing = false;
-let failedQueue = [];
-let refreshInterval = null;
-let isLoggingOut = false;
-
-const processQueue = (error, token = null) => {
-    failedQueue.forEach((prom) => {
-        if (error) {
-            prom.reject(error);
-        } else {
-            prom.resolve(token);
-        }
-    });
-    failedQueue = [];
-};
-
-const forceLogout = () => {
-    if (isLoggingOut) return;
-    isLoggingOut = true;
-    clearTokens();
-    stopTokenRefreshTimer();
-    if (typeof window !== "undefined") {
-        window.location.replace("/login?session=expired");
-    }
+    return process.env.NEXT_PUBLIC_API_URL || "https://your-backend.vercel.app/api/v1";
 };
 
 // ============================================================
@@ -105,20 +56,17 @@ api.interceptors.request.use(
 );
 
 // ============================================================
-// RESPONSE INTERCEPTOR
+// RESPONSE INTERCEPTOR - Centralized Token Handling
 // ============================================================
 
 api.interceptors.response.use(
     (response) => {
-        // Handle token updates from responses
+        // Centralized token update from responses
         if (response.data?.data?.accessToken) {
             setTokens(
                 response.data.data.accessToken,
                 response.data.data.refreshToken || getRefreshToken()
             );
-            if (response.data?.data?.user?.role) {
-                setCookie("userRole", response.data.data.user.role, 604800, false);
-            }
         }
         return response;
     },
@@ -165,10 +113,12 @@ api.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        // Rate limit for concurrent refresh requests
-        if (isRefreshing) {
+        // Queue concurrent refresh requests
+        const refreshState = getRefreshState();
+        if (refreshState.isRefreshing) {
             return new Promise((resolve, reject) => {
-                failedQueue.push({
+                const queue = getRefreshQueue();
+                queue.push({
                     resolve: (token) => {
                         originalRequest.headers.Authorization = `Bearer ${token}`;
                         originalRequest._retry = true;
@@ -176,11 +126,12 @@ api.interceptors.response.use(
                     },
                     reject,
                 });
+                setRefreshQueue(queue);
             });
         }
 
         originalRequest._retry = true;
-        isRefreshing = true;
+        setRefreshState({ isRefreshing: true, queue: getRefreshQueue() });
 
         try {
             const refreshToken = getRefreshToken();
@@ -205,45 +156,110 @@ api.interceptors.response.use(
                 throw new Error("No new access token");
             }
 
+            // Single token write
             setTokens(newAccessToken, newRefreshToken);
-            processQueue(null, newAccessToken);
+
+            // Process queued requests
+            const queue = getRefreshQueue();
+            queue.forEach((prom) => prom.resolve(newAccessToken));
+            setRefreshQueue([]);
 
             originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
             return api(originalRequest);
         } catch (refreshError) {
-            processQueue(refreshError, null);
+            // Process queue with error
+            const queue = getRefreshQueue();
+            queue.forEach((prom) => prom.reject(refreshError));
+            setRefreshQueue([]);
+
             const hasRefreshToken = getRefreshToken();
             if (hasRefreshToken) {
                 forceLogout();
             }
             return Promise.reject(refreshError);
         } finally {
-            isRefreshing = false;
+            setRefreshState({ isRefreshing: false, queue: [] });
         }
     }
 );
 
 // ============================================================
+// FORCE LOGOUT
+// ============================================================
+
+let isLoggingOut = false;
+
+const forceLogout = () => {
+    if (isLoggingOut) return;
+    isLoggingOut = true;
+
+    stopTokenRefreshTimer();
+
+    clearTokens();
+
+    if (typeof window !== "undefined") {
+        // Dispatch event for store reset
+        window.dispatchEvent(new CustomEvent('auth:force-logout'));
+
+        window.location.replace("/login?session=expired");
+    }
+
+    setTimeout(() => {
+        isLoggingOut = false;
+    }, 1000);
+};
+
+// ============================================================
 // TOKEN REFRESH TIMER
 // ============================================================
 
+let refreshInterval = null;
+let refreshTimerActive = false;
+
 export const startTokenRefreshTimer = () => {
-    if (refreshInterval) clearInterval(refreshInterval);
-    
+    if (refreshTimerActive && refreshInterval) {
+        return;
+    }
+
+    if (refreshInterval) {
+        clearInterval(refreshInterval);
+        refreshInterval = null;
+    }
+
+    refreshTimerActive = true;
+
     refreshInterval = setInterval(async () => {
+        if (!refreshTimerActive) {
+            clearInterval(refreshInterval);
+            refreshInterval = null;
+            return;
+        }
+
         const token = getAccessToken();
-        if (!token || isRefreshing) return;
+        const refreshState = getRefreshState();
+
+        if (!token || refreshState.isRefreshing) {
+            return;
+        }
 
         try {
             const payload = JSON.parse(atob(token.split(".")[1]));
             const expiresIn = payload.exp * 1000 - Date.now();
 
-            // Refresh when less than 1 minute remains
-            if (expiresIn < 60000) {
+            if (expiresIn < 120000) {
                 const refreshToken = getRefreshToken();
-                if (!refreshToken) return;
+                if (!refreshToken) {
+                    // No refresh token, schedule logout
+                    if (expiresIn < 30000) {
+                        refreshTimerActive = false;
+                        clearInterval(refreshInterval);
+                        refreshInterval = null;
+                        forceLogout();
+                    }
+                    return;
+                }
 
-                await api.post(
+                const response = await api.post(
                     "/auth/refresh-token",
                     {},
                     {
@@ -252,22 +268,45 @@ export const startTokenRefreshTimer = () => {
                         },
                     }
                 );
+
+                const newAccessToken = response.data?.data?.accessToken;
+                if (newAccessToken) {
+                    setTokens(newAccessToken, refreshToken);
+                }
             }
         } catch (error) {
-            console.error("Token refresh timer error:", error);
+            console.warn("Token refresh timer error:", error.message);
+
+            if (error.response?.status === 401) {
+                refreshTimerActive = false;
+                clearInterval(refreshInterval);
+                refreshInterval = null;
+                forceLogout();
+            }
         }
     }, 30000); // Check every 30 seconds
 };
 
 export const stopTokenRefreshTimer = () => {
+    refreshTimerActive = false;
     if (refreshInterval) {
         clearInterval(refreshInterval);
         refreshInterval = null;
     }
 };
 
+if (typeof window !== "undefined") {
+    window.addEventListener('beforeunload', () => {
+        stopTokenRefreshTimer();
+    });
+
+    window.addEventListener('auth:force-logout', () => {
+        stopTokenRefreshTimer();
+    });
+}
+
 // ============================================================
-// RE-EXPORT AUTH UTILITIES (for convenience)
+// EXPORTS (Backward Compatibility)
 // ============================================================
 
 export {
@@ -278,6 +317,8 @@ export {
     getUser,
     setUser,
     isTokenExpired,
+    startTokenRefreshTimer,
+    stopTokenRefreshTimer,
 };
 
 export default api;

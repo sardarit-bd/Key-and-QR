@@ -4,16 +4,16 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import authService from "@/services/auth.service";
 import {
+    clearTokens,
     getAccessToken,
     getRefreshToken,
-    setTokens,
-    clearTokens,
     getUser,
-    setUser as setUserStorage,
-    startTokenRefreshTimer,
-    stopTokenRefreshTimer,
     isTokenExpired,
-} from "@/lib/api";
+    setTokens,
+    setUser as setUserStorage,
+    updateUser as updateUserStorage,
+} from "@/lib/auth-utils";
+import { startTokenRefreshTimer, stopTokenRefreshTimer } from "@/lib/api";
 
 // ============================================================
 // INTERNAL HELPERS
@@ -35,30 +35,75 @@ const filterUserData = (user) => {
     };
 };
 
-const syncCookies = (user, accessToken, refreshToken) => {
-    if (typeof window === "undefined") return;
-    
-    if (accessToken) {
-        document.cookie = `accessToken=${accessToken}; path=/; max-age=900; SameSite=Lax`;
-    }
-    if (refreshToken) {
-        document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
-    }
-    if (user?.role) {
-        document.cookie = `userRole=${user.role}; path=/; max-age=604800; SameSite=Lax`;
+// ============================================================
+// INTERNAL FUNCTIONS (No class methods, no `this`)
+// ============================================================
+
+/**
+ * ✅ Internal function for background verification
+ * Called from initializeAuth
+ */
+const verifySessionInBackground = async (set, get) => {
+    try {
+        const response = await authService.getCurrentUser();
+        const freshUser = response?.data;
+        if (freshUser) {
+            const filteredFreshUser = filterUserData(freshUser);
+            set({ user: filteredFreshUser });
+            setUserStorage(filteredFreshUser);
+        }
+    } catch (error) {
+        // Silent fail - user stays logged in
+        console.debug("Background verification failed, user stays logged in");
     }
 };
 
-const clearCookies = () => {
-    if (typeof window === "undefined") return;
-    document.cookie = "accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    document.cookie = "refreshToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    document.cookie = "userRole=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+/**
+ * ✅ Internal function for fetching user during restore
+ */
+const fetchUserAndRestore = async (set) => {
+    try {
+        const response = await authService.getCurrentUser();
+        const user = response?.data;
+        if (user) {
+            const filteredUser = filterUserData(user);
+            set({ user: filteredUser });
+            setUserStorage(filteredUser);
+            return filteredUser;
+        }
+    } catch (error) {
+        console.warn("Failed to fetch user during init:", error.message);
+        clearTokens();
+        set({ user: null });
+    }
+    return null;
 };
 
-const saveUserToStorage = (user) => {
-    if (typeof window !== "undefined" && user) {
-        localStorage.setItem("user", JSON.stringify(user));
+/**
+ * ✅ Internal function for guest claim
+ */
+const claimGuestResourcesIfAvailable = async (set) => {
+    try {
+        const checkResponse = await authService.checkGuestResources();
+        const hasResources = checkResponse?.data?.hasResources || false;
+
+        if (hasResources) {
+            const claimResponse = await authService.claimGuestResources();
+            const { ordersClaimed, tagsClaimed } = claimResponse?.data || {};
+
+            set({ isGuestClaimed: true });
+
+            return {
+                claimed: true,
+                orders: ordersClaimed || 0,
+                tags: tagsClaimed || 0,
+            };
+        }
+
+        return { claimed: false };
+    } catch (error) {
+        console.warn("Guest claim check failed:", error.message);
+        return { claimed: false, error: error.message };
     }
 };
 
@@ -79,15 +124,18 @@ export const useAuthStore = create(
             isInitialized: false,
             error: null,
             isGuestClaimed: false,
+            _isInitializing: false,
 
             // ============================================================
-            // DIRECT SETTERS (for OAuth callback)
+            // DIRECT SETTERS
             // ============================================================
             
             setUser: (userData) => {
                 const filteredUser = filterUserData(userData);
                 set({ user: filteredUser });
-                saveUserToStorage(filteredUser);
+                if (filteredUser) {
+                    setUserStorage(filteredUser);
+                }
             },
 
             setIsInitialized: (status) => {
@@ -99,25 +147,24 @@ export const useAuthStore = create(
             },
 
             // ============================================================
-            // INITIALIZATION
+            // INITIALIZATION - Single execution path
             // ============================================================
             
             initializeAuth: async () => {
                 const state = get();
 
-                // ✅ Already initialized
+                // ✅ Prevent duplicate initialization
                 if (state.isInitialized) {
-                    console.log("✅ Auth already initialized");
                     return;
                 }
-
-                // ✅ Already loading
+                if (state._isInitializing) {
+                    return;
+                }
                 if (state.loading || state.isLoading) {
-                    console.log("⏳ Auth already loading");
                     return;
                 }
 
-                set({ loading: true, isLoading: true });
+                set({ _isInitializing: true, loading: true, isLoading: true });
 
                 try {
                     const storedUser = getUser();
@@ -132,6 +179,7 @@ export const useAuthStore = create(
                             loading: false,
                             isLoading: false,
                             error: null,
+                            _isInitializing: false,
                         });
                         return;
                     }
@@ -139,9 +187,6 @@ export const useAuthStore = create(
                     // ✅ Have stored user + tokens - restore session
                     if (storedUser && (storedToken || storedRefreshToken)) {
                         const filteredUser = filterUserData(storedUser);
-                        
-                        // Sync cookies
-                        syncCookies(filteredUser, storedToken, storedRefreshToken);
                         
                         // Start refresh timer
                         startTokenRefreshTimer();
@@ -152,46 +197,19 @@ export const useAuthStore = create(
                             loading: false,
                             isLoading: false,
                             error: null,
+                            _isInitializing: false,
                         });
 
-                        // ✅ Background verification (non-blocking)
-                        try {
-                            const response = await authService.getCurrentUser();
-                            const freshUser = response?.data;
-                            if (freshUser) {
-                                const filteredFreshUser = filterUserData(freshUser);
-                                set({ user: filteredFreshUser });
-                                saveUserToStorage(filteredFreshUser);
-                            }
-                        } catch (error) {
-                            // Silent fail - user stays logged in
-                            console.debug("Background verification failed, user stays logged in");
-                        }
-
+                        // ✅ Background verification (non-blocking) - using internal function
+                        verifySessionInBackground(set, get);
                         return;
                     }
 
                     // ✅ Have token but no user - fetch user
                     if ((storedToken || storedRefreshToken) && !storedUser) {
-                        try {
-                            const response = await authService.getCurrentUser();
-                            const user = response?.data;
-
-                            if (user) {
-                                const filteredUser = filterUserData(user);
-                                set({ user: filteredUser });
-                                saveUserToStorage(filteredUser);
-                                syncCookies(filteredUser, storedToken, storedRefreshToken);
-                                startTokenRefreshTimer();
-                            } else {
-                                // No user found - clear invalid session
-                                clearTokens();
-                                set({ user: null });
-                            }
-                        } catch (error) {
-                            console.warn("Failed to fetch user during init:", error.message);
-                            clearTokens();
-                            set({ user: null });
+                        const user = await fetchUserAndRestore(set);
+                        if (user) {
+                            startTokenRefreshTimer();
                         }
                     }
 
@@ -200,6 +218,7 @@ export const useAuthStore = create(
                         loading: false,
                         isLoading: false,
                         error: null,
+                        _isInitializing: false,
                     });
                 } catch (error) {
                     console.error("❌ Auth initialization error:", error);
@@ -209,6 +228,7 @@ export const useAuthStore = create(
                         loading: false,
                         isLoading: false,
                         error: error.message,
+                        _isInitializing: false,
                     });
                 }
             },
@@ -217,29 +237,9 @@ export const useAuthStore = create(
             // GUEST RESOURCE CLAIM
             // ============================================================
             
-            claimGuestResourcesIfAvailable: async () => {
-                try {
-                    const checkResponse = await authService.checkGuestResources();
-                    const hasResources = checkResponse?.data?.hasResources || false;
-
-                    if (hasResources) {
-                        const claimResponse = await authService.claimGuestResources();
-                        const { ordersClaimed, tagsClaimed } = claimResponse?.data || {};
-
-                        set({ isGuestClaimed: true });
-
-                        return {
-                            claimed: true,
-                            orders: ordersClaimed || 0,
-                            tags: tagsClaimed || 0,
-                        };
-                    }
-
-                    return { claimed: false };
-                } catch (error) {
-                    console.warn("Guest claim check failed:", error.message);
-                    return { claimed: false, error: error.message };
-                }
+            claimGuestResourcesIfAvailable: () => {
+                // ✅ Using internal function
+                return claimGuestResourcesIfAvailable(set);
             },
 
             // ============================================================
@@ -258,16 +258,13 @@ export const useAuthStore = create(
                         return { success: false, error: "Invalid server response" };
                     }
 
-                    // Save tokens
+                    // Single token write
                     setTokens(accessToken, refreshToken);
 
-                    // Save user
                     const filteredUser = filterUserData(user);
                     setUserStorage(user);
                     set({ user: filteredUser });
 
-                    // Sync cookies
-                    syncCookies(filteredUser, accessToken, refreshToken);
                     startTokenRefreshTimer();
 
                     set({
@@ -277,8 +274,7 @@ export const useAuthStore = create(
                         isInitialized: true,
                     });
 
-                    // Claim guest resources
-                    const claimResult = await get().claimGuestResourcesIfAvailable();
+                    const claimResult = await claimGuestResourcesIfAvailable(set);
 
                     return {
                         success: true,
@@ -311,16 +307,13 @@ export const useAuthStore = create(
                         return { success: false, error: "Invalid server response" };
                     }
 
-                    // Save tokens
+                    // ✅ Single token write
                     setTokens(accessToken, refreshToken);
 
-                    // Save user
                     const filteredUser = filterUserData(user);
                     setUserStorage(user);
                     set({ user: filteredUser });
 
-                    // Sync cookies
-                    syncCookies(filteredUser, accessToken, refreshToken);
                     startTokenRefreshTimer();
 
                     set({
@@ -330,8 +323,7 @@ export const useAuthStore = create(
                         isInitialized: true,
                     });
 
-                    // Claim guest resources
-                    const claimResult = await get().claimGuestResourcesIfAvailable();
+                    const claimResult = await claimGuestResourcesIfAvailable(set);
 
                     return {
                         success: true,
@@ -356,10 +348,8 @@ export const useAuthStore = create(
                 } catch (error) {
                     console.warn("Logout API error:", error.message);
                 } finally {
-                    // Clear all tokens and user data
                     clearTokens();
                     stopTokenRefreshTimer();
-                    clearCookies();
                     localStorage.removeItem("user");
 
                     set({
@@ -389,7 +379,7 @@ export const useAuthStore = create(
                     if (user) {
                         const filteredUser = filterUserData(user);
                         set({ user: filteredUser, error: null });
-                        saveUserToStorage(filteredUser);
+                        setUserStorage(filteredUser);
                     }
 
                     return user;
@@ -405,7 +395,7 @@ export const useAuthStore = create(
                 }));
                 const currentUser = get().user;
                 if (currentUser) {
-                    saveUserToStorage(currentUser);
+                    updateUserStorage(currentUser);
                 }
             },
 
@@ -415,7 +405,7 @@ export const useAuthStore = create(
                 }));
                 const currentUser = get().user;
                 if (currentUser) {
-                    saveUserToStorage(currentUser);
+                    updateUserStorage(currentUser);
                 }
             },
 
@@ -506,7 +496,6 @@ export const useAuthStore = create(
             reset: () => {
                 clearTokens();
                 stopTokenRefreshTimer();
-                clearCookies();
                 localStorage.removeItem("user");
                 set({
                     user: null,
@@ -515,26 +504,46 @@ export const useAuthStore = create(
                     isInitialized: false,
                     error: null,
                     isGuestClaimed: false,
+                    _isInitializing: false,
                 });
             },
         }),
         {
             name: "auth-storage",
-            getStorage: () => {
-                if (typeof window !== "undefined") {
-                    return localStorage;
-                }
-                return {
-                    getItem: () => null,
-                    setItem: () => {},
-                    removeItem: () => {},
-                };
+            storage: {
+                getItem: (name) => {
+                    if (typeof window === "undefined") return null;
+                    const value = localStorage.getItem(name);
+                    if (!value) return null;
+                    try {
+                        return JSON.parse(value);
+                    } catch {
+                        return value;
+                    }
+                },
+                setItem: (name, value) => {
+                    if (typeof window === "undefined") return;
+                    localStorage.setItem(name, JSON.stringify(value));
+                },
+                removeItem: (name) => {
+                    if (typeof window === "undefined") return;
+                    localStorage.removeItem(name);
+                },
             },
             partialize: (state) => ({
                 user: state.user ? filterUserData(state.user) : null,
                 isInitialized: state.isInitialized,
                 isGuestClaimed: state.isGuestClaimed,
             }),
+            onRehydrateStorage: () => {
+                console.debug("Auth store rehydrated");
+                return (state, error) => {
+                    if (error) {
+                        console.error("Auth store rehydration error:", error);
+                    }
+                };
+            },
+            version: 1,
         }
     )
 );

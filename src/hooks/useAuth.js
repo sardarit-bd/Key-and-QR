@@ -21,44 +21,37 @@ export const authKeys = {
 
 /**
  * Get Current User Query
- * React Query manages this server state
- * Zustand manages the application state
+ * React Query manages server state
+ * Zustand manages application state
+ * Single source of truth for user data
  */
 export function useCurrentUser() {
     const { user, isInitialized, updateUser } = useAuthStore();
-    const queryClient = useQueryClient();
-
+    
     return useQuery({
         queryKey: authKeys.user,
         queryFn: async () => {
-            try {
-                const response = await authService.getCurrentUser();
-                const freshUser = response?.data || null;
-                
-                // Update Zustand store with fresh data
-                if (freshUser) {
-                    updateUser(freshUser);
-                }
-                
-                return freshUser;
-            } catch (error) {
-                // 401 means session expired
-                if (error.response?.status === 401) {
-                    const { logout } = useAuthStore.getState();
-                    logout();
-                }
-                throw error;
+            const response = await authService.getCurrentUser();
+            const freshUser = response?.data || null;
+            
+            // Update Zustand store (single write)
+            if (freshUser) {
+                updateUser(freshUser);
             }
+            
+            return freshUser;
         },
         enabled: isInitialized && !!useAuthStore.getState().getToken(),
         staleTime: 30 * 1000,
         gcTime: 5 * 60 * 1000,
         retry: 1,
-        // Use Zustand user as initial data
+        // Zustand is the source of truth, React Query uses it as initial data
         initialData: user || undefined,
         placeholderData: user,
         refetchOnWindowFocus: true,
         refetchOnMount: true,
+        // Only fetch if user exists in store
+        select: (data) => data,
     });
 }
 
@@ -145,26 +138,21 @@ export function useLogoutMutation() {
             await useAuthStore.getState().logout();
         },
         onSuccess: () => {
-            // Clear all React Query cache
             queryClient.clear();
             toast.success("Logged out successfully");
             router.push("/login");
         },
         onError: (error) => {
             console.error("Logout error:", error);
-            // Still logout on frontend
             useAuthStore.getState().logout();
         },
     });
 }
 
 // ============================================================
-// CUSTOM HOOKS (Existing functionality)
+// CUSTOM HOOKS
 // ============================================================
 
-/**
- * Redirect authenticated users to dashboard
- */
 export function useRedirectAuthenticated(redirectTo = null) {
     const { user, isInitialized, loading } = useAuthStore();
     const router = useRouter();
@@ -179,9 +167,6 @@ export function useRedirectAuthenticated(redirectTo = null) {
     }, [user, isInitialized, loading, redirectTo, router]);
 }
 
-/**
- *  Redirect unauthenticated users to login
- */
 export function useRequireAuth(redirectTo = "/login") {
     const { user, isInitialized, loading } = useAuthStore();
     const router = useRouter();
@@ -198,9 +183,6 @@ export function useRequireAuth(redirectTo = "/login") {
     return { user, isLoading: loading || !isInitialized };
 }
 
-/**
- * Check if user is admin
- */
 export function useAdminCheck() {
     const { user, isInitialized, loading } = useAuthStore();
     const router = useRouter();
@@ -221,9 +203,6 @@ export function useAdminCheck() {
     return { user, isAdmin: user?.role === "admin", isLoading: loading || !isInitialized };
 }
 
-/**
- * Guest Resources Query
- */
 export function useGuestResources() {
     const { user, isInitialized } = useAuthStore();
 
@@ -239,9 +218,6 @@ export function useGuestResources() {
     });
 }
 
-/**
- * Claim Guest Resources Mutation
- */
 export function useClaimGuestResourcesMutation() {
     const queryClient = useQueryClient();
 
