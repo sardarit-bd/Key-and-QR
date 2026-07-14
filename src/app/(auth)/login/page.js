@@ -5,10 +5,18 @@ import { useAuthStore } from "@/store/authStore";
 import { useLoginMutation } from "@/hooks/useAuth";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="py-32 text-center">Loading...</div>}>
+      <LoginPageContent />
+    </Suspense>
+  );
+}
+
+function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get("redirect") || "/dashboard/user";

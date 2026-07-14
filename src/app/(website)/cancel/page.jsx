@@ -3,9 +3,17 @@
 import { orderService } from "@/services/order.service";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 export default function CancelPage() {
+    return (
+        <Suspense fallback={<div className="py-32 text-center">Loading...</div>}>
+            <CancelPageContent />
+        </Suspense>
+    );
+}
+
+function CancelPageContent() {
     const searchParams = useSearchParams();
     const orderId = searchParams.get("orderId");
 
