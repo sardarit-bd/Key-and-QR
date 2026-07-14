@@ -5,7 +5,8 @@ import { useCartStore } from "@/store/cartStore";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import Loader from "./Loader";
+import Loader from "@/shared/Loader";
+import PAYMENT_STATUS from "@/config/paymentStatus";
 
 export default function SuccessPage() {
     const searchParams = useSearchParams();
@@ -14,6 +15,7 @@ export default function SuccessPage() {
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [paymentStatus, setPaymentStatus] = useState(PAYMENT_STATUS.PENDING);
 
     const clearCart = useCartStore((state) => state.clearCart);
 
@@ -32,11 +34,12 @@ export default function SuccessPage() {
             const response = await orderService.getOrderStatus(orderId);
             const orderData = response.data;
             setOrder(orderData);
+            setPaymentStatus(orderData?.paymentStatus || PAYMENT_STATUS.PENDING);
 
-            if (orderData?.paymentStatus === "paid") {
+            // Clear cart only after successful payment
+            if (orderData?.paymentStatus === PAYMENT_STATUS.SUCCEEDED) {
                 clearCart();
             }
-
         } catch (err) {
             console.error("Error checking order:", err);
             setError("Failed to verify order");
@@ -45,64 +48,59 @@ export default function SuccessPage() {
         }
     };
 
-    // 🔄 Loading UI
+    // Loading state
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <Loader text="Qkey..." size={40} fullScreen={false} />
+                <Loader text="Verifying payment..." size={40} fullScreen={false} />
             </div>
         );
     }
 
-    // ❌ Error UI
+    // Error state
     if (error) {
         return (
             <div className="max-w-7xl mx-auto py-32 px-4 text-center">
-                <h2 className="text-2xl font-semibold text-red-600 mb-4">{error}</h2>
-                <Link href="/shop" className="bg-black text-white px-6 py-3 rounded-lg">
-                    Go to Shop
-                </Link>
+                <div className="bg-red-50 rounded-lg p-8 max-w-md mx-auto">
+                    <h2 className="text-xl font-semibold text-red-600 mb-2">Something went wrong</h2>
+                    <p className="text-gray-600 mb-6">{error}</p>
+                    <Link href="/shop" className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition">
+                        Continue Shopping
+                    </Link>
+                </div>
             </div>
         );
     }
+
+    const isSuccessful = paymentStatus === PAYMENT_STATUS.SUCCEEDED;
 
     return (
         <div className="max-w-7xl mx-auto py-32 px-4 text-center">
             <div className="bg-white border border-gray-300 rounded-lg p-8 max-w-2xl mx-auto shadow-sm">
-
                 {/* Icon */}
                 <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 
-                    ${order?.paymentStatus === "paid" ? "bg-green-100" : "bg-red-100"}`}>
-                    <svg
-                        className={`w-8 h-8 ${order?.paymentStatus === "paid" ? "text-green-600" : "text-red-600"}`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                    >
-                        {order?.paymentStatus === "paid" ? (
+                    ${isSuccessful ? "bg-green-100" : "bg-yellow-100"}`}>
+                    {isSuccessful ? (
+                        <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        ) : (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        )}
-                    </svg>
+                        </svg>
+                    ) : (
+                        <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                    )}
                 </div>
 
                 {/* Title */}
-                {order?.paymentStatus === "paid" ? (
-                    <h1 className="text-3xl font-bold mb-2 text-gray-900">
-                        Payment Successful! 🎉
-                    </h1>
-                ) : (
-                    <h1 className="text-3xl font-bold mb-2 text-red-600">
-                        Payment Pending / Failed ❌
-                    </h1>
-                )}
+                <h1 className="text-3xl font-bold mb-2 text-gray-900">
+                    {isSuccessful ? "Payment Successful! 🎉" : "Payment Pending"}
+                </h1>
 
                 {/* Description */}
                 <p className="text-gray-600 mb-6">
-                    {order?.paymentStatus === "paid"
+                    {isSuccessful
                         ? "Your order has been confirmed and is being processed."
-                        : "Your payment is not completed yet. Please try again."}
+                        : "Your payment is being processed. You will receive a confirmation shortly."}
                 </p>
 
                 {/* Order Info */}
@@ -111,41 +109,33 @@ export default function SuccessPage() {
                         <p className="text-sm text-gray-500 mb-2">
                             Order ID: <span className="font-mono">{order._id}</span>
                         </p>
-
-                        {order.assignedTag && (
-                            <p className="text-sm text-gray-500 mb-2">
-                                Tag ID:{" "}
-                                <span className="font-mono font-semibold text-black">
-                                    {typeof order.assignedTag === "object"
-                                        ? order.assignedTag.tagCode || order.assignedTag._id
-                                        : order.assignedTag}
-                                </span>
-                            </p>
-                        )}
-
                         <p className="text-sm text-gray-500">
                             Status:{" "}
-                            <span className="capitalize font-medium text-green-600">
-                                {order.fulfillmentStatus}
+                            <span className={`capitalize font-medium ${
+                                isSuccessful ? "text-green-600" : "text-yellow-600"
+                            }`}>
+                                {order.fulfillmentStatus || "Processing"}
                             </span>
                         </p>
                     </div>
                 )}
 
                 {/* Actions */}
-                <div className="flex gap-4 justify-center">
+                <div className="flex flex-wrap gap-4 justify-center">
                     <Link
                         href="/shop"
-                        className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-900 transition"
+                        className="bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-800 transition"
                     >
                         Continue Shopping
                     </Link>
-                    <Link
-                        href="/dashboard/user/orders"
-                        className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition"
-                    >
-                        View Orders
-                    </Link>
+                    {isSuccessful && (
+                        <Link
+                            href="/dashboard/user/orders"
+                            className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition"
+                        >
+                            View Orders
+                        </Link>
+                    )}
                 </div>
             </div>
         </div>

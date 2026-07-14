@@ -2,7 +2,8 @@ import api from "@/lib/api";
 
 export const orderService = {
     /**
-     * Create checkout session (Supports guest & authenticated)
+     * Create checkout - Creates order only (not Stripe session)
+     * Payment session is created via payment service
      */
     createCheckout: async (orderData) => {
         try {
@@ -121,3 +122,5 @@ export const orderService = {
         }
     },
 };
+
+export default orderService;
