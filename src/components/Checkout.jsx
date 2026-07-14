@@ -37,6 +37,7 @@ export default function Checkout() {
     const [imageErrors, setImageErrors] = useState({});
     const [existingOrder, setExistingOrder] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isRedirecting, setIsRedirecting] = useState(false);
     const [fieldErrors, setFieldErrors] = useState({});
 
     const [formData, setFormData] = useState({
@@ -53,7 +54,7 @@ export default function Checkout() {
 
     const countries = CHECKOUT_CONFIG.countries;
 
-    // ✅ Get checkout items from cart
+    // Get checkout items from cart
     const checkoutItems = useMemo(() => {
         if (orderId && existingOrder?.product) {
             // Legacy single product order
@@ -68,7 +69,7 @@ export default function Checkout() {
             ];
         }
 
-        // ✅ Multi-product from cart
+        // Multi-product from cart
         if (cart.length > 0) {
             return cart.map(item => ({
                 id: item.id,
@@ -86,7 +87,7 @@ export default function Checkout() {
 
     const firstItem = checkoutItems?.[0];
 
-    // ✅ Set user data to form
+    // Set user data to form
     useEffect(() => {
         if (user) {
             setFormData((prev) => ({
@@ -97,7 +98,7 @@ export default function Checkout() {
         }
     }, [user]);
 
-    // ✅ Fetch existing order
+    // Fetch existing order
     useEffect(() => {
         const fetchOrder = async () => {
             if (!orderId) return;
@@ -124,12 +125,12 @@ export default function Checkout() {
         fetchOrder();
     }, [orderId]);
 
-    // ✅ Calculate totals
+    // Calculate totals
     const subtotal = checkoutItems.reduce((sum, item) => sum + (item.price * (item.qty || 1)), 0);
     const shippingCost = CHECKOUT_CONFIG.shipping.cost;
     const total = subtotal + shippingCost;
 
-    // ✅ Validate cart before checkout
+    // Validate cart before checkout
     const validateCart = async () => {
         const errors = await validateStock();
         if (errors.length > 0) {
@@ -160,28 +161,19 @@ export default function Checkout() {
 
         const cartItems = getCheckoutItems();
 
-        // Convert to backend expected format with prices
-        const items = cartItems.map(item => {
-            // Get product price from cart
-            const product = cart.find(p => p.id === item.productId);
-            const unitPrice = product?.price || 0;
-            const quantity = item.quantity || 1;
-            const subtotal = unitPrice * quantity;
-
-            return {
-                product: item.productId,
-                quantity: quantity,
-                unitPrice: unitPrice,        // ← SEND THIS
-                subtotal: subtotal,          // ← SEND THIS
-                purchaseType: item.purchaseType || formData.purchaseType || "self",
-                giftMessage: (item.purchaseType || formData.purchaseType) === "gift"
-                    ? item.giftMessage || formData.giftMessage || null
-                    : null,
-            };
-        });
+        // Convert to backend expected format
+        const items = cartItems.map(item => ({
+            product: item.productId,
+            quantity: item.quantity || 1,
+            purchaseType: item.purchaseType || formData.purchaseType || "self",
+            giftMessage: (item.purchaseType || formData.purchaseType) === "gift"
+                ? item.giftMessage || formData.giftMessage || null
+                : null,
+        }));
 
         return {
             items,
+            // Legacy support for single product
             productId: items.length === 1 ? items[0].product : undefined,
             quantity: items.length === 1 ? items[0].quantity : undefined,
             purchaseType: formData.purchaseType,
@@ -200,7 +192,7 @@ export default function Checkout() {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        if (isSubmitting || loading) return;
+        if (isSubmitting || loading || isRedirecting) return;
 
         // Validate cart
         if (!orderId && !hasItems()) {
@@ -240,10 +232,8 @@ export default function Checkout() {
             const response = await orderService.createCheckout(payload);
 
             if (response?.data?.url) {
-                if (!orderId) {
-                    clearCart();
-                }
-
+                // Do NOT clear cart here - will be cleared on success page
+                setIsRedirecting(true);
                 window.location.href = response.data.url;
                 return;
             }
@@ -260,13 +250,16 @@ export default function Checkout() {
             }
 
             toast.error(errorMessage);
+            setIsRedirecting(false);
         } finally {
-            setLoading(false);
-            setIsSubmitting(false);
+            if (!isRedirecting) {
+                setLoading(false);
+                setIsSubmitting(false);
+            }
         }
     };
 
-    // ✅ Image error handler
+    // Image error handler
     const handleImageError = (productId) => {
         setImageErrors((prev) => ({ ...prev, [productId]: true }));
     };
@@ -276,13 +269,27 @@ export default function Checkout() {
         return item.img || PLACEHOLDER_IMAGE;
     };
 
-    // ✅ Loading state
+    // Loading state
     if (pageLoading) {
         return <Loader text="Loading order..." size={50} fullScreen />;
     }
 
-    // ✅ Empty cart
-    if (!orderId && !hasItems()) {
+    // Redirecting state - Show loading while redirecting to Stripe
+    if (isRedirecting) {
+        return (
+            <section className="max-w-7xl mx-auto py-32 px-4 text-center">
+                <div className="bg-gray-50 p-8 rounded-lg max-w-md mx-auto">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+                        <p className="text-gray-600">Redirecting to secure payment...</p>
+                    </div>
+                </div>
+            </section>
+        );
+    }
+
+    // Empty cart - Only show when not submitting and not redirecting
+    if (!orderId && !hasItems() && !isSubmitting && !loading) {
         return (
             <section className="max-w-7xl mx-auto py-32 px-4 text-center">
                 <div className="bg-gray-50 p-8 rounded-lg max-w-md mx-auto">
@@ -299,7 +306,7 @@ export default function Checkout() {
         );
     }
 
-    // ✅ Check if cart has multiple items
+    // Check if cart has multiple items
     const hasMultipleItems = checkoutItems.length > 1;
 
     return (
@@ -398,7 +405,7 @@ export default function Checkout() {
                             }}
                             placeholder="you@example.com"
                             className={`w-full border ${fieldErrors.email ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 focus:outline-none focus:border-black transition`}
-                            disabled={isSubmitting || loading}
+                            disabled={isSubmitting || loading || isRedirecting}
                             aria-label="Email address"
                         />
                         {fieldErrors.email && (
@@ -424,7 +431,7 @@ export default function Checkout() {
                                         }
                                     }}
                                     className={`w-full border ${fieldErrors.fullName ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 focus:outline-none focus:border-black transition`}
-                                    disabled={isSubmitting || loading}
+                                    disabled={isSubmitting || loading || isRedirecting}
                                     aria-label="Full name"
                                 />
                                 {fieldErrors.fullName && (
@@ -445,7 +452,7 @@ export default function Checkout() {
                                         }
                                     }}
                                     className={`w-full border ${fieldErrors.phone ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 focus:outline-none focus:border-black transition`}
-                                    disabled={isSubmitting || loading}
+                                    disabled={isSubmitting || loading || isRedirecting}
                                     aria-label="Phone number"
                                 />
                                 {fieldErrors.phone && (
@@ -459,7 +466,7 @@ export default function Checkout() {
                                     type="button"
                                     onClick={() => setCountryOpen(!countryOpen)}
                                     className={`w-full border ${fieldErrors.country ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 flex justify-between items-center focus:outline-none focus:border-black transition bg-white`}
-                                    disabled={isSubmitting || loading}
+                                    disabled={isSubmitting || loading || isRedirecting}
                                     aria-label="Select country"
                                 >
                                     <span className={formData.country === '' || formData.country === 'Select your country' ? 'text-gray-400' : ''}>
@@ -519,7 +526,7 @@ export default function Checkout() {
                                         }
                                     }}
                                     className={`w-full border ${fieldErrors.address ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 focus:outline-none focus:border-black transition`}
-                                    disabled={isSubmitting || loading}
+                                    disabled={isSubmitting || loading || isRedirecting}
                                     aria-label="Address"
                                 />
                                 {fieldErrors.address && (
@@ -541,7 +548,7 @@ export default function Checkout() {
                                             }
                                         }}
                                         className={`w-full border ${fieldErrors.city ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 focus:outline-none focus:border-black transition`}
-                                        disabled={isSubmitting || loading}
+                                        disabled={isSubmitting || loading || isRedirecting}
                                         aria-label="City"
                                     />
                                     {fieldErrors.city && (
@@ -561,7 +568,7 @@ export default function Checkout() {
                                             }
                                         }}
                                         className={`w-full border ${fieldErrors.postalCode ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 focus:outline-none focus:border-black transition`}
-                                        disabled={isSubmitting || loading}
+                                        disabled={isSubmitting || loading || isRedirecting}
                                         aria-label="Postal code"
                                     />
                                     {fieldErrors.postalCode && (
@@ -588,7 +595,7 @@ export default function Checkout() {
                                     }
                                 }}
                                 className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-black transition bg-white"
-                                disabled={isSubmitting || loading}
+                                disabled={isSubmitting || loading || isRedirecting}
                             >
                                 <option value="self">For myself</option>
                                 <option value="gift">As a gift</option>
@@ -612,7 +619,7 @@ export default function Checkout() {
                                         }}
                                         rows={4}
                                         className={`w-full border ${fieldErrors.giftMessage ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 focus:outline-none focus:border-black transition resize-none`}
-                                        disabled={isSubmitting || loading}
+                                        disabled={isSubmitting || loading || isRedirecting}
                                         aria-label="Gift message"
                                     />
                                     {fieldErrors.giftMessage && (
@@ -636,11 +643,12 @@ export default function Checkout() {
                     {/* Submit Button */}
                     <button
                         type="submit"
-                        disabled={isSubmitting || loading || checkoutItems.length === 0}
-                        className={`w-full text-white py-3 rounded-lg transition ${isSubmitting || loading || checkoutItems.length === 0
-                            ? "bg-gray-400 cursor-not-allowed"
-                            : "bg-black hover:bg-gray-800 cursor-pointer"
-                            }`}
+                        disabled={isSubmitting || loading || isRedirecting || checkoutItems.length === 0}
+                        className={`w-full text-white py-3 rounded-lg transition ${
+                            isSubmitting || loading || isRedirecting || checkoutItems.length === 0
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-black hover:bg-gray-800 cursor-pointer"
+                        }`}
                     >
                         {isSubmitting || loading ? (
                             <span className="flex items-center justify-center gap-2">

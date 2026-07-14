@@ -1,3 +1,4 @@
+import productService from "@/services/product-service/product.service";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
@@ -11,6 +12,8 @@ export const useCartStore = create(
             cart: [],
             isLoading: false,
             error: null,
+
+            // ************* EXISTING METHODS *************
 
             // Add item to cart - Optimized with single stock check
             addToCart: async (product) => {
@@ -223,6 +226,63 @@ export const useCartStore = create(
                 stockCache.clear();
                 set({ cart: [], isLoading: false, error: null });
             },
+
+            // ************* NEW HELPER METHODS *************
+
+            /**
+             * Check if a product is in the cart
+             * @param {string} productId - Product ID
+             * @returns {boolean}
+             */
+            isInCart: (productId) => {
+                const { cart } = get();
+                return cart.some(item => item.id === productId);
+            },
+
+            /**
+             * Get a cart item by product ID
+             * @param {string} productId - Product ID
+             * @returns {object|null} Cart item or null
+             */
+            getCartItem: (productId) => {
+                const { cart } = get();
+                return cart.find(item => item.id === productId) || null;
+            },
+
+            /**
+             * Remove a product from cart by ID
+             * @param {string} productId - Product ID
+             * @returns {object} Result with success flag and item name
+             */
+            removeFromCart: (productId) => {
+                const { cart } = get();
+                const item = cart.find(i => i.id === productId);
+                if (item) {
+                    set({ cart: cart.filter(i => i.id !== productId) });
+                    return { success: true, name: item.name };
+                }
+                return { success: false, error: 'Item not found' };
+            },
+
+            /**
+             * Update quantity of a product in cart
+             * @param {string} productId - Product ID
+             * @param {number} quantity - New quantity
+             * @returns {object} Result with success flag
+             */
+            updateQuantity: (productId, quantity) => {
+                const { cart } = get();
+                if (quantity <= 0) {
+                    set({ cart: cart.filter((item) => item.id !== productId) });
+                    return { success: true, removed: true };
+                }
+                set({
+                    cart: cart.map((item) =>
+                        item.id === productId ? { ...item, qty: quantity } : item
+                    ),
+                });
+                return { success: true };
+            },
         }),
         {
             name: "qkey-cart",
@@ -234,9 +294,7 @@ export const useCartStore = create(
     )
 );
 
-// ============================================================
-// Stock Cache Helper (prevents duplicate API calls)
-// ============================================================
+// ************* Stock Cache Helper *************
 
 async function getProductStockWithCache(productId) {
     const cacheKey = `stock_${productId}`;
@@ -259,7 +317,7 @@ async function getProductStockWithCache(productId) {
     return stock;
 }
 
-// ✅ Clean up stock cache periodically
+// Clean up stock cache periodically
 if (typeof window !== "undefined") {
     setInterval(() => {
         const now = Date.now();
