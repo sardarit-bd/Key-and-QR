@@ -233,7 +233,7 @@ export default function Footer() {
         >
           <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
             <p className="text-sm text-neutral-500">
-              © {new Date().getFullYear()} InspireTag. All rights reserved.
+              © {new Date().getFullYear()} MyInspireTag. All rights reserved.
             </p>
 
             <div className="flex flex-wrap items-center gap-6 text-3xl text-neutral-700">

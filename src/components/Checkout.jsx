@@ -1,11 +1,13 @@
 "use client";
 
 import { orderService } from "@/services/order.service";
-import Loader from "@/shared/Loader";
-import { useAuthStore } from "@/store/authStore";
 import { useCartStore } from "@/store/cartStore";
+import { useAuthStore } from "@/store/authStore";
+import { ProductImage } from "@/components/ui/ProductImage";
+import Loader from "@/shared/Loader";
+import { CHECKOUT_CONFIG, formatPrice, getCountryName } from "@/config/checkout.config";
+import { validateCheckoutForm } from "@/lib/validators/checkout.validator";
 import { ChevronDown } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -19,14 +21,24 @@ export default function Checkout() {
     const orderId = searchParams.get("orderId");
 
     const { user } = useAuthStore();
-    const { cart, clearCart } = useCartStore();
+    const {
+        cart,
+        clearCart,
+        getTotalPrice,
+        getTotalQuantity,
+        hasItems,
+        validateStock,
+        getCheckoutItems,
+    } = useCartStore();
 
     const [loading, setLoading] = useState(false);
     const [pageLoading, setPageLoading] = useState(false);
     const [countryOpen, setCountryOpen] = useState(false);
     const [imageErrors, setImageErrors] = useState({});
     const [existingOrder, setExistingOrder] = useState(null);
-    const [cartLoaded, setCartLoaded] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isRedirecting, setIsRedirecting] = useState(false);
+    const [fieldErrors, setFieldErrors] = useState({});
 
     const [formData, setFormData] = useState({
         email: "",
@@ -35,17 +47,45 @@ export default function Checkout() {
         address: "",
         city: "",
         postalCode: "",
-        country: "Select your country",
-        purchaseType: "self",
+        country: CHECKOUT_CONFIG.defaults.country,
+        purchaseType: CHECKOUT_CONFIG.defaults.purchaseType,
         giftMessage: "",
     });
 
-    const countries = ["Bangladesh", "India", "USA", "UK", "Australia"];
+    const countries = CHECKOUT_CONFIG.countries;
 
-    // Debug: Check cart data
-    useEffect(() => {
-        setCartLoaded(true);
-    }, [cart]);
+    // Get checkout items from cart
+    const checkoutItems = useMemo(() => {
+        if (orderId && existingOrder?.product) {
+            // Legacy single product order
+            return [
+                {
+                    id: existingOrder.product._id,
+                    name: existingOrder.product.name,
+                    price: existingOrder.product.price,
+                    qty: existingOrder.quantity || 1,
+                    img: existingOrder.product.image?.url || PLACEHOLDER_IMAGE,
+                },
+            ];
+        }
+
+        // Multi-product from cart
+        if (cart.length > 0) {
+            return cart.map(item => ({
+                id: item.id,
+                name: item.name,
+                price: item.price,
+                qty: item.qty || 1,
+                img: item.img || PLACEHOLDER_IMAGE,
+                purchaseType: item.purchaseType || CHECKOUT_CONFIG.defaults.purchaseType,
+                giftMessage: item.giftMessage || null,
+            }));
+        }
+
+        return [];
+    }, [orderId, existingOrder, cart]);
+
+    const firstItem = checkoutItems?.[0];
 
     // Set user data to form
     useEffect(() => {
@@ -58,7 +98,7 @@ export default function Checkout() {
         }
     }, [user]);
 
-    // Fetch existing order (for pending payment)
+    // Fetch existing order
     useEffect(() => {
         const fetchOrder = async () => {
             if (!orderId) return;
@@ -66,17 +106,17 @@ export default function Checkout() {
             try {
                 setPageLoading(true);
                 const response = await orderService.getOrderStatus(orderId);
-                const orderData = response.data?.data || response.data;
+                const orderData = response.data || response;
                 setExistingOrder(orderData);
 
                 setFormData((prev) => ({
                     ...prev,
-                    purchaseType: orderData?.purchaseType || "self",
+                    purchaseType: orderData?.purchaseType || CHECKOUT_CONFIG.defaults.purchaseType,
                     giftMessage: orderData?.giftMessage || "",
                 }));
             } catch (error) {
-                console.error("Failed to load order for checkout:", error);
-                toast.error(error.response?.data?.message || "Failed to load order");
+                console.error("Failed to load order:", error);
+                toast.error("Failed to load order details");
             } finally {
                 setPageLoading(false);
             }
@@ -85,54 +125,141 @@ export default function Checkout() {
         fetchOrder();
     }, [orderId]);
 
-    // Get checkout items
-    const checkoutItems = useMemo(() => {
-        if (orderId && existingOrder?.product) {
-            return [
-                {
-                    id: existingOrder.product._id,
-                    name: existingOrder.product.name,
-                    price: existingOrder.product.price,
-                    qty: existingOrder.quantity || 1,
-                    img: existingOrder.product.image?.url || PLACEHOLDER_IMAGE,
-                },
-            ];
-        }
-
-        // Return cart items with their quantities
-        if (cart && cart.length > 0) {
-            return cart.map(item => ({
-                id: item.id,
-                name: item.name,
-                price: item.price,
-                qty: item.qty || 1,
-                img: item.img || PLACEHOLDER_IMAGE,
-                purchaseType: item.purchaseType || "self",
-                giftMessage: item.giftMessage || null,
-            }));
-        }
-        
-        return [];
-    }, [orderId, existingOrder, cart]);
-
-    const firstItem = checkoutItems?.[0];
-
-    // Set form data from first item (for gift purchase)
-    useEffect(() => {
-        if (!orderId && firstItem) {
-            setFormData((prev) => ({
-                ...prev,
-                purchaseType: firstItem.purchaseType || "self",
-                giftMessage: firstItem.giftMessage || "",
-            }));
-        }
-    }, [orderId, firstItem]);
-
-    // Calculate totals with proper quantity
+    // Calculate totals
     const subtotal = checkoutItems.reduce((sum, item) => sum + (item.price * (item.qty || 1)), 0);
-    const shippingCost = 0;
+    const shippingCost = CHECKOUT_CONFIG.shipping.cost;
     const total = subtotal + shippingCost;
 
+    // Validate cart before checkout
+    const validateCart = async () => {
+        const errors = await validateStock();
+        if (errors.length > 0) {
+            for (const error of errors) {
+                toast.error(
+                    `${error.name}: Only ${error.available} available, you requested ${error.requested}`
+                );
+            }
+            return false;
+        }
+        return true;
+    };
+
+    // Build checkout payload with items
+    const buildCheckoutPayload = () => {
+        if (orderId) {
+            return {
+                orderId,
+                fullName: formData.fullName,
+                email: formData.email,
+                phone: formData.phone,
+                address: formData.address,
+                city: formData.city,
+                postalCode: formData.postalCode,
+                country: formData.country,
+            };
+        }
+
+        const cartItems = getCheckoutItems();
+
+        // Convert to backend expected format
+        const items = cartItems.map(item => ({
+            product: item.productId,
+            quantity: item.quantity || 1,
+            purchaseType: item.purchaseType || formData.purchaseType || "self",
+            giftMessage: (item.purchaseType || formData.purchaseType) === "gift"
+                ? item.giftMessage || formData.giftMessage || null
+                : null,
+        }));
+
+        return {
+            items,
+            // Legacy support for single product
+            productId: items.length === 1 ? items[0].product : undefined,
+            quantity: items.length === 1 ? items[0].quantity : undefined,
+            purchaseType: formData.purchaseType,
+            giftMessage: formData.purchaseType === "gift" ? formData.giftMessage || null : null,
+            fullName: formData.fullName,
+            email: formData.email,
+            phone: formData.phone,
+            address: formData.address,
+            city: formData.city,
+            postalCode: formData.postalCode,
+            country: formData.country,
+        };
+    };
+
+    // Handle checkout submission
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        if (isSubmitting || loading || isRedirecting) return;
+
+        // Validate cart
+        if (!orderId && !hasItems()) {
+            toast.error("Your cart is empty. Please add items before checking out.");
+            router.push("/shop");
+            return;
+        }
+
+        // Use extracted validation
+        const validation = validateCheckoutForm(formData);
+        if (!validation.valid) {
+            setFieldErrors(validation.errors);
+            const firstError = Object.values(validation.errors)[0];
+            if (firstError) toast.error(firstError);
+            return;
+        }
+
+        // Clear field errors
+        setFieldErrors({});
+
+        setIsSubmitting(true);
+        setLoading(true);
+
+        try {
+            if (!orderId) {
+                const isValid = await validateCart();
+                if (!isValid) {
+                    setLoading(false);
+                    setIsSubmitting(false);
+                    return;
+                }
+            }
+
+            const payload = buildCheckoutPayload();
+            console.log("Checkout payload:", payload);
+
+            const response = await orderService.createCheckout(payload);
+
+            if (response?.data?.url) {
+                // Do NOT clear cart here - will be cleared on success page
+                setIsRedirecting(true);
+                window.location.href = response.data.url;
+                return;
+            }
+
+            throw new Error("No checkout URL received");
+        } catch (error) {
+            console.error("Checkout failed:", error);
+
+            let errorMessage = "Something went wrong. Please try again.";
+            if (error.response?.data?.message) {
+                errorMessage = error.response.data.message;
+            } else if (error.message) {
+                errorMessage = error.message;
+            }
+
+            toast.error(errorMessage);
+            setIsRedirecting(false);
+        } finally {
+            if (!isRedirecting) {
+                setLoading(false);
+                setIsSubmitting(false);
+            }
+        }
+    };
+
+    // Image error handler
     const handleImageError = (productId) => {
         setImageErrors((prev) => ({ ...prev, [productId]: true }));
     };
@@ -142,115 +269,35 @@ export default function Checkout() {
         return item.img || PLACEHOLDER_IMAGE;
     };
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-
-        console.log("Checkout items before submit:", checkoutItems);
-        console.log("Cart before submit:", cart);
-
-        if (checkoutItems.length === 0) {
-            toast.error("Your cart is empty. Please add items before checkout.");
-            router.push("/shop");
-            return;
-        }
-
-        if (
-            !formData.email ||
-            !formData.fullName ||
-            !formData.address ||
-            !formData.country ||
-            formData.country === "Select your country"
-        ) {
-            toast.error("Please fill in all required fields");
-            return;
-        }
-
-        setLoading(true);
-
-        try {
-            let response;
-
-            if (orderId) {
-                response = await orderService.createCheckout({
-                    orderId,
-                    fullName: formData.fullName,
-                    email: formData.email,
-                    phone: formData.phone,
-                    address: formData.address,
-                    city: formData.city,
-                    postalCode: formData.postalCode,
-                    country: formData.country,
-                });
-            } else {
-                // Make sure we have a valid product
-                if (!firstItem || !firstItem.id) {
-                    toast.error("No product found in cart");
-                    setLoading(false);
-                    return;
-                }
-
-                const orderPayload = {
-                    productId: firstItem.id,
-                    quantity: firstItem.qty || 1,
-                    purchaseType: firstItem.purchaseType || formData.purchaseType || "self",
-                    giftMessage: (firstItem.purchaseType || formData.purchaseType) === "gift"
-                        ? firstItem.giftMessage || formData.giftMessage || null
-                        : null,
-                    fullName: formData.fullName,
-                    email: formData.email,
-                    phone: formData.phone,
-                    address: formData.address,
-                    city: formData.city,
-                    postalCode: formData.postalCode,
-                    country: formData.country,
-                };
-
-                console.log("Order payload being sent:", orderPayload);
-                response = await orderService.createCheckout(orderPayload);
-            }
-
-            console.log("Checkout response:", response);
-
-            if (response.data?.url) {
-                // Clear cart after successful checkout
-                if (!orderId) {
-                    clearCart();
-                }
-                window.location.href = response.data.url;
-                return;
-            }
-
-            throw new Error("No checkout URL received");
-        } catch (error) {
-            console.error("Checkout failed - Full error:", error);
-            console.error("Error response:", error.response);
-            
-            let errorMessage = "Something went wrong. Please try again.";
-            if (error.response?.data?.message) {
-                errorMessage = error.response.data.message;
-            } else if (error.message) {
-                errorMessage = error.message;
-            }
-            
-            toast.error(errorMessage);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    if (pageLoading || !cartLoaded) {
-        return <Loader text="QKey..." size={50} fullScreen />;
+    // Loading state
+    if (pageLoading) {
+        return <Loader text="Loading order..." size={50} fullScreen />;
     }
 
-    if (!orderId && checkoutItems.length === 0 && cart.length === 0) {
+    // Redirecting state - Show loading while redirecting to Stripe
+    if (isRedirecting) {
         return (
             <section className="max-w-7xl mx-auto py-32 px-4 text-center">
-                <div className="bg-gray-50 p-8 rounded-lg">
+                <div className="bg-gray-50 p-8 rounded-lg max-w-md mx-auto">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
+                        <p className="text-gray-600">Redirecting to secure payment...</p>
+                    </div>
+                </div>
+            </section>
+        );
+    }
+
+    // Empty cart - Only show when not submitting and not redirecting
+    if (!orderId && !hasItems() && !isSubmitting && !loading) {
+        return (
+            <section className="max-w-7xl mx-auto py-32 px-4 text-center">
+                <div className="bg-gray-50 p-8 rounded-lg max-w-md mx-auto">
                     <h2 className="text-2xl font-semibold mb-4">Your cart is empty</h2>
                     <p className="text-gray-600 mb-6">Add some products to your cart before checking out.</p>
                     <Link
                         href="/shop"
-                        className="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-900"
+                        className="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-900 transition"
                     >
                         Continue Shopping
                     </Link>
@@ -259,8 +306,12 @@ export default function Checkout() {
         );
     }
 
+    // Check if cart has multiple items
+    const hasMultipleItems = checkoutItems.length > 1;
+
     return (
         <section className="max-w-7xl mx-auto py-16 px-4 grid grid-cols-1 md:grid-cols-2 gap-12 lg:gap-52">
+            {/* LEFT: Order Summary */}
             <div>
                 <Link
                     href={orderId ? "/dashboard/user/orders" : "/cart"}
@@ -279,176 +330,337 @@ export default function Checkout() {
                     </div>
                 ) : (
                     <>
-                        <div className="space-y-4 max-h-96 overflow-y-auto">
+                        <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
                             {checkoutItems.map((item) => (
                                 <div key={item.id} className="flex items-center justify-between border-b border-gray-100 pb-4">
                                     <div className="flex items-center gap-4">
-                                        <div className="relative w-16 h-16 bg-gray-100 rounded-lg overflow-hidden">
-                                            <Image
+                                        <div className="relative w-16 h-16 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                                            <ProductImage
                                                 src={getImageUrl(item)}
                                                 alt={item.name}
-                                                fill
+                                                width={64}
+                                                height={64}
                                                 className="object-cover"
-                                                onError={() => handleImageError(item.id)}
-                                                unoptimized
+                                                fill={false}
                                             />
                                         </div>
                                         <div>
-                                            <h3 className="font-medium">{item.name}</h3>
+                                            <h3 className="font-medium text-sm">{item.name}</h3>
                                             <p className="text-sm text-gray-500">Qty: {item.qty || 1}</p>
-                                            <p className="text-sm text-gray-500">${item.price} each</p>
+                                            <p className="text-sm text-gray-500">{formatPrice(item.price)} each</p>
                                         </div>
                                     </div>
-                                    <p className="font-medium">${((item.price || 0) * (item.qty || 1)).toFixed(2)}</p>
+                                    <p className="font-medium">{formatPrice((item.price || 0) * (item.qty || 1))}</p>
                                 </div>
                             ))}
                         </div>
 
                         <div className="border-t border-gray-300 mt-6 pt-4 space-y-2 text-sm">
                             <div className="flex justify-between text-gray-600">
-                                <span>Subtotal</span>
-                                <span>${subtotal.toFixed(2)}</span>
+                                <span>Subtotal ({checkoutItems.length} items)</span>
+                                <span>{formatPrice(subtotal)}</span>
                             </div>
                             <div className="flex justify-between text-gray-600">
                                 <span>Shipping</span>
-                                <span className="text-green-600">Free</span>
+                                <span className="text-green-600">{CHECKOUT_CONFIG.shipping.label}</span>
                             </div>
+                            {hasMultipleItems && (
+                                <div className="flex justify-between text-gray-600 text-xs italic">
+                                    <span>Multiple items</span>
+                                    <span>✓</span>
+                                </div>
+                            )}
                             <div className="flex justify-between text-base font-semibold mt-2 border-t border-gray-300 pt-4">
                                 <span>Total</span>
-                                <span>${total.toFixed(2)}</span>
+                                <span>{formatPrice(total)}</span>
                             </div>
                         </div>
                     </>
                 )}
             </div>
 
+            {/* RIGHT: Checkout Form */}
             <div>
                 <h2 className="text-xl font-semibold mb-6">
                     {orderId ? "Complete Payment" : "Billing Details"}
                 </h2>
 
                 <form onSubmit={handleSubmit} className="space-y-6">
+                    {/* Email */}
                     <div>
-                        <label className="text-sm font-medium block mb-1">Email *</label>
+                        <label className="text-sm font-medium block mb-1" htmlFor="email">
+                            Email *
+                        </label>
                         <input
+                            id="email"
                             type="email"
                             required
                             value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                            onChange={(e) => {
+                                setFormData({ ...formData, email: e.target.value });
+                                if (fieldErrors.email) {
+                                    const { errors } = validateCheckoutForm({ ...formData, email: e.target.value });
+                                    setFieldErrors(prev => ({ ...prev, email: errors.email }));
+                                }
+                            }}
                             placeholder="you@example.com"
-                            className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-black"
+                            className={`w-full border ${fieldErrors.email ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 focus:outline-none focus:border-black transition`}
+                            disabled={isSubmitting || loading || isRedirecting}
+                            aria-label="Email address"
                         />
+                        {fieldErrors.email && (
+                            <p className="text-red-500 text-xs mt-1">{fieldErrors.email}</p>
+                        )}
                     </div>
 
+                    {/* Shipping Information */}
                     <div>
                         <h3 className="text-sm font-medium mb-2">Shipping Information</h3>
                         <div className="space-y-3">
-                            <input
-                                type="text"
-                                required
-                                placeholder="Full name *"
-                                value={formData.fullName}
-                                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-black"
-                            />
+                            <div>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="Full name *"
+                                    value={formData.fullName}
+                                    onChange={(e) => {
+                                        setFormData({ ...formData, fullName: e.target.value });
+                                        if (fieldErrors.fullName) {
+                                            const { errors } = validateCheckoutForm({ ...formData, fullName: e.target.value });
+                                            setFieldErrors(prev => ({ ...prev, fullName: errors.fullName }));
+                                        }
+                                    }}
+                                    className={`w-full border ${fieldErrors.fullName ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 focus:outline-none focus:border-black transition`}
+                                    disabled={isSubmitting || loading || isRedirecting}
+                                    aria-label="Full name"
+                                />
+                                {fieldErrors.fullName && (
+                                    <p className="text-red-500 text-xs mt-1">{fieldErrors.fullName}</p>
+                                )}
+                            </div>
 
-                            <input
-                                type="tel"
-                                placeholder="Phone number"
-                                value={formData.phone}
-                                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-black"
-                            />
+                            <div>
+                                <input
+                                    type="tel"
+                                    placeholder="Phone number"
+                                    value={formData.phone}
+                                    onChange={(e) => {
+                                        setFormData({ ...formData, phone: e.target.value });
+                                        if (fieldErrors.phone) {
+                                            const { errors } = validateCheckoutForm({ ...formData, phone: e.target.value });
+                                            setFieldErrors(prev => ({ ...prev, phone: errors.phone }));
+                                        }
+                                    }}
+                                    className={`w-full border ${fieldErrors.phone ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 focus:outline-none focus:border-black transition`}
+                                    disabled={isSubmitting || loading || isRedirecting}
+                                    aria-label="Phone number"
+                                />
+                                {fieldErrors.phone && (
+                                    <p className="text-red-500 text-xs mt-1">{fieldErrors.phone}</p>
+                                )}
+                            </div>
 
+                            {/* Country Select */}
                             <div className="relative">
                                 <button
                                     type="button"
                                     onClick={() => setCountryOpen(!countryOpen)}
-                                    className="w-full border border-gray-300 rounded-md px-4 py-2 flex justify-between items-center focus:outline-none focus:border-black"
+                                    className={`w-full border ${fieldErrors.country ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 flex justify-between items-center focus:outline-none focus:border-black transition bg-white`}
+                                    disabled={isSubmitting || loading || isRedirecting}
+                                    aria-label="Select country"
                                 >
-                                    {formData.country}
-                                    <ChevronDown size={18} />
+                                    <span className={formData.country === '' || formData.country === 'Select your country' ? 'text-gray-400' : ''}>
+                                        {formData.country ? getCountryName(formData.country) : 'Select your country'}
+                                    </span>
+                                    <ChevronDown size={18} className={`transition-transform ${countryOpen ? 'rotate-180' : ''}`} />
                                 </button>
 
                                 {countryOpen && (
-                                    <div className="absolute bg-white w-full border border-gray-300 rounded-md shadow-md mt-1 z-10">
+                                    <div className="absolute bg-white w-full border border-gray-300 rounded-md shadow-md mt-1 z-10 max-h-48 overflow-y-auto">
+                                        <button
+                                            key="default"
+                                            type="button"
+                                            onClick={() => {
+                                                setFormData({ ...formData, country: '' });
+                                                setCountryOpen(false);
+                                            }}
+                                            className="w-full px-4 py-2 text-left hover:bg-gray-100 transition"
+                                        >
+                                            Select your country
+                                        </button>
                                         {countries.map((c) => (
-                                            <p
-                                                key={c}
+                                            <button
+                                                key={c.code}
+                                                type="button"
                                                 onClick={() => {
-                                                    setFormData({ ...formData, country: c });
+                                                    setFormData({ ...formData, country: c.code });
                                                     setCountryOpen(false);
+                                                    if (fieldErrors.country) {
+                                                        const { errors } = validateCheckoutForm({ ...formData, country: c.code });
+                                                        setFieldErrors(prev => ({ ...prev, country: errors.country }));
+                                                    }
                                                 }}
-                                                className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                                                className="w-full px-4 py-2 text-left hover:bg-gray-100 transition"
                                             >
-                                                {c}
-                                            </p>
+                                                {c.name}
+                                            </button>
                                         ))}
                                     </div>
                                 )}
+                                {fieldErrors.country && (
+                                    <p className="text-red-500 text-xs mt-1">{fieldErrors.country}</p>
+                                )}
                             </div>
 
-                            <input
-                                type="text"
-                                required
-                                placeholder="Address *"
-                                value={formData.address}
-                                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-black"
-                            />
+                            <div>
+                                <input
+                                    type="text"
+                                    required
+                                    placeholder="Address *"
+                                    value={formData.address}
+                                    onChange={(e) => {
+                                        setFormData({ ...formData, address: e.target.value });
+                                        if (fieldErrors.address) {
+                                            const { errors } = validateCheckoutForm({ ...formData, address: e.target.value });
+                                            setFieldErrors(prev => ({ ...prev, address: errors.address }));
+                                        }
+                                    }}
+                                    className={`w-full border ${fieldErrors.address ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 focus:outline-none focus:border-black transition`}
+                                    disabled={isSubmitting || loading || isRedirecting}
+                                    aria-label="Address"
+                                />
+                                {fieldErrors.address && (
+                                    <p className="text-red-500 text-xs mt-1">{fieldErrors.address}</p>
+                                )}
+                            </div>
 
                             <div className="grid grid-cols-2 gap-3">
-                                <input
-                                    type="text"
-                                    placeholder="City"
-                                    value={formData.city}
-                                    onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-black"
-                                />
-                                <input
-                                    type="text"
-                                    placeholder="Postal Code"
-                                    value={formData.postalCode}
-                                    onChange={(e) => setFormData({ ...formData, postalCode: e.target.value })}
-                                    className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-black"
-                                />
+                                <div>
+                                    <input
+                                        type="text"
+                                        placeholder="City"
+                                        value={formData.city}
+                                        onChange={(e) => {
+                                            setFormData({ ...formData, city: e.target.value });
+                                            if (fieldErrors.city) {
+                                                const { errors } = validateCheckoutForm({ ...formData, city: e.target.value });
+                                                setFieldErrors(prev => ({ ...prev, city: errors.city }));
+                                            }
+                                        }}
+                                        className={`w-full border ${fieldErrors.city ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 focus:outline-none focus:border-black transition`}
+                                        disabled={isSubmitting || loading || isRedirecting}
+                                        aria-label="City"
+                                    />
+                                    {fieldErrors.city && (
+                                        <p className="text-red-500 text-xs mt-1">{fieldErrors.city}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <input
+                                        type="text"
+                                        placeholder="Postal Code"
+                                        value={formData.postalCode}
+                                        onChange={(e) => {
+                                            setFormData({ ...formData, postalCode: e.target.value });
+                                            if (fieldErrors.postalCode) {
+                                                const { errors } = validateCheckoutForm({ ...formData, postalCode: e.target.value });
+                                                setFieldErrors(prev => ({ ...prev, postalCode: errors.postalCode }));
+                                            }
+                                        }}
+                                        className={`w-full border ${fieldErrors.postalCode ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 focus:outline-none focus:border-black transition`}
+                                        disabled={isSubmitting || loading || isRedirecting}
+                                        aria-label="Postal code"
+                                    />
+                                    {fieldErrors.postalCode && (
+                                        <p className="text-red-500 text-xs mt-1">{fieldErrors.postalCode}</p>
+                                    )}
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    {!orderId && (
+                    {/* Purchase Type - Only for single item or new orders */}
+                    {!orderId && checkoutItems.length <= 1 && (
                         <div>
-                            <label className="text-sm font-medium block mb-2">Purchase Type</label>
+                            <label className="text-sm font-medium block mb-2" htmlFor="purchaseType">
+                                Purchase Type
+                            </label>
                             <select
+                                id="purchaseType"
                                 value={formData.purchaseType}
-                                onChange={(e) => setFormData({ ...formData, purchaseType: e.target.value })}
-                                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-black"
+                                onChange={(e) => {
+                                    setFormData({ ...formData, purchaseType: e.target.value });
+                                    if (fieldErrors.purchaseType) {
+                                        setFieldErrors(prev => ({ ...prev, purchaseType: undefined }));
+                                    }
+                                }}
+                                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-black transition bg-white"
+                                disabled={isSubmitting || loading || isRedirecting}
                             >
                                 <option value="self">For myself</option>
                                 <option value="gift">As a gift</option>
                             </select>
 
                             {formData.purchaseType === "gift" && (
-                                <div className="mt-3">
-                                    <label className="text-sm font-medium block mb-2">Gift Message</label>
+                                <div className="mt-3 animate-fadeIn">
+                                    <label className="text-sm font-medium block mb-2" htmlFor="giftMessage">
+                                        Gift Message
+                                    </label>
                                     <textarea
+                                        id="giftMessage"
                                         placeholder="Write your gift message here..."
                                         value={formData.giftMessage}
-                                        onChange={(e) => setFormData({ ...formData, giftMessage: e.target.value })}
+                                        onChange={(e) => {
+                                            setFormData({ ...formData, giftMessage: e.target.value });
+                                            if (fieldErrors.giftMessage) {
+                                                const { errors } = validateCheckoutForm({ ...formData, giftMessage: e.target.value });
+                                                setFieldErrors(prev => ({ ...prev, giftMessage: errors.giftMessage }));
+                                            }
+                                        }}
                                         rows={4}
-                                        className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:border-black resize-none"
+                                        className={`w-full border ${fieldErrors.giftMessage ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 focus:outline-none focus:border-black transition resize-none`}
+                                        disabled={isSubmitting || loading || isRedirecting}
+                                        aria-label="Gift message"
                                     />
+                                    {fieldErrors.giftMessage && (
+                                        <p className="text-red-500 text-xs mt-1">{fieldErrors.giftMessage}</p>
+                                    )}
                                 </div>
                             )}
                         </div>
                     )}
 
+                    {/* Multiple Items Notice */}
+                    {!orderId && checkoutItems.length > 1 && (
+                        <div className="p-3 bg-blue-50 rounded-lg text-sm text-blue-700">
+                            <p className="font-medium">📦 Multiple Items</p>
+                            <p className="text-xs mt-1">
+                                You have {checkoutItems.length} items in your cart. Each item will be processed separately.
+                            </p>
+                        </div>
+                    )}
+
+                    {/* Submit Button */}
                     <button
                         type="submit"
-                        disabled={loading || checkoutItems.length === 0}
-                        className="w-full bg-black text-white py-3 rounded-lg hover:bg-gray-900 cursor-pointer transition disabled:opacity-50 disabled:cursor-not-allowed"
+                        disabled={isSubmitting || loading || isRedirecting || checkoutItems.length === 0}
+                        className={`w-full text-white py-3 rounded-lg transition ${
+                            isSubmitting || loading || isRedirecting || checkoutItems.length === 0
+                                ? "bg-gray-400 cursor-not-allowed"
+                                : "bg-black hover:bg-gray-800 cursor-pointer"
+                        }`}
                     >
-                        {loading ? "Processing..." : `${orderId ? "Pay Now" : "Place Order"} • $${total.toFixed(2)}`}
+                        {isSubmitting || loading ? (
+                            <span className="flex items-center justify-center gap-2">
+                                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Processing...
+                            </span>
+                        ) : (
+                            `${orderId ? "Pay Now" : "Place Order"} • ${formatPrice(total)}`
+                        )}
                     </button>
                 </form>
             </div>

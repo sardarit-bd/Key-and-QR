@@ -121,10 +121,9 @@ export default function Header() {
   const handleLogout = async () => {
     try {
       await logout();
-      setSheetOpen(false);
-      router.push("/");
     } catch (error) {
       console.error("Logout error:", error);
+      useAuthStore.getState().logout();
     }
   };
 
@@ -135,9 +134,8 @@ export default function Header() {
       {/* DESKTOP HEADER */}
       <header className="bg-white sticky top-0 z-50 border-b border-gray-100 hidden md:block">
         <div
-          className={`${
-            isDashboard ? "px-6" : "max-w-7xl mx-auto px-6 lg:px-8"
-          } h-[96px] flex items-center justify-between`}
+          className={`${isDashboard ? "px-6" : "max-w-7xl mx-auto px-6 lg:px-8"
+            } h-[96px] flex items-center justify-between`}
         >
           {/* Logo - Left aligned */}
           <Link href="/" className="flex items-center shrink-0">
@@ -162,11 +160,10 @@ export default function Header() {
                     <li key={item.name} className="relative">
                       <Link
                         href={item.href}
-                        className={`relative block py-2 text-[15px] lg:text-base font-medium tracking-wide transition-colors duration-300 ${
-                          isActive
-                            ? "text-gray-900"
-                            : "text-gray-500 hover:text-gray-900"
-                        }`}
+                        className={`relative block py-2 text-[15px] lg:text-base font-medium tracking-wide transition-colors duration-300 ${isActive
+                          ? "text-gray-900"
+                          : "text-gray-500 hover:text-gray-900"
+                          }`}
                       >
                         {item.name}
                         {isActive && (
@@ -244,11 +241,10 @@ export default function Header() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild className="cursor-pointer">
                     <Link
-                      href={`${
-                        user?.role === "admin"
-                          ? "/dashboard/admin"
-                          : "/dashboard/user"
-                      }`}
+                      href={`${user?.role === "admin"
+                        ? "/dashboard/admin"
+                        : "/dashboard/user"
+                        }`}
                       className="flex items-center gap-3 px-4 py-3"
                     >
                       <LayoutDashboard size={18} className="text-gray-400" />
@@ -258,12 +254,10 @@ export default function Header() {
                   <DropdownMenuItem
                     onClick={handleLogout}
                     disabled={loading}
-                    className="cursor-pointer flex items-center gap-3 px-4 py-3 text-red-600 focus:text-red-600"
+                    className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
                   >
                     <LogOut size={18} />
-                    <span className="text-sm font-medium">
-                      {loading ? "Logging out..." : "Logout"}
-                    </span>
+                    <span>{loading ? "Logging out..." : "Logout"}</span>
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
@@ -281,6 +275,7 @@ export default function Header() {
             <Link
               href="/cart"
               className="relative mt-0.5 text-gray-600 hover:text-gray-900 transition-colors duration-300"
+              aria-label="Cart"
             >
               <ShoppingBag size={25} strokeWidth={1.5} />
               {cartCount > 0 && (
@@ -333,18 +328,16 @@ export default function Header() {
                           <item.icon
                             size={22}
                             strokeWidth={1.5}
-                            className={`transition-colors duration-200 ${
-                              isActive
-                                ? "text-gray-900"
-                                : "text-gray-400 group-hover:text-gray-600"
-                            }`}
+                            className={`transition-colors duration-200 ${isActive
+                              ? "text-gray-900"
+                              : "text-gray-400 group-hover:text-gray-600"
+                              }`}
                           />
                           <span
-                            className={`text-[17px] font-medium tracking-wide transition-colors duration-200 ${
-                              isActive
-                                ? "text-gray-900"
-                                : "text-gray-700 group-hover:text-gray-900"
-                            }`}
+                            className={`text-[17px] font-medium tracking-wide transition-colors duration-200 ${isActive
+                              ? "text-gray-900"
+                              : "text-gray-700 group-hover:text-gray-900"
+                              }`}
                           >
                             {item.label}
                           </span>
@@ -370,18 +363,16 @@ export default function Header() {
                             <item.icon
                               size={22}
                               strokeWidth={1.5}
-                              className={`transition-colors duration-200 ${
-                                isActive
-                                  ? "text-gray-900"
-                                  : "text-gray-400 group-hover:text-gray-600"
-                              }`}
+                              className={`transition-colors duration-200 ${isActive
+                                ? "text-gray-900"
+                                : "text-gray-400 group-hover:text-gray-600"
+                                }`}
                             />
                             <span
-                              className={`text-[17px] font-medium tracking-wide transition-colors duration-200 ${
-                                isActive
-                                  ? "text-gray-900"
-                                  : "text-gray-700 group-hover:text-gray-900"
-                              }`}
+                              className={`text-[17px] font-medium tracking-wide transition-colors duration-200 ${isActive
+                                ? "text-gray-900"
+                                : "text-gray-700 group-hover:text-gray-900"
+                                }`}
                             >
                               {item.label}
                             </span>
@@ -480,6 +471,7 @@ export default function Header() {
             <Link
               href="/cart"
               className="relative p-2 -mr-2 text-gray-700 hover:text-gray-900 transition-colors"
+              aria-label="Cart"
             >
               <ShoppingBag size={22} strokeWidth={1.5} />
               {cartCount > 0 && (

@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { setTokens, setUser } from "@/lib/api";
+import { setTokens, setUser } from "@/lib/auth-utils";
 import { useAuthStore } from "@/store/authStore";
 
 export default function CallbackPage() {
@@ -25,16 +25,18 @@ export default function CallbackPage() {
 
     if (success === "true" && accessToken && refreshToken && userParam) {
       try {
-        // Save to localStorage
+        // Save tokens using centralized auth-utils
         setTokens(accessToken, refreshToken);
         
         const user = JSON.parse(decodeURIComponent(userParam));
         console.log("User from callback:", user);
         
+        // Save user using centralized auth-utils
         setUser(user);
         
+        // Update store
         setStoreUser(user);
-        setIsInitialized(true); 
+        setIsInitialized(true);
         
         // Set cookies for middleware
         document.cookie = `accessToken=${accessToken}; path=/; max-age=900; SameSite=Lax`;
@@ -43,9 +45,8 @@ export default function CallbackPage() {
         
         console.log("Auth successful, store updated");
         
-        // Small delay to ensure store is updated
+        // Redirect based on role
         setTimeout(() => {
-          // Redirect based on role
           if (user.role === "admin") {
             router.push("/dashboard/admin");
           } else {

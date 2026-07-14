@@ -94,7 +94,7 @@ export default function InspirationBanner() {
                   variants={textVariants}
                   className="font-serif text-2xl sm:text-3xl md:text-4xl lg:text-[38px] xl:text-[28px] text-black leading-[1.2] tracking-[-0.01em]"
                 >
-                  Inspiration is
+                  MyInspiration is
                   <br />
                   always with you.
                 </motion.h2>

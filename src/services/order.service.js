@@ -1,6 +1,10 @@
 import api from "@/lib/api";
 
 export const orderService = {
+    /**
+     * Create checkout - Creates order only (not Stripe session)
+     * Payment session is created via payment service
+     */
     createCheckout: async (orderData) => {
         try {
             const response = await api.post("/orders/checkout", orderData);
@@ -11,6 +15,9 @@ export const orderService = {
         }
     },
 
+    /**
+     * Get order status
+     */
     getOrderStatus: async (orderId) => {
         try {
             const response = await api.get(`/orders/${orderId}`);
@@ -21,13 +28,15 @@ export const orderService = {
         }
     },
 
+    /**
+     * Get user orders
+     */
     getUserOrders: async (params = {}) => {
         try {
             const { page = 1, limit = 10 } = params;
             const response = await api.get("/orders", {
                 params: { page, limit }
             });
-            console.log("Orders API response:", response.data);
             return response.data;
         } catch (error) {
             console.error("Get orders error:", error);
@@ -35,6 +44,9 @@ export const orderService = {
         }
     },
 
+    /**
+     * Update order address
+     */
     updateOrderAddress: async (orderId, addressData) => {
         try {
             const response = await api.patch(`/orders/${orderId}/address`, addressData);
@@ -45,6 +57,9 @@ export const orderService = {
         }
     },
 
+    /**
+     * Update order
+     */
     updateOrder: async (orderId, updateData) => {
         try {
             const response = await api.patch(`/orders/${orderId}`, updateData);
@@ -55,6 +70,9 @@ export const orderService = {
         }
     },
 
+    /**
+     * Cancel order
+     */
     cancelOrder: async (orderId, reason) => {
         try {
             const response = await api.post(`/orders/${orderId}/cancel`, { reason });
@@ -65,6 +83,9 @@ export const orderService = {
         }
     },
 
+    /**
+     * Request refund
+     */
     requestRefund: async (orderId, reason) => {
         try {
             const response = await api.post(`/orders/${orderId}/refund/request`, { reason });
@@ -75,6 +96,9 @@ export const orderService = {
         }
     },
 
+    /**
+     * Request return
+     */
     requestReturn: async (orderId, reason) => {
         try {
             const response = await api.post(`/orders/${orderId}/return/request`, { reason });
@@ -85,6 +109,9 @@ export const orderService = {
         }
     },
 
+    /**
+     * Claim gift
+     */
     claimGift: async (orderId) => {
         try {
             const response = await api.post(`/orders/${orderId}/claim-gift`);
@@ -95,3 +122,5 @@ export const orderService = {
         }
     },
 };
+
+export default orderService;

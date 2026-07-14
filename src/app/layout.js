@@ -1,10 +1,14 @@
 import AuthProvider from "@/components/auth/AuthProvider";
-import ConditionalFooter from "@/shared/ConditionalFooter";
-import TopHeader from "@/shared/TopHeader";
-import Header from "../shared/Header";
+
 import "./globals.css";
 
-import { Geist, Geist_Mono, Inter, Playfair_Display } from "next/font/google";
+import {
+  Geist,
+  Geist_Mono,
+  Inter,
+  Playfair_Display,
+} from "next/font/google";
+import { Providers } from "@/providers/Providers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -56,12 +60,9 @@ export default function RootLayout({ children }) {
         `}
         suppressHydrationWarning
       >
-        <AuthProvider>
-          <TopHeader />
-          <Header />
-          {children}
-          <ConditionalFooter />
-        </AuthProvider>
+        <Providers>
+          <AuthProvider>{children}</AuthProvider>
+        </Providers>
       </body>
     </html>
   );

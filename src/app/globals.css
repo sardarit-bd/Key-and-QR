@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
+@import "../styles/themes/theme-variables.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -138,4 +139,20 @@ body {
 
 .font-heading {
   font-family: var(--font-heading);
+}
+
+
+/* Hide Scrollbar (Chrome, Edge, Safari) */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide Scrollbar (Firefox) */
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+
+/* Hide Scrollbar (IE/Old Edge) */
+.hide-scrollbar {
+  -ms-overflow-style: none;
 }

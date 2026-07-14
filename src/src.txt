@@ -1,0 +1,118 @@
+src
+│
+├── app
+│   │
+│   ├── layout.js                 // Root Layout (Only Providers)
+│   ├── page.js
+│   ├── not-found.jsx
+│   │
+│   ├── (website)                 // Future Website Layout
+│   │   ├── layout.js
+│   │   ├── page.js
+│   │   ├── shop/
+│   │   ├── pricing/
+│   │   ├── subscription/
+│   │   ├── how-it-works/
+│   │   ├── quotes/
+│   │   ├── success/
+│   │   └── cancel/
+│   │
+│   ├── (auth)
+│   │   ├── layout.js
+│   │   ├── login/
+│   │   ├── signup/
+│   │   ├── forgot-password/
+│   │   └── ...
+│   │
+│   ├── (dashboard)
+│   │   ├── layout.js             // New Dashboard Layout
+│   │   │
+│   │   └── new-dashboard
+│   │       │
+│   │       ├── admin
+│   │       │   ├── page.js
+│   │       │   ├── users/
+│   │       │   ├── quotes/
+│   │       │   ├── categories/
+│   │       │   ├── subscriptions/
+│   │       │   └── settings/
+│   │       │
+│   │       └── user
+│   │           ├── page.js
+│   │           ├── my-quotes/
+│   │           ├── reflections/
+│   │           ├── scan-history/
+│   │           ├── favorites/
+│   │           ├── gifted-messages/
+│   │           ├── categories/
+│   │           ├── subscription/
+│   │           └── settings/
+│   │
+│   ├── dashboard                 // Legacy Dashboard (Don't Touch)
+│   │   ├── admin/
+│   │   ├── user/
+│   │   └── layout.js
+│   │
+│   └── api/
+│
+├── components
+│   │
+│   ├── common                    // Shared Components
+│   │
+│   ├── website
+│   │   ├── Header
+│   │   ├── Footer
+│   │   ├── TopHeader
+│   │   └── ...
+│   │
+│   ├── dashboard
+│   │   │
+│   │   ├── shared                // Shared for Admin + User
+│   │   │   ├── Button
+│   │   │   ├── Card
+│   │   │   ├── Modal
+│   │   │   ├── Table
+│   │   │   ├── EmptyState
+│   │   │   ├── Skeleton
+│   │   │   └── ...
+│   │   │
+│   │   ├── admin
+│   │   │
+│   │   └── user
+│   │       │
+│   │       ├── layout
+│   │       │   ├── Sidebar.jsx
+│   │       │   ├── SidebarMenu.jsx
+│   │       │   ├── SidebarProfile.jsx
+│   │       │   ├── UpgradeCard.jsx
+│   │       │   └── DashboardLayout.jsx
+│   │       │
+│   │       ├── dashboard
+│   │       │   ├── DashboardHome.jsx
+│   │       │   ├── WelcomeSection.jsx
+│   │       │   ├── DailyQuoteCard.jsx
+│   │       │   ├── CategorySelector.jsx
+│   │       │   ├── RecentQuotes.jsx
+│   │       │   ├── InspirationStreak.jsx
+│   │       │   └── StatsCards.jsx
+│   │       │
+│   │       ├── quotes
+│   │       ├── reflections
+│   │       ├── favorites
+│   │       ├── scans
+│   │       ├── subscription
+│   │       └── settings
+│   │
+│   └── ui
+│
+├── services
+│
+├── hooks
+│
+├── store
+│
+├── lib
+│
+├── config
+│
+└── utils
