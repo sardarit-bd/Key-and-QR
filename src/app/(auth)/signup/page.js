@@ -5,9 +5,17 @@ import { useAuthStore } from "@/store/authStore";
 import { useRegisterMutation } from "@/hooks/useAuth";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 
 export default function SignUpPage() {
+  return (
+    <Suspense fallback={<div className="py-32 text-center">Loading...</div>}>
+      <SignUpPageContent />
+    </Suspense>
+  );
+}
+
+function SignUpPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get("redirect") || "/dashboard/user";

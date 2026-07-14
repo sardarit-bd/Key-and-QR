@@ -1,12 +1,29 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useSubscriptionStore } from "@/store/subscriptionStore";
 import { CheckCircle, Crown, Loader2 } from "lucide-react";
 import Link from "next/link";
 
 export default function SubscriptionSuccessPage() {
+    return (
+        <Suspense
+            fallback={
+                <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-50 to-pink-50">
+                    <div className="text-center">
+                        <Loader2 size={48} className="animate-spin text-purple-500 mx-auto mb-4" />
+                        <p className="text-gray-600">Loading...</p>
+                    </div>
+                </div>
+            }
+        >
+            <SubscriptionSuccessContent />
+        </Suspense>
+    );
+}
+
+function SubscriptionSuccessContent() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const tagCode = searchParams.get("tagCode");
