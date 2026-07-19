@@ -1,123 +1,82 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import api from "@/lib/api";
-import MessageDisplay from "@/components/scan/MessageDisplay";
-import LimitReachedScreen from "@/components/scan/LimitReachedScreen";
-import { toast } from "react-hot-toast";
 import Loader from "@/shared/Loader";
-import MessageLoadingScreen from "@/components/scan/MessageLoadingScreen";
+import PublicQuoteDisplay from "@/components/scan/public/PublicQuoteDisplay";
+import InvalidQrScreen from "@/components/scan/public/InvalidQrScreen";
+import InactiveQrScreen from "@/components/scan/public/InactiveQrScreen";
+import ScanErrorScreen from "@/components/scan/public/ScanErrorScreen";
 
-export default function TagPage() {
+// Error codes returned by GET /scan/public/:tagCode (see tag-unlock.service.js)
+const INVALID_CODES = ["INVALID_TAG_CODE", "TAG_NOT_FOUND"];
+const INACTIVE_CODES = ["TAG_INACTIVE", "TAG_NOT_ACTIVATED"];
+
+export default function PublicScanPage() {
     const { tagCode } = useParams();
 
-    const [loading, setLoading] = useState(true);
-    const [tagStatus, setTagStatus] = useState(null);
-    const [unlockResult, setUnlockResult] = useState(null);
-    const [error, setError] = useState(null);
+    // "loading" | "success" | "invalid" | "inactive" | "error"
+    const [status, setStatus] = useState("loading");
+    const [quoteData, setQuoteData] = useState(null);
+    const [errorMessage, setErrorMessage] = useState("");
 
-    const performUnlock = async () => {
+    const fetchQuote = useCallback(async () => {
+        setStatus("loading");
+        setErrorMessage("");
+
         try {
-            setLoading(true);
+            const response = await api.get(`/scan/public/${tagCode}`);
+            const data = response.data?.data;
 
-            const response = await api.post(`/scan/unlock/${tagCode}`, {});
-            const result = response.data.data;
-            setUnlockResult(result);
-
-            if (result.status === "ALREADY_SCANNED_TODAY") {
-                toast(result.data.message, { icon: "🔄" });
+            if (!data) {
+                setStatus("error");
+                setErrorMessage("No data returned for this QR code.");
+                return;
             }
+
+            setQuoteData(data);
+            setStatus("success");
         } catch (err) {
-            console.error("Error unlocking:", err);
-            setError(err.response?.data?.message || "Failed to unlock");
-            toast.error("Failed to unlock message");
-        } finally {
-            setLoading(false);
-        }
-    };
+            const code = err.response?.data?.code;
+            const message = err.response?.data?.message;
 
-    const resolveTag = async () => {
-        try {
-            setLoading(true);
-            setError(null);
-
-            const response = await api.get(`/tags/resolve/${tagCode}`);
-            const data = response.data.data;
-
-            setTagStatus(data.status);
-
-            if (data.status === "READY_FOR_UNLOCK") {
-                await performUnlock();
+            if (INVALID_CODES.includes(code)) {
+                setStatus("invalid");
+                return;
             }
-        } catch (err) {
-            console.error("Error resolving tag:", err);
-            setError(err.response?.data?.message || "Failed to load tag");
-            toast.error("Failed to load tag");
-            setLoading(false);
-        }
-    };
 
-    useEffect(() => {
-        if (tagCode) {
-            resolveTag();
+            if (INACTIVE_CODES.includes(code)) {
+                setStatus("inactive");
+                return;
+            }
+
+            setErrorMessage(message || "Failed to load this QR code. Please try again.");
+            setStatus("error");
         }
     }, [tagCode]);
 
-    if (error) {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-                <div className="text-center max-w-md">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-2">Something went wrong</h2>
-                    <p className="text-gray-600 mb-4">{error}</p>
-                    <button
-                        onClick={() => window.location.reload()}
-                        className="px-4 py-2 bg-gray-900 text-white rounded-lg hover:bg-gray-800 transition"
-                    >
-                        Try Again
-                    </button>
-                </div>
-            </div>
-        );
+    useEffect(() => {
+        if (tagCode) {
+            fetchQuote();
+        }
+    }, [tagCode, fetchQuote]);
+
+    if (status === "loading") {
+        return <Loader text="QKey..." fullScreen />;
     }
 
-    if (tagStatus === "DISABLED") {
-        return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-                <div className="text-center max-w-md">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-2">Tag Disabled</h2>
-                    <p className="text-gray-600">This tag is no longer active.</p>
-                </div>
-            </div>
-        );
+    if (status === "invalid") {
+        return <InvalidQrScreen tagCode={tagCode} />;
     }
 
-    if (unlockResult?.status === "LIMIT_REACHED") {
-        return <LimitReachedScreen dailyLimit={unlockResult.data?.dailyLimit || 3} />;
+    if (status === "inactive") {
+        return <InactiveQrScreen tagCode={tagCode} />;
     }
 
-    if (unlockResult) {
-        return (
-            <MessageDisplay
-                message={
-                    unlockResult.data?.quoteData || {
-                        _id: unlockResult.data?._id,
-                        text: unlockResult.data?.quote,
-                        category: unlockResult.data?.category,
-                        author: unlockResult.data?.author,
-                        image: unlockResult.data?.image,
-                        theme: unlockResult.data?.theme,
-                        sourceType: unlockResult.data?.sourceType,
-                    }
-                }
-                category={unlockResult.data?.category}
-                isPersonalMessage={unlockResult.data?.isPersonalMessage}
-                isAlreadyScanned={unlockResult.status === "ALREADY_SCANNED_TODAY"}
-                quoteId={unlockResult.data?._id}
-                tagCode={tagCode}
-            />
-        );
+    if (status === "error") {
+        return <ScanErrorScreen message={errorMessage} onRetry={fetchQuote} />;
     }
 
-    return <Loader text="QKey..." fullScreen />;
+    return <PublicQuoteDisplay data={quoteData} tagCode={tagCode} />;
 }
