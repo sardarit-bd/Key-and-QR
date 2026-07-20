@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Heart, Share2, MoreVertical, Copy, X, Calendar } from 'lucide-react';
+import { Share2, MoreVertical, Copy, Calendar } from 'lucide-react';
 import { toast } from 'react-hot-toast';
 import {
   DropdownMenu,
@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
+import FavoriteButton from '@/components/favorite/FavoriteButton';
 
 const CATEGORY_COLORS = {
   faith: 'border-amber-500/30 bg-amber-500/10 text-amber-400',
@@ -39,7 +40,7 @@ const DEFAULT_IMAGES = {
 
 /**
  * My Quote Card
- * Displays a single quote with actions
+ * Displays a single quote with favorite, share, and remove actions
  */
 export default function MyQuoteCard({ favorite, view = 'grid', onRemove }) {
   const [isRemoving, setIsRemoving] = useState(false);
@@ -94,6 +95,7 @@ export default function MyQuoteCard({ favorite, view = 'grid', onRemove }) {
     }
   };
 
+  // List view
   if (view === 'list') {
     return (
       <motion.div
@@ -120,11 +122,18 @@ export default function MyQuoteCard({ favorite, view = 'grid', onRemove }) {
         </div>
 
         <div className="flex items-center gap-1">
+          <FavoriteButton
+            id={quote._id}
+            type="quote"
+            size="sm"
+            variant="ghost"
+            className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/5"
+          />
           <Button
             variant="ghost"
             size="icon"
             onClick={handleShare}
-            className="text-gray-400 hover:text-white hover:bg-white/5"
+            className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/5"
             aria-label="Share quote"
           >
             <Share2 className="w-4 h-4" />
@@ -134,13 +143,26 @@ export default function MyQuoteCard({ favorite, view = 'grid', onRemove }) {
             size="icon"
             onClick={handleRemove}
             disabled={isRemoving}
-            className="text-gray-400 hover:text-rose-500 hover:bg-rose-500/10"
+            className="h-8 w-8 text-gray-400 hover:text-rose-500 hover:bg-rose-500/10"
             aria-label="Remove from favorites"
           >
             {isRemoving ? (
               <div className="w-4 h-4 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
             ) : (
-              <Heart className="w-4 h-4 fill-rose-500 text-rose-500" />
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
             )}
           </Button>
         </div>
@@ -193,6 +215,13 @@ export default function MyQuoteCard({ favorite, view = 'grid', onRemove }) {
             >
               <Share2 className="w-3.5 h-3.5" />
             </Button>
+            <FavoriteButton
+              id={quote._id}
+              type="quote"
+              size="sm"
+              variant="ghost"
+              className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10"
+            />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -201,7 +230,20 @@ export default function MyQuoteCard({ favorite, view = 'grid', onRemove }) {
                   className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10"
                   aria-label="More options"
                 >
-                  <MoreVertical className="w-3.5 h-3.5" />
+                  <svg
+                    className="w-3.5 h-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                    />
+                  </svg>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -223,7 +265,20 @@ export default function MyQuoteCard({ favorite, view = 'grid', onRemove }) {
                   {isRemoving ? (
                     <div className="w-4 h-4 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin mr-2" />
                   ) : (
-                    <Heart className="mr-2 h-4 w-4 fill-rose-500" />
+                    <svg
+                      className="mr-2 h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M6 18L18 6M6 6l12 12"
+                      />
+                    </svg>
                   )}
                   Remove
                 </DropdownMenuItem>

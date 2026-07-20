@@ -1,6 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
+import { useFavoriteStore } from '@/store/favoriteStore';
 import myQuotesService from '@/services/myquotes-service/myQuotes.service';
 
 /**
@@ -9,6 +10,7 @@ import myQuotesService from '@/services/myquotes-service/myQuotes.service';
 export const useMyQuotes = () => {
   const router = useRouter();
   const { user, isInitialized } = useAuthStore();
+  const { favorites, setFavorites, updateStats, stats: storeStats } = useFavoriteStore();
   
   const [quotes, setQuotes] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -59,6 +61,9 @@ export const useMyQuotes = () => {
       });
 
       if (result.success) {
+        // Sync with favorite store
+        setFavorites(result.data || []);
+        
         // Filter by category if needed
         let filteredData = result.data || [];
         if (category !== 'all') {
@@ -85,7 +90,7 @@ export const useMyQuotes = () => {
     } finally {
       setLoading(false);
     }
-  }, [user, pagination.page, pagination.limit, search, category, sort]);
+  }, [user, pagination.page, pagination.limit, search, category, sort, setFavorites]);
 
   /**
    * Fetch statistics
@@ -98,6 +103,13 @@ export const useMyQuotes = () => {
       
       if (result.success) {
         const statsData = result.data;
+        
+        // Update store stats
+        updateStats({
+          total: statsData.total || 0,
+          products: statsData.products || 0,
+          quotes: statsData.quotes || 0,
+        });
         
         // Calculate additional stats
         const quotesCount = statsData.quotes || 0;
@@ -114,7 +126,7 @@ export const useMyQuotes = () => {
     } catch (err) {
       console.error('Failed to fetch stats:', err);
     }
-  }, [user]);
+  }, [user, updateStats]);
 
   /**
    * Remove a quote from favorites
@@ -224,6 +236,7 @@ export const useMyQuotes = () => {
     view,
     pagination,
     stats,
+    storeStats,
     setSearch: handleSearch,
     setCategory: handleCategoryChange,
     setSort: handleSortChange,

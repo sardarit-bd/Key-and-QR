@@ -2,9 +2,11 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Gift, Heart, Share2, Compass, X } from 'lucide-react';
+import { Gift, Share2, Compass, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import FavoriteButton from '@/components/favorite/FavoriteButton';
+import useFavorite from '@/hooks/useFavorite';
 
 const DEFAULT_IMAGES = {
   faith: '/images/quote-bg/faith.jpg',
@@ -30,15 +32,14 @@ const CATEGORY_LABELS = {
  */
 export default function QRReady({
   data,
-  isFavorite,
-  onToggleFavorite,
+  isFavorite: initialIsFavorite,
+  onToggleFavorite: initialOnToggleFavorite,
   isAuthenticated,
   tagCode,
   user,
 }) {
   const router = useRouter();
   const [showPersonalMessage, setShowPersonalMessage] = useState(false);
-  const [favoriteLoading, setFavoriteLoading] = useState(false);
 
   const quote = data?.quote || null;
   const hasPersonalMessage = data?.hasPersonalMessage || false;
@@ -47,6 +48,20 @@ export default function QRReady({
   const category = quote?.category || 'faith';
   const backgroundImage = quote?.image?.url || DEFAULT_IMAGES[category] || DEFAULT_IMAGES.faith;
   const categoryLabel = CATEGORY_LABELS[category] || CATEGORY_LABELS.faith;
+
+  // Use favorite hook for the quote
+  const { isFavorite, toggleFavorite, isLoading } = useFavorite({
+    id: quote?._id,
+    type: 'quote',
+    onSuccess: ({ action }) => {
+      toast.success(action === 'add' ? 'Added to favorites!' : 'Removed from favorites');
+    },
+    onError: (error) => {
+      if (error?.status === 401) {
+        router.push(`/login?redirect=/tag/${tagCode}`);
+      }
+    },
+  });
 
   /**
    * Handle share
@@ -81,26 +96,6 @@ export default function QRReady({
   };
 
   /**
-   * Handle favorite toggle
-   */
-  const handleFavoriteToggle = async () => {
-    if (favoriteLoading) return;
-    
-    if (!isAuthenticated) {
-      router.push(`/login?redirect=/tag/${tagCode}`);
-      return;
-    }
-
-    setFavoriteLoading(true);
-    const success = await onToggleFavorite();
-    setFavoriteLoading(false);
-    
-    if (success) {
-      toast.success(isFavorite ? 'Removed from favorites' : 'Added to favorites');
-    }
-  };
-
-  /**
    * Handle discover more
    */
   const handleDiscoverMore = () => {
@@ -108,7 +103,7 @@ export default function QRReady({
       router.push(`/login?redirect=/tag/${tagCode}`);
       return;
     }
-    router.push('/dashboard');
+    router.push('/dashboard/my-quotes');
   };
 
   return (
@@ -196,20 +191,20 @@ export default function QRReady({
             <span className="text-[10px]">Share</span>
           </button>
 
-          {/* Save/Favorite */}
-          <button
-            onClick={handleFavoriteToggle}
-            disabled={favoriteLoading}
-            className="flex flex-col items-center gap-1 text-gray-400 hover:text-white transition-colors group disabled:opacity-50"
-            aria-label={isFavorite ? 'Remove from favorites' : 'Save to favorites'}
-          >
-            <Heart
-              className={`w-5 h-5 group-hover:scale-110 transition-transform ${
-                isFavorite ? 'fill-rose-500 text-rose-500' : ''
-              }`}
+          {/* Save/Favorite - Using FavoriteButton */}
+          <div className="flex flex-col items-center gap-1">
+            <FavoriteButton
+              id={quote?._id}
+              type="quote"
+              size="default"
+              variant="ghost"
+              className="w-8 h-8 p-0 text-gray-400 hover:text-white"
+              onToggle={({ action }) => {
+                toast.success(action === 'add' ? 'Added to favorites!' : 'Removed from favorites');
+              }}
             />
-            <span className="text-[10px]">{isFavorite ? 'Saved' : 'Save'}</span>
-          </button>
+            <span className="text-[10px] text-gray-400">{isFavorite ? 'Saved' : 'Save'}</span>
+          </div>
 
           {/* Discover More */}
           <button
