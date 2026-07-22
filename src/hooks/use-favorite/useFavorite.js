@@ -3,8 +3,8 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
 import { useFavoriteStore } from '@/store/favoriteStore';
+import api from '@/lib/api';
 import { useShallow } from 'zustand/react/shallow';
-import favoriteService from '@/services/favorite-service/favorite.service';
 
 /**
  * Custom hook for favorite functionality
@@ -79,19 +79,19 @@ export const useFavorite = (options = {}) => {
           throw new Error('Favorite not found');
         }
 
-        const result = await favoriteService.removeFavorite(favorite._id);
+        const response = await api.delete(`/favorites/${favorite._id}`);
         
-        if (result.success) {
+        if (response.status === 200 || response.status === 204) {
           // Optimistic update - remove
           removeFavorite(id);
           toast.success('Removed from favorites');
           
           if (onSuccess) {
-            onSuccess({ action: 'remove', favorite: result.data });
+            onSuccess({ action: 'remove', favorite: response.data?.data });
           }
           return true;
         } else {
-          throw new Error(result.message);
+          throw new Error('Failed to remove favorite');
         }
       } else {
         // Add favorite
@@ -99,24 +99,25 @@ export const useFavorite = (options = {}) => {
           ? { quoteId: id } 
           : { productId: id };
 
-        const result = await favoriteService.addFavorite(payload);
+        const response = await api.post('/favorites', payload);
         
-        if (result.success) {
+        if (response.status === 201 || response.status === 200) {
+          const newFavorite = response.data?.data;
           // Optimistic update - add
-          addFavorite(id, result.data);
+          addFavorite(id, newFavorite);
           toast.success('Added to favorites');
           
           if (onSuccess) {
-            onSuccess({ action: 'add', favorite: result.data });
+            onSuccess({ action: 'add', favorite: newFavorite });
           }
           return true;
         } else {
-          throw new Error(result.message);
+          throw new Error('Failed to add favorite');
         }
       }
     } catch (err) {
       // Error handling
-      const errorMessage = err.message || 'Failed to update favorites';
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to update favorites';
       setLocalError(errorMessage);
       setError(errorMessage);
       toast.error(errorMessage);
@@ -142,12 +143,12 @@ export const useFavorite = (options = {}) => {
         ? { quoteId: id } 
         : { productId: id };
       
-      const result = await favoriteService.checkFavorite(params);
+      const response = await api.get('/favorites/check', { params });
       
-      if (result.success && result.data?.exists) {
+      if (response.data?.data?.exists) {
         // Add to store if not already present
         if (!isFavorited(id)) {
-          addFavorite(id, { _id: result.data.favoriteId, [type]: { _id: id } });
+          addFavorite(id, { _id: response.data.data.favoriteId, [type]: { _id: id } });
         }
       }
     } catch (error) {

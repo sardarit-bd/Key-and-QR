@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Gift, Share2, Compass, X } from 'lucide-react';
+import { Share2, Compass } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import FavoriteButton from '@/components/favorite/FavoriteButton';
+import GiftMessageButton from '@/components/gift-message/GiftMessageButton';
 import useFavorite from '@/hooks/useFavorite';
 
 const DEFAULT_IMAGES = {
@@ -32,14 +33,12 @@ const CATEGORY_LABELS = {
  */
 export default function QRReady({
   data,
-  isFavorite: initialIsFavorite,
-  onToggleFavorite: initialOnToggleFavorite,
   isAuthenticated,
   tagCode,
   user,
 }) {
   const router = useRouter();
-  const [showPersonalMessage, setShowPersonalMessage] = useState(false);
+  const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
 
   const quote = data?.quote || null;
   const hasPersonalMessage = data?.hasPersonalMessage || false;
@@ -50,7 +49,7 @@ export default function QRReady({
   const categoryLabel = CATEGORY_LABELS[category] || CATEGORY_LABELS.faith;
 
   // Use favorite hook for the quote
-  const { isFavorite, toggleFavorite, isLoading } = useFavorite({
+  const { isFavorite } = useFavorite({
     id: quote?._id,
     type: 'quote',
     onSuccess: ({ action }) => {
@@ -106,6 +105,20 @@ export default function QRReady({
     router.push('/dashboard/my-quotes');
   };
 
+  /**
+   * Handle gift message open
+   */
+  const handleGiftOpen = () => {
+    setIsGiftModalOpen(true);
+  };
+
+  /**
+   * Handle gift message close
+   */
+  const handleGiftClose = () => {
+    setIsGiftModalOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-black flex items-center justify-center p-4">
       {/* Main Card */}
@@ -158,19 +171,20 @@ export default function QRReady({
               </motion.p>
             )}
 
-            {/* Personal Message Gift Icon */}
-            {hasPersonalMessage && (
-              <motion.button
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.6 }}
-                onClick={() => setShowPersonalMessage(true)}
-                className="mt-6 p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-                aria-label="View personal message"
-              >
-                <Gift className="w-5 h-5 text-amber-400" />
-              </motion.button>
-            )}
+            {/* Gift Message Button */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.7 }}
+              className="mt-6"
+            >
+              <GiftMessageButton
+                tagCode={tagCode}
+                hasPersonalMessage={hasPersonalMessage}
+                personalMessage={personalMessage}
+                size="default"
+              />
+            </motion.div>
           </div>
         </div>
 
@@ -191,7 +205,7 @@ export default function QRReady({
             <span className="text-[10px]">Share</span>
           </button>
 
-          {/* Save/Favorite - Using FavoriteButton */}
+          {/* Save/Favorite */}
           <div className="flex flex-col items-center gap-1">
             <FavoriteButton
               id={quote?._id}
@@ -217,58 +231,6 @@ export default function QRReady({
           </button>
         </motion.div>
       </motion.div>
-
-      {/* Personal Message Modal */}
-      {showPersonalMessage && personalMessage && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
-          onClick={() => setShowPersonalMessage(false)}
-        >
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0.9, opacity: 0 }}
-            onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-md bg-gray-900 rounded-2xl p-6 border border-gray-800 shadow-2xl"
-          >
-            {/* Close button */}
-            <button
-              onClick={() => setShowPersonalMessage(false)}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors"
-              aria-label="Close personal message"
-            >
-              <X className="w-5 h-5" />
-            </button>
-
-            {/* Gift Icon */}
-            <div className="flex justify-center mb-4">
-              <div className="p-3 bg-amber-500/10 rounded-full">
-                <Gift className="w-8 h-8 text-amber-400" />
-              </div>
-            </div>
-
-            {/* Title */}
-            <h2 className="text-xl font-semibold text-white text-center font-serif">
-              Personal Message
-            </h2>
-
-            {/* Message */}
-            <div className="mt-4 p-4 bg-gray-800/50 rounded-lg border border-gray-700">
-              <p className="text-gray-200 text-center italic leading-relaxed">
-                “{personalMessage}”
-              </p>
-            </div>
-
-            {/* Footer */}
-            <p className="mt-4 text-xs text-gray-500 text-center">
-              A special message for you 💝
-            </p>
-          </motion.div>
-        </motion.div>
-      )}
     </div>
   );
 }
