@@ -211,13 +211,13 @@ export default function PricingPage() {
                         </div>
                         <div className="p-6">
                             <div className="text-center mb-6">
-                                <span className="text-4xl font-bold text-gray-900">$2.99</span>
+                                <span className="text-4xl font-bold text-gray-900">$4.99</span>
                                 <span className="text-gray-500">/month</span>
                             </div>
                             <ul className="space-y-3 mb-8">
                                 <li className="flex items-center gap-3 text-gray-600">
                                     <FaCheck size={14} className="text-purple-500 flex-shrink-0" />
-                                    <span className="text-sm">3 quotes per day</span>
+                                    <span className="text-sm">Unlimited quotes per day</span>
                                 </li>
                                 <li className="flex items-center gap-3 text-gray-600">
                                     <FaCheck size={14} className="text-purple-500 flex-shrink-0" />

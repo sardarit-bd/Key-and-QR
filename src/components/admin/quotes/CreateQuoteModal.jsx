@@ -6,11 +6,11 @@ import api from "@/lib/api";
 import { toast } from "react-hot-toast";
 
 const CATEGORIES = [
-    { value: "faith", label: "Faith", color: "bg-purple-100 text-purple-700" },
     { value: "love", label: "Love", color: "bg-red-100 text-pink-700" },
-    { value: "hope", label: "Hope", color: "bg-green-100 text-green-700" },
-    { value: "success", label: "Success", color: "bg-blue-100 text-blue-700" },
-    { value: "motivation", label: "Motivation", color: "bg-orange-100 text-orange-700" },
+    { value: "strength", label: "Strength", color: "bg-orange-100 text-orange-700" },
+    { value: "healing", label: "Healing", color: "bg-green-100 text-green-700" },
+    { value: "faith", label: "Faith", color: "bg-purple-100 text-purple-700" },
+    { value: "gratitude", label: "Gratitude", color: "bg-yellow-100 text-yellow-700" },
 ];
 
 export default function CreateQuoteModal({ isOpen, onClose, onSuccess }) {

@@ -13,11 +13,11 @@ import {
 
 const CATEGORIES = [
   { id: "all", name: "All Categories" },
-  { id: "motivation", name: "Motivation" },
   { id: "love", name: "Love" },
-  { id: "gratitude", name: "Gratitude" },
-  { id: "faith", name: "Faith" },
+  { id: "strength", name: "Strength" },
   { id: "healing", name: "Healing" },
+  { id: "faith", name: "Faith" },
+  { id: "gratitude", name: "Gratitude" },
 ];
 
 export default function MyQuoteFilters({ filters }) {

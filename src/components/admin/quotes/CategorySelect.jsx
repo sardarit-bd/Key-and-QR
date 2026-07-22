@@ -1,17 +1,9 @@
 // components/admin/quotes/CategorySelect.jsx
 import { useState, useRef, useEffect } from "react";
 import { ChevronDown, Check } from "lucide-react";
-import { FaChurch, FaHeart, FaStar, FaTrophy, FaBolt } from "react-icons/fa";
+import { FaHeart, FaBolt, FaLeaf, FaChurch, FaSun } from "react-icons/fa";
 
 const CATEGORIES = [
-    { 
-        value: "faith", 
-        label: "Faith", 
-        color: "bg-purple-100 text-purple-700", 
-        hoverColor: "hover:bg-purple-200",
-        icon: FaChurch,
-        iconColor: "text-purple-600"
-    },
     { 
         value: "love", 
         label: "Love", 
@@ -21,28 +13,36 @@ const CATEGORIES = [
         iconColor: "text-pink-600"
     },
     { 
-        value: "hope", 
-        label: "Hope", 
-        color: "bg-green-100 text-green-700", 
-        hoverColor: "hover:bg-green-200",
-        icon: FaStar,
-        iconColor: "text-green-600"
-    },
-    { 
-        value: "success", 
-        label: "Success", 
-        color: "bg-blue-100 text-blue-700", 
-        hoverColor: "hover:bg-blue-200",
-        icon: FaTrophy,
-        iconColor: "text-blue-600"
-    },
-    { 
-        value: "motivation", 
-        label: "Motivation", 
+        value: "strength", 
+        label: "Strength", 
         color: "bg-orange-100 text-orange-700", 
         hoverColor: "hover:bg-orange-200",
         icon: FaBolt,
         iconColor: "text-orange-600"
+    },
+    { 
+        value: "healing", 
+        label: "Healing", 
+        color: "bg-green-100 text-green-700", 
+        hoverColor: "hover:bg-green-200",
+        icon: FaLeaf,
+        iconColor: "text-green-600"
+    },
+    { 
+        value: "faith", 
+        label: "Faith", 
+        color: "bg-purple-100 text-purple-700", 
+        hoverColor: "hover:bg-purple-200",
+        icon: FaChurch,
+        iconColor: "text-purple-600"
+    },
+    { 
+        value: "gratitude", 
+        label: "Gratitude", 
+        color: "bg-yellow-100 text-yellow-700", 
+        hoverColor: "hover:bg-yellow-200",
+        icon: FaSun,
+        iconColor: "text-yellow-600"
     },
 ];
 

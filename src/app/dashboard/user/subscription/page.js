@@ -160,7 +160,7 @@ export default function UserSubscriptionsPage() {
                                             </div>
                                             <div className="flex items-center gap-1 text-gray-700 font-medium">
                                                 <DollarSign size={14} />
-                                                <span>$2.99/month</span>
+                                                <span>$4.99/month</span>
                                             </div>
                                         </div>
                                     </div>

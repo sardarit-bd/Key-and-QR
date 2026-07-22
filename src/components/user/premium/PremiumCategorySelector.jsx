@@ -5,11 +5,11 @@ import { Lock } from 'lucide-react';
 
 const CATEGORIES = [
   { id: 'random', label: 'Random', icon: '✨' },
-  { id: 'faith', label: 'Faith', icon: '🙏' },
   { id: 'love', label: 'Love', icon: '❤️' },
-  { id: 'hope', label: 'Hope', icon: '🌟' },
-  { id: 'success', label: 'Success', icon: '🏆' },
-  { id: 'motivation', label: 'Motivation', icon: '💪' },
+  { id: 'strength', label: 'Strength', icon: '💪' },
+  { id: 'healing', label: 'Healing', icon: '🌿' },
+  { id: 'faith', label: 'Faith', icon: '🙏' },
+  { id: 'gratitude', label: 'Gratitude', icon: '☀️' },
 ];
 
 /**

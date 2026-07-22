@@ -185,7 +185,7 @@ export default function PremiumSection({ selectedCategory }) {
         </h2>
 
         <p className="text-gray-500 mb-6">
-          Get access to categorized quotes for only $2.99/month
+          Get access to categorized quotes for only $4.99/month
         </p>
 
         {/* Glassmorphism Selected Category Display - With Colors */}
@@ -264,7 +264,7 @@ export default function PremiumSection({ selectedCategory }) {
           <div className="absolute -inset-0.5 bg-gradient-to-r from-gray-200 to-gray-300 rounded-2xl blur opacity-20 group-hover:opacity-30 transition duration-300"></div>
           <div className="relative rounded-2xl border border-gray-200 p-8 shadow-lg bg-white/90 backdrop-blur-sm">
             <div className="mb-6">
-              <span className="text-4xl font-bold text-gray-900">$2.99</span>
+              <span className="text-4xl font-bold text-gray-900">$4.99</span>
               <span className="text-gray-500">/month</span>
               <p className="text-sm text-gray-400 mt-1">
                 Cancel anytime, no commitment
@@ -305,7 +305,7 @@ export default function PremiumSection({ selectedCategory }) {
             </button>
 
             <p className="mt-4 text-xs text-gray-400">
-              Then $2.99/month. Cancel anytime.
+              Then $4.99/month. Cancel anytime.
             </p>
           </div>
         </div>

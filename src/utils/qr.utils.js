@@ -12,30 +12,30 @@ export const QR_STATUS = {
   };
   
   export const CATEGORY_LABELS = {
-    faith: 'Faith ☾',
     love: 'Love ♥',
-    hope: 'Healing ✦',
-    success: 'Success ☆',
-    motivation: 'Strength ◐',
+    strength: 'Strength ◐',
+    healing: 'Healing ✦',
+    faith: 'Faith ☾',
+    gratitude: 'Gratitude ☀',
     personal: 'Personal ♥',
   };
   
   export const DEFAULT_IMAGES = {
-    faith: '/images/quote-bg/faith.jpg',
     love: '/images/quote-bg/love.jpg',
-    hope: '/images/quote-bg/healing.jpg',
-    success: '/images/quote-bg/success.jpg',
-    motivation: '/images/quote-bg/strength.jpg',
+    strength: '/images/quote-bg/strength.jpg',
+    healing: '/images/quote-bg/healing.jpg',
+    faith: '/images/quote-bg/faith.jpg',
+    gratitude: '/images/quote-bg/gratitude.jpg',
     personal: '/images/quote-bg/peace.jpg',
   };
   
   export const getCategoryLabel = (category) => {
-    return CATEGORY_LABELS[category] || CATEGORY_LABELS.faith;
+    return CATEGORY_LABELS[category] || CATEGORY_LABELS.love;
   };
   
   export const getBackgroundImage = (category, customImage) => {
     if (customImage) return customImage;
-    return DEFAULT_IMAGES[category] || DEFAULT_IMAGES.faith;
+    return DEFAULT_IMAGES[category] || DEFAULT_IMAGES.love;
   };
   
   export const formatQuoteForShare = (quote, author) => {

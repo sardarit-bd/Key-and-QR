@@ -13,11 +13,11 @@ import {
 
 const CATEGORIES = [
   { id: 'all', name: 'All Categories' },
-  { id: 'faith', name: 'Faith' },
   { id: 'love', name: 'Love' },
-  { id: 'hope', name: 'Hope' },
-  { id: 'success', name: 'Success' },
-  { id: 'motivation', name: 'Motivation' },
+  { id: 'strength', name: 'Strength' },
+  { id: 'healing', name: 'Healing' },
+  { id: 'faith', name: 'Faith' },
+  { id: 'gratitude', name: 'Gratitude' },
 ];
 
 const SORT_OPTIONS = [

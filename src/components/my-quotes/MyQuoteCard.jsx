@@ -15,27 +15,27 @@ import { format } from 'date-fns';
 import FavoriteButton from '@/components/favorite/FavoriteButton';
 
 const CATEGORY_COLORS = {
-  faith: 'border-amber-500/30 bg-amber-500/10 text-amber-400',
   love: 'border-rose-500/30 bg-rose-500/10 text-rose-400',
-  hope: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400',
-  success: 'border-blue-500/30 bg-blue-500/10 text-blue-400',
-  motivation: 'border-violet-500/30 bg-violet-500/10 text-violet-400',
+  strength: 'border-orange-500/30 bg-orange-500/10 text-orange-400',
+  healing: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400',
+  faith: 'border-amber-500/30 bg-amber-500/10 text-amber-400',
+  gratitude: 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400',
 };
 
 const CATEGORY_LABELS = {
-  faith: 'Faith',
   love: 'Love',
-  hope: 'Hope',
-  success: 'Success',
-  motivation: 'Motivation',
+  strength: 'Strength',
+  healing: 'Healing',
+  faith: 'Faith',
+  gratitude: 'Gratitude',
 };
 
 const DEFAULT_IMAGES = {
-  faith: '/images/quote-bg/faith.jpg',
   love: '/images/quote-bg/love.jpg',
-  hope: '/images/quote-bg/healing.jpg',
-  success: '/images/quote-bg/success.jpg',
-  motivation: '/images/quote-bg/strength.jpg',
+  strength: '/images/quote-bg/strength.jpg',
+  healing: '/images/quote-bg/healing.jpg',
+  faith: '/images/quote-bg/faith.jpg',
+  gratitude: '/images/quote-bg/gratitude.jpg',
 };
 
 /**
