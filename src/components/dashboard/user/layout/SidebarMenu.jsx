@@ -1,36 +1,36 @@
 'use client';
 
-import { 
-  Home, 
-  Quote, 
-  Sparkles, 
-  QrCode, 
-  Heart, 
-  Gift, 
-  BookOpen, 
-  CreditCard, 
-  Settings
-} from 'lucide-react';
-import SidebarItem from './SidebarItem';
+import { useMemo } from 'react';
+import SidebarMenuItem from './SidebarMenuItem';
 
-const MENU_ITEMS = [
-  { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/new-dashboard/user', exact: true },
-  { id: 'my-quotes', label: 'My Quotes', icon: Quote, href: '/new-dashboard/user/my-quotes' },
-  { id: 'scan-history', label: 'Scan History', icon: QrCode, href: '/new-dashboard/user/scan-history' },
-  { id: 'favorites', label: 'Favorites', icon: Heart, href: '/new-dashboard/user/favorites' },
-  { id: 'gifted', label: 'Gifted Messages', icon: Gift, href: '/new-dashboard/user/gifted' },
-  { id: 'subscription', label: 'Subscription', icon: CreditCard, href: '/new-dashboard/user/premium' },
-];
+/**
+ * Sidebar Menu
+ * Dynamic menu rendered from configuration
+ */
+export default function SidebarMenu({ menuItems, pathname, isCollapsed }) {
+  // Memoize menu items to prevent unnecessary re-renders
+  const memoizedMenuItems = useMemo(() => menuItems, [menuItems]);
 
-export default function SidebarMenu({ pathname, isCollapsed }) {
+  if (!memoizedMenuItems || memoizedMenuItems.length === 0) {
+    return null;
+  }
+
   return (
     <nav className="px-4 flex flex-col gap-1" aria-label="Dashboard navigation">
-      {MENU_ITEMS.map((item) => (
-        <SidebarItem
+      {memoizedMenuItems.map((item) => (
+        <SidebarMenuItem
           key={item.id}
-          {...item}
-          isActive={item.exact ? pathname === item.href : pathname?.startsWith(item.href)}
+          id={item.id}
+          title={item.title}
+          icon={item.icon}
+          href={item.href}
+          isActive={
+            item.exact 
+              ? pathname === item.href 
+              : pathname?.startsWith(item.href)
+          }
           isCollapsed={isCollapsed}
+          badge={item.badge}
         />
       ))}
     </nav>

@@ -1,26 +1,33 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
+import { useAuthStore } from '@/store/authStore';
 import SidebarFooter from './SidebarFooter';
 import SidebarUpgradeCard from './SidebarUpgradeCard';
 import SidebarMenu from './SidebarMenu';
 import SidebarHeader from './SidebarHeader';
 import SidebarProfile from './SidebarProfile';
+import useSidebar from '@/hooks/sidebar/useSidebar';
 
 const SIDEBAR_WIDTH = 'w-72';
 const COLLAPSED_WIDTH = 'w-20';
 
-export default function Sidebar({ user, isCollapsed = false, onToggle }) {
+export default function Sidebar({ isCollapsed = false, onToggle }) {
   const pathname = usePathname();
+  const { isAuthenticated, isLoading } = useAuthStore();
+  const sidebarData = useSidebar();
+
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(isCollapsed);
 
+  // Close mobile sidebar on route change
   useEffect(() => {
     setIsMobileOpen(false);
   }, [pathname]);
 
+  // Handle resize
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
@@ -52,8 +59,14 @@ export default function Sidebar({ user, isCollapsed = false, onToggle }) {
     flex flex-col
   `;
 
+  // Don't render if not authenticated
+  if (!isAuthenticated && !isLoading) {
+    return null;
+  }
+
   return (
     <>
+      {/* Mobile overlay */}
       {isMobileOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 lg:hidden"
@@ -62,6 +75,7 @@ export default function Sidebar({ user, isCollapsed = false, onToggle }) {
         />
       )}
 
+      {/* Mobile toggle button */}
       <button
         onClick={toggleSidebar}
         className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-[#070911] text-[#e3ba85] shadow-lg border border-[#e3ba85]/20"
@@ -70,24 +84,35 @@ export default function Sidebar({ user, isCollapsed = false, onToggle }) {
         {isMobileOpen ? <X size={20} /> : <Menu size={20} />}
       </button>
 
+      {/* Sidebar */}
       <aside className={sidebarClasses} aria-label="Dashboard navigation">
-      <div className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar pb-6">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar pb-6">
           <SidebarHeader isCollapsed={isDesktopCollapsed} />
           
           <div className="mt-4">
-            <SidebarProfile
-              user={user} 
+            <SidebarProfile 
+              profile={sidebarData.profile} 
               isCollapsed={isDesktopCollapsed} 
             />
           </div>
 
           <SidebarMenu 
+            menuItems={sidebarData.menuItems}
             pathname={pathname} 
             isCollapsed={isDesktopCollapsed} 
           />
 
           <div className="mt-4">
-            <SidebarUpgradeCard isCollapsed={isDesktopCollapsed} />
+            <SidebarUpgradeCard 
+              isCollapsed={isDesktopCollapsed}
+              config={sidebarData.upgradeCard}
+              userPlan={sidebarData.userPlan}
+              shouldShow={sidebarData.shouldShowUpgrade}
+            />
+          </div>
+
+          <div className="mt-6 px-4">
+            <SidebarFooter isCollapsed={isDesktopCollapsed} />
           </div>
         </div>
       </aside>

@@ -11,6 +11,7 @@ import PAYMENT_STATUS from "@/config/paymentStatus";
 export default function SuccessPage() {
     const searchParams = useSearchParams();
     const orderId = searchParams.get("orderId");
+    const token = searchParams.get("token");
 
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -31,7 +32,7 @@ export default function SuccessPage() {
 
     const checkOrderStatus = async () => {
         try {
-            const response = await orderService.getOrderStatus(orderId);
+            const response = await orderService.getOrderStatus(orderId, token);
             const orderData = response.data;
             setOrder(orderData);
             setPaymentStatus(orderData?.paymentStatus || PAYMENT_STATUS.PENDING);

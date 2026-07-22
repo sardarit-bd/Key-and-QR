@@ -153,7 +153,6 @@ export const clearTokens = () => {
     localStorage.removeItem(USER_KEY);
     clearCookie("accessToken");
     clearCookie("refreshToken");
-    clearCookie("userRole");
     
     // Reset write state
     _writeQueue = [];

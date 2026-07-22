@@ -41,7 +41,6 @@ export default function CallbackContent() {
                 // Set cookies for middleware
                 document.cookie = `accessToken=${accessToken}; path=/; max-age=900; SameSite=Lax`;
                 document.cookie = `refreshToken=${refreshToken}; path=/; max-age=604800; SameSite=Lax`;
-                document.cookie = `userRole=${user.role}; path=/; max-age=604800; SameSite=Lax`;
 
                 console.log("Auth successful, store updated");
 
