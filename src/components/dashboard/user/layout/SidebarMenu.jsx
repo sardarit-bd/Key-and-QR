@@ -16,13 +16,10 @@ import SidebarItem from './SidebarItem';
 const MENU_ITEMS = [
   { id: 'dashboard', label: 'Dashboard', icon: Home, href: '/new-dashboard/user', exact: true },
   { id: 'my-quotes', label: 'My Quotes', icon: Quote, href: '/new-dashboard/user/my-quotes' },
-  { id: 'reflections', label: 'Reflections', icon: Sparkles, href: '/dashboard/user/reflections' },
-  { id: 'scan-history', label: 'Scan History', icon: QrCode, href: '/dashboard/user/scan-history' },
-  { id: 'favorites', label: 'Favorites', icon: Heart, href: '/dashboard/user/favorites' },
-  { id: 'gifted', label: 'Gifted Messages', icon: Gift, href: '/dashboard/user/gifted' },
-  { id: 'categories', label: 'Categories', icon: BookOpen, href: '/dashboard/user/categories' },
-  { id: 'subscription', label: 'Subscription', icon: CreditCard, href: '/dashboard/user/subscription' },
-  { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/user/settings' },
+  { id: 'scan-history', label: 'Scan History', icon: QrCode, href: '/new-dashboard/user/scan-history' },
+  { id: 'favorites', label: 'Favorites', icon: Heart, href: '/new-dashboard/user/favorites' },
+  { id: 'gifted', label: 'Gifted Messages', icon: Gift, href: '/new-dashboard/user/gifted' },
+  { id: 'subscription', label: 'Subscription', icon: CreditCard, href: '/new-dashboard/user/premium' },
 ];
 
 export default function SidebarMenu({ pathname, isCollapsed }) {
