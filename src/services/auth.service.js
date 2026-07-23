@@ -1,4 +1,5 @@
 import api from "@/lib/api";
+import { getRefreshToken } from "@/lib/auth-utils";
 
 /**
  * Auth Service - Handles all authentication API calls
@@ -28,15 +29,37 @@ export const authService = {
     },
 
     /**
-     * Logout user
+     * Logout user - sends refresh token for server-side revocation
      */
     logout: async () => {
         try {
-            const response = await api.post("/auth/logout");
+            const refreshToken = getRefreshToken();
+            const response = await api.post(
+                "/auth/logout",
+                {},
+                {
+                    headers: refreshToken
+                        ? { "x-refresh-token": refreshToken }
+                        : {},
+                }
+            );
             return response.data;
         } catch (error) {
             // Silently fail logout API call
             console.warn("Logout API call failed:", error.message);
+            return { success: true };
+        }
+    },
+
+    /**
+     * Logout from all devices - revokes all refresh tokens
+     */
+    logoutAll: async () => {
+        try {
+            const response = await api.post("/auth/logout-all");
+            return response.data;
+        } catch (error) {
+            console.warn("Logout all API call failed:", error.message);
             return { success: true };
         }
     },
