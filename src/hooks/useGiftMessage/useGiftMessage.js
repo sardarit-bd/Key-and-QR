@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { toast } from 'react-hot-toast';
-import { giftMessageService } from '@/services/giftMessage.service';
+import { giftMessageService } from '@/services/giftMessage-service/giftMessage.service';
 
 /**
  * Gift Message Hook
