@@ -2,7 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useQRResolution } from '@/hooks/useQRResolution';
+import { useQRResolution } from '@/hooks/qr-resolution.js/useQRResolution';
 import {
   QRLoading,
   QRNotFound,

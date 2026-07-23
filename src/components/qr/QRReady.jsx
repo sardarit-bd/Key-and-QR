@@ -6,8 +6,8 @@ import { Share2, Compass } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
 import FavoriteButton from '@/components/favorite/FavoriteButton';
-import GiftMessageButton from '@/components/gift-message/GiftMessageButton';
-import useFavorite from '@/hooks/useFavorite';
+import GiftMessageButton from '@/components/user/gift-message/GiftMessageButton';
+import useFavorite from '@/hooks/use-favorite/useFavorite';
 
 const DEFAULT_IMAGES = {
   love: '/images/quote-bg/love.jpg',
