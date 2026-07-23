@@ -46,6 +46,7 @@ export default function Checkout() {
         phone: "",
         address: "",
         city: "",
+        state: "",
         postalCode: "",
         country: CHECKOUT_CONFIG.defaults.country,
         purchaseType: CHECKOUT_CONFIG.defaults.purchaseType,
@@ -154,6 +155,7 @@ export default function Checkout() {
                 phone: formData.phone,
                 address: formData.address,
                 city: formData.city,
+                state: formData.state,
                 postalCode: formData.postalCode,
                 country: formData.country,
             };
@@ -183,6 +185,7 @@ export default function Checkout() {
             phone: formData.phone,
             address: formData.address,
             city: formData.city,
+            state: formData.state,
             postalCode: formData.postalCode,
             country: formData.country,
         };
@@ -534,11 +537,11 @@ export default function Checkout() {
                                 )}
                             </div>
 
-                            <div className="grid grid-cols-2 gap-3">
+                            <div className="grid grid-cols-3 gap-3">
                                 <div>
                                     <input
                                         type="text"
-                                        placeholder="City"
+                                        placeholder="City *"
                                         value={formData.city}
                                         onChange={(e) => {
                                             setFormData({ ...formData, city: e.target.value });
@@ -558,7 +561,27 @@ export default function Checkout() {
                                 <div>
                                     <input
                                         type="text"
-                                        placeholder="Postal Code"
+                                        placeholder="State *"
+                                        value={formData.state}
+                                        onChange={(e) => {
+                                            setFormData({ ...formData, state: e.target.value });
+                                            if (fieldErrors.state) {
+                                                const { errors } = validateCheckoutForm({ ...formData, state: e.target.value });
+                                                setFieldErrors(prev => ({ ...prev, state: errors.state }));
+                                            }
+                                        }}
+                                        className={`w-full border ${fieldErrors.state ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 focus:outline-none focus:border-black transition`}
+                                        disabled={isSubmitting || loading || isRedirecting}
+                                        aria-label="State"
+                                    />
+                                    {fieldErrors.state && (
+                                        <p className="text-red-500 text-xs mt-1">{fieldErrors.state}</p>
+                                    )}
+                                </div>
+                                <div>
+                                    <input
+                                        type="text"
+                                        placeholder="ZIP Code *"
                                         value={formData.postalCode}
                                         onChange={(e) => {
                                             setFormData({ ...formData, postalCode: e.target.value });
@@ -569,7 +592,7 @@ export default function Checkout() {
                                         }}
                                         className={`w-full border ${fieldErrors.postalCode ? 'border-red-500' : 'border-gray-300'} rounded-md px-4 py-2 focus:outline-none focus:border-black transition`}
                                         disabled={isSubmitting || loading || isRedirecting}
-                                        aria-label="Postal code"
+                                        aria-label="ZIP Code"
                                     />
                                     {fieldErrors.postalCode && (
                                         <p className="text-red-500 text-xs mt-1">{fieldErrors.postalCode}</p>
