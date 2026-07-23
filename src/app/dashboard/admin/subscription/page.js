@@ -303,7 +303,7 @@ export default function AdminSubscriptionsPage() {
                                         </td>
                                         <td className="p-4">
                                             <div className="flex items-center gap-1 text-gray-700">
-                                                <span className="font-medium flex items-center"><DollarSign size={14} />2.99</span>
+                                                <span className="font-medium flex items-center"><DollarSign size={14} />4.99</span>
                                                 <span className="text-xs text-gray-500">/month</span>
                                             </div>
                                         </td>

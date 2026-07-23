@@ -8,11 +8,11 @@ import api from "@/lib/api";
 import { MdTipsAndUpdates } from "react-icons/md";
 
 const CATEGORIES = [
-  { value: "faith", label: "Faith", icon: "☾" },
   { value: "love", label: "Love", icon: "♥" },
-  { value: "hope", label: "Hope", icon: "✦" },
-  { value: "success", label: "Success", icon: "☆" },
-  { value: "motivation", label: "Motivation", icon: "◐" },
+  { value: "strength", label: "Strength", icon: "💪" },
+  { value: "healing", label: "Healing", icon: "🌿" },
+  { value: "faith", label: "Faith", icon: "☾" },
+  { value: "gratitude", label: "Gratitude", icon: "☀" },
 ];
 
 // File validation helper

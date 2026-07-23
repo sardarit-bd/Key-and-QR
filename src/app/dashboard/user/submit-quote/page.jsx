@@ -23,11 +23,11 @@ import { toast, Toaster } from "react-hot-toast";
 
 // Category options - Black & White theme with colored icons
 const CATEGORIES = [
-    { id: "motivation", label: "Motivation", icon: Sparkles, iconColor: "text-orange-500" },
     { id: "love", label: "Love", icon: Heart, iconColor: "text-pink-500" },
-    { id: "gratitude", label: "Gratitude", icon: MessageSquare, iconColor: "text-green-500" },
-    { id: "faith", label: "Faith", icon: Tag, iconColor: "text-purple-500" },
+    { id: "strength", label: "Strength", icon: Sparkles, iconColor: "text-orange-500" },
     { id: "healing", label: "Healing", icon: Heart, iconColor: "text-blue-500" },
+    { id: "faith", label: "Faith", icon: Tag, iconColor: "text-purple-500" },
+    { id: "gratitude", label: "Gratitude", icon: MessageSquare, iconColor: "text-green-500" },
     { id: "other", label: "Other", icon: Quote, iconColor: "text-gray-500" },
 ];
 

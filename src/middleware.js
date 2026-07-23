@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { jwtVerify } from "jose";
 import {
     isPublicRoute,
     isGuestOnlyRoute,
@@ -8,49 +9,42 @@ import {
 } from "@/config/routes";
 
 /**
- * Decode JWT payload
+ * Verify JWT access token with signature verification.
+ * Uses jose (Edge-compatible) instead of jsonwebtoken.
+ * Returns decoded payload if valid, null if invalid/expired.
  */
-function decodeJwtPayload(token) {
+async function verifyAccessToken(token) {
     try {
-        const base64Payload = token.split(".")[1];
-        if (!base64Payload) return null;
-
-        const normalized = base64Payload.replace(/-/g, "+").replace(/_/g, "/");
-        const padded = normalized.padEnd(
-            normalized.length + (4 - (normalized.length % 4 || 4)) % 4,
-            "="
-        );
-
-        const json = atob(padded);
-        return JSON.parse(json);
+        const secret = new TextEncoder().encode(process.env.JWT_ACCESS_SECRET);
+        const { payload } = await jwtVerify(token, secret);
+        return payload;
     } catch {
         return null;
     }
 }
 
 /**
- * Check if token is expired
+ * Clear authentication cookies
  */
-function isTokenExpired(token) {
-    const payload = decodeJwtPayload(token);
-    if (!payload?.exp) return true;
-    return payload.exp * 1000 <= Date.now();
+function clearAuthCookies(response) {
+    response.cookies.delete("accessToken");
+    response.cookies.delete("refreshToken");
+    return response;
 }
 
-export function middleware(request) {
+export async function middleware(request) {
     const accessToken = request.cookies.get("accessToken")?.value;
     const refreshToken = request.cookies.get("refreshToken")?.value;
-    const userRole = request.cookies.get("userRole")?.value;
     const { pathname } = request.nextUrl;
 
     // ************* PUBLIC ROUTES - Always accessible *************
 
     if (isPublicRoute(pathname)) {
         // Guest-only routes redirect authenticated users
-        if (isGuestOnlyRoute(pathname)) {
-            const hasValidToken = accessToken && !isTokenExpired(accessToken);
-            if (hasValidToken) {
-                const dashboard = userRole === "admin" ? "/dashboard/admin" : "/dashboard/user";
+        if (isGuestOnlyRoute(pathname) && accessToken) {
+            const payload = await verifyAccessToken(accessToken);
+            if (payload) {
+                const dashboard = payload.role === "admin" ? "/new-dashboard/admin" : "/new-dashboard/user";
                 return NextResponse.redirect(new URL(dashboard, request.url));
             }
         }
@@ -66,34 +60,35 @@ export function middleware(request) {
     // ************* PROTECTED ROUTES - Require authentication *************
 
     if (isProtectedRoute(pathname)) {
-        const hasAccessToken = Boolean(accessToken);
-        const hasRefreshToken = Boolean(refreshToken);
-        const accessExpired = hasAccessToken ? isTokenExpired(accessToken) : true;
+        // Try to verify access token
+        if (accessToken) {
+            const payload = await verifyAccessToken(accessToken);
 
-        // No tokens at all
-        if (!hasAccessToken && !hasRefreshToken) {
-            const url = new URL("/login", request.url);
-            url.searchParams.set("redirect", pathname);
-            return NextResponse.redirect(url);
-        }
-
-        // Valid access token
-        if (hasAccessToken && !accessExpired) {
-            // Admin route check
-            if (isAdminRoute(pathname) && userRole !== "admin") {
-                return NextResponse.redirect(new URL("/dashboard/user", request.url));
+            // Valid access token
+            if (payload) {
+                // Admin route check - use verified role from JWT
+                if (isAdminRoute(pathname) && payload.role !== "admin") {
+                    return NextResponse.redirect(new URL("/new-dashboard/user", request.url));
+                }
+                return NextResponse.next();
             }
+
+            // Invalid/expired access token - clear and redirect to login
+            if (!refreshToken) {
+                const response = NextResponse.redirect(
+                    new URL("/login?session=expired", request.url)
+                );
+                return clearAuthCookies(response);
+            }
+        }
+
+        // No access token but has refresh token - allow through (client will refresh)
+        if (refreshToken) {
             return NextResponse.next();
         }
 
-        // Has refresh token - allow through (client will refresh)
-        if (hasRefreshToken) {
-            return NextResponse.next();
-        }
-
-        // Session expired - redirect to login
+        // No tokens at all - redirect to login
         const url = new URL("/login", request.url);
-        url.searchParams.set("session", "expired");
         url.searchParams.set("redirect", pathname);
         return NextResponse.redirect(url);
     }
@@ -105,31 +100,13 @@ export function middleware(request) {
 
 export const config = {
     matcher: [
-        "/",
-        "/login",
-        "/signup",
-        "/forgot-password",
-        "/reset-password",
-        "/callback",
-        "/dashboard/:path*",
-        "/profile/:path*",
-        "/checkout/:path*",
-        "/cart",
-        "/payment/:path*",
-        "/subscription/:path*",
-        "/orders/:path*",
-        "/api/:path*",
-        "/shop/:path*",
-        "/t/:path*",
-        "/how-it-works",
-        "/inspiration",
-        "/about",
-        "/contact",
-        "/faq",
-        "/privacy",
-        "/terms",
-        "/shipping",
-        "/success",
-        "/cancel",
+        /*
+         * Match all request paths except:
+         * - _next/static (static files)
+         * - _next/image (image optimization files)
+         * - favicon.ico (favicon file)
+         * - public folder files (images, etc.)
+         */
+        "/((?!_next/static|_next/image|favicon.ico|images|public).*)",
     ],
 };

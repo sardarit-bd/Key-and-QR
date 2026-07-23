@@ -23,11 +23,11 @@ import { toast } from "react-hot-toast";
 
 // Category configuration with icons
 const CATEGORIES = [
-    { id: "motivation", label: "Motivation", icon: Sparkles, color: "bg-orange-100 text-orange-700" },
     { id: "love", label: "Love", icon: Heart, color: "bg-pink-100 text-pink-700" },
-    { id: "gratitude", label: "Gratitude", icon: Bookmark, color: "bg-green-100 text-green-700" },
-    { id: "faith", label: "Faith", icon: Tag, color: "bg-purple-100 text-purple-700" },
+    { id: "strength", label: "Strength", icon: Sparkles, color: "bg-orange-100 text-orange-700" },
     { id: "healing", label: "Healing", icon: Heart, color: "bg-blue-100 text-blue-700" },
+    { id: "faith", label: "Faith", icon: Tag, color: "bg-purple-100 text-purple-700" },
+    { id: "gratitude", label: "Gratitude", icon: Bookmark, color: "bg-green-100 text-green-700" },
     { id: "random", label: "Random", icon: RefreshCw, color: "bg-gray-100 text-gray-700" },
 ];
 

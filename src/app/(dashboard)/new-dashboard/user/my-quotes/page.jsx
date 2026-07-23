@@ -1,118 +1,131 @@
-"use client";
+'use client';
 
-import React, { useEffect, useState } from "react";
-import { AlertCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { motion } from 'framer-motion';
 import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from "@/components/ui/alert";
+  MyQuoteHeader,
+  MyQuoteStats,
+  MyQuoteFilters,
+  MyQuoteGrid,
+  MyQuoteLoadingSkeleton,
+  MyQuoteErrorState,
+  MyQuoteEmptyState,
+} from '@/components/my-quotes';
+import useMyQuotes from '@/hooks/my-quotes-service/useMyQuotes';
 
-import api from "@/lib/api";
-
-import MobileHeader from "@/components/dashboard/user/my-quote/MobileHeader";
-import MyQuoteFilters from "@/components/dashboard/user/my-quote/MyQuoteFilters";
-import MyQuoteStats from "@/components/dashboard/user/my-quote/MyQuoteStats";
-import QuoteGrid from "@/components/dashboard/user/my-quote/QuoteGrid";
-import BottomNavigation from "@/components/dashboard/user/my-quote/BottomNavigation";
-
-export default function MyQuotePage() {
-  const [quote, setQuote] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  const [category, setCategory] = useState("random");
-  const [favoriteCount] = useState(0);
-
-  const fetchQuote = async (selectedCategory = "random") => {
-    try {
-      setLoading(true);
-      setError(false);
-
-      const res = await api.get("/quotes/random", {
-        params: {
-          category: selectedCategory,
-        },
-      });
-
-      const data = res.data?.data || res.data;
-
-      setQuote({
-        id: data._id,
-        text: data.text,
-        author: data.author || "InspireTag",
-        category: data.category,
-        image: data.image,
-      });
-    } catch (err) {
-      console.error(err);
-      setError(true);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchQuote(category);
-  }, [category]);
-
-  const filters = {
-    search: "",
-    setSearch: () => {},
+/**
+ * My Quotes Page
+ * Personal inspiration library
+ * Route: /new-dashboard/user/my-quotes
+ */
+export default function MyQuotesPage() {
+  const {
+    quotes,
+    loading,
+    error,
+    search,
     category,
+    sort,
+    view,
+    pagination,
+    stats,
+    setSearch,
     setCategory,
-    sort: "newest",
-    setSort: () => {},
-    view: "grid",
-    handleViewChange: () => {},
-  };
+    setSort,
+    setView,
+    handlePageChange,
+    removeQuote,
+    resetFilters,
+    isAuthenticated,
+  } = useMyQuotes();
+
+  // Always ensure quotes is an array
+  const quoteList = Array.isArray(quotes) ? quotes : [];
+
+  // Loading state
+  if (loading && quoteList.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#090b14]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+          <MyQuoteHeader />
+          <div className="mt-6">
+            <MyQuoteLoadingSkeleton />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-[#090b14]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+          <MyQuoteHeader />
+          <div className="mt-6">
+            <MyQuoteErrorState error={error} onRetry={() => window.location.reload()} />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Empty state — only when not loading AND array is actually empty
+  if (!loading && quoteList.length === 0) {
+    return (
+      <div className="min-h-screen bg-[#090b14]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+          <MyQuoteHeader />
+          <div className="mt-6">
+            <MyQuoteEmptyState />
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-[#090b14] pb-24 font-sans text-white md:pb-0 p-4 md:p-6 lg:p-8">
-      <div className="mx-auto max-w-7xl space-y-6">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="min-h-screen bg-[#090b14]"
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24">
+        {/* Header */}
+        <MyQuoteHeader />
 
-        <MobileHeader filters={filters} />
+        {/* Stats */}
+        <div className="mt-6">
+          <MyQuoteStats stats={stats} />
+        </div>
 
-        <div className="hidden md:flex flex-col gap-6">
-          <MyQuoteFilters filters={filters} />
-
-          <MyQuoteStats
-            favoriteCount={favoriteCount}
-            currentCategory={category}
+        {/* Filters */}
+        <div className="mt-6">
+          <MyQuoteFilters
+            search={search}
+            category={category}
+            sort={sort}
+            view={view}
+            onSearchChange={setSearch}
+            onCategoryChange={setCategory}
+            onSortChange={setSort}
+            onViewChange={setView}
+            onReset={resetFilters}
           />
         </div>
 
-        {error ? (
-          <Alert className="border-red-500/20 bg-red-500/10 text-red-400">
-            <AlertCircle className="h-4 w-4" />
-
-            <AlertTitle>Error</AlertTitle>
-
-            <AlertDescription className="flex items-center justify-between">
-              Failed to load quote.
-
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => fetchQuote(category)}
-              >
-                Retry
-              </Button>
-            </AlertDescription>
-          </Alert>
-        ) : (
-          <QuoteGrid
-            quote={quote}
-            isLoading={loading}
-            onResetFilters={() => {
-              setCategory("random");
-            }}
+        {/* Grid */}
+        <div className="mt-6">
+          <MyQuoteGrid
+            quotes={quoteList}
+            view={view}
+            loading={loading}
+            pagination={pagination}
+            onPageChange={handlePageChange}
+            onRemove={removeQuote}
           />
-        )}
+        </div>
       </div>
-
-      <BottomNavigation />
-    </div>
+    </motion.div>
   );
 }

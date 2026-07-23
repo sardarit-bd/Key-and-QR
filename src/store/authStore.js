@@ -3,6 +3,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import authService from "@/services/auth.service";
+import api from "@/lib/api";
 import {
     clearTokens,
     getAccessToken,
@@ -343,8 +344,21 @@ export const useAuthStore = create(
             logout: async () => {
                 set({ loading: true, isLoading: true });
 
+                // Capture refresh token before clearing
+                const refreshToken = getRefreshToken();
+
                 try {
-                    await authService.logout();
+                    // Send refresh token to server for revocation
+                    if (refreshToken) {
+                        await api.post(
+                            "/auth/logout",
+                            {},
+                            {
+                                headers: { "x-refresh-token": refreshToken },
+                                timeout: 5000,
+                            }
+                        ).catch(() => {});
+                    }
                 } catch (error) {
                     console.warn("Logout API error:", error.message);
                 } finally {
@@ -536,7 +550,6 @@ export const useAuthStore = create(
                 isGuestClaimed: state.isGuestClaimed,
             }),
             onRehydrateStorage: () => {
-                console.debug("Auth store rehydrated");
                 return (state, error) => {
                     if (error) {
                         console.error("Auth store rehydration error:", error);

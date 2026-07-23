@@ -195,6 +195,19 @@ const forceLogout = () => {
 
     stopTokenRefreshTimer();
 
+    // Revoke refresh token on server (fire-and-forget, best-effort)
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+        api.post(
+            "/auth/logout",
+            {},
+            {
+                headers: { "x-refresh-token": refreshToken },
+                timeout: 5000,
+            }
+        ).catch(() => {});
+    }
+
     clearTokens();
 
     if (typeof window !== "undefined") {

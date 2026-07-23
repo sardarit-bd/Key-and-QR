@@ -3,17 +3,23 @@
 import { Check } from "lucide-react";
 import Card from "./Card";
 
-const DAYS = [
-  { day: "M", active: true },
-  { day: "T", active: true },
-  { day: "W", active: true },
-  { day: "T", active: true },
-  { day: "F", active: true },
-  { day: "S", active: true },
-  { day: "S", active: false },
-];
+export default function InspirationStreak({ streak }) {
+  const current = streak?.current ?? 0;
+  const longest = streak?.longest ?? 0;
+  const weekActivity = streak?.weekActivity ?? [false, false, false, false, false, false, false];
 
-export default function InspirationStreak({ streak = 7 }) {
+  // Calculate ring progress: 7-day weekly cycle
+  // 0 days = 0%, 7 days = 100%
+  const progressPercent = (Math.min(current, 7) / 7) * 100;
+
+  // SVG circle geometry
+  const radius = 82;
+  const circumference = 2 * Math.PI * radius; // ~515.22
+  const offset = circumference * (1 - progressPercent / 100);
+
+  // Monday → Sunday labels
+  const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
   return (
     <Card className="relative overflow-hidden rounded-[26px] border border-[#4d3523] p-5 sm:p-6 h-full">
       <div className="relative z-10 flex h-full flex-col items-center justify-center">
@@ -75,9 +81,10 @@ export default function InspirationStreak({ streak = 7 }) {
               stroke="url(#eclipseGradient)"
               strokeWidth="2.5"
               strokeLinecap="round"
-              strokeDasharray="515"
-              strokeDashoffset="25"
+              strokeDasharray={circumference}
+              strokeDashoffset={offset}
               filter="url(#eclipseGlow)"
+              style={{ transition: 'stroke-dashoffset 1s ease-in-out' }}
             />
             <circle
               cx="192"
@@ -91,7 +98,7 @@ export default function InspirationStreak({ streak = 7 }) {
           {/* Center Text */}
           <div className="relative z-20 text-center">
             <h1 className="font-serif text-[88px] leading-none text-[#ffb45d] drop-shadow-[0_0_12px_rgba(255,180,93,0.3)]">
-              {streak || 7}
+              {current || 0}
             </h1>
             <p className="mt-2 font-serif text-[20px] text-[#ffb45d] drop-shadow-[0_0_8px_rgba(255,180,93,0.3)]">
               Days
@@ -106,18 +113,18 @@ export default function InspirationStreak({ streak = 7 }) {
         {/* Adjusted mobile padding (px-3 py-3) for the days container */}
         <div className="mt-6 sm:mt-8 w-full rounded-[18px] bg-[#121722]/90 px-3 sm:px-5 py-3 sm:py-4">
           <div className="flex justify-between">
-            {DAYS.map((item, i) => (
+            {DAYS.map((day, i) => (
               <div key={i} className="flex flex-col items-center gap-2 sm:gap-3">
-                <span className="text-xs sm:text-sm text-[#ece8e2]">{item.day}</span>
+                <span className="text-xs sm:text-sm text-[#ece8e2]">{day}</span>
 
                 <div
                   className={`flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full border ${
-                    item.active
+                    weekActivity[i]
                       ? "border-[#f3b25f] bg-[#f3b25f]"
                       : "border-[#5b5d66] bg-transparent"
                   }`}
                 >
-                  {item.active && (
+                  {weekActivity[i] && (
                     <Check
                       size={14}
                       strokeWidth={3}

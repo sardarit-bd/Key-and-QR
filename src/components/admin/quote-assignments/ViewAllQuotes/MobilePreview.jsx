@@ -3,20 +3,20 @@
 import { X, Smartphone } from "lucide-react";
 
 const DEFAULT_IMAGES = {
-  faith: "/images/quote-bg/faith.jpg",
   love: "/images/quote-bg/love.jpg",
-  hope: "/images/quote-bg/healing.jpg",
-  success: "/images/quote-bg/success.jpg",
-  motivation: "/images/quote-bg/strength.jpg",
+  strength: "/images/quote-bg/strength.jpg",
+  healing: "/images/quote-bg/healing.jpg",
+  faith: "/images/quote-bg/faith.jpg",
+  gratitude: "/images/quote-bg/gratitude.jpg",
   personal: "/images/quote-bg/peace.jpg",
 };
 
 const CATEGORY_LABELS = {
-  faith: "Faith",
   love: "Love",
-  hope: "Healing",
-  success: "Success",
-  motivation: "Strength",
+  strength: "Strength",
+  healing: "Healing",
+  faith: "Faith",
+  gratitude: "Gratitude",
   personal: "Personal Message",
 };
 

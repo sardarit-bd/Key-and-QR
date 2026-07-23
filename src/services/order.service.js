@@ -17,10 +17,13 @@ export const orderService = {
 
     /**
      * Get order status
+     * @param {string} orderId - Order ID
+     * @param {string} [guestAccessToken] - Optional guest access token for guest orders
      */
-    getOrderStatus: async (orderId) => {
+    getOrderStatus: async (orderId, guestAccessToken = null) => {
         try {
-            const response = await api.get(`/orders/${orderId}`);
+            const params = guestAccessToken ? { token: guestAccessToken } : {};
+            const response = await api.get(`/orders/${orderId}`, { params });
             return response.data;
         } catch (error) {
             console.error("Order status error:", error);

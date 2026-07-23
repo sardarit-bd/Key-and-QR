@@ -62,6 +62,10 @@ export const protectedPatterns = [
     "/dashboard",
     "/dashboard/:path*",
 
+    // New Dashboard
+    "/new-dashboard",
+    "/new-dashboard/:path*",
+
     // Profile
     "/profile",
     "/profile/:path*",

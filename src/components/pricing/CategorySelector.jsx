@@ -11,17 +11,15 @@ import {
 import { FaHandsPraying, FaHandHoldingHeart } from "react-icons/fa";
 
 const CATEGORIES = [
-    { id: "motivation", label: "Motivation", icon: FiZap, color: "text-orange-500" },
     { id: "love", label: "Love", icon: FiHeart, color: "text-pink-500" },
-    { id: "gratitude", label: "Gratitude", icon: FaHandHoldingHeart, color: "text-green-500" },
-    { id: "faith", label: "Faith", icon: FaHandsPraying, color: "text-purple-500" },
+    { id: "strength", label: "Strength", icon: FiZap, color: "text-orange-500" },
     { id: "healing", label: "Healing", icon: FiSun, color: "text-blue-500" },
-    { id: "success", label: "Success", icon: FiStar, color: "text-yellow-500" },
-    { id: "hope", label: "Hope", icon: FiTrendingUp, color: "text-teal-500" },
+    { id: "faith", label: "Faith", icon: FaHandsPraying, color: "text-purple-500" },
+    { id: "gratitude", label: "Gratitude", icon: FaHandHoldingHeart, color: "text-green-500" },
     { id: "random", label: "Random", icon: FiRefreshCw, color: "text-gray-500" },
 ];
 
-export default function CategorySelector({ selectedCategory, onSelectCategory, isSubscriber, dailyLimit = 3 }) {
+export default function CategorySelector({ selectedCategory, onSelectCategory, isSubscriber, dailyLimit = null }) {
     if (!isSubscriber) {
         return (
             <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 text-center border border-gray-200">

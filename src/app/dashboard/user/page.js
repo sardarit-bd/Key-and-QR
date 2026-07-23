@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   ChevronRight,
   Circle,
+  Dice5,
   Gift,
   Heart,
   LayoutGrid,
@@ -100,7 +101,7 @@ export default function UserDashboard() {
   const [greeting, setGreeting] = useState("Good Afternoon");
 
   const quoteCategories = [
-    { id: "random", label: "Inspire Random", icon: Sparkles },
+    { id: "random", label: "Surprise Me", icon: Dice5 },
     { id: "love", label: "Love", icon: Heart },
     { id: "strength", label: "Strength", icon: Sparkles },
     { id: "healing", label: "Healing", icon: Heart },

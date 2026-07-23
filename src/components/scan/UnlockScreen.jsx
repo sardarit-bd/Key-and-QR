@@ -5,13 +5,6 @@ import { useState } from "react";
 
 const CATEGORIES = [
     {
-        id: "faith",
-        label: "Faith",
-        icon: Sparkles,
-        color: "bg-purple-100 text-purple-700 hover:bg-purple-200",
-        description: "Find strength and hope",
-    },
-    {
         id: "love",
         label: "Love",
         icon: Heart,
@@ -19,32 +12,39 @@ const CATEGORIES = [
         description: "Heartfelt messages",
     },
     {
-        id: "hope",
-        label: "Hope",
-        icon: Smile,
-        color: "bg-green-100 text-green-700 hover:bg-green-200",
-        description: "Optimism and encouragement",
-    },
-    {
-        id: "success",
-        label: "Success",
-        icon: Star,
-        color: "bg-blue-100 text-blue-700 hover:bg-blue-200",
-        description: "Achievement and growth",
-    },
-    {
-        id: "motivation",
-        label: "Motivation",
+        id: "strength",
+        label: "Strength",
         icon: Flame,
         color: "bg-orange-100 text-orange-700 hover:bg-orange-200",
-        description: "Get inspired",
+        description: "Find your power",
+    },
+    {
+        id: "healing",
+        label: "Healing",
+        icon: Sparkles,
+        color: "bg-green-100 text-green-700 hover:bg-green-200",
+        description: "Restore your spirit",
+    },
+    {
+        id: "faith",
+        label: "Faith",
+        icon: Star,
+        color: "bg-purple-100 text-purple-700 hover:bg-purple-200",
+        description: "Find strength and hope",
+    },
+    {
+        id: "gratitude",
+        label: "Gratitude",
+        icon: Smile,
+        color: "bg-yellow-100 text-yellow-700 hover:bg-yellow-200",
+        description: "Count your blessings",
     },
 ];
 
 export default function UnlockScreen({
     onSelectCategory,
     selectedCategory,
-    dailyLimit = 3,
+    dailyLimit = null, // null = unlimited for Premium
 }) {
     const [selected, setSelected] = useState(selectedCategory || null);
 

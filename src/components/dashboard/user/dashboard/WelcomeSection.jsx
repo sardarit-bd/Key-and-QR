@@ -1,11 +1,14 @@
 'use client';
 
-export default function WelcomeSection({ userName = "Sardar IT" }) {
+export default function WelcomeSection({ greeting, userName }) {
+  const name = greeting?.name || userName || "there";
+  const timeGreeting = greeting?.text || "Welcome";
+
   return (
     <section className="flex flex-col justify-center w-full h-full">
       <div className="max-w-xl">
         <h1 className="font-serif text-[28px] sm:text-[32px] md:text-[36px] lg:text-[42px] leading-[1.2] tracking-wide text-[#F8F3EA] break-words">
-          Good Evening, {userName}!
+          {timeGreeting}, {name}!
           <span className="ml-2 inline-block text-[#FDB65C]">
             ✨
           </span>
