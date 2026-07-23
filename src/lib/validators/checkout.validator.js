@@ -47,11 +47,18 @@ export const isValidCity = (city) => {
     return { valid: true, error: null };
 };
 
-// Postal code validation (optional)
+// State validation
+export const isValidState = (state) => {
+    if (!state || state.trim().length < 2) {
+        return { valid: false, error: 'State is required' };
+    }
+    return { valid: true, error: null };
+};
+
+// Postal code validation (required)
 export const isValidPostalCode = (postalCode) => {
-    if (!postalCode) return { valid: true, error: null };
-    if (postalCode.trim().length < 3) {
-        return { valid: false, error: 'Postal code must be at least 3 characters' };
+    if (!postalCode || postalCode.trim().length < 3) {
+        return { valid: false, error: 'ZIP Code is required' };
     }
     return { valid: true, error: null };
 };
@@ -88,6 +95,9 @@ export const validateCheckoutForm = (formData) => {
 
     const cityValidation = isValidCity(formData.city);
     if (!cityValidation.valid) errors.city = cityValidation.error;
+
+    const stateValidation = isValidState(formData.state);
+    if (!stateValidation.valid) errors.state = stateValidation.error;
 
     const countryValidation = isValidCountry(formData.country);
     if (!countryValidation.valid) errors.country = countryValidation.error;
