@@ -1,11 +1,11 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { LayoutGrid, Sparkles, Heart, Quote, RefreshCw } from 'lucide-react';
+import { LayoutGrid, Sparkles, Heart, Quote, RefreshCw, Dice5 } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 
 const CATEGORIES = [
-  { id: 'random', label: 'Inspire Random', icon: Sparkles, color: 'text-indigo-400' },
+  { id: 'random', label: 'Surprise Me', icon: Dice5, color: 'text-indigo-400' },
   { id: 'love', label: 'Love', icon: Heart, color: 'text-pink-400' },
   { id: 'strength', label: 'Strength', icon: Sparkles, color: 'text-amber-400' },
   { id: 'healing', label: 'Healing', icon: Heart, color: 'text-emerald-400' },
@@ -71,15 +71,7 @@ export default function CategorySelector({ selectedCategory, onSelectCategory })
                   className="text-sm font-medium text-center leading-tight"
                   style={{ color: isActive ? colors.primary : colors.foregroundSecondary }}
                 >
-                  {cat.id === 'random' ? (
-                    <>
-                      Inspire
-                      <br />
-                      <span className="text-xs opacity-60">Random</span>
-                    </>
-                  ) : (
-                    cat.label
-                  )}
+                  {cat.label}
                 </span>
               </motion.button>
             );

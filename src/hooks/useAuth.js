@@ -77,12 +77,12 @@ export function useLoginMutation() {
             toast.success("Welcome back! 🎉");
             
             if (data.user?.role === "admin") {
-                router.push("/dashboard/admin");
+                router.push("/new-dashboard/admin");
             } else {
                 if (data.guestClaimed) {
                     toast.success(`Claimed ${data.guestOrders || 0} orders and ${data.guestTags || 0} tags! 🎉`);
                 }
-                router.push("/dashboard/user");
+                router.push("/new-dashboard/user");
             }
         },
         onError: (error) => {
@@ -115,9 +115,9 @@ export function useRegisterMutation() {
             }
             
             if (data.user?.role === "admin") {
-                router.push("/dashboard/admin");
+                router.push("/new-dashboard/admin");
             } else {
-                router.push("/dashboard/user");
+                router.push("/new-dashboard/user");
             }
         },
         onError: (error) => {
@@ -161,7 +161,7 @@ export function useRedirectAuthenticated(redirectTo = null) {
         if (!isInitialized || loading) return;
 
         if (user) {
-            const target = redirectTo || (user.role === "admin" ? "/dashboard/admin" : "/dashboard/user");
+            const target = redirectTo || (user.role === "admin" ? "/new-dashboard/admin" : "/new-dashboard/user");
             router.replace(target);
         }
     }, [user, isInitialized, loading, redirectTo, router]);
@@ -196,7 +196,7 @@ export function useAdminCheck() {
         }
 
         if (user.role !== "admin") {
-            router.replace("/dashboard/user");
+            router.replace("/new-dashboard/user");
         }
     }, [user, isInitialized, loading, router]);
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
@@ -20,10 +20,14 @@ export const usePremium = () => {
   const [error, setError] = useState(null);
   const [premiumFeatures, setPremiumFeatures] = useState([]);
 
+  // Ref to hold the latest selectedCategory for fetchQuote
+  const selectedCategoryRef = useRef(selectedCategory);
+  selectedCategoryRef.current = selectedCategory;
+
   // Check authentication
   useEffect(() => {
     if (isInitialized && !user) {
-      router.push('/login?redirect=/dashboard/premium');
+      router.push('/login?redirect=/new-dashboard/user/premium');
     }
   }, [isInitialized, user, router]);
 
@@ -43,7 +47,6 @@ export const usePremium = () => {
         const subs = result.data || [];
         setSubscriptions(subs);
         
-        // Check if any subscription is active
         const hasActive = subs.some(
           sub => sub.status === 'active' || sub.status === 'trialing'
         );
@@ -69,16 +72,19 @@ export const usePremium = () => {
   }, []);
 
   /**
-   * Fetch a new quote
+   * Fetch a new quote — uses ref to avoid stale closure
    */
-  const fetchQuote = useCallback(async (category = selectedCategory) => {
+  const fetchQuote = useCallback(async (category) => {
     if (!user) return;
+
+    // Use the passed category, or fall back to ref
+    const cat = category || selectedCategoryRef.current || 'random';
 
     setQuoteLoading(true);
 
     try {
       const result = await premiumService.getPremiumQuote(
-        category !== 'random' ? category : null
+        cat !== 'random' ? cat : null
       );
       
       if (result.success && result.data) {
@@ -91,7 +97,7 @@ export const usePremium = () => {
     } finally {
       setQuoteLoading(false);
     }
-  }, [user, selectedCategory]);
+  }, [user]);
 
   /**
    * Load a new quote (for premium users)
@@ -105,14 +111,31 @@ export const usePremium = () => {
   }, [isPremium, fetchQuote]);
 
   /**
-   * Change category and load new quote
+   * Change category and load new quote — no page reload
    */
   const changeCategory = useCallback(async (category) => {
     setSelectedCategory(category);
+    selectedCategoryRef.current = category;
     if (isPremium) {
       await fetchQuote(category);
     }
   }, [isPremium, fetchQuote]);
+
+  /**
+   * Create Stripe Billing Portal session
+   */
+  const createPortalSession = useCallback(async () => {
+    try {
+      const result = await premiumService.createPortalSession();
+      if (result.success && result.data?.url) {
+        window.location.href = result.data.url;
+      } else {
+        toast.error(result.message || 'Failed to open billing portal');
+      }
+    } catch (err) {
+      toast.error('Failed to open billing portal. Please try again.');
+    }
+  }, []);
 
   /**
    * Get active subscription
@@ -159,6 +182,7 @@ export const usePremium = () => {
     fetchQuote,
     loadNewQuote,
     changeCategory,
+    createPortalSession,
     getActiveSubscription,
     getSubscriptionStatus,
     isAuthenticated: !!user,

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Heart, X } from "lucide-react";
+import { Heart, Share2, Sparkles, BookOpen, X } from "lucide-react";
 import { toast } from "react-hot-toast";
 import api from "@/lib/api";
 import favoriteService from "@/services/favorite-service/favorite.service";
@@ -41,7 +41,6 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
     const categoryLabel = CATEGORY_LABELS[category] || CATEGORY_LABELS.faith;
 
-    // Favorite is only meaningful for a real Quote, not a tag's personal message.
     const canFavorite = !isPersonalMessage;
 
     const [quoteId, setQuoteId] = useState(null);
@@ -49,14 +48,10 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     const [favoriteId, setFavoriteId] = useState(null);
     const [favoriteLoading, setFavoriteLoading] = useState(false);
     const [showAuthModal, setShowAuthModal] = useState(false);
+    const [showShareMenu, setShowShareMenu] = useState(false);
 
-    // The public scan endpoint intentionally omits the internal quote id
-    // (privacy for anonymous guests). Once a user is authenticated we
-    // resolve the real quote id via the existing public tag-resolve
-    // endpoint so it can be favorited. No backend logic is changed here.
     const resolveQuoteId = async () => {
         if (!tagCode) return null;
-
         try {
             const response = await api.get(`/tags/resolve/${tagCode}`);
             const resolvedQuote = response.data?.data?.quote;
@@ -70,9 +65,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     const checkFavoriteStatus = async () => {
         const id = quoteId || (await resolveQuoteId());
         if (!id) return;
-
         setQuoteId(id);
-
         try {
             const response = await favoriteService.checkFavorite(null, id);
             const result = response?.data;
@@ -84,11 +77,9 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     };
 
     useEffect(() => {
-        // Only look up favorite status for logged-in users viewing a real quote.
         if (isInitialized && user && canFavorite) {
             checkFavoriteStatus();
         }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [isInitialized, user, tagCode, canFavorite]);
 
     const goToAuth = (type = "login") => {
@@ -98,23 +89,18 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
     const handleFavoriteClick = async () => {
         if (!canFavorite || !isInitialized || favoriteLoading) return;
-
-        // Guest → login modal (never call the favorite API for guests)
         if (!user) {
             setShowAuthModal(true);
             return;
         }
-
         try {
             setFavoriteLoading(true);
-
             const id = quoteId || (await resolveQuoteId());
             if (!id) {
                 toast.error("This quote can't be saved right now");
                 return;
             }
             setQuoteId(id);
-
             if (saved && favoriteId) {
                 await favoriteService.removeFavorite(favoriteId);
                 setSaved(false);
@@ -122,7 +108,6 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                 toast.success("Removed from favorites");
                 return;
             }
-
             const response = await favoriteService.addFavorite({ quoteId: id });
             setSaved(true);
             setFavoriteId(response?.data?._id || null);
@@ -133,6 +118,31 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
         } finally {
             setFavoriteLoading(false);
         }
+    };
+
+    const handleShare = async () => {
+        const shareUrl = window.location.href;
+        const shareText = `"${quoteText}"${quoteAuthor ? ` — ${quoteAuthor}` : ''}`;
+
+        if (navigator.share) {
+            try {
+                await navigator.share({ title: "InspireTag Quote", text: shareText, url: shareUrl });
+            } catch (err) {
+                // User cancelled share
+            }
+        } else if (navigator.clipboard) {
+            await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
+            toast.success("Quote copied to clipboard");
+        }
+        setShowShareMenu(false);
+    };
+
+    const handleReflect = () => {
+        if (!user) {
+            setShowAuthModal(true);
+            return;
+        }
+        toast.success("Reflection feature coming soon!");
     };
 
     return (
@@ -162,7 +172,6 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                         <h1 className="text-white text-[24px] sm:text-[28px] leading-[1.18] font-serif font-medium drop-shadow-xl">
                             {quoteText}
                         </h1>
-
                         {quoteAuthor && (
                             <p className="mt-5 text-[#e7b96f] text-[13px] font-serif">
                                 - {quoteAuthor} -
@@ -170,30 +179,69 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                         )}
                     </div>
 
-                    {/* Bottom actions */}
-                    <div className="absolute bottom-8 left-0 right-0 z-10 flex flex-col items-center">
-                        {canFavorite && (
+                    {/* Bottom Action Bar */}
+                    <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/80 to-transparent pt-12 pb-8">
+                        <div className="flex items-center justify-center gap-6">
+                            {/* Save / Heart */}
                             <button
                                 onClick={handleFavoriteClick}
-                                disabled={favoriteLoading}
-                                className="w-9 h-9 rounded-full flex items-center justify-center text-[#e6b76f] hover:bg-white/10 transition disabled:opacity-60"
+                                disabled={favoriteLoading || !canFavorite}
+                                className="flex flex-col items-center gap-1 text-[#e6b76f] hover:text-white transition disabled:opacity-40"
                                 aria-label={saved ? "Remove from favorites" : "Save quote"}
                             >
-                                <Heart
-                                    size={20}
-                                    strokeWidth={1.5}
-                                    className={saved ? "fill-current" : ""}
-                                />
+                                <div className={`w-11 h-11 rounded-full flex items-center justify-center border transition ${
+                                    saved ? 'bg-[#e6b76f]/20 border-[#e6b76f]' : 'border-white/20 hover:border-white/40'
+                                }`}>
+                                    <Heart size={20} className={saved ? "fill-current" : ""} />
+                                </div>
+                                <span className="text-[10px]">{saved ? 'Saved' : 'Save'}</span>
                             </button>
-                        )}
 
-                        <p className="mt-1 text-[11px] text-[#e6b76f] tracking-wide">
+                            {/* Inspire / Refresh */}
+                            <button
+                                onClick={() => router.refresh()}
+                                className="flex flex-col items-center gap-1 text-[#e6b76f] hover:text-white transition"
+                                aria-label="Get new inspiration"
+                            >
+                                <div className="w-11 h-11 rounded-full flex items-center justify-center border border-white/20 hover:border-white/40 transition">
+                                    <Sparkles size={20} />
+                                </div>
+                                <span className="text-[10px]">Inspire</span>
+                            </button>
+
+                            {/* Share */}
+                            <button
+                                onClick={handleShare}
+                                className="flex flex-col items-center gap-1 text-[#e6b76f] hover:text-white transition"
+                                aria-label="Share quote"
+                            >
+                                <div className="w-11 h-11 rounded-full flex items-center justify-center border border-white/20 hover:border-white/40 transition">
+                                    <Share2 size={20} />
+                                </div>
+                                <span className="text-[10px]">Share</span>
+                            </button>
+
+                            {/* Reflect */}
+                            <button
+                                onClick={handleReflect}
+                                className="flex flex-col items-center gap-1 text-[#e6b76f] hover:text-white transition"
+                                aria-label="Write a reflection"
+                            >
+                                <div className="w-11 h-11 rounded-full flex items-center justify-center border border-white/20 hover:border-white/40 transition">
+                                    <BookOpen size={20} />
+                                </div>
+                                <span className="text-[10px]">Reflect</span>
+                            </button>
+                        </div>
+
+                        <p className="mt-4 text-center text-[11px] text-[#e6b76f]/60 tracking-wide">
                             myinspiretag.com
                         </p>
                     </div>
                 </section>
             </main>
 
+            {/* Auth Modal */}
             {showAuthModal && (
                 <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4">
                     <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl relative">
@@ -204,19 +252,15 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                         >
                             <X size={20} />
                         </button>
-
                         <h3 className="text-xl font-semibold text-gray-900 mb-3">
                             Save your quote
                         </h3>
-
                         <p className="text-gray-600 mb-5">
                             Please log in or create an account to save this quote to your favorites.
                         </p>
-
                         <div className="rounded-xl bg-gray-50 border border-gray-200 p-4 mb-6">
                             <p className="text-gray-700 italic text-center">&ldquo;{quoteText}&rdquo;</p>
                         </div>
-
                         <div className="grid grid-cols-2 gap-3">
                             <button
                                 onClick={() => goToAuth("login")}
@@ -224,7 +268,6 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                             >
                                 Log In
                             </button>
-
                             <button
                                 onClick={() => goToAuth("register")}
                                 className="h-11 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition"

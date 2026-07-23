@@ -1,34 +1,25 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 
 export default function SidebarHeader({ isCollapsed }) {
   return (
     <Link
-      href="/dashboard/user"
-      className={`flex items-center gap-3 px-6 py-6 ${isCollapsed ? 'justify-center' : ''}`}
+      href="/new-dashboard/user"
       aria-label="Dashboard home"
+      className={`flex w-full justify-center ${
+        isCollapsed ? 'px-3' : 'px-5'
+      }`}
     >
-      {/* Shell Icon SVG as seen in the image */}
-      <svg 
-        width="32" 
-        height="32" 
-        viewBox="0 0 24 24" 
-        fill="none" 
-        xmlns="http://www.w3.org/2000/svg"
-        className="text-[#e3ba85] flex-shrink-0"
-      >
-        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M12 22V12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M5.5 15.5L12 12L18.5 15.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-        <path d="M3.5 9L12 12L20.5 9" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-      </svg>
-      
-      {!isCollapsed && (
-        <span className="text-[22px] font-serif text-[#e3ba85] tracking-wide">
-          MyInspireTag
-        </span>
-      )}
+      <Image
+        src="/logo/white-logo-1.png"
+        alt="MyInspireTag Logo"
+        width={180}
+        height={48}
+        priority
+        className="h-[100px] w-[180px] object-contain"
+      />
     </Link>
   );
 }

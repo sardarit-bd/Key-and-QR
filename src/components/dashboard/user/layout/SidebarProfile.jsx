@@ -3,11 +3,21 @@
 import { Crown } from 'lucide-react';
 
 export default function SidebarProfile({ profile, isCollapsed }) {
+  const hasAvatar = profile?.avatar;
+
   if (isCollapsed) {
     return (
       <div className="flex justify-center px-4 mb-6">
-        <div className="relative w-10 h-10 rounded-full bg-gradient-to-tr from-[#7c4d5b] to-[#403362] flex items-center justify-center text-white font-serif text-lg ring-1 ring-[#e3ba85]/40 shadow-[0_0_15px_rgba(227,186,133,0.15)]">
-          {profile.initials}
+        <div className="relative w-10 h-10 rounded-full bg-gradient-to-tr from-[#7c4d5b] to-[#403362] flex items-center justify-center text-white font-serif text-lg ring-1 ring-[#e3ba85]/40 shadow-[0_0_15px_rgba(227,186,133,0.15)] overflow-hidden">
+          {hasAvatar ? (
+            <img
+              src={hasAvatar}
+              alt={profile.name || 'User'}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            profile.initials
+          )}
           {profile.plan === 'premium' && (
             <div className="absolute -top-1 -right-1">
               <Crown className="w-3.5 h-3.5 text-amber-400" />
@@ -25,8 +35,16 @@ export default function SidebarProfile({ profile, isCollapsed }) {
       
       {/* Avatar */}
       <div className="relative flex-shrink-0 mb-4 z-10">
-        <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#7c4d5b] via-[#5c4366] to-[#403362] flex items-center justify-center text-white font-serif text-[32px] ring-[1px] ring-[#e3ba85]/40 shadow-[0_0_20px_rgba(227,186,133,0.15)]">
-          {profile.initials}
+        <div className="w-20 h-20 rounded-full bg-gradient-to-tr from-[#7c4d5b] via-[#5c4366] to-[#403362] flex items-center justify-center text-white font-serif text-[32px] ring-[1px] ring-[#e3ba85]/40 shadow-[0_0_20px_rgba(227,186,133,0.15)] overflow-hidden">
+          {hasAvatar ? (
+            <img
+              src={hasAvatar}
+              alt={profile.name || 'User'}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            profile.initials
+          )}
         </div>
         {profile.plan === 'premium' && (
           <div className="absolute -top-1 -right-1">

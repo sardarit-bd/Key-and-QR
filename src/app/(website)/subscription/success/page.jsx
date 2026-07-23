@@ -78,10 +78,10 @@ function SubscriptionSuccessContent() {
 
                 <div className="space-y-3">
                     <Link
-                        href="/dashboard/user/subscription"
-                        className="block w-full py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition"
+                        href="/new-dashboard/user/premium"
+                        className="block w-full py-3 bg-gradient-to-r from-[#e3ba85] to-[#c9965a] text-black rounded-lg font-medium hover:from-[#d4a976] hover:to-[#b88a4e] transition"
                     >
-                        View My Subscriptions
+                        View Premium Plan
                     </Link>
                     <Link
                         href="/"

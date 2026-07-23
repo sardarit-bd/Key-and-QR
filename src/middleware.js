@@ -44,7 +44,7 @@ export async function middleware(request) {
         if (isGuestOnlyRoute(pathname) && accessToken) {
             const payload = await verifyAccessToken(accessToken);
             if (payload) {
-                const dashboard = payload.role === "admin" ? "/dashboard/admin" : "/dashboard/user";
+                const dashboard = payload.role === "admin" ? "/new-dashboard/admin" : "/new-dashboard/user";
                 return NextResponse.redirect(new URL(dashboard, request.url));
             }
         }
@@ -68,7 +68,7 @@ export async function middleware(request) {
             if (payload) {
                 // Admin route check - use verified role from JWT
                 if (isAdminRoute(pathname) && payload.role !== "admin") {
-                    return NextResponse.redirect(new URL("/dashboard/user", request.url));
+                    return NextResponse.redirect(new URL("/new-dashboard/user", request.url));
                 }
                 return NextResponse.next();
             }
@@ -100,31 +100,13 @@ export async function middleware(request) {
 
 export const config = {
     matcher: [
-        "/",
-        "/login",
-        "/signup",
-        "/forgot-password",
-        "/reset-password",
-        "/callback",
-        "/dashboard/:path*",
-        "/profile/:path*",
-        "/checkout/:path*",
-        "/cart",
-        "/payment/:path*",
-        "/subscription/:path*",
-        "/orders/:path*",
-        "/api/:path*",
-        "/shop/:path*",
-        "/t/:path*",
-        "/how-it-works",
-        "/inspiration",
-        "/about",
-        "/contact",
-        "/faq",
-        "/privacy",
-        "/terms",
-        "/shipping",
-        "/success",
-        "/cancel",
+        /*
+         * Match all request paths except:
+         * - _next/static (static files)
+         * - _next/image (image optimization files)
+         * - favicon.ico (favicon file)
+         * - public folder files (images, etc.)
+         */
+        "/((?!_next/static|_next/image|favicon.ico|images|public).*)",
     ],
 };

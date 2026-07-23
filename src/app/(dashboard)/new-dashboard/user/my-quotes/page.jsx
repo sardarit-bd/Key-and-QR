@@ -15,7 +15,7 @@ import useMyQuotes from '@/hooks/my-quotes-service/useMyQuotes';
 /**
  * My Quotes Page
  * Personal inspiration library
- * Route: /dashboard/my-quotes
+ * Route: /new-dashboard/user/my-quotes
  */
 export default function MyQuotesPage() {
   const {
@@ -38,8 +38,11 @@ export default function MyQuotesPage() {
     isAuthenticated,
   } = useMyQuotes();
 
+  // Always ensure quotes is an array
+  const quoteList = Array.isArray(quotes) ? quotes : [];
+
   // Loading state
-  if (loading && quotes.length === 0) {
+  if (loading && quoteList.length === 0) {
     return (
       <div className="min-h-screen bg-[#090b14]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
@@ -66,8 +69,8 @@ export default function MyQuotesPage() {
     );
   }
 
-  // Empty state
-  if (!loading && quotes.length === 0) {
+  // Empty state — only when not loading AND array is actually empty
+  if (!loading && quoteList.length === 0) {
     return (
       <div className="min-h-screen bg-[#090b14]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
@@ -114,7 +117,7 @@ export default function MyQuotesPage() {
         {/* Grid */}
         <div className="mt-6">
           <MyQuoteGrid
-            quotes={quotes}
+            quotes={quoteList}
             view={view}
             loading={loading}
             pagination={pagination}

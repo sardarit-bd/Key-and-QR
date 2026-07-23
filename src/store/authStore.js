@@ -550,7 +550,6 @@ export const useAuthStore = create(
                 isGuestClaimed: state.isGuestClaimed,
             }),
             onRehydrateStorage: () => {
-                console.debug("Auth store rehydrated");
                 return (state, error) => {
                     if (error) {
                         console.error("Auth store rehydration error:", error);

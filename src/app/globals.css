@@ -156,3 +156,8 @@ body {
 .hide-scrollbar {
   -ms-overflow-style: none;
 }
+
+/* Safe area for mobile bottom tab bar (iPhone notch) */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}

@@ -3,7 +3,11 @@
 import Image from "next/image";
 import { Quote, Sparkles } from "lucide-react";
 
-export default function DailyQuoteBanner() {
+export default function DailyQuoteBanner({ banner }) {
+  const quote = banner?.quote || "Stay positive, work hard, make it happen.";
+  const author = banner?.author || "InspireTag";
+  const ctaText = banner?.ctaText || "Your Daily Quote";
+
   return (
     <section className="relative h-full min-h-[180px] sm:min-h-[200px] lg:min-h-[240px] w-full overflow-hidden rounded-[20px] sm:rounded-[24px] border border-[#5B3B26]/60 bg-[#090B12] shadow-lg">
       
@@ -35,17 +39,16 @@ export default function DailyQuoteBanner() {
           />
 
           <h2 className="font-serif italic text-[18px] sm:text-[20px] md:text-[22px] lg:text-[26px] leading-[1.3] tracking-wide text-[#F8F3EA] mb-2 sm:mb-3">
-            Stay positive, work hard,<br />
-            make it happen.
+            {quote}
           </h2>
 
           <p className="text-[12px] sm:text-[13px] md:text-[14px] text-[#B78D69] mb-3 sm:mb-4 md:mb-5">
-            — InspireTag
+            — {author}
           </p>
 
           <button className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-[#8A6036] bg-[#16110D]/90 px-3 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-[12px] md:text-[13px] font-medium text-[#FDB65C] backdrop-blur-sm transition-all duration-300 hover:bg-[#211812] hover:border-[#FDB65C]/80 hover:shadow-[0_0_15px_rgba(253,182,92,0.15)]">
             <Sparkles size={14} className="w-[12px] h-[12px] sm:w-[14px] sm:h-[14px]" />
-            Your Daily Quote
+            {ctaText}
           </button>
         </div>
       </div>

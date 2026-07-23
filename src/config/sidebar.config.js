@@ -12,6 +12,9 @@ import {
     LayoutDashboard,
     Tag,
     ShoppingBag,
+    PenLine,
+    Package,
+    UserCircle,
   } from 'lucide-react';
   
   /**
@@ -39,23 +42,26 @@ import {
   /**
    * Sidebar Configuration
    * Centralized menu configuration
+   * 
+   * 8 sidebar items for user dashboard:
+   * 1. Overview
+   * 2. Scan History
+   * 3. My Quotes
+   * 4. Submit Quote
+   * 5. Favorites
+   * 6. Orders
+   * 7. Subscription
+   * 8. Profile
    */
   export const SIDEBAR_CONFIG = {
     // Menu items configuration
     menuItems: [
       {
-        id: 'dashboard',
-        title: 'Dashboard',
-        icon: Home,
+        id: 'overview',
+        title: 'Overview',
+        icon: LayoutDashboard,
         href: '/new-dashboard/user',
-        visibility: MENU_VISIBILITY.ALL,
         exact: true,
-      },
-      {
-        id: 'my-quotes',
-        title: 'My Quotes',
-        icon: Quote,
-        href: '/new-dashboard/user/my-quotes',
         visibility: MENU_VISIBILITY.ALL,
       },
       {
@@ -66,6 +72,20 @@ import {
         visibility: MENU_VISIBILITY.ALL,
       },
       {
+        id: 'my-quotes',
+        title: 'My Quotes',
+        icon: Quote,
+        href: '/new-dashboard/user/my-quotes',
+        visibility: MENU_VISIBILITY.ALL,
+      },
+      {
+        id: 'submit-quote',
+        title: 'Submit Quote',
+        icon: PenLine,
+        href: '/new-dashboard/user/submit-quote',
+        visibility: MENU_VISIBILITY.ALL,
+      },
+      {
         id: 'favorites',
         title: 'Favorites',
         icon: Heart,
@@ -73,10 +93,10 @@ import {
         visibility: MENU_VISIBILITY.ALL,
       },
       {
-        id: 'gifted',
-        title: 'Gifted Messages',
-        icon: Gift,
-        href: '/new-dashboard/user/gifted',
+        id: 'orders',
+        title: 'Orders',
+        icon: Package,
+        href: '/new-dashboard/user/orders',
         visibility: MENU_VISIBILITY.ALL,
       },
       {
@@ -84,6 +104,13 @@ import {
         title: 'Subscription',
         icon: CreditCard,
         href: '/new-dashboard/user/premium',
+        visibility: MENU_VISIBILITY.ALL,
+      },
+      {
+        id: 'profile',
+        title: 'Profile',
+        icon: UserCircle,
+        href: '/new-dashboard/user/profile',
         visibility: MENU_VISIBILITY.ALL,
       },
     ],
@@ -133,28 +160,28 @@ import {
         title: 'Unlock Unlimited Inspiration',
         description: 'Get unlimited quotes and all categories.',
         ctaText: 'Upgrade Now',
-        ctaHref: '/subscription',
+        ctaHref: '/new-dashboard/user/premium',
         show: true,
       },
       trial: {
         title: 'Your Trial is Active!',
         description: 'Enjoy all premium features. Upgrade anytime.',
         ctaText: 'Upgrade Now',
-        ctaHref: '/subscription',
+        ctaHref: '/new-dashboard/user/premium',
         show: true,
       },
       expired: {
         title: 'Subscription Expired',
         description: 'Renew your subscription to continue enjoying premium features.',
         ctaText: 'Renew Now',
-        ctaHref: '/subscription',
+        ctaHref: '/new-dashboard/user/premium',
         show: true,
       },
       premium: {
         title: 'You\'re a Premium Member!',
         description: 'Thank you for supporting us.',
         ctaText: 'Manage Subscription',
-        ctaHref: '/subscription',
+        ctaHref: '/new-dashboard/user/premium',
         show: false,
       },
       admin: {
@@ -190,6 +217,9 @@ import {
     LayoutDashboard,
     Tag,
     ShoppingBag,
+    PenLine,
+    Package,
+    UserCircle,
   };
   
   export default SIDEBAR_CONFIG;

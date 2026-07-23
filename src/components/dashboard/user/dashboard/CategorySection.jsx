@@ -53,8 +53,16 @@ const CATEGORIES = [
   },
 ];
 
-export default function CategorySection() {
+export default function CategorySection({ categories }) {
   const [activeCategory, setActiveCategory] = useState('inspire');
+
+  // Map backend category counts to the static category list
+  const categoryCounts = {};
+  if (Array.isArray(categories)) {
+    for (const cat of categories) {
+      categoryCounts[cat.name] = cat.count;
+    }
+  }
 
   return (
     <Card className="relative overflow-hidden rounded-[18px] sm:rounded-[22px] px-4 sm:px-5 md:px-6 lg:px-7 py-4 sm:py-5 md:py-6">
@@ -84,16 +92,17 @@ export default function CategorySection() {
         </div>
 
         {/* Categories */}
-        <div className="flex-1 overflow-x-auto scrollbar-none -mx-4 sm:mx-0 px-4 sm:px-0">
-          {/* Replaced hardcoded px-12 with responsive px-4 sm:px-6 lg:px-12 */}
+        <div className="flex-1 overflow-x-auto hide-scrollbar -mx-4 sm:mx-0 px-4 sm:px-0 snap-x snap-mandatory">
           <div className="flex min-w-max items-center gap-3 sm:gap-4 md:gap-5 lg:gap-6 py-4 sm:py-6 md:py-8 lg:py-10 px-4 sm:px-6 lg:px-12">
             {CATEGORIES.map((category) => (
-              <CategoryCard
-                key={category.id}
-                {...category}
-                isActive={activeCategory === category.id}
-                onClick={() => setActiveCategory(category.id)}
-              />
+              <div key={category.id} className="snap-start">
+                <CategoryCard
+                  {...category}
+                  count={categoryCounts[category.id]}
+                  isActive={activeCategory === category.id}
+                  onClick={() => setActiveCategory(category.id)}
+                />
+              </div>
             ))}
 
             {/* Divider */}

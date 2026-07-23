@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import { Menu, X } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -86,23 +86,26 @@ export default function Sidebar({ isCollapsed = false, onToggle }) {
 
       {/* Sidebar */}
       <aside className={sidebarClasses} aria-label="Dashboard navigation">
-        <div className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar pb-6">
+        {/* SECTION 1: Fixed Header + Profile */}
+        <div className="flex-shrink-0">
           <SidebarHeader isCollapsed={isDesktopCollapsed} />
-          
           <div className="mt-4">
             <SidebarProfile 
               profile={sidebarData.profile} 
               isCollapsed={isDesktopCollapsed} 
             />
           </div>
+        </div>
 
+        {/* SECTION 2: Scrollable Navigation */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar min-h-0">
           <SidebarMenu 
             menuItems={sidebarData.menuItems}
             pathname={pathname} 
             isCollapsed={isDesktopCollapsed} 
           />
 
-          <div className="mt-4">
+          <div className="mt-4 px-4">
             <SidebarUpgradeCard 
               isCollapsed={isDesktopCollapsed}
               config={sidebarData.upgradeCard}
@@ -110,10 +113,11 @@ export default function Sidebar({ isCollapsed = false, onToggle }) {
               shouldShow={sidebarData.shouldShowUpgrade}
             />
           </div>
+        </div>
 
-          <div className="mt-6 px-4">
-            <SidebarFooter isCollapsed={isDesktopCollapsed} />
-          </div>
+        {/* SECTION 3: Fixed Footer */}
+        <div className="flex-shrink-0 px-4 pb-6 pt-4">
+          <SidebarFooter isCollapsed={isDesktopCollapsed} />
         </div>
       </aside>
     </>

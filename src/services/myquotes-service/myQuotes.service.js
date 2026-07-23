@@ -24,10 +24,19 @@ export const myQuotesService = {
 
       const response = await api.get(`/favorites?${queryParams}`);
       
+      // Normalize response — handle all possible shapes:
+      // - []
+      // - { data: [] }
+      // - { data: { quotes: [] } }
+      // - { success: true, data: [...] }
+      const raw = response.data;
+      const dataList = normalizeData(raw?.data);
+      const meta = normalizeMeta(raw?.meta, dataList.length);
+      
       return {
         success: true,
-        data: response.data?.data || [],
-        meta: response.data?.meta || {},
+        data: dataList,
+        meta,
         status: response.status,
       };
     } catch (error) {
@@ -36,7 +45,7 @@ export const myQuotesService = {
         message: error.response?.data?.message || 'Failed to fetch your quotes',
         status: error.response?.status || 500,
         data: [],
-        meta: {},
+        meta: { page: 1, limit: 20, total: 0, totalPage: 0 },
       };
     }
   },
@@ -85,5 +94,40 @@ export const myQuotesService = {
     }
   },
 };
+
+/**
+ * Normalize API data response to always return an array.
+ * Handles: [], { data: [] }, { data: { quotes: [] } }, { success: true, data: [...] }
+ */
+function normalizeData(raw) {
+  if (Array.isArray(raw)) return raw;
+  if (raw && typeof raw === 'object') {
+    // { data: { quotes: [...] } }
+    if (Array.isArray(raw.quotes)) return raw.quotes;
+    // { data: { data: [...] } }
+    if (Array.isArray(raw.data)) return raw.data;
+  }
+  return [];
+}
+
+/**
+ * Normalize meta response to always return pagination info.
+ */
+function normalizeMeta(raw, fallbackTotal = 0) {
+  if (raw && typeof raw === 'object') {
+    return {
+      page: raw.page || 1,
+      limit: raw.limit || 20,
+      total: raw.total ?? fallbackTotal,
+      totalPage: raw.totalPage ?? Math.ceil(fallbackTotal / (raw.limit || 20)),
+    };
+  }
+  return {
+    page: 1,
+    limit: 20,
+    total: fallbackTotal,
+    totalPage: Math.ceil(fallbackTotal / 20),
+  };
+}
 
 export default myQuotesService;

@@ -35,7 +35,7 @@ export const useMyQuotes = () => {
   // Check authentication
   useEffect(() => {
     if (isInitialized && !user) {
-      router.push('/login?redirect=/dashboard/my-quotes');
+      router.push('/login?redirect=/new-dashboard/user/my-quotes');
     }
   }, [isInitialized, user, router]);
 
@@ -61,22 +61,29 @@ export const useMyQuotes = () => {
       });
 
       if (result.success) {
+        // Always ensure data is an array
+        const rawData = Array.isArray(result.data) ? result.data : [];
+        
         // Sync with favorite store
-        setFavorites(result.data || []);
+        setFavorites(rawData);
         
         // Filter by category if needed
-        let filteredData = result.data || [];
+        let filteredData = rawData;
         if (category !== 'all') {
-          filteredData = filteredData.filter((item) => 
-            item.quote?.category?.toLowerCase() === category.toLowerCase()
-          );
+          filteredData = rawData.filter((item) => {
+            const cat = item.quote?.category?.toLowerCase();
+            return cat === category.toLowerCase();
+          });
         }
 
         // Update pagination
+        const total = result.meta?.total ?? rawData.length;
+        const totalPages = result.meta?.totalPage ?? Math.ceil(total / limit);
+        
         setPagination(prev => ({
           ...prev,
-          total: result.meta?.total || filteredData.length,
-          totalPages: result.meta?.totalPage || Math.ceil(filteredData.length / limit),
+          total,
+          totalPages,
         }));
 
         setQuotes(filteredData);
@@ -85,6 +92,7 @@ export const useMyQuotes = () => {
         setQuotes([]);
       }
     } catch (err) {
+      console.error('Failed to load quotes:', err);
       setError('Failed to load your quotes. Please try again.');
       setQuotes([]);
     } finally {
@@ -102,7 +110,7 @@ export const useMyQuotes = () => {
       const result = await myQuotesService.getFavoriteStats();
       
       if (result.success) {
-        const statsData = result.data;
+        const statsData = result.data || {};
         
         // Update store stats
         updateStats({
@@ -113,7 +121,7 @@ export const useMyQuotes = () => {
         
         // Calculate additional stats
         const quotesCount = statsData.quotes || 0;
-        const categoriesCount = 5; // Fixed categories
+        const categoriesCount = 5;
         const recentlyAdded = quotesCount > 0 ? Math.min(3, quotesCount) : 0;
 
         setStats({

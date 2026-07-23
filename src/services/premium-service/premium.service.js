@@ -106,7 +106,6 @@ export const premiumService = {
    * Get premium features
    */
   getPremiumFeatures: async () => {
-    // This could be a static list or from API
     return {
       success: true,
       data: [
@@ -140,6 +139,28 @@ export const premiumService = {
         },
       ],
     };
+  },
+
+  /**
+   * Create Stripe Billing Portal session
+   * POST /subscriptions/create-portal-session
+   */
+  createPortalSession: async () => {
+    try {
+      const response = await api.post('/subscriptions/create-portal-session');
+      return {
+        success: true,
+        data: response.data?.data || null,
+        status: response.status,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to create portal session',
+        status: error.response?.status || 500,
+        data: null,
+      };
+    }
   },
 };
 

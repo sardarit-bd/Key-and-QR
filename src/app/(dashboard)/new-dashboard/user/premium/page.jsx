@@ -19,6 +19,7 @@ export default function PremiumPage() {
     premiumFeatures,
     loadNewQuote,
     changeCategory,
+    createPortalSession,
     getSubscriptionStatus,
     user,
   } = usePremium();
@@ -55,6 +56,7 @@ export default function PremiumPage() {
           <PremiumSubscriptionStatus
             isPremium={isPremium}
             subscriptionStatus={subscriptionStatus}
+            onCreatePortal={createPortalSession}
           />
         </div>
 
