@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { useAuthStore } from '@/store/authStore';
-import useGiftMessage from '@/hooks/useGiftMessage';
+import useGiftMessage from '@/hooks/useGiftMessage/useGiftMessage';
 import GiftMessageDisplay from './GiftMessageDisplay';
 import GiftMessageEditor from './GiftMessageEditor';
 import GiftMessageEmptyState from './GiftMessageEmptyState';

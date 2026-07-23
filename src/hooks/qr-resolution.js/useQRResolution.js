@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { qrService } from '@/services/qr.service';
+import { qrService } from '@/services/qr-service/qr.service';
 import { useAuthStore } from '@/store/authStore';
 
 /**
