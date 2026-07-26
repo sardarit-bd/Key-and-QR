@@ -23,11 +23,11 @@ export default function MyQuoteEmptyState() {
         <div className="absolute inset-0 w-24 h-24 mx-auto rounded-full border-2 border-violet-500/10 animate-pulse" />
       </div>
 
-      <h2 className="mt-6 text-2xl font-semibold text-white font-serif">
+      <h2 className="mt-6 text-2xl font-semibold text-foreground font-serif">
         No saved inspiration yet
       </h2>
       
-      <p className="mt-3 text-gray-400 max-w-sm mx-auto">
+      <p className="mt-3 text-muted-foreground max-w-sm mx-auto">
         Start scanning your InspireTag to build your personal inspiration library.
         Every quote you save will appear here.
       </p>
@@ -36,7 +36,7 @@ export default function MyQuoteEmptyState() {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-violet-500 to-purple-500 text-white font-medium rounded-full inline-flex items-center gap-2 hover:shadow-lg hover:shadow-violet-500/25 transition-shadow"
+          className="mt-6 px-6 py-3 bg-primary text-primary-foreground font-medium rounded-full inline-flex items-center gap-2 hover:bg-primary/90 transition-shadow"
         >
           <Scan className="w-4 h-4" />
           Scan Your First Tag

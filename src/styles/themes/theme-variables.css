@@ -1,51 +1,228 @@
 /* styles/themes/theme-variables.css */
 
-/* These variables are injected dynamically by ThemeProvider */
-/* But we define fallbacks here for SSR */
+/* 
+ * Shared Theme Variables for Dashboard
+ * These variables define the design tokens for both dark and light modes.
+ * Components should use these CSS variables instead of hardcoded colors.
+ */
 
-:root {
-    /* These will be overridden by ThemeProvider */
-    --background: oklch(1 0 0);
-    --foreground: oklch(0.145 0 0);
-    --card: oklch(1 0 0);
-    --card-foreground: oklch(0.145 0 0);
-    --popover: oklch(1 0 0);
-    --popover-foreground: oklch(0.145 0 0);
-    --primary: oklch(0.205 0 0);
-    --primary-foreground: oklch(0.985 0 0);
-    --secondary: oklch(0.97 0 0);
-    --secondary-foreground: oklch(0.205 0 0);
-    --muted: oklch(0.97 0 0);
-    --muted-foreground: oklch(0.556 0 0);
-    --accent: oklch(0.97 0 0);
-    --accent-foreground: oklch(0.205 0 0);
-    --destructive: oklch(0.577 0.245 27.325);
-    --border: oklch(0.922 0 0);
-    --input: oklch(0.922 0 0);
-    --ring: oklch(0.708 0 0);
-    --radius: 0.625rem;
-    --sidebar: oklch(0.985 0 0);
-    --sidebar-foreground: oklch(0.145 0 0);
-    --sidebar-primary: oklch(0.205 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.97 0 0);
-    --sidebar-accent-foreground: oklch(0.205 0 0);
-    --sidebar-border: oklch(0.922 0 0);
-    --sidebar-ring: oklch(0.708 0 0);
-  }
+/* ============================================
+   DARK MODE (Default)
+   ============================================ */
+:root,
+.dark {
+  /* Backgrounds */
+  --background: oklch(0.07 0.01 260);
+  --background-secondary: oklch(0.10 0.01 260);
+  --background-tertiary: oklch(0.13 0.01 260);
   
-  /* Theme-specific overrides */
-  [data-theme="admin-dashboard"] {
-    --radius: 0.5rem;
-  }
+  /* Foregrounds */
+  --foreground: oklch(0.95 0 0);
+  --foreground-secondary: oklch(0.65 0.02 260);
+  --foreground-tertiary: oklch(0.45 0.02 260);
   
-  [data-theme="user-dashboard"] {
-    --radius: 0.75rem;
-  }
+  /* Primary - Premium Purple */
+  --primary: oklch(0.55 0.25 300);
+  --primary-foreground: oklch(0.98 0 0);
+  --primary-gradient: linear-gradient(135deg, oklch(0.55 0.25 300), oklch(0.45 0.3 340));
   
-  /* Smooth theme transitions */
-  * {
-    transition: background-color 0.2s ease, 
+  /* Secondary - Muted */
+  --secondary: oklch(0.15 0.05 300);
+  --secondary-foreground: oklch(0.75 0.15 300);
+  
+  /* Accent - Gold */
+  --accent: oklch(0.65 0.18 85);
+  --accent-foreground: oklch(0.98 0 0);
+  
+  /* Info - Blue (for info cards, blue accents) */
+  --info: oklch(0.65 0.15 250);
+  --info-foreground: oklch(0.98 0 0);
+  
+  /* Muted */
+  --muted: oklch(0.15 0.01 260);
+  --muted-foreground: oklch(0.55 0.02 260);
+  
+  /* Destructive */
+  --destructive: oklch(0.577 0.245 27.325);
+  --destructive-foreground: oklch(0.985 0 0);
+  
+  /* Borders */
+  --border: oklch(0.20 0.01 260);
+  --input: oklch(0.20 0.01 260);
+  --ring: oklch(0.55 0.25 300);
+  
+  /* Cards */
+  --card: oklch(0.10 0.01 260);
+  --card-foreground: oklch(0.95 0 0);
+  
+  /* Popover */
+  --popover: oklch(0.10 0.01 260);
+  --popover-foreground: oklch(0.95 0 0);
+  
+  /* Sidebar */
+  --sidebar: oklch(0.05 0.01 260);
+  --sidebar-foreground: oklch(0.85 0 0);
+  --sidebar-primary: oklch(0.55 0.25 300);
+  --sidebar-primary-foreground: oklch(0.98 0 0);
+  --sidebar-accent: oklch(0.15 0.05 300);
+  --sidebar-accent-foreground: oklch(0.75 0.15 300);
+  --sidebar-border: oklch(0.15 0.01 260);
+  --sidebar-ring: oklch(0.55 0.25 300);
+  
+  /* Charts */
+  --chart-1: oklch(0.55 0.25 300);
+  --chart-2: oklch(0.45 0.3 340);
+  --chart-3: oklch(0.6 0.2 250);
+  --chart-4: oklch(0.5 0.2 200);
+  --chart-5: oklch(0.7 0.2 150);
+  
+  /* Radius */
+  --radius: 0.75rem;
+  
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  
+  /* Glass effects */
+  --glass-bg: oklch(0.10 0.01 260 / 0.8);
+  --glass-border: oklch(1 0 0 / 0.08);
+}
+
+/* ============================================
+   LIGHT MODE - Premium Light Palette
+   ============================================ */
+.light {
+  /* Backgrounds - Warm, slightly off-white for card separation */
+  --background: oklch(0.97 0.004 85);
+  --background-secondary: oklch(0.95 0.005 85);
+  --background-tertiary: oklch(0.92 0.006 85);
+  
+  /* Foregrounds - Rich, dark tones with warmth */
+  --foreground: oklch(0.15 0.015 260);
+  --foreground-secondary: oklch(0.38 0.015 260);
+  --foreground-tertiary: oklch(0.52 0.01 260);
+  
+  /* Primary - Deeper purple for light backgrounds (WCAG AA compliant) */
+  --primary: oklch(0.42 0.22 300);
+  --primary-foreground: oklch(0.99 0 0);
+  --primary-gradient: linear-gradient(135deg, oklch(0.42 0.22 300), oklch(0.35 0.25 340));
+  
+  /* Secondary - Soft lavender surface */
+  --secondary: oklch(0.96 0.025 300);
+  --secondary-foreground: oklch(0.30 0.12 300);
+  
+  /* Accent - Rich gold for light backgrounds (WCAG AA compliant) */
+  --accent: oklch(0.52 0.14 75);
+  --accent-foreground: oklch(0.99 0 0);
+  
+  /* Info - Blue accent */
+  --info: oklch(0.48 0.14 250);
+  --info-foreground: oklch(0.99 0 0);
+  
+  /* Muted - Warm gray with better contrast */
+  --muted: oklch(0.93 0.005 85);
+  --muted-foreground: oklch(0.45 0.01 260);
+  
+  /* Destructive */
+  --destructive: oklch(0.50 0.20 27);
+  --destructive-foreground: oklch(0.99 0 0);
+  
+  /* Borders - More visible, refined */
+  --border: oklch(0.88 0.006 85);
+  --input: oklch(0.88 0.006 85);
+  --ring: oklch(0.42 0.22 300);
+  
+  /* Cards - Clean white */
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.15 0.015 260);
+  
+  /* Popover */
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.15 0.015 260);
+  
+  /* Sidebar - Very light, almost white */
+  --sidebar: oklch(0.995 0.001 85);
+  --sidebar-foreground: oklch(0.15 0.015 260);
+  --sidebar-primary: oklch(0.42 0.22 300);
+  --sidebar-primary-foreground: oklch(0.99 0 0);
+  --sidebar-accent: oklch(0.96 0.025 300);
+  --sidebar-accent-foreground: oklch(0.30 0.12 300);
+  --sidebar-border: oklch(0.88 0.006 85);
+  --sidebar-ring: oklch(0.42 0.22 300);
+  
+  /* Charts - Vibrant on light */
+  --chart-1: oklch(0.42 0.22 300);
+  --chart-2: oklch(0.45 0.25 340);
+  --chart-3: oklch(0.48 0.18 250);
+  --chart-4: oklch(0.52 0.18 200);
+  --chart-5: oklch(0.58 0.16 150);
+  
+  /* Radius */
+  --radius: 0.75rem;
+  
+  /* Shadows - Refined elevation for light mode */
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.10), 0 4px 6px -4px rgb(0 0 0 / 0.08);
+  --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.12), 0 8px 10px -6px rgb(0 0 0 / 0.08);
+  
+  /* Glass effects */
+  --glass-bg: oklch(1 0 0 / 0.85);
+  --glass-border: oklch(0 0 0 / 0.06);
+}
+
+/* Premium Welcome Banner - Light gradient */
+.light .premium-banner-gradient {
+  background: linear-gradient(135deg, oklch(0.95 0.03 300), oklch(0.93 0.02 280));
+  border: 1px solid oklch(0.88 0.04 300);
+}
+
+/* Premium Welcome Banner - Dark gradient */
+.dark .premium-banner-gradient {
+  background: linear-gradient(135deg, oklch(0.35 0.15 260), oklch(0.30 0.18 270));
+  border: 1px solid oklch(0.25 0.05 260);
+}
+
+/* ============================================
+   THEME-SPECIFIC OVERRIDES
+   ============================================ */
+[data-theme="user-dashboard"] {
+  --radius: 0.75rem;
+}
+
+[data-theme="admin-dashboard"] {
+  --radius: 0.5rem;
+}
+
+/* ============================================
+   SMOOTH THEME TRANSITIONS
+   ============================================ */
+@media (prefers-reduced-motion: no-preference) {
+  *,
+  *::before,
+  *::after {
+    transition: background-color 0.2s ease,
                 border-color 0.2s ease,
-                color 0.2s ease;
+                color 0.2s ease,
+                box-shadow 0.2s ease;
   }
+}
+
+/* ============================================
+   UTILITY CLASSES FOR THEMING
+   ============================================ */
+@layer utilities {
+  .bg-glass {
+    background-color: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+  
+  .border-glass {
+    border-color: var(--glass-border);
+  }
+}

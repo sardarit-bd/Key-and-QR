@@ -25,14 +25,14 @@ export default function MyQuoteFilters({ filters }) {
     <div className="flex flex-col md:flex-row items-center justify-between gap-4">
       <div className="flex flex-col sm:flex-row items-center gap-4 w-full md:w-auto">
         <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 z-10" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
 
           <Input
             type="text"
             placeholder="Search quotes..."
             value={filters.search}
             onChange={(e) => filters.setSearch(e.target.value)}
-            className="w-full bg-[#121526] border-white/5 rounded-xl h-11 pl-10 pr-4 text-sm text-gray-200 placeholder:text-gray-500 focus-visible:ring-violet-500/50"
+            className="w-full bg-card border-border rounded-xl h-11 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-primary/50"
           />
         </div>
 
@@ -40,11 +40,11 @@ export default function MyQuoteFilters({ filters }) {
           value={filters.category}
           onValueChange={filters.setCategory}
         >
-          <SelectTrigger className="w-full sm:w-44 bg-[#121526] border-white/5 rounded-xl h-11 text-gray-300 hover:bg-[#1a1e36]">
+          <SelectTrigger className="w-full sm:w-44 bg-card border-border rounded-xl h-11 text-foreground hover:bg-muted">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
 
-          <SelectContent className="bg-[#121526] border-white/10 text-gray-200">
+          <SelectContent className="bg-popover border-border text-popover-foreground">
             {CATEGORIES.map((category) => (
               <SelectItem key={category.id} value={category.id}>
                 {category.name}
@@ -57,11 +57,11 @@ export default function MyQuoteFilters({ filters }) {
           value={filters.sort}
           onValueChange={filters.setSort}
         >
-          <SelectTrigger className="w-full sm:w-44 bg-[#121526] border-white/5 rounded-xl h-11 text-gray-300 hover:bg-[#1a1e36]">
+          <SelectTrigger className="w-full sm:w-44 bg-card border-border rounded-xl h-11 text-foreground hover:bg-muted">
             <SelectValue placeholder="Sort By" />
           </SelectTrigger>
 
-          <SelectContent className="bg-[#121526] border-white/10 text-gray-200">
+          <SelectContent className="bg-popover border-border text-popover-foreground">
             <SelectItem value="newest">Newest First</SelectItem>
             <SelectItem value="oldest">Oldest First</SelectItem>
             <SelectItem value="favorites">Favorites First</SelectItem>
@@ -77,8 +77,8 @@ export default function MyQuoteFilters({ filters }) {
           onClick={() => filters.handleViewChange("grid")}
           className={`rounded-lg ${
             filters.view === "grid"
-              ? "bg-violet-600/20 text-violet-400"
-              : "bg-[#121526] text-gray-500 hover:bg-[#1a1e36]"
+              ? "bg-primary/20 text-primary"
+              : "bg-card text-muted-foreground hover:bg-muted"
           }`}
         >
           <Grid className="w-5 h-5" />
@@ -90,8 +90,8 @@ export default function MyQuoteFilters({ filters }) {
           onClick={() => filters.handleViewChange("list")}
           className={`rounded-lg ${
             filters.view === "list"
-              ? "bg-violet-600/20 text-violet-400"
-              : "bg-[#121526] text-gray-500 hover:bg-[#1a1e36]"
+              ? "bg-primary/20 text-primary"
+              : "bg-card text-muted-foreground hover:bg-muted"
           }`}
         >
           <List className="w-5 h-5" />

@@ -98,7 +98,7 @@ export default function ScanHistoryDetailModal({ isOpen, onClose, data }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/80 backdrop-blur-sm"
         onClick={onClose}
       >
         <motion.div
@@ -107,7 +107,7 @@ export default function ScanHistoryDetailModal({ isOpen, onClose, data }) {
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.9, opacity: 0, y: 20 }}
           transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-          className="relative w-full max-w-lg bg-[#121526] rounded-2xl border border-gray-800 shadow-2xl max-h-[90vh] overflow-hidden"
+          className="relative w-full max-w-lg bg-card rounded-2xl border border-border shadow-2xl max-h-[90vh] overflow-hidden"
           onClick={(e) => e.stopPropagation()}
           tabIndex={-1}
           role="dialog"
@@ -116,7 +116,7 @@ export default function ScanHistoryDetailModal({ isOpen, onClose, data }) {
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 rounded-full text-gray-400 hover:text-white hover:bg-white/10 transition-colors"
+            className="absolute top-4 right-4 z-10 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
             aria-label="Close modal"
           >
             <X className="w-5 h-5" />
@@ -133,15 +133,15 @@ export default function ScanHistoryDetailModal({ isOpen, onClose, data }) {
               
               {/* Category Badge */}
               <div className="absolute top-3 right-3">
-                <span className="text-[10px] px-2.5 py-1 rounded-full border border-white/20 bg-white/10 text-white backdrop-blur-sm">
+                <span className="text-[10px] px-2.5 py-1 rounded-full border border-border bg-muted text-foreground backdrop-blur-sm">
                   {category}
                 </span>
               </div>
 
               {/* Quote Text */}
               <div className="absolute inset-0 flex items-center justify-center p-4">
-                <p className="text-lg text-white font-serif text-center leading-relaxed">
-                  “{quote?.text || ''}”
+                <p className="text-lg text-foreground font-serif text-center leading-relaxed">
+                  "{quote?.text || ''}"
                 </p>
               </div>
             </div>
@@ -154,31 +154,31 @@ export default function ScanHistoryDetailModal({ isOpen, onClose, data }) {
             )}
 
             {/* Details */}
-            <div className="space-y-2 text-sm text-gray-400">
+            <div className="space-y-2 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
-                <Tag className="w-4 h-4 text-gray-500" />
-                <span>Tag: <span className="text-gray-300 font-mono">{tag?.tagCode || 'N/A'}</span></span>
+                <Tag className="w-4 h-4 text-foreground-tertiary" />
+                <span>Tag: <span className="text-foreground-secondary font-mono">{tag?.tagCode || 'N/A'}</span></span>
               </div>
               <div className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-gray-500" />
-                <span>Scanned on: <span className="text-gray-300">{formattedDate} at {formattedTime}</span></span>
+                <Calendar className="w-4 h-4 text-foreground-tertiary" />
+                <span>Scanned on: <span className="text-foreground-secondary">{formattedDate} at {formattedTime}</span></span>
               </div>
             </div>
 
             {/* Actions */}
-            <div className="flex items-center justify-center gap-3 mt-6 pt-4 border-t border-white/5">
+            <div className="flex items-center justify-center gap-3 mt-6 pt-4 border-t border-border">
               <FavoriteButton
                 id={quote?._id}
                 type="quote"
                 size="default"
                 variant="ghost"
-                className="text-gray-400 hover:text-white"
+                className="text-muted-foreground hover:text-foreground"
               />
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={handleShare}
-                className="text-gray-400 hover:text-white hover:bg-white/5"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted/50"
               >
                 <Share2 className="w-4 h-4 mr-2" />
                 Share
@@ -187,7 +187,7 @@ export default function ScanHistoryDetailModal({ isOpen, onClose, data }) {
                 variant="ghost"
                 size="sm"
                 onClick={handleCopy}
-                className="text-gray-400 hover:text-white hover:bg-white/5"
+                className="text-muted-foreground hover:text-foreground hover:bg-muted/50"
               >
                 <Copy className="w-4 h-4 mr-2" />
                 Copy

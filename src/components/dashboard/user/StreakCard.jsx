@@ -5,7 +5,7 @@ import { CheckCircle2, Circle } from 'lucide-react';
 import { useTheme } from '@/hooks/useTheme';
 
 export default function StreakCard() {
-  const { theme, colors } = useTheme();
+  const { themeMode } = useTheme();
 
   const days = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
   const streakDays = 7;
@@ -15,19 +15,12 @@ export default function StreakCard() {
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.4 }}
-      className="rounded-[24px] p-6 shadow-lg flex flex-col items-center relative overflow-hidden"
-      style={{
-        backgroundColor: colors.backgroundSecondary,
-        border: `1px solid ${colors.border}`,
-      }}
+      className="rounded-[24px] p-6 shadow-lg flex flex-col items-center relative overflow-hidden bg-background-secondary border border-border"
     >
       {/* Background Decoration */}
       <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/5 rounded-full blur-[50px]"></div>
 
-      <h2 
-        className="text-lg font-serif tracking-wide w-full text-center mb-8 relative z-10"
-        style={{ color: colors.foreground }}
-      >
+      <h2 className="text-lg font-serif tracking-wide w-full text-center mb-8 relative z-10 text-foreground">
         Inspiration Streak
       </h2>
 
@@ -62,29 +55,29 @@ export default function StreakCard() {
         </svg>
 
         <div className="flex flex-col items-center">
-          <span className="font-serif text-[88px] leading-none text-[#F5C97A]">
+          <span className="font-serif text-[88px] leading-none text-accent">
             {streakDays}
           </span>
-          <span className="mt-2 font-serif text-[22px] text-[#E9C27B]">
+          <span className="mt-2 font-serif text-[22px] text-accent">
             Days
           </span>
         </div>
       </div>
 
-      <p className="text-sm mb-6 relative z-10" style={{ color: colors.foregroundSecondary }}>
+      <p className="text-sm mb-6 relative z-10 text-foreground-secondary">
         Keep your streak going!
       </p>
 
       <div className="flex gap-2.5 sm:gap-4 relative z-10">
         {days.map((day, i) => (
           <div key={i} className="flex flex-col items-center gap-2">
-            <span className="text-[10px] font-medium" style={{ color: colors.foregroundTertiary }}>
+            <span className="text-[10px] font-medium text-foreground-tertiary">
               {day}
             </span>
             {i < 6 ? (
               <CheckCircle2 size={16} className="text-yellow-500" />
             ) : (
-              <Circle size={16} style={{ color: colors.foregroundTertiary }} />
+              <Circle size={16} className="text-foreground-tertiary" />
             )}
           </div>
         ))}

@@ -34,7 +34,7 @@ export default function ScanHistoryPage() {
   // Loading state
   if (loading && history.length === 0) {
     return (
-      <div className="min-h-screen bg-[#090b14]">
+      <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
           <ScanHistoryHeader />
           <div className="mt-6">
@@ -48,7 +48,7 @@ export default function ScanHistoryPage() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen bg-[#090b14]">
+      <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
           <ScanHistoryHeader />
           <div className="mt-6">
@@ -62,7 +62,7 @@ export default function ScanHistoryPage() {
   // Empty state
   if (!loading && history.length === 0) {
     return (
-      <div className="min-h-screen bg-[#090b14]">
+      <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
           <ScanHistoryHeader />
           <div className="mt-6">
@@ -81,7 +81,7 @@ export default function ScanHistoryPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="min-h-screen bg-[#090b14]"
+      className="min-h-screen bg-background"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24">
         {/* Header */}

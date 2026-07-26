@@ -9,12 +9,12 @@ import DailyQuoteBanner from './DailyQuoteBanner';
 import WelcomeSection from './WelcomeSection';
 
 const CATEGORY_ICONS = {
-  faith: { icon: QuoteIcon, colorClass: 'text-purple-400', bgClass: 'bg-purple-900/20 border border-purple-500/20' },
-  love: { icon: Heart, colorClass: 'text-pink-400', bgClass: 'bg-pink-900/20 border border-pink-500/20' },
-  strength: { icon: Sparkles, colorClass: 'text-[#e3ba85]', bgClass: 'bg-[#e3ba85]/10 border border-[#e3ba85]/20' },
-  healing: { icon: Sparkles, colorClass: 'text-green-400', bgClass: 'bg-green-900/20 border border-green-500/20' },
-  gratitude: { icon: Sparkles, colorClass: 'text-yellow-400', bgClass: 'bg-yellow-900/20 border border-yellow-500/20' },
-  motivation: { icon: Sparkles, colorClass: 'text-[#e3ba85]', bgClass: 'bg-[#e3ba85]/10 border border-[#e3ba85]/20' },
+  faith: { icon: QuoteIcon, colorClass: 'text-purple-400', bgClass: 'bg-purple-500/10 border border-purple-500/20' },
+  love: { icon: Heart, colorClass: 'text-pink-400', bgClass: 'bg-pink-500/10 border border-pink-500/20' },
+  strength: { icon: Sparkles, colorClass: 'text-accent', bgClass: 'bg-accent/10 border border-accent/20' },
+  healing: { icon: Sparkles, colorClass: 'text-green-400', bgClass: 'bg-green-500/10 border border-green-500/20' },
+  gratitude: { icon: Sparkles, colorClass: 'text-yellow-400', bgClass: 'bg-yellow-500/10 border border-yellow-500/20' },
+  motivation: { icon: Sparkles, colorClass: 'text-accent', bgClass: 'bg-accent/10 border border-accent/20' },
 };
 
 function mapQuotes(quotes) {

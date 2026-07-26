@@ -19,11 +19,11 @@ const CATEGORY_COLORS = {
   motivation: 'text-orange-400 bg-orange-500/10',
   hope: 'text-emerald-400 bg-emerald-500/10',
   success: 'text-blue-400 bg-blue-500/10',
-  general: 'text-gray-400 bg-gray-500/10',
+  general: 'text-muted-foreground bg-muted',
 };
 
 export default function RecentQuotes({ quotes }) {
-  const { theme, colors } = useTheme();
+  const { themeMode } = useTheme();
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -43,30 +43,20 @@ export default function RecentQuotes({ quotes }) {
       initial={{ opacity: 0, x: -20 }}
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.3 }}
-      className="rounded-[24px] p-6 shadow-lg"
-      style={{
-        backgroundColor: colors.backgroundSecondary,
-        border: `1px solid ${colors.border}`,
-      }}
+      className="rounded-[24px] p-6 shadow-lg bg-background-secondary border border-border"
     >
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-lg font-serif tracking-wide" style={{ color: colors.foreground }}>
+        <h2 className="text-lg font-serif tracking-wide text-foreground">
           Your Recent Quotes
         </h2>
-        <button 
-          className="text-xs font-medium px-4 py-2 rounded-full border transition-colors cursor-pointer"
-          style={{
-            borderColor: colors.border,
-            color: colors.foregroundSecondary,
-          }}
-        >
+        <button className="text-xs font-medium px-4 py-2 rounded-full border transition-colors cursor-pointer border-border text-foreground-secondary hover:bg-muted">
           View All
         </button>
       </div>
 
       <div className="space-y-3">
         {quotes.length === 0 ? (
-          <div className="text-center py-8" style={{ color: colors.foregroundSecondary }}>
+          <div className="text-center py-8 text-foreground-secondary">
             No quotes yet. Start your inspiration journey!
           </div>
         ) : (
@@ -78,33 +68,22 @@ export default function RecentQuotes({ quotes }) {
               <motion.div
                 key={idx}
                 whileHover={{ x: 4 }}
-                className="flex items-center justify-between p-4 rounded-2xl transition-all group"
-                style={{
-                  backgroundColor: colors.background,
-                  border: `1px solid ${colors.border}`,
-                }}
+                className="flex items-center justify-between p-4 rounded-2xl transition-all group bg-background border border-border"
               >
                 <div className="flex items-center gap-4 flex-1 overflow-hidden">
                   <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 ${colorClass}`}>
                     <Icon size={16} />
                   </div>
-                  <p className="text-sm truncate font-medium" style={{ color: colors.foreground }}>
+                  <p className="text-sm truncate font-medium text-foreground">
                     {quote.text}
                   </p>
                 </div>
 
                 <div className="flex items-center gap-6 flex-shrink-0 ml-4">
-                  <span 
-                    className="hidden sm:inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border"
-                    style={{
-                      backgroundColor: `${colors.primary}10`,
-                      color: colors.primary,
-                      borderColor: `${colors.primary}20`,
-                    }}
-                  >
+                  <span className="hidden sm:inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full border bg-primary/10 text-primary border-primary/20">
                     <span className="capitalize">{quote.category || 'General'}</span>
                   </span>
-                  <span className="text-xs flex items-center gap-1.5" style={{ color: colors.foregroundTertiary }}>
+                  <span className="text-xs flex items-center gap-1.5 text-foreground-tertiary">
                     <Calendar size={12} />
                     {formatDate(quote.date)}
                   </span>

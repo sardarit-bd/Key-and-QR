@@ -9,11 +9,11 @@ export default function MyQuoteHeader() {
   return (
     <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
       <div>
-        <h1 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-2">
           <BookOpen className="w-6 h-6 sm:w-7 sm:h-7 text-violet-400" />
           My Quotes
         </h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <p className="text-sm text-muted-foreground mt-1">
           Your personal inspiration library
         </p>
       </div>

@@ -37,13 +37,13 @@ export default function FavoritesPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#090b14]">
+      <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
           <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-white/10 rounded w-48" />
+            <div className="h-8 bg-muted rounded w-48" />
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-48 bg-white/5 rounded-xl" />
+                <div key={i} className="h-48 bg-muted rounded-xl" />
               ))}
             </div>
           </div>
@@ -54,10 +54,10 @@ export default function FavoritesPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#090b14] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-400">Failed to load favorites</p>
-          <button onClick={() => window.location.reload()} className="mt-4 text-[#e3ba85] underline">
+          <p className="text-destructive">Failed to load favorites</p>
+          <button onClick={() => window.location.reload()} className="mt-4 text-accent underline">
             Try again
           </button>
         </div>
@@ -69,25 +69,25 @@ export default function FavoritesPage() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-[#090b14]"
+      className="min-h-screen bg-background"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-white">Favorites</h1>
-            <p className="text-sm text-gray-400 mt-1">{meta.total} items saved</p>
+            <h1 className="text-2xl font-bold text-foreground">Favorites</h1>
+            <p className="text-sm text-muted-foreground mt-1">{meta.total} items saved</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => setView('grid')}
-              className={`p-2 rounded-lg ${view === 'grid' ? 'bg-[#e3ba85]/20 text-[#e3ba85]' : 'text-gray-400 hover:text-white'}`}
+              className={`p-2 rounded-lg ${view === 'grid' ? 'bg-accent/20 text-accent' : 'text-muted-foreground hover:text-foreground'}`}
             >
               <Grid3X3 size={18} />
             </button>
             <button
               onClick={() => setView('list')}
-              className={`p-2 rounded-lg ${view === 'list' ? 'bg-[#e3ba85]/20 text-[#e3ba85]' : 'text-gray-400 hover:text-white'}`}
+              className={`p-2 rounded-lg ${view === 'list' ? 'bg-accent/20 text-accent' : 'text-muted-foreground hover:text-foreground'}`}
             >
               <List size={18} />
             </button>
@@ -97,13 +97,13 @@ export default function FavoritesPage() {
         {/* Search */}
         <div className="mt-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
             <input
               type="text"
               placeholder="Search favorites..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-[#e3ba85]/50"
+              className="w-full pl-10 pr-4 py-3 bg-muted border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent/50"
             />
           </div>
         </div>
@@ -111,39 +111,39 @@ export default function FavoritesPage() {
         {/* Favorites Grid/List */}
         {filteredFavorites.length === 0 ? (
           <div className="mt-12 text-center">
-            <Heart className="mx-auto text-gray-600" size={48} />
-            <p className="mt-4 text-gray-400">
+            <Heart className="mx-auto text-muted-foreground" size={48} />
+            <p className="mt-4 text-muted-foreground">
               {search ? 'No favorites match your search' : 'No favorites yet'}
             </p>
           </div>
         ) : view === 'grid' ? (
           <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredFavorites.map((fav) => (
-              <div key={fav._id} className="bg-white/5 rounded-xl p-4 border border-white/10 hover:border-[#e3ba85]/30 transition-colors">
+              <div key={fav._id} className="bg-card rounded-xl p-4 border border-border hover:border-accent/30 transition-colors">
                 {fav.product ? (
                   <>
-                    <div className="h-32 bg-white/5 rounded-lg flex items-center justify-center mb-3">
+                    <div className="h-32 bg-muted rounded-lg flex items-center justify-center mb-3">
                       {fav.product.image?.url ? (
                         <img src={fav.product.image.url} alt={fav.product.name} className="max-h-full object-contain" />
                       ) : (
-                        <span className="text-gray-500">No image</span>
+                        <span className="text-muted-foreground">No image</span>
                       )}
                     </div>
-                    <h3 className="text-white font-medium truncate">{fav.product.name}</h3>
-                    <p className="text-[#e3ba85] text-sm mt-1">${fav.product.price}</p>
+                    <h3 className="text-foreground font-medium truncate">{fav.product.name}</h3>
+                    <p className="text-accent text-sm mt-1">${fav.product.price}</p>
                   </>
                 ) : fav.quote ? (
                   <>
-                    <div className="h-32 bg-gradient-to-br from-[#e3ba85]/10 to-transparent rounded-lg p-4 flex items-center justify-center mb-3">
-                      <p className="text-white text-sm italic text-center line-clamp-4">"{fav.quote.text}"</p>
+                    <div className="h-32 bg-gradient-to-br from-accent/10 to-transparent rounded-lg p-4 flex items-center justify-center mb-3">
+                      <p className="text-foreground text-sm italic text-center line-clamp-4">"{fav.quote.text}"</p>
                     </div>
-                    <p className="text-white/60 text-xs">{fav.quote.category}</p>
+                    <p className="text-foreground-secondary text-xs">{fav.quote.category}</p>
                   </>
                 ) : null}
                 <div className="flex items-center gap-2 mt-3">
                   <button
                     onClick={() => handleRemove(fav._id)}
-                    className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                    className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                     title="Remove from favorites"
                   >
                     <Trash2 size={16} />
@@ -155,29 +155,29 @@ export default function FavoritesPage() {
         ) : (
           <div className="mt-6 space-y-2">
             {filteredFavorites.map((fav) => (
-              <div key={fav._id} className="bg-white/5 rounded-xl p-4 border border-white/10 hover:border-[#e3ba85]/30 transition-colors flex items-center gap-4">
-                <div className="w-12 h-12 bg-white/5 rounded-lg flex items-center justify-center flex-shrink-0">
+              <div key={fav._id} className="bg-card rounded-xl p-4 border border-border hover:border-accent/30 transition-colors flex items-center gap-4">
+                <div className="w-12 h-12 bg-muted rounded-lg flex items-center justify-center flex-shrink-0">
                   {fav.product ? (
                     fav.product.image?.url ? (
                       <img src={fav.product.image.url} alt="" className="max-h-full object-contain" />
                     ) : (
-                      <span className="text-gray-500 text-xs">N/A</span>
+                      <span className="text-muted-foreground text-xs">N/A</span>
                     )
                   ) : (
-                    <Heart size={16} className="text-[#e3ba85]" />
+                    <Heart size={16} className="text-accent" />
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-white truncate">
+                  <p className="text-foreground truncate">
                     {fav.product?.name || fav.quote?.text || 'Unknown'}
                   </p>
-                  <p className="text-gray-400 text-xs">
+                  <p className="text-muted-foreground text-xs">
                     {fav.type === 'product' ? `$${fav.product?.price}` : fav.quote?.category}
                   </p>
                 </div>
                 <button
                   onClick={() => handleRemove(fav._id)}
-                  className="p-2 text-red-400 hover:bg-red-400/10 rounded-lg transition-colors"
+                  className="p-2 text-destructive hover:bg-destructive/10 rounded-lg transition-colors"
                 >
                   <Trash2 size={16} />
                 </button>
@@ -192,17 +192,17 @@ export default function FavoritesPage() {
             <button
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page === 1}
-              className="px-4 py-2 bg-white/5 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10"
+              className="px-4 py-2 bg-muted rounded-lg text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/80"
             >
               Previous
             </button>
-            <span className="text-gray-400 text-sm">
+            <span className="text-muted-foreground text-sm">
               Page {page} of {meta.totalPage}
             </span>
             <button
               onClick={() => setPage(Math.min(meta.totalPage, page + 1))}
               disabled={page === meta.totalPage}
-              className="px-4 py-2 bg-white/5 rounded-lg text-white disabled:opacity-50 disabled:cursor-not-allowed hover:bg-white/10"
+              className="px-4 py-2 bg-muted rounded-lg text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/80"
             >
               Next
             </button>

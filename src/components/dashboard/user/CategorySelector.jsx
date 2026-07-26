@@ -14,18 +14,14 @@ const CATEGORIES = [
 ];
 
 export default function CategorySelector({ selectedCategory, onSelectCategory }) {
-  const { theme, colors } = useTheme();
+  const { themeMode } = useTheme();
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.2 }}
-      className="relative overflow-hidden rounded-[32px] px-8 py-8 shadow-[0_0_40px_rgba(255,140,0,0.06)] mb-8"
-      style={{
-        backgroundColor: colors.backgroundSecondary,
-        border: `1px solid ${colors.border}`,
-      }}
+      className="relative overflow-hidden rounded-[32px] px-8 py-8 shadow-[0_0_40px_rgba(255,140,0,0.06)] mb-8 bg-background-secondary border border-border"
     >
       {/* Background Glow */}
       <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/5 via-transparent to-pink-500/5"></div>
@@ -33,10 +29,10 @@ export default function CategorySelector({ selectedCategory, onSelectCategory })
       <div className="relative flex flex-col xl:flex-row xl:items-center gap-8">
         {/* Left Text */}
         <div className="min-w-[300px]">
-          <h3 className="text-3xl font-serif mb-4" style={{ color: colors.foreground }}>
+          <h3 className="text-3xl font-serif mb-4 text-foreground">
             Ready for more inspiration?
           </h3>
-          <p className="text-sm leading-relaxed" style={{ color: colors.foregroundSecondary }}>
+          <p className="text-sm leading-relaxed text-foreground-secondary">
             Choose a category and discover a new quote<br />
             that speaks to your heart.
           </p>
@@ -56,20 +52,17 @@ export default function CategorySelector({ selectedCategory, onSelectCategory })
                 onClick={() => onSelectCategory(cat.id)}
                 className={`w-[110px] h-[90px] rounded-[28px] border flex flex-col justify-center items-center transition-all duration-300 flex-shrink-0 cursor-pointer ${
                   isActive
-                    ? 'shadow-[0_0_30px_rgba(168,85,247,0.3)]'
-                    : 'hover:shadow-md'
+                    ? 'bg-primary/30 border-primary shadow-[0_0_30px_rgba(168,85,247,0.3)]'
+                    : 'bg-background border-border hover:shadow-md'
                 }`}
-                style={{
-                  backgroundColor: isActive ? `${colors.primary}30` : colors.background,
-                  borderColor: isActive ? colors.primary : colors.border,
-                }}
               >
                 <div className={`mb-3 ${cat.color}`}>
                   <Icon size={20} />
                 </div>
                 <span 
-                  className="text-sm font-medium text-center leading-tight"
-                  style={{ color: isActive ? colors.primary : colors.foregroundSecondary }}
+                  className={`text-sm font-medium text-center leading-tight ${
+                    isActive ? 'text-primary' : 'text-foreground-secondary'
+                  }`}
                 >
                   {cat.label}
                 </span>
@@ -78,20 +71,17 @@ export default function CategorySelector({ selectedCategory, onSelectCategory })
           })}
 
           {/* Divider */}
-          <div className="h-24 w-px mx-3 flex-shrink-0" style={{ backgroundColor: colors.border }} />
+          <div className="h-24 w-px mx-3 flex-shrink-0 bg-border" />
 
           {/* View All */}
           <motion.button
             whileHover={{ y: -4 }}
             className="flex items-center justify-center gap-4 flex-shrink-0 cursor-pointer"
           >
-            <div 
-              className="w-12 h-12 rounded-full border flex items-center justify-center"
-              style={{ borderColor: colors.border }}
-            >
-              <LayoutGrid className="w-5 h-5" style={{ color: colors.foregroundSecondary }} />
+            <div className="w-12 h-12 rounded-full border border-border flex items-center justify-center">
+              <LayoutGrid className="w-5 h-5 text-foreground-secondary" />
             </div>
-            <span className="text-sm leading-tight text-center" style={{ color: colors.foregroundSecondary }}>
+            <span className="text-sm leading-tight text-center text-foreground-secondary">
               View All
               <br />
               Categories

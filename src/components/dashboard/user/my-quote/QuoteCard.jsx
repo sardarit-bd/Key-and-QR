@@ -49,7 +49,7 @@ export default function QuoteCard({
   };
 
   return (
-    <Card className="group relative overflow-hidden rounded-2xl border border-white/5 bg-[#121526] transition-all duration-300 hover:border-white/20">
+    <Card className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:border-primary/20">
       <div
         className="relative flex min-h-[260px] flex-col items-center justify-center bg-cover bg-center p-8 text-center"
         style={{
@@ -58,24 +58,24 @@ export default function QuoteCard({
             : "none",
         }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-[#090b14]/80 via-[#090b14]/70 to-[#121526]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/70 to-card" />
 
-        <p className="relative z-10 text-xl font-medium leading-relaxed text-white">
-          “{quote.text}”
+        <p className="relative z-10 text-xl font-medium leading-relaxed text-foreground">
+          "{quote.text}"
         </p>
 
-        <span className="relative z-10 mt-6 text-sm text-gray-300">
+        <span className="relative z-10 mt-6 text-sm text-foreground-secondary">
           — {quote.author || "InspireTag"}
         </span>
 
         {quote.category && (
-          <span className="relative z-10 mt-3 rounded-full bg-white/10 px-3 py-1 text-xs text-gray-300">
+          <span className="relative z-10 mt-3 rounded-full bg-muted px-3 py-1 text-xs text-foreground-secondary">
             {quote.category}
           </span>
         )}
       </div>
 
-      <div className="flex items-center justify-between border-t border-white/5 px-5 py-3">
+      <div className="flex items-center justify-between border-t border-border px-5 py-3">
         <Button
           variant="ghost"
           size="icon"
@@ -84,7 +84,7 @@ export default function QuoteCard({
           className={
             isFavorite
               ? "text-rose-500 hover:bg-rose-500/10"
-              : "text-gray-400 hover:bg-white/5 hover:text-white"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
           }
         >
           {isFavorite ? (
@@ -98,7 +98,7 @@ export default function QuoteCard({
           variant="ghost"
           size="icon"
           onClick={handleShare}
-          className="text-gray-400 hover:bg-white/5 hover:text-white"
+          className="text-muted-foreground hover:bg-muted hover:text-foreground"
         >
           <Share2 className="h-5 w-5" />
         </Button>
@@ -108,7 +108,7 @@ export default function QuoteCard({
             <Button
               variant="ghost"
               size="icon"
-              className="text-gray-400 hover:bg-white/5 hover:text-white"
+              className="text-muted-foreground hover:bg-muted hover:text-foreground"
             >
               <MoreVertical className="h-5 w-5" />
             </Button>
@@ -116,11 +116,11 @@ export default function QuoteCard({
 
           <DropdownMenuContent
             align="end"
-            className="border-white/10 bg-[#121526] text-gray-200"
+            className="border-border bg-popover text-popover-foreground"
           >
             <DropdownMenuItem
               onClick={handleCopy}
-              className="cursor-pointer hover:bg-white/5"
+              className="cursor-pointer hover:bg-muted"
             >
               <Copy className="mr-2 h-4 w-4" />
               Copy Quote
@@ -128,7 +128,7 @@ export default function QuoteCard({
 
             <DropdownMenuItem
               onClick={handleShare}
-              className="cursor-pointer hover:bg-white/5"
+              className="cursor-pointer hover:bg-muted"
             >
               <Share2 className="mr-2 h-4 w-4" />
               Share Quote

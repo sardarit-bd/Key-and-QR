@@ -20,8 +20,8 @@ export default function SidebarMenuItem({
         group flex items-center gap-4 px-4 py-3.5 rounded-xl text-[15px] font-serif
         transition-all duration-200 relative
         ${isActive 
-          ? 'bg-[#181512] text-[#e3ba85]' 
-          : 'text-gray-300 hover:text-[#e3ba85] hover:bg-[#181512]/50'
+          ? 'bg-sidebar-accent text-sidebar-primary' 
+          : 'text-sidebar-foreground hover:text-sidebar-primary hover:bg-sidebar-accent/50'
         }
         ${isCollapsed ? 'justify-center px-0' : ''}
       `}
@@ -32,7 +32,7 @@ export default function SidebarMenuItem({
         size={20} 
         strokeWidth={1.5}
         className={`flex-shrink-0 transition-colors ${
-          isActive ? 'text-[#e3ba85]' : 'text-gray-400 group-hover:text-[#e3ba85]'
+          isActive ? 'text-sidebar-primary' : 'text-sidebar-foreground group-hover:text-sidebar-primary'
         }`}
       />
       
@@ -42,17 +42,17 @@ export default function SidebarMenuItem({
 
       {/* Badge for premium items */}
       {badge && !isCollapsed && (
-        <span className="text-[8px] px-2 py-0.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold uppercase tracking-wider">
+        <span className="text-[8px] px-2 py-0.5 rounded-full bg-gradient-to-r from-accent to-accent/80 text-accent-foreground font-semibold uppercase tracking-wider">
           {badge}
         </span>
       )}
 
       {/* Tooltip for collapsed */}
       {isCollapsed && (
-        <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+        <div className="absolute left-full ml-2 px-2 py-1 bg-popover text-popover-foreground text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50 shadow-lg">
           {title}
           {badge && (
-            <span className="ml-1 text-[8px] px-1 py-0.5 rounded bg-amber-500 text-white">
+            <span className="ml-1 text-[8px] px-1 py-0.5 rounded bg-accent text-accent-foreground">
               {badge}
             </span>
           )}

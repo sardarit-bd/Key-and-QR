@@ -14,7 +14,7 @@ export default function PremiumLockIcon({ size = 'default', className = '' }) {
   };
 
   return (
-    <div className={`inline-flex items-center gap-1 text-gray-500 ${className}`}>
+    <div className={`inline-flex items-center gap-1 text-foreground-tertiary ${className}`}>
       <Lock className={sizeClasses[size]} />
       <span className="text-[10px] font-medium">Premium</span>
     </div>

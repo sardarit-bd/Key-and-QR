@@ -10,6 +10,7 @@ import SidebarMenu from './SidebarMenu';
 import SidebarHeader from './SidebarHeader';
 import SidebarProfile from './SidebarProfile';
 import useSidebar from '@/hooks/sidebar/useSidebar';
+import ThemeToggle from '@/components/dashboard/shared/ThemeToggle';
 
 const SIDEBAR_WIDTH = 'w-72';
 const COLLAPSED_WIDTH = 'w-20';
@@ -50,9 +51,8 @@ export default function Sidebar({ isCollapsed = false, onToggle }) {
   const sidebarClasses = `
     fixed top-0 left-0 z-50 h-full 
     ${isDesktopCollapsed ? COLLAPSED_WIDTH : SIDEBAR_WIDTH}
-    bg-[#070911]
-    bg-[#1e2335]
-    border-none
+    bg-sidebar
+    border-r border-sidebar-border
     transition-all duration-300 ease-in-out
     ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
     lg:translate-x-0
@@ -69,7 +69,7 @@ export default function Sidebar({ isCollapsed = false, onToggle }) {
       {/* Mobile overlay */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-foreground/50 lg:hidden"
           onClick={() => setIsMobileOpen(false)}
           aria-hidden="true"
         />
@@ -78,7 +78,7 @@ export default function Sidebar({ isCollapsed = false, onToggle }) {
       {/* Mobile toggle button */}
       <button
         onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-[#070911] text-[#e3ba85] shadow-lg border border-[#e3ba85]/20"
+        className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-sidebar text-primary shadow-lg border border-primary/20"
         aria-label={isMobileOpen ? 'Close sidebar' : 'Open sidebar'}
       >
         {isMobileOpen ? <X size={20} /> : <Menu size={20} />}

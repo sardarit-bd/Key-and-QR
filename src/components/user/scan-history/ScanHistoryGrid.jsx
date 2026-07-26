@@ -55,7 +55,7 @@ export default function ScanHistoryGrid({
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-[#121526] border border-white/5 rounded-2xl h-64 animate-pulse" />
+          <div key={i} className="bg-card border border-border rounded-2xl h-64 animate-pulse" />
         ))}
       </div>
     );
@@ -81,7 +81,7 @@ export default function ScanHistoryGrid({
           {grouped.map((group) => (
             <div key={group.date}>
               {/* Date Header */}
-              <h3 className="text-sm font-medium text-gray-400 mb-3 px-1">
+              <h3 className="text-sm font-medium text-muted-foreground mb-3 px-1">
                 {group.label}
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
