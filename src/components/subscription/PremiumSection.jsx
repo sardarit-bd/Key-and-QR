@@ -160,7 +160,7 @@ export default function PremiumSection({ selectedCategory }) {
               Enjoy unlimited inspiration with categorized quotes.
             </p>
             <button
-              onClick={() => router.push("/dashboard/user/subscription")}
+              onClick={() => router.push("/new-dashboard/user/subscription")}
               className="w-full rounded-lg bg-gray-900 text-white py-3 font-medium hover:bg-gray-800 transition cursor-pointer"
             >
               Manage Subscription

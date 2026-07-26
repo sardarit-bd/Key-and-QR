@@ -81,7 +81,7 @@ export default function Header() {
       href: user
         ? user?.role === "admin"
           ? "/dashboard/admin"
-          : "/dashboard/user"
+          : "/new-dashboard/user"
         : "/login",
     },
     { icon: Heart, label: "Wishlist", href: "/wishlist" },
@@ -243,7 +243,7 @@ export default function Header() {
                     <Link
                       href={`${user?.role === "admin"
                         ? "/dashboard/admin"
-                        : "/dashboard/user"
+                        : "/new-dashboard/user"
                         }`}
                       className="flex items-center gap-3 px-4 py-3"
                     >
