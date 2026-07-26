@@ -16,7 +16,7 @@ export default function GuestRoute({ children }) {
             if (user.role === "admin") {
                 router.replace("/dashboard/admin");
             } else {
-                router.replace("/dashboard/user");
+                router.replace("/new-dashboard/user");
             }
         }
     }, [user, isInitialized, router]);

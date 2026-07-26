@@ -317,7 +317,7 @@ export default function Checkout() {
             {/* LEFT: Order Summary */}
             <div>
                 <Link
-                    href={orderId ? "/dashboard/user/orders" : "/cart"}
+                    href={orderId ? "/new-dashboard/user/orders" : "/cart"}
                     className="text-md text-gray-500 hover:underline mb-4 inline-block"
                 >
                     ← {orderId ? "Back to Orders" : "Back to Cart"}
