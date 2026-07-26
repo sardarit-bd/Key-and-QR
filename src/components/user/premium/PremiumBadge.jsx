@@ -24,7 +24,7 @@ export default function PremiumBadge({ size = 'default', className = '' }) {
     <motion.span
       initial={{ scale: 0.8, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
-      className={`inline-flex items-center font-semibold rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25 ${sizeClasses[size]} ${className}`}
+      className={`inline-flex items-center font-semibold rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-foreground shadow-lg shadow-amber-500/25 ${sizeClasses[size]} ${className}`}
     >
       <Crown className={iconSizes[size]} />
       Premium

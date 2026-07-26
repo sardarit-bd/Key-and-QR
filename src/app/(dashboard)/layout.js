@@ -7,7 +7,7 @@ import Sidebar from "@/components/dashboard/user/layout/Sidebar";
 export default function DashboardLayout({ children }) {
   return (
     <ThemeProvider themeId={THEME_IDS.USER_DASHBOARD}>
-      <div className="min-h-screen flex">
+      <div className="min-h-screen flex bg-background">
         <Sidebar />
 
         {/* Added min-w-0 to prevent flex container blowout on mobile */}

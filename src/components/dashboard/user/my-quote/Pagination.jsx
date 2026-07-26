@@ -10,7 +10,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
         variant="ghost" 
         onClick={() => onPageChange(currentPage - 1)}
         disabled={currentPage === 1}
-        className="text-gray-500 hover:text-white hover:bg-white/5"
+        className="text-muted-foreground hover:text-foreground hover:bg-muted"
       >
         <ChevronLeft className="w-4 h-4 mr-1" /> Previous
       </Button>
@@ -25,13 +25,13 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
                 key={page}
                 variant={currentPage === page ? "default" : "ghost"}
                 onClick={() => onPageChange(page)}
-                className={`w-9 h-9 p-0 ${currentPage === page ? 'bg-violet-600 text-white hover:bg-violet-700' : 'text-gray-400 hover:bg-white/5'}`}
+                className={`w-9 h-9 p-0 ${currentPage === page ? 'bg-primary text-primary-foreground hover:bg-primary/90' : 'text-muted-foreground hover:bg-muted'}`}
               >
                 {page}
               </Button>
             );
           } else if (page === currentPage - 2 || page === currentPage + 2) {
-            return <span key={page} className="w-9 h-9 flex items-center justify-center text-gray-500">...</span>;
+            return <span key={page} className="w-9 h-9 flex items-center justify-center text-muted-foreground">...</span>;
           }
           return null;
         })}
@@ -41,7 +41,7 @@ export default function Pagination({ currentPage, totalPages, onPageChange }) {
         variant="outline" 
         onClick={() => onPageChange(currentPage + 1)}
         disabled={currentPage === totalPages}
-        className="border-white/10 bg-transparent text-gray-300 hover:bg-white/5 hover:text-white"
+        className="border-border bg-transparent text-foreground hover:bg-muted hover:text-foreground"
       >
         Next <ChevronRight className="w-4 h-4 ml-1" />
       </Button>

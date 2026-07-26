@@ -23,7 +23,7 @@ export default function MyQuoteGrid({
         {[...Array(6)].map((_, i) => (
           <div
             key={i}
-            className="bg-[#121526] border border-white/5 rounded-2xl h-64 animate-pulse"
+            className="bg-card border border-border rounded-2xl h-64 animate-pulse"
           />
         ))}
       </div>

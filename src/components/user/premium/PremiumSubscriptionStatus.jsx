@@ -27,14 +27,14 @@ export default function PremiumSubscriptionStatus({
 
   if (!subscriptionStatus) {
     return (
-      <div className="bg-[#121526] border border-white/5 rounded-xl p-6">
+      <div className="bg-card border border-border rounded-xl p-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gray-800/50 flex items-center justify-center">
-            <XCircle className="w-5 h-5 text-gray-500" />
+          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+            <XCircle className="w-5 h-5 text-foreground-tertiary" />
           </div>
           <div>
-            <p className="text-sm text-gray-400">Subscription Status</p>
-            <p className="text-white font-medium">No Active Subscription</p>
+            <p className="text-sm text-muted-foreground">Subscription Status</p>
+            <p className="text-foreground font-medium">No Active Subscription</p>
           </div>
         </div>
       </div>
@@ -51,7 +51,7 @@ export default function PremiumSubscriptionStatus({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-[#121526] border border-white/5 rounded-xl p-6"
+      className="bg-card border border-border rounded-xl p-6"
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -65,9 +65,9 @@ export default function PremiumSubscriptionStatus({
             )}
           </div>
           <div>
-            <p className="text-xs text-gray-400">Subscription Status</p>
+            <p className="text-xs text-muted-foreground">Subscription Status</p>
             <div className="flex items-center gap-2">
-              <p className="text-white font-medium">
+              <p className="text-foreground font-medium">
                 {isActive ? 'Active' : 'Inactive'}
               </p>
               {isActive && (
@@ -87,14 +87,14 @@ export default function PremiumSubscriptionStatus({
         {isActive && (
           <div className="flex flex-col items-end gap-2">
             <div>
-              <p className="text-xs text-gray-400">Valid Until</p>
-              <p className="text-sm text-white font-medium">{endDate}</p>
+              <p className="text-xs text-muted-foreground">Valid Until</p>
+              <p className="text-sm text-foreground font-medium">{endDate}</p>
             </div>
             {onCreatePortal && (
               <button
                 onClick={handleManageSubscription}
                 disabled={portalLoading}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-[#e3ba85] bg-[#e3ba85]/10 border border-[#e3ba85]/20 rounded-lg hover:bg-[#e3ba85]/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-accent bg-accent/10 border border-accent/20 rounded-lg hover:bg-accent/20 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {portalLoading ? (
                   <Loader2 className="w-3 h-3 animate-spin" />
@@ -109,14 +109,14 @@ export default function PremiumSubscriptionStatus({
       </div>
 
       {/* Status indicators */}
-      <div className="mt-4 pt-4 border-t border-white/5 flex flex-wrap gap-4">
+      <div className="mt-4 pt-4 border-t border-border flex flex-wrap gap-4">
         <div className="flex items-center gap-2">
           {isActive ? (
             <CheckCircle className="w-4 h-4 text-emerald-400" />
           ) : (
-            <XCircle className="w-4 h-4 text-gray-500" />
+            <XCircle className="w-4 h-4 text-foreground-tertiary" />
           )}
-          <span className={`text-xs ${isActive ? 'text-emerald-400' : 'text-gray-500'}`}>
+          <span className={`text-xs ${isActive ? 'text-emerald-400' : 'text-foreground-tertiary'}`}>
             {isActive ? 'Active Subscription' : 'No Active Subscription'}
           </span>
         </div>

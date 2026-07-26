@@ -14,17 +14,17 @@ export default function MyQuoteErrorState({ error, onRetry }) {
         <AlertTriangle className="w-8 h-8 text-red-400" />
       </div>
 
-      <h3 className="mt-4 text-lg font-semibold text-white">
+      <h3 className="mt-4 text-lg font-semibold text-foreground">
         Oops! Something went wrong
       </h3>
       
-      <p className="mt-2 text-sm text-gray-400 max-w-sm">
+      <p className="mt-2 text-sm text-muted-foreground max-w-sm">
         {error || 'Failed to load your quotes. Please try again.'}
       </p>
 
       <Button
         onClick={onRetry}
-        className="mt-6 bg-white/10 text-white hover:bg-white/20 border border-white/20"
+        className="mt-6 bg-muted text-foreground hover:bg-muted border border-border"
       >
         <RefreshCw className="w-4 h-4 mr-2" />
         Try Again

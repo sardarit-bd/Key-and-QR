@@ -7,14 +7,14 @@ export default function WelcomeSection({ greeting, userName }) {
   return (
     <section className="flex flex-col justify-center w-full h-full">
       <div className="max-w-xl">
-        <h1 className="font-serif text-[28px] sm:text-[32px] md:text-[36px] lg:text-[42px] leading-[1.2] tracking-wide text-[#F8F3EA] break-words">
+        <h1 className="font-serif text-[28px] sm:text-[32px] md:text-[36px] lg:text-[42px] leading-[1.2] tracking-wide text-foreground break-words">
           {timeGreeting}, {name}!
-          <span className="ml-2 inline-block text-[#FDB65C]">
+          <span className="ml-2 inline-block text-accent">
             ✨
           </span>
         </h1>
 
-        <p className="mt-2 sm:mt-3 text-[14px] sm:text-[15px] md:text-[16px] lg:text-[17px] font-normal text-[#B78D69]">
+        <p className="mt-2 sm:mt-3 text-[14px] sm:text-[15px] md:text-[16px] lg:text-[17px] font-normal text-foreground-secondary">
           Welcome back to your inspiration journey.
         </p>
       </div>

@@ -23,11 +23,11 @@ export default function ScanHistoryEmptyState() {
         <div className="absolute inset-0 w-24 h-24 mx-auto rounded-full border-2 border-emerald-500/10 animate-pulse" />
       </div>
 
-      <h2 className="mt-6 text-2xl font-semibold text-white font-serif">
+      <h2 className="mt-6 text-2xl font-semibold text-foreground font-serif">
         No Scan History Yet
       </h2>
       
-      <p className="mt-3 text-gray-400 max-w-sm mx-auto">
+      <p className="mt-3 text-muted-foreground max-w-sm mx-auto">
         Scan your first InspireTag to start building your inspiration journey.
         Every quote you discover will appear here.
       </p>
@@ -36,7 +36,7 @@ export default function ScanHistoryEmptyState() {
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-medium rounded-full inline-flex items-center gap-2 hover:shadow-lg hover:shadow-emerald-500/25 transition-shadow"
+          className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-foreground font-medium rounded-full inline-flex items-center gap-2 hover:shadow-lg hover:shadow-emerald-500/25 transition-shadow"
         >
           <Scan className="w-4 h-4" />
           Scan Your First Tag

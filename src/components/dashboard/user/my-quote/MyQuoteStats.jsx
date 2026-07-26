@@ -12,8 +12,8 @@ export default function MyQuoteStats({
       value: 1,
       sub: "Showing now",
       icon: Quote,
-      color: "text-violet-400",
-      bg: "bg-violet-500/10",
+      color: "text-primary",
+      bg: "bg-primary/10",
     },
     {
       label: "Favorites",
@@ -46,7 +46,7 @@ export default function MyQuoteStats({
       {statConfig.map((stat, idx) => (
         <div
           key={idx}
-          className="bg-[#121526] border border-white/5 rounded-2xl p-5 flex items-center gap-4 hover:border-white/10 transition-colors"
+          className="bg-card border border-border rounded-2xl p-5 flex items-center gap-4 hover:border-primary/20 transition-colors"
         >
           <div
             className={`w-12 h-12 rounded-full flex items-center justify-center ${stat.bg}`}
@@ -55,15 +55,15 @@ export default function MyQuoteStats({
           </div>
 
           <div>
-            <p className="text-xs text-gray-400 font-medium mb-1">
+            <p className="text-xs text-muted-foreground font-medium mb-1">
               {stat.label}
             </p>
 
-            <h3 className="text-xl font-bold text-white leading-none">
+            <h3 className="text-xl font-bold text-foreground leading-none">
               {stat.value}
             </h3>
 
-            <p className="text-xs text-gray-500 mt-1">{stat.sub}</p>
+            <p className="text-xs text-foreground-tertiary mt-1">{stat.sub}</p>
           </div>
         </div>
       ))}

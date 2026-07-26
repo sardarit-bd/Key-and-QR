@@ -8,10 +8,10 @@ export default function RecentQuotesCard({ quotes }) {
     <Card className="p-4 sm:p-5 md:p-6 h-full flex flex-col">
       <div className="flex items-center justify-between mb-4 sm:mb-5 md:mb-6 gap-2">
         {/* Added truncate min-w-0 for mobile overflow protection */}
-        <h2 className="text-lg sm:text-xl font-serif text-white truncate min-w-0">
+        <h2 className="text-lg sm:text-xl font-serif text-foreground truncate min-w-0">
           Your Recent Quotes
         </h2>
-        <button className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg border border-[#1e2235] text-gray-300 text-[11px] sm:text-xs font-medium hover:bg-[#1a1d29] transition-colors whitespace-nowrap flex-shrink-0">
+        <button className="px-3 sm:px-4 py-1 sm:py-1.5 rounded-lg border border-border text-foreground-secondary text-[11px] sm:text-xs font-medium hover:bg-muted transition-colors whitespace-nowrap flex-shrink-0">
           View All
         </button>
       </div>

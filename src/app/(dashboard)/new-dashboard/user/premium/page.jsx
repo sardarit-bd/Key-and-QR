@@ -26,7 +26,7 @@ export default function PremiumPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#090b14]">
+      <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
           <PremiumLoadingSkeleton />
         </div>
@@ -41,7 +41,7 @@ export default function PremiumPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="min-h-screen bg-[#090b14]"
+      className="min-h-screen bg-background"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24">
         {/* Welcome Banner */}
@@ -63,7 +63,7 @@ export default function PremiumPage() {
         {/* Premium Features */}
         {isPremium && (
           <div className="mt-8">
-            <h2 className="text-lg font-semibold text-white mb-4">
+            <h2 className="text-lg font-semibold text-foreground mb-4">
               Premium Features
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

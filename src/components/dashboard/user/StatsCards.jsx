@@ -12,7 +12,7 @@ const STATS_CONFIG = [
 ];
 
 export default function StatsCards({ stats }) {
-  const { theme, colors } = useTheme();
+  const { themeMode } = useTheme();
 
   const heartbeatPulse = {
     scale: [1, 1.15, 1],
@@ -46,15 +46,9 @@ export default function StatsCards({ stats }) {
         return (
           <div
             key={index}
-            className="rounded-[24px] p-5 shadow-lg flex items-center gap-5 hover:shadow-xl transition-all cursor-default"
-            style={{
-              backgroundColor: colors.backgroundSecondary,
-              border: `1px solid ${colors.border}`,
-            }}
+            className="rounded-[24px] p-5 shadow-lg flex items-center gap-5 hover:shadow-xl transition-all cursor-default bg-background-secondary border border-border"
           >
-            <div 
-              className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${stat.bg} ${stat.border}`}
-            >
+            <div className={`w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0 ${stat.bg} ${stat.border}`}>
               {isAnimated ? (
                 <motion.div animate={heartbeatPulse}>
                   <Icon size={24} className={stat.color} />
@@ -64,13 +58,13 @@ export default function StatsCards({ stats }) {
               )}
             </div>
             <div>
-              <p className="text-sm mb-1" style={{ color: colors.foregroundSecondary }}>
+              <p className="text-sm mb-1 text-foreground-secondary">
                 {stat.label}
               </p>
-              <h4 className="text-2xl font-bold leading-none mb-1" style={{ color: colors.foreground }}>
+              <h4 className="text-2xl font-bold leading-none mb-1 text-foreground">
                 {stat.value}
               </h4>
-              <p className="text-[10px]" style={{ color: colors.foregroundTertiary }}>
+              <p className="text-[10px] text-foreground-tertiary">
                 {stat.label === 'Total Quotes' && 'Quotes received'}
                 {stat.label === 'Favorites' && 'Your favorite quotes'}
                 {stat.label === 'Total Scans' && 'QR & NFC scans'}

@@ -19,20 +19,20 @@ export default function UserDashboardPage() {
       <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6 animate-pulse">
         {/* Row 1: Welcome & Banner skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6 min-h-[180px] sm:min-h-[200px] lg:min-h-[220px]">
-          <div className="bg-white/5 rounded-2xl h-full" />
-          <div className="bg-white/5 rounded-2xl h-full" />
+          <div className="bg-muted rounded-2xl h-full" />
+          <div className="bg-muted rounded-2xl h-full" />
         </div>
         {/* Row 2: Categories skeleton */}
-        <div className="bg-white/5 rounded-[22px] h-32" />
+        <div className="bg-muted rounded-[22px] h-32" />
         {/* Row 3: Quotes & Streak skeleton */}
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-          <div className="xl:col-span-2 bg-white/5 rounded-2xl h-64" />
-          <div className="xl:col-span-1 bg-white/5 rounded-[26px] h-64" />
+          <div className="xl:col-span-2 bg-muted rounded-2xl h-64" />
+          <div className="xl:col-span-1 bg-muted rounded-[26px] h-64" />
         </div>
         {/* Row 4: Stats skeleton */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-white/5 rounded-2xl h-28" />
+            <div key={i} className="bg-muted rounded-2xl h-28" />
           ))}
         </div>
       </div>
@@ -44,12 +44,12 @@ export default function UserDashboardPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
-          <p className="text-red-400 text-sm mb-4">
+          <p className="text-destructive text-sm mb-4">
             {error?.message || "Failed to load dashboard"}
           </p>
           <button
             onClick={() => refetch()}
-            className="px-6 py-3 bg-[#e3ba85] text-black font-medium rounded-xl hover:bg-[#d4a976] transition-colors"
+            className="px-6 py-3 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors"
           >
             Try Again
           </button>

@@ -9,19 +9,19 @@ export default function MobileHeader({ filters }) {
   return (
     <div className="flex md:hidden items-center justify-between py-2 mb-2">
       <div className="flex items-center gap-3">
-        <Menu className="w-6 h-6 text-white" />
-        <h1 className="text-xl font-semibold text-white">My Quotes</h1>
+        <Menu className="w-6 h-6 text-foreground" />
+        <h1 className="text-xl font-semibold text-foreground">My Quotes</h1>
       </div>
       
       <Sheet>
         <SheetTrigger asChild>
-          <Button variant="ghost" size="sm" className="text-[13px] text-gray-400 font-medium hover:text-white hover:bg-white/5">
+          <Button variant="ghost" size="sm" className="text-[13px] text-muted-foreground font-medium hover:text-foreground hover:bg-muted">
             <Filter className="w-3 h-3 mr-1.5" /> Filters
           </Button>
         </SheetTrigger>
-        <SheetContent side="bottom" className="bg-[#121526] border-t-white/10 text-white rounded-t-2xl">
+        <SheetContent side="bottom" className="bg-card border-t-border text-foreground rounded-t-2xl">
           <SheetHeader className="mb-4 text-left">
-            <SheetTitle className="text-white">Filter Quotes</SheetTitle>
+            <SheetTitle className="text-foreground">Filter Quotes</SheetTitle>
           </SheetHeader>
           <MyQuoteFilters filters={filters} />
         </SheetContent>

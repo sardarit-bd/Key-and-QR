@@ -84,22 +84,22 @@ export default function ScanHistoryCard({
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#121526] border border-white/5 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:border-white/10 transition-colors"
+        className="bg-card border border-border rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:border-accent/30 transition-colors"
       >
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-white font-medium line-clamp-2">
-            “{quote?.text || ''}”
+          <p className="text-sm text-foreground font-medium line-clamp-2">
+            "{quote?.text || ''}"
           </p>
           <div className="flex flex-wrap items-center gap-2 mt-2">
-            <span className="text-xs text-gray-400">{quote?.author || 'InspireTag'}</span>
+            <span className="text-xs text-muted-foreground">{quote?.author || 'InspireTag'}</span>
             <span className={`text-[10px] px-2 py-0.5 rounded-full ${categoryColor}`}>
               {categoryLabel}
             </span>
-            <span className="text-[10px] text-gray-500 flex items-center gap-1">
+            <span className="text-[10px] text-foreground-tertiary flex items-center gap-1">
               <Tag className="w-3 h-3" />
               {tag?.tagCode || 'N/A'}
             </span>
-            <span className="text-[10px] text-gray-500 flex items-center gap-1">
+            <span className="text-[10px] text-foreground-tertiary flex items-center gap-1">
               <Calendar className="w-3 h-3" />
               {formattedDate} at {formattedTime}
             </span>
@@ -112,13 +112,13 @@ export default function ScanHistoryCard({
             type="quote"
             size="sm"
             variant="ghost"
-            className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/5"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50"
           />
           <Button
             variant="ghost"
             size="icon"
             onClick={handleShare}
-            className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/5"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50"
           >
             <Share2 className="w-4 h-4" />
           </Button>
@@ -126,7 +126,7 @@ export default function ScanHistoryCard({
             variant="ghost"
             size="icon"
             onClick={() => onViewDetail(item)}
-            className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/5"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50"
           >
             <Eye className="w-4 h-4" />
           </Button>
@@ -142,7 +142,7 @@ export default function ScanHistoryCard({
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ scale: 1.02, y: -4 }}
       transition={{ duration: 0.2 }}
-      className="group relative bg-[#121526] border border-white/5 rounded-2xl overflow-hidden hover:border-white/20 transition-all"
+      className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:border-accent/30 transition-all"
     >
       {/* Background Image */}
       <div
@@ -161,21 +161,21 @@ export default function ScanHistoryCard({
 
         {/* Tag Code */}
         <div className="absolute top-3 left-3">
-          <span className="text-[10px] px-2.5 py-1 rounded-full bg-black/50 border border-white/10 text-gray-300 backdrop-blur-sm">
+            <span className="text-[10px] px-2.5 py-1 rounded-full bg-muted/70 border border-border text-foreground-secondary backdrop-blur-sm">
             {tag?.tagCode || 'N/A'}
           </span>
         </div>
 
         {/* Quote Text */}
         <div className="absolute inset-0 flex items-center justify-center p-4">
-          <p className="text-sm text-white font-medium text-center leading-relaxed line-clamp-4">
-            “{quote?.text || ''}”
+          <p className="text-sm text-foreground font-medium text-center leading-relaxed line-clamp-4">
+            "{quote?.text || ''}"
           </p>
         </div>
 
         {/* Bottom Actions */}
         <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-          <span className="text-[10px] text-gray-400">
+          <span className="text-[10px] text-muted-foreground">
             {quote?.author || 'InspireTag'}
           </span>
           <div className="flex items-center gap-1">
@@ -183,7 +183,7 @@ export default function ScanHistoryCard({
               variant="ghost"
               size="icon"
               onClick={handleShare}
-              className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
             >
               <Share2 className="w-3.5 h-3.5" />
             </Button>
@@ -192,13 +192,13 @@ export default function ScanHistoryCard({
               type="quote"
               size="sm"
               variant="ghost"
-              className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
             />
             <Button
               variant="ghost"
               size="icon"
               onClick={() => onViewDetail(item)}
-              className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
             >
               <Eye className="w-3.5 h-3.5" />
             </Button>
@@ -207,7 +207,7 @@ export default function ScanHistoryCard({
 
         {/* Date/Time */}
         <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
-          <span className="text-[10px] text-gray-500 flex items-center gap-1">
+          <span className="text-[10px] text-foreground-tertiary flex items-center gap-1">
             <Calendar className="w-3 h-3" />
             {formattedDate} · {formattedTime}
           </span>

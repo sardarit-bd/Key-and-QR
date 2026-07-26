@@ -101,19 +101,19 @@ export default function MyQuoteCard({ favorite, view = 'grid', onRemove }) {
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-[#121526] border border-white/5 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:border-white/10 transition-colors"
+        className="bg-card border border-border rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:border-border transition-colors"
       >
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-white font-medium line-clamp-2">
-            “{quote.text}”
+          <p className="text-sm text-foreground font-medium line-clamp-2">
+            "{quote.text}"
           </p>
           <div className="flex items-center gap-3 mt-2">
-            <span className="text-xs text-gray-400">{quote.author || 'InspireTag'}</span>
+            <span className="text-xs text-muted-foreground">{quote.author || 'InspireTag'}</span>
             <span className={`text-[10px] px-2 py-0.5 rounded-full ${categoryColor}`}>
               {categoryLabel}
             </span>
             {formattedDate && (
-              <span className="text-[10px] text-gray-500 flex items-center gap-1">
+              <span className="text-[10px] text-foreground-tertiary flex items-center gap-1">
                 <Calendar className="w-3 h-3" />
                 {formattedDate}
               </span>
@@ -127,13 +127,13 @@ export default function MyQuoteCard({ favorite, view = 'grid', onRemove }) {
             type="quote"
             size="sm"
             variant="ghost"
-            className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/5"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50"
           />
           <Button
             variant="ghost"
             size="icon"
             onClick={handleShare}
-            className="h-8 w-8 text-gray-400 hover:text-white hover:bg-white/5"
+            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50"
             aria-label="Share quote"
           >
             <Share2 className="w-4 h-4" />
@@ -143,7 +143,7 @@ export default function MyQuoteCard({ favorite, view = 'grid', onRemove }) {
             size="icon"
             onClick={handleRemove}
             disabled={isRemoving}
-            className="h-8 w-8 text-gray-400 hover:text-rose-500 hover:bg-rose-500/10"
+            className="h-8 w-8 text-muted-foreground hover:text-rose-500 hover:bg-rose-500/10"
             aria-label="Remove from favorites"
           >
             {isRemoving ? (
@@ -177,7 +177,7 @@ export default function MyQuoteCard({ favorite, view = 'grid', onRemove }) {
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ scale: 1.02, y: -4 }}
       transition={{ duration: 0.2 }}
-      className="group relative bg-[#121526] border border-white/5 rounded-2xl overflow-hidden hover:border-white/20 transition-all"
+      className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:border-border transition-all"
     >
       {/* Background Image */}
       <div
@@ -195,14 +195,14 @@ export default function MyQuoteCard({ favorite, view = 'grid', onRemove }) {
 
         {/* Quote Text */}
         <div className="absolute inset-0 flex items-center justify-center p-4">
-          <p className="text-sm text-white font-medium text-center leading-relaxed line-clamp-4">
-            “{quote.text}”
+          <p className="text-sm text-foreground font-medium text-center leading-relaxed line-clamp-4">
+            "{quote.text}"
           </p>
         </div>
 
         {/* Actions Overlay */}
         <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-          <span className="text-[10px] text-gray-400">
+          <span className="text-[10px] text-muted-foreground">
             {quote.author || 'InspireTag'}
           </span>
           <div className="flex items-center gap-1">
@@ -210,7 +210,7 @@ export default function MyQuoteCard({ favorite, view = 'grid', onRemove }) {
               variant="ghost"
               size="icon"
               onClick={handleShare}
-              className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
               aria-label="Share quote"
             >
               <Share2 className="w-3.5 h-3.5" />
@@ -220,14 +220,14 @@ export default function MyQuoteCard({ favorite, view = 'grid', onRemove }) {
               type="quote"
               size="sm"
               variant="ghost"
-              className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10"
+              className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
             />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-7 w-7 text-gray-400 hover:text-white hover:bg-white/10"
+                  className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
                   aria-label="More options"
                 >
                   <svg
@@ -248,11 +248,11 @@ export default function MyQuoteCard({ favorite, view = 'grid', onRemove }) {
               </DropdownMenuTrigger>
               <DropdownMenuContent
                 align="end"
-                className="border-white/10 bg-[#121526] text-gray-200"
+                className="border-border bg-card text-foreground"
               >
                 <DropdownMenuItem
                   onClick={handleCopy}
-                  className="cursor-pointer hover:bg-white/5"
+                  className="cursor-pointer hover:bg-muted/50"
                 >
                   <Copy className="mr-2 h-4 w-4" />
                   Copy Quote
@@ -290,7 +290,7 @@ export default function MyQuoteCard({ favorite, view = 'grid', onRemove }) {
         {/* Date */}
         {formattedDate && (
           <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
-            <span className="text-[10px] text-gray-500 flex items-center gap-1">
+            <span className="text-[10px] text-foreground-tertiary flex items-center gap-1">
               <Calendar className="w-3 h-3" />
               {formattedDate}
             </span>

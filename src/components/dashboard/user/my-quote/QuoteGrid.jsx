@@ -13,7 +13,7 @@ export default function QuoteGrid({
   if (isLoading) {
     return (
       <div className="grid grid-cols-1">
-        <Skeleton className="h-64 rounded-2xl bg-[#121526] border border-white/5" />
+        <Skeleton className="h-64 rounded-2xl bg-muted border border-border" />
       </div>
     );
   }

@@ -12,12 +12,12 @@ export default function BottomNavigation() {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 h-20 bg-[#090b14]/95 backdrop-blur-md border-t border-white/5 flex md:hidden items-center justify-around px-2 z-50">
+    <div className="fixed bottom-0 left-0 right-0 h-20 bg-background/95 backdrop-blur-md border-t border-border flex md:hidden items-center justify-around px-2 z-50">
       {navItems.map((item) => (
         <Button 
           key={item.label}
           variant="ghost" 
-          className={`flex flex-col items-center gap-1.5 h-16 w-16 p-0 hover:bg-white/5 ${item.active ? 'text-[#d946ef]' : 'text-gray-500 hover:text-gray-300'}`}
+          className={`flex flex-col items-center gap-1.5 h-16 w-16 p-0 hover:bg-muted ${item.active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'}`}
         >
           <item.icon className="w-5 h-5" />
           <span className="text-[10px] font-medium">{item.label}</span>

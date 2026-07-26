@@ -1,75 +1,116 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState } from 'react';
-import { getTheme, THEME_IDS } from '@/config/dashboard/themes';
+import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import { THEME_IDS } from '@/config/dashboard/themes';
 
 const ThemeContext = createContext(null);
 
-export function ThemeProvider({ 
-  children, 
+const THEME_STORAGE_KEY = 'myinspiretag-theme-mode';
+
+function getSystemTheme() {
+  if (typeof window === 'undefined') return 'dark';
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
+function getStoredThemeMode() {
+  if (typeof window === 'undefined') return null;
+  try {
+    return localStorage.getItem(THEME_STORAGE_KEY);
+  } catch {
+    return null;
+  }
+}
+
+function setStoredThemeMode(mode) {
+  try {
+    localStorage.setItem(THEME_STORAGE_KEY, mode);
+  } catch {
+    // localStorage not available
+  }
+}
+
+export function ThemeProvider({
+  children,
   themeId = THEME_IDS.WEBSITE,
   userRole = null,
 }) {
-  const [theme, setTheme] = useState(() => getTheme(themeId));
+  const [themeMode, setThemeMode] = useState(() => {
+    const stored = getStoredThemeMode();
+    return stored || 'dark';
+  });
   const [isReady, setIsReady] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Handle mounting to prevent hydration mismatch
+  useEffect(() => {
+    setIsMounted(true);
+    const stored = getStoredThemeMode();
+    if (stored) {
+      setThemeMode(stored);
+    } else {
+      setThemeMode(getSystemTheme());
+    }
+    setIsReady(true);
+  }, []);
 
   // Apply theme to DOM
   useEffect(() => {
-    const applyTheme = () => {
-      const root = document.documentElement;
-      
-      // Apply CSS variables
-      const colors = theme.colors || {};
-      Object.entries(colors).forEach(([key, value]) => {
-        if (value) {
-          root.style.setProperty(`--${key}`, value);
-        }
-      });
-      
-      // Apply dark mode
-      if (theme.isDark) {
-        root.classList.add('dark');
-        root.style.colorScheme = 'dark';
-      } else {
-        root.classList.remove('dark');
-        root.style.colorScheme = 'light';
+    if (!isReady) return;
+
+    const root = document.documentElement;
+    
+    // Remove existing theme classes
+    root.classList.remove('light', 'dark');
+    
+    // Add the current theme mode class
+    root.classList.add(themeMode);
+    
+    // Set color scheme for native elements
+    root.style.colorScheme = themeMode;
+    
+    // Set data attribute for CSS selectors
+    root.setAttribute('data-theme-mode', themeMode);
+    
+    // Store the preference
+    setStoredThemeMode(themeMode);
+  }, [themeMode, isReady]);
+
+  // Listen for system theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleChange = (e) => {
+      const stored = getStoredThemeMode();
+      if (!stored) {
+        setThemeMode(e.matches ? 'dark' : 'light');
       }
-      
-      // Apply theme class
-      root.setAttribute('data-theme', theme.id);
-      
-      setIsReady(true);
     };
 
-    applyTheme();
-  }, [theme]);
+    mediaQuery.addEventListener('change', handleChange);
+    return () => mediaQuery.removeEventListener('change', handleChange);
+  }, []);
 
-  // Update theme when themeId changes
-  useEffect(() => {
-    const newTheme = getTheme(themeId);
-    if (newTheme && newTheme.id !== theme.id) {
-      setTheme(newTheme);
+  const toggleTheme = useCallback(() => {
+    setThemeMode(prev => prev === 'dark' ? 'light' : 'dark');
+  }, []);
+
+  const setTheme = useCallback((mode) => {
+    if (mode === 'dark' || mode === 'light') {
+      setThemeMode(mode);
     }
-  }, [themeId]);
+  }, []);
 
-  const changeTheme = (newThemeId) => {
-    const newTheme = getTheme(newThemeId);
-    if (newTheme) {
-      setTheme(newTheme);
-    }
-  };
+  const isDark = useMemo(() => themeMode === 'dark', [themeMode]);
 
-  const contextValue = {
-    theme,
-    themeId: theme.id,
-    changeTheme,
+  const contextValue = useMemo(() => ({
+    themeId,
+    themeMode,
+    isDark,
     isReady,
-    colors: theme.colors,
-    typography: theme.typography,
-    spacing: theme.spacing,
-    components: theme.components,
-    isDark: theme.isDark,
-  };
+    isMounted,
+    toggleTheme,
+    setTheme,
+    userRole,
+  }), [themeId, themeMode, isDark, isReady, isMounted, toggleTheme, setTheme, userRole]);
 
   return (
     <ThemeContext.Provider value={contextValue}>

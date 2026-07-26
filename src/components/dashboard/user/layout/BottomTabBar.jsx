@@ -50,7 +50,7 @@ export default function BottomTabBar() {
   };
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-[#070911] border-t border-white/10 safe-area-bottom">
+    <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-sidebar border-t border-sidebar-border safe-area-bottom">
       <div className="flex items-center justify-around h-16">
         {TABS.map((tab) => {
           const Icon = tab.icon;
@@ -60,7 +60,7 @@ export default function BottomTabBar() {
               key={tab.id}
               href={tab.href}
               className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
-                active ? 'text-[#e3ba85]' : 'text-gray-500'
+                active ? 'text-sidebar-primary' : 'text-muted-foreground'
               }`}
             >
               <Icon size={22} strokeWidth={active ? 2.5 : 2} />

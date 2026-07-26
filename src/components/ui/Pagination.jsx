@@ -81,7 +81,7 @@ export default function Pagination({
         size="sm"
         onClick={handlePrevious}
         disabled={currentPage === 1}
-        className="text-gray-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed"
+        className="text-foreground-tertiary hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
         aria-label="Previous page"
       >
         <ChevronLeft className="w-4 h-4" />
@@ -92,7 +92,7 @@ export default function Pagination({
           return (
             <span
               key={`ellipsis-${index}`}
-              className="w-8 h-8 flex items-center justify-center text-gray-500 text-sm"
+              className="w-8 h-8 flex items-center justify-center text-foreground-tertiary text-sm"
             >
               …
             </span>
@@ -105,10 +105,10 @@ export default function Pagination({
             variant={currentPage === page ? 'default' : 'ghost'}
             size="sm"
             onClick={() => onPageChange(page)}
-            className={`w-8 h-8 p-0 text-sm ${
+             className={`w-8 h-8 p-0 text-sm ${
               currentPage === page
-                ? 'bg-violet-600 text-white hover:bg-violet-700'
-                : 'text-gray-400 hover:text-white hover:bg-white/5'
+                ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                : 'text-foreground-tertiary hover:text-foreground hover:bg-muted'
             }`}
             aria-label={`Go to page ${page}`}
             aria-current={currentPage === page ? 'page' : undefined}
@@ -123,7 +123,7 @@ export default function Pagination({
         size="sm"
         onClick={handleNext}
         disabled={currentPage === totalPages}
-        className="text-gray-400 hover:text-white hover:bg-white/5 disabled:opacity-30 disabled:cursor-not-allowed"
+        className="text-foreground-tertiary hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
         aria-label="Next page"
       >
         <ChevronRight className="w-4 h-4" />

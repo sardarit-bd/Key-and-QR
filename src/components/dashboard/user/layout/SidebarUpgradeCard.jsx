@@ -36,36 +36,36 @@ export default function SidebarUpgradeCard({
       <div className="flex justify-center px-4 mt-6">
         <Link 
           href={config.ctaHref || '/subscription'} 
-          className="w-10 h-10 rounded-xl bg-gradient-to-r from-[#edb879] to-[#df9d56] flex items-center justify-center hover:opacity-90 transition-opacity"
+          className="w-10 h-10 rounded-xl bg-gradient-to-r from-accent to-accent/80 flex items-center justify-center hover:opacity-90 transition-opacity"
           aria-label={config.title}
         >
-          <Icon size={18} className="text-[#3c2510]" />
+          <Icon size={18} className="text-accent-foreground" />
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="mx-5 mt-6 mb-4 rounded-2xl p-5 bg-[#0e111a] border border-[#1a1e2d] relative">
+    <div className="mx-5 mt-6 mb-4 rounded-2xl p-5 bg-background-secondary border border-border relative">
       <div className="relative z-10 flex flex-col items-start text-left">
         <div className="flex items-start gap-3 mb-2">
           <Icon 
             size={20} 
-            className="text-[#e3ba85] flex-shrink-0 mt-0.5" 
+            className="text-accent flex-shrink-0 mt-0.5" 
             fill="currentColor" 
           />
-          <h4 className="font-serif text-[#e3ba85] text-[15px] leading-[1.3] tracking-wide">
+          <h4 className="font-serif text-accent text-[15px] leading-[1.3] tracking-wide">
             {config.title}
           </h4>
         </div>
         
-        <p className="text-[13px] text-gray-400 mb-5 ml-8 leading-snug">
+        <p className="text-[13px] text-foreground-secondary mb-5 ml-8 leading-snug">
           {config.description}
         </p>
         
         <Link
           href={config.ctaHref || '/subscription'}
-          className="w-full flex items-center justify-center py-2.5 bg-gradient-to-r from-[#f1c385] to-[#df9d56] text-[#3c2510] rounded-xl text-[14px] font-semibold hover:opacity-90 transition-opacity"
+          className="w-full flex items-center justify-center py-2.5 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground rounded-xl text-[14px] font-semibold hover:opacity-90 transition-opacity"
         >
           {config.ctaText}
         </Link>

@@ -47,13 +47,13 @@ export default function ScanHistoryStats({ stats, loading = false }) {
         {[...Array(4)].map((_, i) => (
           <div
             key={i}
-            className="bg-[#121526] border border-white/5 rounded-xl p-4 animate-pulse"
+            className="bg-card border border-border rounded-xl p-4 animate-pulse"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-gray-800/50" />
+              <div className="w-10 h-10 rounded-full bg-muted" />
               <div className="flex-1">
-                <div className="h-3 bg-gray-800/50 rounded w-16" />
-                <div className="h-5 bg-gray-800/50 rounded w-12 mt-1" />
+                <div className="h-3 bg-muted rounded w-16" />
+                <div className="h-5 bg-muted rounded w-12 mt-1" />
               </div>
             </div>
           </div>
@@ -67,16 +67,16 @@ export default function ScanHistoryStats({ stats, loading = false }) {
       {statConfig.map((stat, idx) => (
         <div
           key={idx}
-          className="bg-[#121526] border border-white/5 rounded-xl p-4 flex items-center gap-3 hover:border-white/10 transition-colors"
+          className="bg-card border border-border rounded-xl p-4 flex items-center gap-3 hover:border-accent/30 transition-colors"
         >
           <div className={`w-10 h-10 rounded-full flex items-center justify-center ${stat.bg}`}>
             <stat.icon className={`w-4 h-4 ${stat.color}`} />
           </div>
 
           <div>
-            <p className="text-xs text-gray-400 font-medium">{stat.label}</p>
-            <h3 className="text-xl font-bold text-white leading-none">{stat.value}</h3>
-            <p className="text-[10px] text-gray-500 mt-0.5">{stat.sub}</p>
+            <p className="text-xs text-muted-foreground font-medium">{stat.label}</p>
+            <h3 className="text-xl font-bold text-foreground leading-none">{stat.value}</h3>
+            <p className="text-[10px] text-foreground-tertiary mt-0.5">{stat.sub}</p>
           </div>
         </div>
       ))}
