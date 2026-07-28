@@ -113,24 +113,49 @@ export const isMenuItemVisible = (item, userPlan) => {
 /**
  * Filter sidebar menu
  */
+/**
+ * Determine dashboard context from pathname.
+ * Returns 'admin' | 'user' | null
+ */
+const getDashboardContext = (pathname) => {
+  if (!pathname) return null;
+  if (pathname.startsWith('/new-dashboard/admin') || pathname.startsWith('/dashboard/admin')) {
+    return 'admin';
+  }
+  if (pathname.startsWith('/new-dashboard') || pathname.startsWith('/dashboard')) {
+    return 'user';
+  }
+  return null;
+};
+
+/**
+ * Filter sidebar menu items based on user plan and current dashboard context.
+ *
+ * - Admin users in admin context → only admin items
+ * - Admin users in user context → only user items
+ * - Non-admin users → only user items (admin items excluded by visibility)
+ */
 export const getFilteredMenuItems = (
   menuItems,
   userPlan,
-  adminItems = []
+  adminItems = [],
+  pathname = null
 ) => {
-  const filtered = menuItems.filter((item) =>
-    isMenuItemVisible(item, userPlan)
-  );
+  const context = getDashboardContext(pathname);
+  const isAdmin = userPlan === SUBSCRIPTION_PLANS.ADMIN;
 
-  if (userPlan === SUBSCRIPTION_PLANS.ADMIN) {
-    const adminFiltered = adminItems.filter((item) =>
+  // Admin in admin dashboard → show ONLY admin menu
+  if (isAdmin && context === 'admin') {
+    return adminItems.filter((item) =>
       isMenuItemVisible(item, userPlan)
     );
-
-    return [...filtered, ...adminFiltered];
   }
 
-  return filtered;
+  // Admin in user dashboard → show ONLY user menu
+  // Non-admin users → show user menu (admin items filtered by visibility)
+  return menuItems.filter((item) =>
+    isMenuItemVisible(item, userPlan)
+  );
 };
 
 /**
