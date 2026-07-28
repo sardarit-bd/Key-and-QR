@@ -9,13 +9,11 @@ export const ADMIN_ORDERS_KEYS = {
 };
 
 /** Fetch paginated + filtered orders */
-export function useAdminOrders(filters = {}, options = {}) {
-  const { useMock = true } = options;
-
+export function useAdminOrders(filters = {}) {
   return useQuery({
     queryKey: ADMIN_ORDERS_KEYS.list(filters),
     queryFn: async () => {
-      const res = await adminOrdersService.getOrders({ useMock, ...filters });
+      const res = await adminOrdersService.getOrders(filters);
       return res;
     },
     staleTime: 30 * 1000,
@@ -26,13 +24,11 @@ export function useAdminOrders(filters = {}, options = {}) {
 }
 
 /** Fetch order stats for summary cards */
-export function useAdminOrdersStats(options = {}) {
-  const { useMock = true } = options;
-
+export function useAdminOrdersStats() {
   return useQuery({
     queryKey: ADMIN_ORDERS_KEYS.stats,
     queryFn: async () => {
-      const res = await adminOrdersService.getStats({ useMock });
+      const res = await adminOrdersService.getStats();
       return res.data;
     },
     staleTime: 30 * 1000,
@@ -44,23 +40,20 @@ export function useAdminOrdersStats(options = {}) {
 
 /** Fetch a single order for detail view */
 export function useAdminOrderDetail(orderId, options = {}) {
-  const { useMock = true, enabled = false } = options;
-
   return useQuery({
     queryKey: ADMIN_ORDERS_KEYS.detail(orderId),
     queryFn: async () => {
-      const res = await adminOrdersService.getOrderById({ useMock, orderId });
+      const res = await adminOrdersService.getOrderById(orderId);
       return res.data;
     },
-    enabled: !!orderId && enabled,
+    enabled: !!orderId && options.enabled !== false,
     staleTime: 60 * 1000,
     gcTime: 5 * 60 * 1000,
   });
 }
 
 /** Mutations for order management actions */
-export function useAdminOrderActions(options = {}) {
-  const { useMock = true } = options;
+export function useAdminOrderActions() {
   const queryClient = useQueryClient();
 
   const invalidate = () => {
@@ -78,9 +71,7 @@ export function useAdminOrderActions(options = {}) {
           ),
         };
       });
-      const res = await adminOrdersService.updateFulfillmentStatus({
-        useMock, orderId, fulfillmentStatus, changeReason,
-      });
+      const res = await adminOrdersService.updateFulfillmentStatus({ orderId, fulfillmentStatus, changeReason });
       return res.data;
     },
     onSettled: invalidate,
@@ -97,7 +88,7 @@ export function useAdminOrderActions(options = {}) {
           ),
         };
       });
-      const res = await adminOrdersService.cancelOrder({ useMock, orderId, reason });
+      const res = await adminOrdersService.cancelOrder({ orderId, reason });
       return res.data;
     },
     onSettled: invalidate,
@@ -105,7 +96,8 @@ export function useAdminOrderActions(options = {}) {
 
   const deleteOrder = useMutation({
     mutationFn: async ({ orderId }) => {
-      const res = await adminOrdersService.deleteOrder({ useMock, orderId });
+      // Backend doesn't support order deletion — map to cancel
+      const res = await adminOrdersService.cancelOrder({ orderId, reason: 'Order deleted by admin' });
       return res.data;
     },
     onSettled: invalidate,

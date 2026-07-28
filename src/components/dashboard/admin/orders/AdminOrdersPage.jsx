@@ -44,8 +44,8 @@ export default function AdminOrdersPage() {
   const [dialogVariant, setDialogVariant] = useState('delete');
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  // Data
-  const filters = { search: debouncedSearch, fulfillmentStatus, paymentStatus, sort, page, limit: ITEMS_PER_PAGE };
+  // Data — backend only supports search, fulfillmentStatus, page, limit
+  const filters = { search: debouncedSearch, fulfillmentStatus, page, limit: ITEMS_PER_PAGE };
   const { data, isLoading, isError, error, refetch } = useAdminOrders(filters);
   const { data: statsData } = useAdminOrdersStats();
   const { updateFulfillmentStatus, cancelOrder, deleteOrder } = useAdminOrderActions();

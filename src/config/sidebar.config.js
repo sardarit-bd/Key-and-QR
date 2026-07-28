@@ -155,15 +155,24 @@ import {
         id: 'admin-tags',
         title: 'QR Tags',
         icon: Tag,
-        href: '/new-dashboard/admin/tags',
         visibility: MENU_VISIBILITY.ADMIN,
+        children: [
+          { id: 'admin-tags-all', title: 'All Tags', href: '/new-dashboard/admin/tags', visibility: MENU_VISIBILITY.ADMIN },
+          { id: 'admin-tags-assign', title: 'Assign Tags', href: '/new-dashboard/admin/assignment', visibility: MENU_VISIBILITY.ADMIN },
+          { id: 'admin-tags-assigned', title: 'Assigned Tags', href: '/new-dashboard/admin/tags/assigned', visibility: MENU_VISIBILITY.ADMIN },
+        ],
       },
       {
         id: 'admin-quotes',
         title: 'Quotes',
         icon: Quote,
-        href: '/new-dashboard/admin/quotes',
         visibility: MENU_VISIBILITY.ADMIN,
+        children: [
+          { id: 'admin-quotes-all', title: 'All Quotes', href: '/new-dashboard/admin/quotes', visibility: MENU_VISIBILITY.ADMIN },
+          { id: 'admin-quotes-pending', title: 'Pending Quotes', href: '/new-dashboard/admin/quotes/pending', visibility: MENU_VISIBILITY.ADMIN },
+          { id: 'admin-quotes-approved', title: 'Approved Quotes', href: '/new-dashboard/admin/quotes/approved', visibility: MENU_VISIBILITY.ADMIN },
+          { id: 'admin-quotes-rejected', title: 'Rejected Quotes', href: '/new-dashboard/admin/quotes/rejected', visibility: MENU_VISIBILITY.ADMIN },
+        ],
       },
       {
         id: 'admin-categories',
