@@ -116,7 +116,7 @@ export default function ScanHistoryDetailModal({ isOpen, onClose, data }) {
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 z-10 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+            className="absolute top-4 right-4 z-10 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
             aria-label="Close modal"
           >
             <X className="w-5 h-5" />
@@ -129,11 +129,11 @@ export default function ScanHistoryDetailModal({ isOpen, onClose, data }) {
               className="relative h-48 rounded-xl bg-cover bg-center mb-6"
               style={{ backgroundImage: `url(${backgroundImage})` }}
             >
-              <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/70 rounded-xl" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/10 to-black/10 rounded-xl" />
               
               {/* Category Badge */}
               <div className="absolute top-3 right-3">
-                <span className="text-[10px] px-2.5 py-1 rounded-full border border-border bg-muted text-foreground backdrop-blur-sm">
+                <span className="text-[10px] px-2.5 py-1 rounded-full border border-border bg-muted text-foreground backdrop-blur-sm capitalize">
                   {category}
                 </span>
               </div>
