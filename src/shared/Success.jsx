@@ -108,7 +108,7 @@ export default function SuccessPage() {
                 {order && (
                     <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
                         <p className="text-sm text-gray-500 mb-2">
-                            Order ID: <span className="font-mono">{order._id}</span>
+ Order ID: <span className="">{order._id}</span>
                         </p>
                         <p className="text-sm text-gray-500">
                             Status:{" "}

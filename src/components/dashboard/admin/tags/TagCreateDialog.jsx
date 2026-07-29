@@ -85,7 +85,7 @@ export default function TagCreateDialog({ open, onOpenChange, onSave, isLoading 
                 value={tagCode}
                 onChange={(e) => { setTagCode(e.target.value); setManual(true); setError(''); }}
                 placeholder="Enter tag code"
-                className={`font-mono text-sm flex-1 ${error ? 'border-destructive' : ''}`}
+ className={` text-sm flex-1 ${error ? 'border-destructive' : ''}`}
               />
               <Button variant="outline" size="icon" onClick={handleGenerate} title="Generate random code" className="cursor-pointer">
                 <Wand size={16} />

@@ -98,7 +98,7 @@ export default function AssignmentsTable({
                       <div>
                         <div className="flex items-center gap-1.5">
                           <Tag size={14} className="text-gray-500" />
-                          <span className="font-mono text-sm">{assignment?.tag?.tagCode || "N/A"}</span>
+ <span className=" text-sm">{assignment?.tag?.tagCode || "N/A"}</span>
                         </div>
                         {assignment?.tag?.owner && (
                           <div className="text-xs text-gray-500 mt-1">

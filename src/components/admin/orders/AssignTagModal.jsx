@@ -117,7 +117,7 @@ export default function AssignTagModal({
                             <div className="text-sm font-medium text-blue-800 mb-2">Assigned Tags:</div>
                             <div className="flex flex-wrap gap-2">
                                 {existingTags.map((tagCode, idx) => (
-                                    <span key={idx} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-mono">
+ <span key={idx} className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded ">
                                         {tagCode}
                                     </span>
                                 ))}

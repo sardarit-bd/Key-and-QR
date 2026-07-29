@@ -142,7 +142,7 @@ export default function QuoteDetailsModal({ assignment, onClose }) {
                         {assign.assignmentType === "tag" ? (
                           <>
                             <Tag size={12} className="text-gray-500" />
-                            <span className="font-mono text-sm">{assign?.tag?.tagCode}</span>
+ <span className=" text-sm">{assign?.tag?.tagCode}</span>
                             {assign?.tag?.owner && (
                               <span className="text-xs text-gray-500">(Owner: {assign.tag.owner?.name || "Unknown"})</span>
                             )}

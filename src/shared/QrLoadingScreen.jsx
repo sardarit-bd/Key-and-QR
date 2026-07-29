@@ -124,7 +124,7 @@ export default function QrLoadingScreen({
                         <div className="mb-4">
                             <div className="inline-flex items-center gap-2 px-4 py-2 bg-purple-100 rounded-full">
                                 <QrCode size={14} className="text-purple-600" />
-                                <span className="text-xs font-mono text-purple-700">{tagCode}</span>
+ <span className="text-xs text-purple-700">{tagCode}</span>
                             </div>
                         </div>
                     )}

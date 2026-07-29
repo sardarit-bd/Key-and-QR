@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Upload, X, Save, Package } from 'lucide-react';
+import { Upload, X, Save, Package, GripVertical } from 'lucide-react';
 
 const CATEGORIES = [
   'Smart NFC Keychain',
@@ -39,13 +39,21 @@ function getInitials(name) {
   return name?.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2) || 'P';
 }
 
+function validateImageType(file) {
+  return file.type.startsWith('image/');
+}
+
+function validateImageSize(file, maxBytes = 5 * 1024 * 1024) {
+  return file.size <= maxBytes;
+}
+
 export default function ProductEditDialog({
   open,
   onOpenChange,
   product,
   onSave,
   isLoading = false,
-  mode = 'edit', // 'create' | 'edit'
+  mode = 'edit',
 }) {
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
@@ -56,10 +64,12 @@ export default function ProductEditDialog({
   const [isActive, setIsActive] = useState('true');
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [galleryFiles, setGalleryFiles] = useState([]);
+  const [galleryPreviews, setGalleryPreviews] = useState([]);
   const [errors, setErrors] = useState({});
   const fileInputRef = useRef(null);
+  const galleryInputRef = useRef(null);
 
-  // Reset form when dialog opens
   useEffect(() => {
     if (open) {
       if (product && mode === 'edit') {
@@ -72,6 +82,8 @@ export default function ProductEditDialog({
         setIsActive(product.isActive !== false ? 'true' : 'false');
         setImageFile(null);
         setImagePreview(product.image?.url || null);
+        setGalleryFiles([]);
+        setGalleryPreviews(product.gallery?.map((g) => g.url) || []);
       } else {
         setName('');
         setPrice('');
@@ -82,38 +94,38 @@ export default function ProductEditDialog({
         setIsActive('true');
         setImageFile(null);
         setImagePreview(null);
+        setGalleryFiles([]);
+        setGalleryPreviews([]);
       }
       setErrors({});
     }
   }, [product, open, mode]);
 
-  // Cleanup object URLs
   useEffect(() => {
     return () => {
-      if (imagePreview && imageFile) {
-        URL.revokeObjectURL(imagePreview);
-      }
+      galleryPreviews.forEach((preview) => {
+        if (preview.startsWith('blob:')) {
+          URL.revokeObjectURL(preview);
+        }
+      });
     };
-  }, [imagePreview, imageFile]);
+  }, []);
 
   const handleImageSelect = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate type
-    if (!file.type.startsWith('image/')) {
+    if (!validateImageType(file)) {
       setErrors((prev) => ({ ...prev, image: 'Only image files are allowed' }));
       return;
     }
 
-    // Validate size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
+    if (!validateImageSize(file)) {
       setErrors((prev) => ({ ...prev, image: 'Image must be under 5MB' }));
       return;
     }
 
-    // Revoke previous preview
-    if (imagePreview && imageFile) {
+    if (imagePreview && imageFile && imagePreview.startsWith('blob:')) {
       URL.revokeObjectURL(imagePreview);
     }
 
@@ -123,12 +135,60 @@ export default function ProductEditDialog({
   };
 
   const removeImage = () => {
-    if (imagePreview && imageFile) {
+    if (imagePreview && imagePreview.startsWith('blob:')) {
       URL.revokeObjectURL(imagePreview);
     }
     setImageFile(null);
     setImagePreview(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleGallerySelect = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const validFiles = files.filter((file) => {
+      if (!validateImageType(file)) {
+        setErrors((prev) => ({ ...prev, gallery: 'Only image files are allowed' }));
+        return false;
+      }
+      if (!validateImageSize(file)) {
+        setErrors((prev) => ({ ...prev, gallery: 'Each image must be under 5MB' }));
+        return false;
+      }
+      return true;
+    });
+
+    if (validFiles.length === 0) return;
+
+    const newPreviews = validFiles.map((file) => URL.createObjectURL(file));
+    setGalleryFiles((prev) => [...prev, ...validFiles]);
+    setGalleryPreviews((prev) => [...prev, ...newPreviews]);
+    setErrors((prev) => ({ ...prev, gallery: null }));
+    if (galleryInputRef.current) galleryInputRef.current.value = '';
+  };
+
+  const removeGalleryImage = (index) => {
+    const preview = galleryPreviews[index];
+    if (preview && preview.startsWith('blob:')) {
+      URL.revokeObjectURL(preview);
+    }
+    setGalleryFiles((prev) => prev.filter((_, i) => i !== index));
+    setGalleryPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const moveGalleryImage = (fromIndex, direction) => {
+    const toIndex = fromIndex + direction;
+    if (toIndex < 0 || toIndex >= galleryPreviews.length) return;
+
+    const newFiles = [...galleryFiles];
+    const newPreviews = [...galleryPreviews];
+    const [movedFile] = newFiles.splice(fromIndex, 1);
+    const [movedPreview] = newPreviews.splice(fromIndex, 1);
+    newFiles.splice(toIndex, 0, movedFile);
+    newPreviews.splice(toIndex, 0, movedPreview);
+    setGalleryFiles(newFiles);
+    setGalleryPreviews(newPreviews);
   };
 
   const validate = () => {
@@ -159,12 +219,17 @@ export default function ProductEditDialog({
       formData.append('image', imageFile);
     }
 
+    // Append gallery files
+    galleryFiles.forEach((file) => {
+      formData.append('gallery', file);
+    });
+
     onSave({ formData, id: product?._id });
   };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[85vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-2">
             <Package size={24} className="text-primary" />
@@ -176,9 +241,9 @@ export default function ProductEditDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          {/* Image upload */}
+          {/* Main Image upload */}
           <div className="space-y-1.5">
-            <label className="block text-xs font-medium text-foreground-secondary">Product Image</label>
+            <label className="block text-xs font-medium text-foreground-secondary">Main Image</label>
             <div
               className={`relative w-full h-36 rounded-xl border-2 border-dashed flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors ${imagePreview ? 'border-primary/30' : 'border-border'} ${errors.image ? 'border-destructive' : ''}`}
               onClick={() => fileInputRef.current?.click()}
@@ -197,7 +262,7 @@ export default function ProductEditDialog({
               ) : (
                 <div className="flex flex-col items-center gap-2 text-foreground-tertiary">
                   <Upload size={24} />
-                  <span className="text-xs">Click to upload image</span>
+                  <span className="text-xs">Click to upload main image</span>
                 </div>
               )}
             </div>
@@ -209,6 +274,73 @@ export default function ProductEditDialog({
               className="hidden"
             />
             {errors.image && <p className="text-[11px] text-destructive">{errors.image}</p>}
+          </div>
+
+          {/* Gallery Images */}
+          <div className="space-y-1.5">
+            <label className="block text-xs font-medium text-foreground-secondary">Gallery Images (optional)</label>
+            <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+              {galleryPreviews.map((preview, index) => (
+                <div key={index} className="relative aspect-square rounded-lg border border-border overflow-hidden group">
+                  <img src={preview} alt={`Gallery ${index + 1}`} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => removeGalleryImage(index)}
+                      className="w-6 h-6 rounded-full bg-red-500/80 flex items-center justify-center hover:bg-red-500 transition-colors cursor-pointer"
+                      title="Remove"
+                    >
+                      <X size={12} className="text-white" />
+                    </button>
+                  </div>
+                  {galleryPreviews.length > 1 && (
+                    <div className="absolute top-1 left-1 flex gap-0.5">
+                      {index > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => moveGalleryImage(index, -1)}
+                          className="w-5 h-5 rounded bg-background/80 flex items-center justify-center hover:bg-background transition-colors cursor-pointer text-[10px] text-foreground"
+                          title="Move left"
+                        >
+                          ←
+                        </button>
+                      )}
+                      {index < galleryPreviews.length - 1 && (
+                        <button
+                          type="button"
+                          onClick={() => moveGalleryImage(index, 1)}
+                          className="w-5 h-5 rounded bg-background/80 flex items-center justify-center hover:bg-background transition-colors cursor-pointer text-[10px] text-foreground"
+                          title="Move right"
+                        >
+                          →
+                        </button>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ))}
+              {galleryPreviews.length < 5 && (
+                <div
+                  className="aspect-square rounded-lg border-2 border-dashed border-border flex items-center justify-center cursor-pointer hover:border-primary/50 transition-colors"
+                  onClick={() => galleryInputRef.current?.click()}
+                >
+                  <div className="flex flex-col items-center gap-1 text-foreground-tertiary">
+                    <Upload size={16} />
+                    <span className="text-[10px]">Add</span>
+                  </div>
+                </div>
+              )}
+            </div>
+            <input
+              ref={galleryInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/jpg,image/webp"
+              multiple
+              onChange={handleGallerySelect}
+              className="hidden"
+            />
+            {errors.gallery && <p className="text-[11px] text-destructive">{errors.gallery}</p>}
+            <p className="text-[10px] text-foreground-tertiary">Up to 5 images. Drag to reorder after adding.</p>
           </div>
 
           {/* Name */}

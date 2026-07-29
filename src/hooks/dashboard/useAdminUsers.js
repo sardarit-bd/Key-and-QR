@@ -9,15 +9,13 @@ export const ADMIN_USERS_KEYS = {
 };
 
 /**
- * Fetch paginated + filtered users for the admin users table.
+ * Fetch paginated + filtered users from the backend.
  */
-export function useAdminUsers(filters = {}, options = {}) {
-  const { useMock = true } = options;
-
+export function useAdminUsers(filters = {}) {
   return useQuery({
     queryKey: ADMIN_USERS_KEYS.list(filters),
     queryFn: async () => {
-      const res = await adminUsersService.getUsers({ useMock, ...filters });
+      const res = await adminUsersService.getUsers(filters);
       return res.data;
     },
     staleTime: 30 * 1000,
@@ -30,13 +28,11 @@ export function useAdminUsers(filters = {}, options = {}) {
 /**
  * Fetch aggregate user stats for summary cards.
  */
-export function useAdminUsersStats(options = {}) {
-  const { useMock = true } = options;
-
+export function useAdminUsersStats() {
   return useQuery({
     queryKey: ADMIN_USERS_KEYS.stats,
     queryFn: async () => {
-      const res = await adminUsersService.getStats({ useMock });
+      const res = await adminUsersService.getStats();
       return res.data;
     },
     staleTime: 30 * 1000,
@@ -47,15 +43,15 @@ export function useAdminUsersStats(options = {}) {
 }
 
 /**
- * Fetch a single user by ID (for detail/edit dialogs).
+ * Fetch a single user by ID (for detail dialogs).
  */
 export function useAdminUserDetail(userId, options = {}) {
-  const { useMock = true, enabled = false } = options;
+  const { enabled = false } = options;
 
   return useQuery({
     queryKey: ADMIN_USERS_KEYS.detail(userId),
     queryFn: async () => {
-      const res = await adminUsersService.getUserById({ useMock, userId });
+      const res = await adminUsersService.getUserById({ userId });
       return res.data;
     },
     enabled: !!userId && enabled,
@@ -67,8 +63,7 @@ export function useAdminUserDetail(userId, options = {}) {
 /**
  * Mutations for user management actions.
  */
-export function useAdminUserActions(options = {}) {
-  const { useMock = true } = options;
+export function useAdminUserActions() {
   const queryClient = useQueryClient();
 
   const invalidate = () => {
@@ -77,7 +72,6 @@ export function useAdminUserActions(options = {}) {
 
   const suspendUser = useMutation({
     mutationFn: async ({ userId, reason }) => {
-      // Optimistic update
       queryClient.setQueriesData(
         { queryKey: ADMIN_USERS_KEYS.all },
         (old) => {
@@ -85,12 +79,12 @@ export function useAdminUserActions(options = {}) {
           return {
             ...old,
             users: old.users.map((u) =>
-              u._id === userId ? { ...u, status: 'suspended' } : u
+              u._id === userId ? { ...u, isSuspended: true } : u
             ),
           };
         }
       );
-      const res = await adminUsersService.suspendUser({ useMock, userId, reason });
+      const res = await adminUsersService.suspendUser({ userId, reason });
       return res.data;
     },
     onSettled: invalidate,
@@ -105,12 +99,12 @@ export function useAdminUserActions(options = {}) {
           return {
             ...old,
             users: old.users.map((u) =>
-              u._id === userId ? { ...u, status: 'active' } : u
+              u._id === userId ? { ...u, isSuspended: false } : u
             ),
           };
         }
       );
-      const res = await adminUsersService.activateUser({ useMock, userId });
+      const res = await adminUsersService.activateUser({ userId });
       return res.data;
     },
     onSettled: invalidate,
@@ -118,7 +112,7 @@ export function useAdminUserActions(options = {}) {
 
   const deleteUser = useMutation({
     mutationFn: async ({ userId }) => {
-      const res = await adminUsersService.deleteUser({ useMock, userId });
+      const res = await adminUsersService.deleteUser({ userId });
       return res.data;
     },
     onSettled: invalidate,
@@ -138,7 +132,7 @@ export function useAdminUserActions(options = {}) {
           };
         }
       );
-      const res = await adminUsersService.updateUser({ useMock, userId, updates });
+      const res = await adminUsersService.updateUser({ userId, updates });
       return res.data;
     },
     onSettled: invalidate,

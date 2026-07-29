@@ -167,7 +167,7 @@ export default function AdminAssignmentPage() {
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-foreground truncate">
-                Assign <span className="font-mono text-primary">{selectedTag.tagCode}</span> → Order #
+ Assign <span className=" text-primary">{selectedTag.tagCode}</span> → Order #
                 {selectedOrder._id?.slice(-8).toUpperCase()}
               </p>
               <p className="text-xs text-foreground-tertiary truncate">

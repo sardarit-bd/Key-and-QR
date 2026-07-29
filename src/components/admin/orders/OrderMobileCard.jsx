@@ -293,7 +293,7 @@ export default function OrderMobileCard({
             >
                 <div className="flex-1">
                     <div className="flex items-center justify-between mb-2 flex-wrap gap-2">
-                        <span className="font-mono font-semibold text-gray-900 text-sm">
+ <span className=" font-semibold text-gray-900 text-sm">
                             #{order._id?.slice(-8).toUpperCase()}
                         </span>
                         {expanded ? (
@@ -415,7 +415,7 @@ export default function OrderMobileCard({
                                         {allTags.map((tag, idx) => {
                                             const cleanTagId = tag.id?.toString();
                                             return (
-                                                <div key={idx} className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 px-2 py-1 rounded font-mono text-sm">
+ <div key={idx} className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm">
                                                     <span>{tag.code}</span>
                                                     {tagsEditable && (
                                                         <div className="flex items-center gap-1 ml-1">

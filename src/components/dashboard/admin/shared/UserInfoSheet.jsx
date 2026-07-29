@@ -53,7 +53,7 @@ export default function UserInfoSheet({ open, onOpenChange, user }) {
               </div>
             </div>
 
-            <Row icon={User} label="User ID" value={user._id} className="font-mono text-xs" />
+ <Row icon={User} label="User ID" value={user._id} className=" text-xs" />
             <Row icon={Shield} label="Role" value={user.role || 'user'} className="capitalize" />
             <Row icon={Activity} label="Email Verified" value={user.isEmailVerified ? 'Yes' : 'No'} className={user.isEmailVerified ? 'text-emerald-400' : 'text-amber-400'} />
             {user.createdAt && <Row icon={Calendar} label="Registered" value={formatDate(user.createdAt)} />}

@@ -170,7 +170,7 @@ export default function OrdersTable({
                         return (
                             <tr key={order._id} className="hover:bg-gray-50 transition">
                                 <td className="p-4">
-                                    <span className="font-mono text-sm font-medium text-gray-900">
+ <span className=" text-sm font-medium text-gray-900">
                                         #{order._id?.slice(-8).toUpperCase()}
                                     </span>
                                 </td>
@@ -224,7 +224,7 @@ export default function OrdersTable({
                                                     console.log(`Tag ${idx}:`, { originalId: tag.id, cleanId: cleanTagId, code: tag.code });
 
                                                     return (
-                                                        <div key={idx} className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded font-mono text-xs">
+ <div key={idx} className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded text-xs">
                                                             <span>{tag.code}</span>
                                                             {tagsEditable && (
                                                                 <>

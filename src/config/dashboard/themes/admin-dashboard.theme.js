@@ -71,7 +71,7 @@ export const ADMIN_DASHBOARD_THEME = {
     typography: {
       fontFamily: 'var(--font-inter)',
       headingFont: 'var(--font-inter)',
-      monoFont: 'var(--font-geist-mono)',
+      monoFont: 'var(--font-sans)',
       baseSize: '14px',
       scale: 1.2,
     },

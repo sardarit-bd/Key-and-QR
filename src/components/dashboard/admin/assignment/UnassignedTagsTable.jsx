@@ -35,7 +35,7 @@ export default function UnassignedTagsTable({ tags = [], selectedTagId, onSelect
                 }`}
               >
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-mono font-medium text-foreground truncate">{tag.tagCode}</p>
+ <p className="text-sm font-medium text-foreground truncate">{tag.tagCode}</p>
                   <p className="text-[10px] text-foreground-tertiary">Created {formatDate(tag.createdAt)}</p>
                 </div>
                 <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 flex-shrink-0">

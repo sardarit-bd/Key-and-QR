@@ -283,7 +283,7 @@ export default function UserDashboard() {
           <motion.h1
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-3xl lg:text-4xl font-serif text-white flex items-center gap-2 mb-2"
+            className="text-3xl lg:text-4xl text-white flex items-center gap-2 mb-2"
           >
             {greeting}, {user?.name?.split(" ")[0] || "Dd"}!{" "}
             <span className="text-yellow-400">✨</span>
@@ -311,7 +311,7 @@ export default function UserDashboard() {
 
           <div className="relative z-10 max-w-[80%]">
             <Quote className="text-white/20 w-10 h-10 mb-4" />
-            <p className="font-serif text-lg lg:text-xl italic text-slate-100 mb-3 leading-relaxed">
+            <p className="text-lg lg:text-xl italic text-slate-100 mb-3 leading-relaxed">
               "{dailyQuote?.text || "Stay positive, work hard, make it happen."}
               "
             </p>
@@ -340,7 +340,7 @@ export default function UserDashboard() {
         <div className="relative flex flex-col xl:flex-row xl:items-center gap-8">
           {/* Left text */}
           <div className="min-w-[400px]">
-            <h3 className="text-3xl font-serif text-white mb-4">
+            <h3 className="text-3xl text-white mb-4">
               Ready for more inspiration?
             </h3>
 
@@ -436,7 +436,7 @@ export default function UserDashboard() {
           className="lg:col-span-2 bg-[#0b1120] border border-white/5 rounded-[24px] p-6 shadow-lg"
         >
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-lg text-white font-serif tracking-wide">
+            <h2 className="text-lg text-white tracking-wide">
               Your Recent Quotes
             </h2>
             <button className="text-xs font-medium px-4 py-2 rounded-full border border-white/10 text-slate-300 hover:bg-white/5 transition-colors cursor-pointer">
@@ -498,7 +498,7 @@ export default function UserDashboard() {
         >
           <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-full blur-[50px] z-0"></div>
 
-          <h2 className="text-lg text-white font-serif tracking-wide w-full text-center mb-8 relative z-10">
+          <h2 className="text-lg text-white tracking-wide w-full text-center mb-8 relative z-10">
             Inspiration Streak
           </h2>
 
@@ -573,11 +573,11 @@ export default function UserDashboard() {
             </svg>
 
             <div className="flex flex-col items-center">
-              <span className="font-serif text-[88px] leading-none text-[#F5C97A]">
+              <span className="text-[88px] leading-none text-[#F5C97A]">
                 7
               </span>
 
-              <span className="mt-2 font-serif text-[22px] text-[#E9C27B]">
+              <span className="mt-2 text-[22px] text-[#E9C27B]">
                 Days
               </span>
             </div>

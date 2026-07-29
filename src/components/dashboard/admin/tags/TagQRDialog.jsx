@@ -65,7 +65,7 @@ export default function TagQRDialog({ open, onOpenChange, tag }) {
           </div>
 
           <div className="text-center space-y-1">
-            <p className="text-xs font-mono font-semibold text-foreground">{tag.tagCode}</p>
+ <p className="text-xs font-semibold text-foreground">{tag.tagCode}</p>
             <p className="text-[10px] text-foreground-tertiary break-all">{tagUrl}</p>
             {tag.subscriptionType && (
               <span className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-foreground-tertiary capitalize inline-block mt-1">

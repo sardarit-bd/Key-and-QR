@@ -37,7 +37,7 @@ function OrderRow({ order }) {
           <p className="text-sm font-medium text-foreground truncate">
             {order.user?.name || order.user?.email || 'Guest'}
           </p>
-          <p className="text-xs text-foreground-tertiary font-mono">
+ <p className="text-xs text-foreground-tertiary ">
             #{idSuffix} · {order.product?.name || 'Order'}
           </p>
         </div>

@@ -145,7 +145,7 @@ export default function OrderDetailsModal({
                     <div className="flex justify-between items-start gap-2">
                         <div>
                             <h3 className="text-base sm:text-lg font-semibold text-gray-900">Order Details</h3>
-                            <p className="text-xs sm:text-sm text-gray-500 mt-1 font-mono break-all">
+ <p className="text-xs sm:text-sm text-gray-500 mt-1 break-all">
                                 Order ID: {order._id}
                             </p>
                         </div>
@@ -326,7 +326,7 @@ export default function OrderDetailsModal({
                                         <>
                                             <div className="flex flex-wrap gap-2">
                                                 {allTags.map((tag, idx) => (
-                                                    <div key={idx} className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 px-2 py-1 rounded font-mono text-sm">
+ <div key={idx} className="inline-flex items-center gap-1.5 bg-blue-100 text-blue-700 px-2 py-1 rounded text-sm">
                                                         <span>{tag.code}</span>
                                                         {tagsEditable && (
                                                             <div className="flex items-center gap-1 ml-1">
@@ -477,7 +477,7 @@ export default function OrderDetailsModal({
                                         {order.returnTrackingNumber && (
                                             <div className="flex flex-col xs:flex-row xs:justify-between gap-1 xs:gap-0">
                                                 <span className="text-gray-500">Return Tracking:</span>
-                                                <span className="text-gray-900 font-mono text-xs break-all">{order.returnTrackingNumber}</span>
+ <span className="text-gray-900 text-xs break-all">{order.returnTrackingNumber}</span>
                                             </div>
                                         )}
                                     </div>

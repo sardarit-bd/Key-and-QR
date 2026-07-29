@@ -53,7 +53,7 @@ export default function AssignDialog({
               <p className="text-[10px] text-foreground-tertiary uppercase tracking-wider mb-2 flex items-center gap-1.5">
                 <QrCode size={12} /> Tag
               </p>
-              <p className="text-base font-mono font-bold text-foreground">{selectedTag.tagCode}</p>
+ <p className="text-base font-bold text-foreground">{selectedTag.tagCode}</p>
               <p className="text-xs text-foreground-tertiary">ID: {selectedTag._id}</p>
             </div>
           ) : (

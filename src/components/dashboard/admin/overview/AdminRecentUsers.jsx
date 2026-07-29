@@ -33,7 +33,7 @@ function UserRow({ user }) {
         </div>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
-        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-foreground-tertiary font-mono">
+ <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-foreground-tertiary ">
           {providerTag}
         </span>
         {user.isEmailVerified ? (

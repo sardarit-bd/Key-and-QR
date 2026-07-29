@@ -201,7 +201,7 @@ export default function CreateTagModal({ isOpen, onClose, onSuccess }) {
                                             type="text"
                                             value={tagCode}
                                             readOnly
-                                            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 font-mono text-sm"
+ className="flex-1 px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-sm"
                                         />
                                         <button
                                             onClick={handleCopy}
@@ -234,7 +234,7 @@ export default function CreateTagModal({ isOpen, onClose, onSuccess }) {
                                     value={tagCode}
                                     onChange={(e) => setTagCode(e.target.value.toUpperCase())}
                                     placeholder="e.g., MY_TAG_001, CUSTOM-CODE, KEY123"
-                                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black font-mono text-sm"
+ className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-black text-sm"
                                     autoFocus
                                 />
                                 <p className="text-xs text-gray-500 mt-2">

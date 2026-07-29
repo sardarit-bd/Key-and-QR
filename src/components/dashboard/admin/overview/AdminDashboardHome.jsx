@@ -7,6 +7,7 @@ import AdminRecentUsers from './AdminRecentUsers';
 import AdminRecentActivity from './AdminRecentActivity';
 import AdminQuickActions from './AdminQuickActions';
 import AdminSystemStatus from './AdminSystemStatus';
+import AdminCharts from './AdminCharts';
 
 export default function AdminDashboardHome({ data }) {
   const {
@@ -16,6 +17,7 @@ export default function AdminDashboardHome({ data }) {
     recentActivity = [],
     quickActions = [],
     systemStatus = null,
+    ordersByStatus = {},
   } = data || {};
 
   return (
@@ -26,19 +28,22 @@ export default function AdminDashboardHome({ data }) {
       {/* Row 2: Quick Statistics */}
       <AdminStatsGrid stats={stats} />
 
-      {/* Row 3: Recent Orders + Recent Users */}
+      {/* Row 3: Charts */}
+      <AdminCharts ordersByStatus={ordersByStatus} />
+
+      {/* Row 4: Recent Orders + Recent Users */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
         <AdminRecentOrders orders={recentOrders} />
         <AdminRecentUsers users={recentUsers} />
       </div>
 
-      {/* Row 4: Recent Activity + System Status */}
+      {/* Row 5: Recent Activity + System Status */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
         <AdminRecentActivity activity={recentActivity} />
         <AdminSystemStatus systemStatus={systemStatus} />
       </div>
 
-      {/* Row 5: Quick Actions */}
+      {/* Row 6: Quick Actions */}
       <AdminQuickActions actions={quickActions} />
     </div>
   );

@@ -65,7 +65,7 @@ export default function QRCodeModal({ isOpen, onClose, tag }) {
                             includeMargin={true}
                         />
                     </div>
-                    <p className="font-mono text-sm text-gray-600 mb-2 break-all">{url}</p>
+ <p className=" text-sm text-gray-600 mb-2 break-all">{url}</p>
                     <button
                         onClick={() => handleCopyUrl(url)}
                         className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition cursor-pointer"

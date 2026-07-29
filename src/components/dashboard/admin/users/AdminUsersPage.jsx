@@ -23,28 +23,27 @@ import Pagination from '@/components/ui/Pagination';
 
 const ITEMS_PER_PAGE = 10;
 
-export default function AdminUsersPage() {
-  // Filter / sort / pagination state
+export default function AdminUsersPage({ 
+  title = 'Users Management', 
+  description = 'View, manage, and moderate all platform users.',
+  defaultRole = 'all',
+  defaultStatus = 'all',
+}) {
   const [search, setSearch] = useState('');
-  const [role, setRole] = useState('all');
-  const [status, setStatus] = useState('all');
+  const [role, setRole] = useState(defaultRole);
+  const [status, setStatus] = useState(defaultStatus);
   const [sort, setSort] = useState('newest');
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
 
-  // View detail dialog
   const [viewUser, setViewUser] = useState(null);
-
-  // Edit dialog
   const [editUser, setEditUser] = useState(null);
   const [editLoading, setEditLoading] = useState(false);
 
-  // Confirm dialog
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogVariant, setDialogVariant] = useState('delete');
   const [selectedUser, setSelectedUser] = useState(null);
 
-  // Data
   const filters = { search: debouncedSearch, role, status, sort, page, limit: ITEMS_PER_PAGE };
   const { data, isLoading, isError, error, refetch } = useAdminUsers(filters);
   const { data: statsData } = useAdminUsersStats();
@@ -56,16 +55,12 @@ export default function AdminUsersPage() {
   const isProcessing =
     suspendUser.isPending || activateUser.isPending || deleteUser.isPending;
 
-  // ---- Filter handlers (reset to page 1) ----
   const handleSearchChange = useCallback((value) => { setSearch(value); setPage(1); }, []);
   const handleRoleChange    = useCallback((value) => { setRole(value); setPage(1); }, []);
   const handleStatusChange  = useCallback((value) => { setStatus(value); setPage(1); }, []);
   const handleSortChange    = useCallback((value) => { setSort(value); setPage(1); }, []);
 
-  // ---- View Details ----
   const handleView = useCallback((user) => setViewUser(user), []);
-
-  // ---- Edit User ----
   const handleEdit = useCallback((user) => setEditUser(user), []);
 
   const handleEditSave = useCallback(async ({ userId, updates }) => {
@@ -81,7 +76,6 @@ export default function AdminUsersPage() {
     }
   }, [updateUser]);
 
-  // ---- Suspend / Activate / Delete confirmation ----
   const openDialog = useCallback((variant, user) => {
     setDialogVariant(variant);
     setSelectedUser(user);
@@ -115,7 +109,6 @@ export default function AdminUsersPage() {
   const handleActivate = useCallback((user) => openDialog('activate', user), [openDialog]);
   const handleDelete   = useCallback((user) => openDialog('delete', user), [openDialog]);
 
-  // ---- Loading state ----
   if (isLoading && users.length === 0) {
     return (
       <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6 animate-pulse">
@@ -135,7 +128,6 @@ export default function AdminUsersPage() {
     );
   }
 
-  // ---- Error state ----
   if (isError && users.length === 0) {
     return (
       <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 flex items-center justify-center">
@@ -149,7 +141,7 @@ export default function AdminUsersPage() {
           </p>
           <button
             onClick={() => refetch()}
-            className="px-6 py-3 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors"
+            className="px-6 py-3 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors cursor-pointer"
           >
             Try Again
           </button>
@@ -160,23 +152,20 @@ export default function AdminUsersPage() {
 
   return (
     <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6">
-      {/* Page header */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
           <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 border border-primary/20">
             <Users size={20} className="text-primary" />
           </span>
-          Users Management
+          {title}
         </h1>
         <p className="text-sm text-foreground-secondary mt-2 ml-[52px]">
-          View, manage, and moderate all platform users.
+          {description}
         </p>
       </motion.div>
 
-      {/* Stats cards */}
       <UsersStatsCards stats={statsData || {}} />
 
-      {/* Filters */}
       <UsersFilters
         search={search}
         onSearchChange={handleSearchChange}
@@ -189,7 +178,6 @@ export default function AdminUsersPage() {
         totalItems={pagination.totalItems}
       />
 
-      {/* No search results */}
       {!isLoading && users.length === 0 && (
         <Card className="p-10 sm:p-12">
           <div className="text-center">
@@ -202,7 +190,6 @@ export default function AdminUsersPage() {
         </Card>
       )}
 
-      {/* Desktop table */}
       {users.length > 0 && (
         <div className="hidden lg:block">
           <UsersTable
@@ -216,7 +203,6 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      {/* Mobile cards */}
       {users.length > 0 && (
         <UserMobileCards
           users={users}
@@ -228,7 +214,6 @@ export default function AdminUsersPage() {
         />
       )}
 
-      {/* Pagination */}
       {pagination.totalPages > 1 && (
         <Pagination
           currentPage={pagination.page}
@@ -238,14 +223,12 @@ export default function AdminUsersPage() {
         />
       )}
 
-      {/* View Details dialog */}
       <UserViewDialog
         open={!!viewUser}
         onOpenChange={(open) => { if (!open) setViewUser(null); }}
         user={viewUser}
       />
 
-      {/* Edit User dialog */}
       <UserEditDialog
         open={!!editUser}
         onOpenChange={(open) => { if (!open) setEditUser(null); }}
@@ -254,7 +237,6 @@ export default function AdminUsersPage() {
         isLoading={editLoading}
       />
 
-      {/* Confirm dialog (suspend / activate / delete) */}
       <ConfirmDialog
         open={dialogOpen}
         onOpenChange={setDialogOpen}
@@ -264,7 +246,6 @@ export default function AdminUsersPage() {
         isLoading={isProcessing}
       />
 
-      {/* Toast notifications */}
       <Toaster
         position="top-right"
         toastOptions={{

@@ -124,7 +124,7 @@ import {
     adminMenuItems: [
       {
         id: 'admin-dashboard',
-        title: 'Dashboard',
+        title: 'Overview',
         icon: LayoutDashboard,
         href: '/new-dashboard/admin',
         exact: true,
@@ -134,8 +134,14 @@ import {
         id: 'admin-users',
         title: 'Users',
         icon: Users,
-        href: '/new-dashboard/admin/users',
         visibility: MENU_VISIBILITY.ADMIN,
+        children: [
+          { id: 'admin-users-all', title: 'All Users', href: '/new-dashboard/admin/users', visibility: MENU_VISIBILITY.ADMIN },
+          { id: 'admin-users-active', title: 'Active Users', href: '/new-dashboard/admin/users/active', visibility: MENU_VISIBILITY.ADMIN },
+          { id: 'admin-users-suspended', title: 'Suspended Users', href: '/new-dashboard/admin/users/suspended', visibility: MENU_VISIBILITY.ADMIN },
+          { id: 'admin-users-admins', title: 'Administrators', href: '/new-dashboard/admin/users/admins', visibility: MENU_VISIBILITY.ADMIN },
+          { id: 'admin-users-moderators', title: 'Moderators', href: '/new-dashboard/admin/users/moderators', visibility: MENU_VISIBILITY.ADMIN },
+        ],
       },
       {
         id: 'admin-orders',

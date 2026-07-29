@@ -72,7 +72,7 @@ export default function ReplaceTagModal({
                         Order: #{orderId?.slice(-8).toUpperCase()}
                     </p>
                     <p className="text-sm text-gray-500">
-                        Replacing tag: <span className="font-mono font-semibold text-blue-600">{oldTagCode}</span>
+ Replacing tag: <span className=" font-semibold text-blue-600">{oldTagCode}</span>
                     </p>
                 </div>
 

@@ -26,7 +26,7 @@ const StyledWrapper = styled.div`
     max-width: fit-content;
     color: #000;
     font-size: ${({ $size }) => `${$size}px`};
-    font-family: Mine, sans-serif;
+    font-family: var(--font-sans);
     position: relative;
     font-style: italic;
     font-weight: 600;

@@ -88,8 +88,8 @@ export default function TagViewDialog({ open, onOpenChange, tag, isLoading = fal
 
             {/* Info rows */}
             <div className="bg-muted/30 rounded-xl p-3 space-y-1">
-              <Row label="Tag Code" value={tag.tagCode} className="font-mono font-semibold" />
-              <Row label="ID" value={tag._id} className="font-mono text-[10px]" />
+ <Row label="Tag Code" value={tag.tagCode} className=" font-semibold" />
+ <Row label="ID" value={tag._id} className=" text-[10px]" />
               <Row label="Status" value={statusLabel} className={statusColor} />
               <Row label="Plan" value={tag.subscriptionType || 'free'} className="capitalize" />
               <Row label="Active" value={tag.isActive ? 'Yes' : 'No'} className={tag.isActive ? 'text-emerald-400' : 'text-red-400'} />

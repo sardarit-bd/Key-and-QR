@@ -45,8 +45,8 @@ function TagRow({ tag, onShowQR, onToggleStatus, onDelete }) {
     <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,100px)_minmax(0,36px)] items-center gap-2 py-3 px-2 hover:bg-muted/30 rounded-lg transition-colors">
       {/* Tag Code + ID */}
       <div className="min-w-0">
-        <p className="text-sm font-mono font-medium text-foreground truncate">{tag.tagCode}</p>
-        <p className="text-[10px] text-foreground-tertiary font-mono truncate">ID: {tag._id?.slice(-8).toUpperCase()}</p>
+ <p className="text-sm font-medium text-foreground truncate">{tag.tagCode}</p>
+ <p className="text-[10px] text-foreground-tertiary truncate">ID: {tag._id?.slice(-8).toUpperCase()}</p>
       </div>
 
       {/* Plan */}

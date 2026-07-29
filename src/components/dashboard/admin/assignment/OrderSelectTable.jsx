@@ -48,7 +48,7 @@ export default function OrderSelectTable({ orders = [], selectedOrderId, onSelec
               >
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-foreground truncate">{customer}</p>
-                  <p className="text-xs text-foreground-tertiary font-mono truncate">
+ <p className="text-xs text-foreground-tertiary truncate">
                     #{order._id?.slice(-8).toUpperCase()} · {formatDate(order.createdAt)}
                   </p>
                 </div>

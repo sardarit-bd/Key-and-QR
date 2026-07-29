@@ -576,7 +576,7 @@ export default function AdminDashboard() {
                 <div key={order._id} className="p-4 hover:bg-gray-50 transition">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-mono text-sm font-medium text-gray-900">
+ <p className=" text-sm font-medium text-gray-900">
                         #{order._id?.slice(-8).toUpperCase()}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">
@@ -633,7 +633,7 @@ export default function AdminDashboard() {
                 <div key={tag._id} className="p-4 hover:bg-gray-50 transition">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="font-mono text-sm font-semibold text-gray-900">
+ <p className=" text-sm font-semibold text-gray-900">
                         {tag.tagCode}
                       </p>
                       <p className="text-xs text-gray-500 mt-1">

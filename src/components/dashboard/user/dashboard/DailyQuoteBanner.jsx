@@ -4,55 +4,55 @@ import Image from "next/image";
 import { Quote, Sparkles } from "lucide-react";
 
 export default function DailyQuoteBanner({ banner }) {
-  const quote = banner?.quote || "Stay positive, work hard, make it happen.";
-  const author = banner?.author || "InspireTag";
-  const ctaText = banner?.ctaText || "Your Daily Quote";
+ const quote = banner?.quote || "Stay positive, work hard, make it happen.";
+ const author = banner?.author || "InspireTag";
+ const ctaText = banner?.ctaText || "Your Daily Quote";
 
-  return (
-    <section className="relative h-full min-h-[180px] sm:min-h-[200px] lg:min-h-[240px] w-full overflow-hidden rounded-[20px] sm:rounded-[24px] border border-border bg-card shadow-lg">
-      
-      {/* Background Image */}
-      <div className="absolute inset-0">
-        <Image
-          src="/images/dashboard/daily-quote-banner.webp"
-          alt="Daily Quote Banner"
-          fill
-          priority
-          className="object-cover object-[75%_center] opacity-90 mix-blend-screen"
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-        />
-      </div>
+ return (
+ <section className="relative h-full min-h-[180px] sm:min-h-[200px] lg:min-h-[240px] w-full overflow-hidden rounded-[20px] sm:rounded-[24px] border border-border bg-card shadow-lg">
+ 
+ {/* Background Image */}
+ <div className="absolute inset-0">
+ <Image
+ src="/images/dashboard/daily-quote-banner.webp"
+ alt="Daily Quote Banner"
+ fill
+ priority
+ className="object-cover object-[75%_center] opacity-90 mix-blend-screen"
+ sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+ />
+ </div>
 
-      {/* Left Overlay Gradient for Text Readability */}
-      <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-transparent" />
-      <div className="absolute inset-0 bg-foreground/5" />
+ {/* Left Overlay Gradient for Text Readability */}
+ <div className="absolute inset-0 bg-gradient-to-r from-background via-background/90 to-transparent" />
+ <div className="absolute inset-0 bg-foreground/5" />
 
-      {/* Content */}
-      <div className="relative z-10 flex h-full flex-col justify-center px-5 sm:px-6 md:px-8 lg:px-10 py-4 sm:py-5 md:py-6">
-        <div className="max-w-[280px] sm:max-w-[320px] md:max-w-[380px]">
-          
-          <Quote
-            size={22}
-            className="mb-2 sm:mb-3 text-primary/80 w-[18px] h-[18px] sm:w-5 sm:h-5 md:w-[22px] md:h-[22px]"
-            fill="currentColor"
-            stroke="none"
-          />
+ {/* Content */}
+ <div className="relative z-10 flex h-full flex-col justify-center px-5 sm:px-6 md:px-8 lg:px-10 py-4 sm:py-5 md:py-6">
+ <div className="max-w-[280px] sm:max-w-[320px] md:max-w-[380px]">
+ 
+ <Quote
+ size={22}
+ className="mb-2 sm:mb-3 text-primary/80 w-[18px] h-[18px] sm:w-5 sm:h-5 md:w-[22px] md:h-[22px]"
+ fill="currentColor"
+ stroke="none"
+ />
 
-          <h2 className="font-serif italic text-[18px] sm:text-[20px] md:text-[22px] lg:text-[26px] leading-[1.3] tracking-wide text-foreground mb-2 sm:mb-3">
-            {quote}
-          </h2>
+ <h2 className=" italic text-[18px] sm:text-[20px] md:text-[22px] lg:text-[26px] leading-[1.3] tracking-wide text-foreground mb-2 sm:mb-3">
+ {quote}
+ </h2>
 
-          <p className="text-[12px] sm:text-[13px] md:text-[14px] text-foreground-secondary mb-3 sm:mb-4 md:mb-5">
-            — {author}
-          </p>
+ <p className="text-[12px] sm:text-[13px] md:text-[14px] text-foreground-secondary mb-3 sm:mb-4 md:mb-5">
+ — {author}
+ </p>
 
-          <button className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-accent/30 bg-background-secondary/90 px-3 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-[12px] md:text-[13px] font-medium text-accent backdrop-blur-sm transition-all duration-300 hover:bg-accent/10 hover:border-accent/50 hover:shadow-[0_0_15px_rgba(253,182,92,0.15)]">
-            <Sparkles size={14} className="w-[12px] h-[12px] sm:w-[14px] sm:h-[14px]" />
-            {ctaText}
-          </button>
-        </div>
-      </div>
-      
-    </section>
-  );
+ <button className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-accent/30 bg-background-secondary/90 px-3 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-[12px] md:text-[13px] font-medium text-accent backdrop-blur-sm transition-all duration-300 hover:bg-accent/10 hover:border-accent/50 hover:shadow-[0_0_15px_rgba(253,182,92,0.15)]">
+ <Sparkles size={14} className="w-[12px] h-[12px] sm:w-[14px] sm:h-[14px]" />
+ {ctaText}
+ </button>
+ </div>
+ </div>
+ 
+ </section>
+ );
 }

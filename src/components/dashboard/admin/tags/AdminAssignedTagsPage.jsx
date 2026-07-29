@@ -13,8 +13,8 @@ import { adminUsersService } from '@/services/dashboard-service/admin-users.serv
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AssignedTagsTable from './AssignedTagsTable';
 import TagQRDialog from './TagQRDialog';
-import UserInfoSheet from '../shared/UserInfoSheet';
-import OrderInfoSheet from '../shared/OrderInfoSheet';
+import UserViewDialog from '../shared/UserViewDialog';
+import OrderViewDialog from '../shared/OrderViewDialog';
 import ConfirmDialog from '../shared/ConfirmDialog';
 import Pagination from '@/components/ui/Pagination';
 import { Input } from '@/components/ui/input';
@@ -186,8 +186,8 @@ export default function AdminAssignedTagsPage() {
       <TagQRDialog open={!!qrTag} onOpenChange={(o) => { if (!o) setQrTag(null); }} tag={qrTag} />
       <ConfirmDialog open={unassignOpen} onOpenChange={setUnassignOpen} variant="delete" userName={unassignTag?.tagCode || ''} onConfirm={handleUnassignConfirm} isLoading={false} />
 
-      <UserInfoSheet open={viewUserOpen} onOpenChange={setViewUserOpen} user={viewUser} />
-      <OrderInfoSheet open={viewOrderOpen} onOpenChange={setViewOrderOpen} order={viewOrder} />
+      <UserViewDialog open={viewUserOpen} onOpenChange={setViewUserOpen} user={viewUser} />
+      <OrderViewDialog open={viewOrderOpen} onOpenChange={setViewOrderOpen} order={viewOrder} />
 
       <Toaster position="top-right" toastOptions={{ duration: 3000, style: { borderRadius: '12px', background: 'var(--popover)', color: 'var(--popover-foreground)', border: '1px solid var(--border)' } }} />
     </div>

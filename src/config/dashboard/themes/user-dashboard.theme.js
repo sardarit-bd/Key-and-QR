@@ -70,8 +70,8 @@ export const USER_DASHBOARD_THEME = {
     // Typography - Premium fonts
     typography: {
       fontFamily: 'var(--font-inter)',
-      headingFont: 'var(--font-playfair)',
-      monoFont: 'var(--font-geist-mono)',
+      headingFont: 'var(--font-sans)',
+      monoFont: 'var(--font-sans)',
       baseSize: '16px',
       scale: 1.25,
     },

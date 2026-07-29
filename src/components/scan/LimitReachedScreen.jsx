@@ -80,17 +80,17 @@ export default function LimitReachedScreen({ dailyLimit = 1 }) {
                     <p className="text-xs text-gray-400 uppercase tracking-wider mb-3">Next quote available in</p>
                     <div className="flex items-center justify-center gap-3">
                         <div className="text-center">
-                            <div className="text-3xl font-bold text-[#e3ba85] tabular-nums font-mono">{hours}</div>
+ <div className="text-3xl font-bold text-[#e3ba85] tabular-nums ">{hours}</div>
                             <div className="text-[10px] text-gray-500 uppercase mt-1">Hours</div>
                         </div>
-                        <span className="text-2xl text-gray-600 font-mono">:</span>
+ <span className="text-2xl text-gray-600 ">:</span>
                         <div className="text-center">
-                            <div className="text-3xl font-bold text-[#e3ba85] tabular-nums font-mono">{minutes}</div>
+ <div className="text-3xl font-bold text-[#e3ba85] tabular-nums ">{minutes}</div>
                             <div className="text-[10px] text-gray-500 uppercase mt-1">Min</div>
                         </div>
-                        <span className="text-2xl text-gray-600 font-mono">:</span>
+ <span className="text-2xl text-gray-600 ">:</span>
                         <div className="text-center">
-                            <div className="text-3xl font-bold text-[#e3ba85] tabular-nums font-mono">{seconds}</div>
+ <div className="text-3xl font-bold text-[#e3ba85] tabular-nums ">{seconds}</div>
                             <div className="text-[10px] text-gray-500 uppercase mt-1">Sec</div>
                         </div>
                     </div>

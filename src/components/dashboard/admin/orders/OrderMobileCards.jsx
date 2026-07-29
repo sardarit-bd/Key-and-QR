@@ -59,20 +59,14 @@ function OrderCard({ order, onView, onStatus, onCancel, onDelete }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
-          <p className="text-sm font-medium text-foreground truncate">
-            {order.user?.name || order.guestCustomer?.fullName || 'Guest'}
-          </p>
+          <p className="text-sm font-medium text-foreground truncate">{order.user?.name || order.guestCustomer?.fullName || 'Guest'}</p>
           <ActionMenu actions={actions} />
         </div>
-        <p className="text-xs text-foreground-tertiary font-mono mt-0.5">#{idShort(order._id)}</p>
+ <p className="text-xs text-foreground-tertiary mt-0.5">#{idShort(order._id)}</p>
         <p className="text-xs text-foreground-tertiary truncate mt-0.5">{productNames}</p>
         <div className="flex items-center gap-2 mt-2 flex-wrap">
-          <span className={`text-[10px] px-2 py-0.5 rounded-full border ${paymentStyle}`}>
-            {order.paymentStatus}
-          </span>
-          <span className={`text-[10px] px-2 py-0.5 rounded-full border ${fulfillmentStyle}`}>
-            {order.fulfillmentStatus}
-          </span>
+          <span className={`text-[10px] px-2 py-0.5 rounded-full border ${paymentStyle}`}>{order.paymentStatus}</span>
+          <span className={`text-[10px] px-2 py-0.5 rounded-full border ${fulfillmentStyle}`}>{order.fulfillmentStatus}</span>
           <span className="text-xs font-semibold text-foreground ml-auto">{formatPrice(order.grandTotal)}</span>
           <span className="text-[10px] text-foreground-tertiary">{formatDate(order.createdAt)}</span>
         </div>
@@ -85,17 +79,11 @@ export default function OrderMobileCards({ orders = [], onView, onStatus, onCanc
   if (orders.length === 0) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-      className="lg:hidden"
-    >
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="lg:hidden">
       <Card className="p-4 sm:p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <ShoppingBag size={18} className="text-indigo-400" />
-            All Orders
+            <ShoppingBag size={18} className="text-indigo-400" /> All Orders
           </h2>
         </div>
         <div className="divide-y divide-border/50">

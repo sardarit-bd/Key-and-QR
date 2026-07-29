@@ -143,7 +143,7 @@ export default function TagsTable({
                             {tags.map((tag) => (
                                 <tr key={tag._id} className="hover:bg-gray-50 transition">
                                     <td className="px-3 py-3">
-                                        <span className="font-mono text-xs md:text-sm font-medium text-gray-900 break-all">
+ <span className=" text-xs md:text-sm font-medium text-gray-900 break-all">
                                             {tag.tagCode}
                                         </span>
                                     </td>

@@ -77,7 +77,7 @@ export default function OrderInfoSheet({ open, onOpenChange, order, isLoading = 
             {/* Order identity */}
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-foreground-tertiary font-mono">#{order._id?.slice(-8).toUpperCase()}</p>
+ <p className="text-xs text-foreground-tertiary ">#{order._id?.slice(-8).toUpperCase()}</p>
                 <p className="text-sm font-semibold text-foreground">{order.orderNumber || ''}</p>
               </div>
               <span className={`text-[10px] px-2 py-0.5 rounded-full border ${fulfillmentStyle}`}>

@@ -21,7 +21,7 @@ export default function ActivationScreen({ tagCode, onActivate, isLoggedIn }) {
                     <p className="text-sm text-gray-700 font-medium mb-2">
                         Tag Information:
                     </p>
-                    <p className="text-xs font-mono text-gray-600 bg-white rounded px-2 py-1 inline-block break-all border border-gray-200">
+ <p className="text-xs text-gray-600 bg-white rounded px-2 py-1 inline-block break-all border border-gray-200">
                         {tagCode}
                     </p>
                 </div>

@@ -27,8 +27,8 @@ function AssignedTagRow({ tag, onShowQR, onUnassign, onViewUser, onViewOrder }) 
     <div className="grid grid-cols-[minmax(0,1.5fr)_minmax(0,1.5fr)_minmax(0,0.8fr)_minmax(0,100px)_minmax(0,36px)] items-center gap-2 py-3 px-2 hover:bg-muted/30 rounded-lg transition-colors">
       {/* Tag Code */}
       <div className="min-w-0">
-        <p className="text-sm font-mono font-medium text-foreground truncate">{tag.tagCode}</p>
-        <p className="text-[10px] text-foreground-tertiary font-mono">ID: {tag._id?.slice(-8).toUpperCase()}</p>
+ <p className="text-sm font-medium text-foreground truncate">{tag.tagCode}</p>
+ <p className="text-[10px] text-foreground-tertiary ">ID: {tag._id?.slice(-8).toUpperCase()}</p>
       </div>
 
       {/* Assigned User */}

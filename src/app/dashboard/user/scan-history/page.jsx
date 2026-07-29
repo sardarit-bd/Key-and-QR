@@ -218,7 +218,7 @@ export default function UserScanHistoryPage() {
                     <td className="p-4">
                       <div className="flex items-center gap-2">
                         <QrCode size={14} className="text-gray-400" />
-                        <span className="font-mono text-sm font-medium text-gray-900">
+ <span className=" text-sm font-medium text-gray-900">
                           {scan.tag?.tagCode || "Unknown"}
                         </span>
                       </div>

@@ -290,7 +290,7 @@ export default function ScanHistoryPage() {
                                                 {(currentPage - 1) * itemsPerPage + index + 1}
                                             </td>
                                             <td className="p-4">
-                                                <span className="font-mono text-sm font-medium text-gray-900">
+ <span className=" text-sm font-medium text-gray-900">
                                                     {scan.tag?.tagCode || "Unknown"}
                                                 </span>
                                             </td>
@@ -324,7 +324,7 @@ export default function ScanHistoryPage() {
                                     >
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between mb-2">
-                                                <span className="font-mono font-semibold text-gray-900 text-sm">
+ <span className=" font-semibold text-gray-900 text-sm">
                                                     {scan.tag?.tagCode || "Unknown"}
                                                 </span>
                                                 {expandedId === scan._id ? (
@@ -350,7 +350,7 @@ export default function ScanHistoryPage() {
                                         <div className="mt-3 pt-3 border-t border-gray-100 space-y-2">
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-gray-500">Tag Code:</span>
-                                                <span className="text-gray-900 font-mono">{scan.tag?.tagCode}</span>
+ <span className="text-gray-900 ">{scan.tag?.tagCode}</span>
                                             </div>
                                             <div className="flex justify-between text-sm">
                                                 <span className="text-gray-500">Category:</span>

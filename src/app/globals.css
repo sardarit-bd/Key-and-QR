@@ -6,10 +6,9 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  /* Fonts */
+  /* Fonts - single font family across the entire app */
   --font-sans: var(--font-inter);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-playfair);
+ --: var(--font-inter);
 
   /* Colors - mapped from CSS variables */
   --color-background: var(--background);
@@ -112,10 +111,6 @@ body {
   html.light {
     color-scheme: light;
   }
-}
-
-.font-heading {
-  font-family: var(--font-heading);
 }
 
 /* Hide Scrollbar (Chrome, Edge, Safari) */

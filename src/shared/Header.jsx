@@ -80,7 +80,7 @@ export default function Header() {
       label: "My Account",
       href: user
         ? user?.role === "admin"
-          ? "/dashboard/admin"
+          ? "/new-dashboard/admin"
           : "/new-dashboard/user"
         : "/login",
     },
@@ -242,7 +242,7 @@ export default function Header() {
                   <DropdownMenuItem asChild className="cursor-pointer">
                     <Link
                       href={`${user?.role === "admin"
-                        ? "/dashboard/admin"
+                        ? "/new-dashboard/admin"
                         : "/new-dashboard/user"
                         }`}
                       className="flex items-center gap-3 px-4 py-3"

@@ -11,11 +11,6 @@ const ROLE_STYLES = {
   user:      'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
 };
 
-const STATUS_STYLES = {
-  active:    'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  suspended: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-};
-
 function formatDate(iso) {
   if (!iso) return '—';
   const d = new Date(iso);
@@ -33,15 +28,15 @@ function getInitials(name) {
 
 function UserCard({ user, onView, onEdit, onSuspend, onActivate, onDelete }) {
   const roleStyle = ROLE_STYLES[user.role] || ROLE_STYLES.user;
-  const statusStyle = STATUS_STYLES[user.status] || STATUS_STYLES.active;
+  const isSuspended = user.isSuspended;
 
   const actions = [
     { label: 'View Details', onClick: () => onView(user) },
     { label: 'Edit User',   onClick: () => onEdit(user) },
     { separator: true },
-    ...(user.status === 'active'
-      ? [{ label: 'Suspend', onClick: () => onSuspend(user) }]
-      : [{ label: 'Activate', onClick: () => onActivate(user) }]),
+    ...(isSuspended
+      ? [{ label: 'Activate', onClick: () => onActivate(user) }]
+      : [{ label: 'Suspend', onClick: () => onSuspend(user) }]),
     { separator: true },
     { label: 'Delete User', onClick: () => onDelete(user), destructive: true },
   ];
@@ -58,15 +53,11 @@ function UserCard({ user, onView, onEdit, onSuspend, onActivate, onDelete }) {
         </div>
         <p className="text-xs text-foreground-tertiary truncate mt-0.5">{user.email}</p>
         <div className="flex items-center gap-2 mt-2">
-          <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${roleStyle}`}>
-            {user.role}
+          <span className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${roleStyle}`}>{user.role}</span>
+          <span className={`text-[10px] px-2 py-0.5 rounded-full border ${isSuspended ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
+            {isSuspended ? 'Suspended' : 'Active'}
           </span>
-          <span className={`text-[10px] px-2 py-0.5 rounded-full border ${statusStyle}`}>
-            {user.status === 'active' ? 'Active' : 'Suspended'}
-          </span>
-          <span className="text-[10px] text-foreground-tertiary ml-auto">
-            {formatDate(user.createdAt)}
-          </span>
+          <span className="text-[10px] text-foreground-tertiary ml-auto">{formatDate(user.createdAt)}</span>
         </div>
       </div>
     </div>
@@ -77,12 +68,7 @@ export default function UserMobileCards({ users = [], onView, onEdit, onSuspend,
   if (users.length === 0) return null;
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.2 }}
-      className="lg:hidden"
-    >
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="lg:hidden">
       <Card className="p-4 sm:p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
@@ -92,20 +78,8 @@ export default function UserMobileCards({ users = [], onView, onEdit, onSuspend,
         </div>
         <div className="divide-y divide-border/50">
           {users.map((user, i) => (
-            <motion.div
-              key={user._id}
-              initial={{ opacity: 0, x: -10 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.05 * i }}
-            >
-              <UserCard
-                user={user}
-                onView={onView}
-                onEdit={onEdit}
-                onSuspend={onSuspend}
-                onActivate={onActivate}
-                onDelete={onDelete}
-              />
+            <motion.div key={user._id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
+              <UserCard user={user} onView={onView} onEdit={onEdit} onSuspend={onSuspend} onActivate={onActivate} onDelete={onDelete} />
             </motion.div>
           ))}
         </div>

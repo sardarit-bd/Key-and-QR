@@ -565,7 +565,7 @@ export default function OrdersPage() {
                                         return (
                                             <tr key={order._id} className="hover:bg-gray-50 transition-colors duration-200">
                                                 <td className="px-6 py-4">
-                                                    <span className="font-mono text-sm text-gray-900">
+ <span className=" text-sm text-gray-900">
                                                         #{order._id?.slice(-8).toUpperCase()}
                                                     </span>
                                                 </td>
@@ -670,7 +670,7 @@ export default function OrdersPage() {
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     {order.assignedTag ? (
-                                                        <span className="inline-flex items-center gap-1 text-xs font-mono bg-blue-50 text-blue-700 px-2 py-1 rounded">
+ <span className="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2 py-1 rounded">
                                                             <Tag className="w-3 h-3" />
                                                             {typeof order.assignedTag === "object"
                                                                 ? order.assignedTag.tagCode || order.assignedTag._id?.slice(-6)
@@ -763,7 +763,7 @@ export default function OrdersPage() {
                                     <div key={order._id} className="p-4 hover:bg-gray-50 transition-colors">
                                         <div className="flex items-start justify-between mb-3">
                                             <div>
-                                                <span className="font-mono text-sm font-semibold text-gray-900">
+ <span className=" text-sm font-semibold text-gray-900">
                                                     #{order._id?.slice(-8).toUpperCase()}
                                                 </span>
                                                 <p className="text-xs text-gray-500 mt-1">

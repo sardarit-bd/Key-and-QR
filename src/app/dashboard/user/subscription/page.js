@@ -139,7 +139,7 @@ export default function UserSubscriptionsPage() {
                                     <div className="flex-1">
                                         <div className="flex items-center gap-2 flex-wrap mb-2">
                                             <Crown size={16} className="text-yellow-500" />
-                                            <span className="font-mono font-semibold text-black">{sub.tag?.tagCode}</span>
+ <span className=" font-semibold text-black">{sub.tag?.tagCode}</span>
                                             <span className="text-xs bg-gray-100 text-gray-700 px-2 py-0.5 rounded-full capitalize">
                                                 {sub.status}
                                             </span>
@@ -184,7 +184,7 @@ export default function UserSubscriptionsPage() {
                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                                     <div>
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="font-mono font-semibold text-black">{sub.tag?.tagCode}</span>
+ <span className=" font-semibold text-black">{sub.tag?.tagCode}</span>
                                             <span className="text-xs bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full">
                                                 Cancelling
                                             </span>
@@ -216,7 +216,7 @@ export default function UserSubscriptionsPage() {
                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                                     <div>
                                         <div className="flex items-center gap-2 mb-2">
-                                            <span className="font-mono font-semibold text-gray-600">{sub.tag?.tagCode}</span>
+ <span className=" font-semibold text-gray-600">{sub.tag?.tagCode}</span>
                                             <span className="text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full capitalize">
                                                 {sub.status}
                                             </span>

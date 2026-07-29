@@ -6,23 +6,19 @@ export const ADMIN_DASHBOARD_KEYS = {
 };
 
 /**
- * Fetch the admin dashboard overview.
- * Defaults to mock data when the backend endpoint is unavailable — 
- * swap to a real API call by updating adminDashboardService.getOverview().
+ * Fetch the admin dashboard overview from the backend.
  */
-export function useAdminDashboardOverview(options = {}) {
-  const { useMock = true } = options;
-
+export function useAdminDashboardOverview() {
   return useQuery({
     queryKey: ADMIN_DASHBOARD_KEYS.overview,
     queryFn: async () => {
-      const res = await adminDashboardService.getOverview({ useMock });
+      const res = await adminDashboardService.getOverview();
       return res.data;
     },
-    staleTime: 30 * 1000, // 30 seconds for admin data
+    staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,
     retry: 2,
-    refetchOnWindowFocus: true, // Admin wants fresh data
+    refetchOnWindowFocus: true,
   });
 }
 

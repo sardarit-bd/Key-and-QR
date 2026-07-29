@@ -32,7 +32,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, quote, onConfirm }) => {
                     <p className="text-gray-600">
                         Are you sure you want to delete this quote?
                     </p>
-                    <p className="text-sm text-gray-500 mt-2 font-mono">
+ <p className="text-sm text-gray-500 mt-2 ">
                         "{quote.text?.substring(0, 100)}..."
                     </p>
                 </div>
