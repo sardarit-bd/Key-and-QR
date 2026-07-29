@@ -259,17 +259,11 @@ export const startTokenRefreshTimer = () => {
             const payload = JSON.parse(atob(token.split(".")[1]));
             const expiresIn = payload.exp * 1000 - Date.now();
 
-            if (expiresIn < 120000) {
+            // Only attempt refresh when token is close to expiry (under 5 minutes)
+            if (expiresIn < 300000 && expiresIn > 60000) {
                 const refreshToken = getRefreshToken();
                 if (!refreshToken) {
-                    // No refresh token, schedule logout
-                    if (expiresIn < 30000) {
-                        refreshTimerActive = false;
-                        clearInterval(refreshInterval);
-                        refreshInterval = null;
-                        forceLogout();
-                    }
-                    return;
+                    return; // leave the timer running — let the response interceptor handle it
                 }
 
                 const response = await api.post(
@@ -286,18 +280,30 @@ export const startTokenRefreshTimer = () => {
                 if (newAccessToken) {
                     setTokens(newAccessToken, refreshToken);
                 }
+            } else if (expiresIn <= 60000) {
+                // Token is critically close to expiry — rely on response interceptor instead
+                // The interceptor handles 401s with queued refresh + retry
+                const refreshToken = getRefreshToken();
+                if (!refreshToken) {
+                    // No refresh token at all — schedule a graceful logout
+                    if (expiresIn < 10000) {
+                        refreshTimerActive = false;
+                        clearInterval(refreshInterval);
+                        refreshInterval = null;
+                        // Don't forceLogout — let the next API call's 401 interceptor handle it
+                    }
+                    return;
+                }
             }
         } catch (error) {
-            console.warn("Token refresh timer error:", error.message);
-
-            if (error.response?.status === 401) {
-                refreshTimerActive = false;
-                clearInterval(refreshInterval);
-                refreshInterval = null;
-                forceLogout();
+            // Silent — the response interceptor handles real failures
+            // Only force logout if we're sure the session is gone
+            if (error.message?.includes('jwt expired') || error.message?.includes('malformed')) {
+                // Token decoding failed — let the response interceptor handle actual API calls
+                return;
             }
         }
-    }, 30000); // Check every 30 seconds
+    }, 60000); // Check every 60 seconds instead of 30
 };
 
 export const stopTokenRefreshTimer = () => {

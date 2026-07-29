@@ -23,9 +23,15 @@ import Pagination from '@/components/ui/Pagination';
 
 const ITEMS_PER_PAGE = 10;
 
-export default function AdminOrdersPage() {
+export default function AdminOrdersPage({
+  title = 'Orders Management',
+  description = 'View, manage, and fulfill all platform orders.',
+  defaultTagAssignment = 'all',
+  defaultFulfillment = 'all',
+}) {
   const [search, setSearch] = useState('');
-  const [fulfillmentStatus, setFulfillmentStatus] = useState('all');
+  const [fulfillmentStatus, setFulfillmentStatus] = useState(defaultFulfillment);
+  const [tagAssignmentStatus, setTagAssignmentStatus] = useState(defaultTagAssignment);
   const [paymentStatus, setPaymentStatus] = useState('all');
   const [sort, setSort] = useState('newest');
   const [page, setPage] = useState(1);
@@ -39,7 +45,7 @@ export default function AdminOrdersPage() {
   const [dialogVariant, setDialogVariant] = useState('delete');
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const filters = { search: debouncedSearch, fulfillmentStatus, page, limit: ITEMS_PER_PAGE };
+  const filters = { search: debouncedSearch, fulfillmentStatus, tagAssignmentStatus, page, limit: ITEMS_PER_PAGE };
   const { data, isLoading, isError, error, refetch } = useAdminOrders(filters);
   const { data: statsData } = useAdminOrdersStats();
   const { updateFulfillmentStatus, cancelOrder, deleteOrder } = useAdminOrderActions();
@@ -51,6 +57,7 @@ export default function AdminOrdersPage() {
 
   const handleSearchChange = useCallback((v) => { setSearch(v); setPage(1); }, []);
   const handleFulfillmentChange = useCallback((v) => { setFulfillmentStatus(v); setPage(1); }, []);
+  const handleTagAssignmentChange = useCallback((v) => { setTagAssignmentStatus(v); setPage(1); }, []);
   const handlePaymentChange = useCallback((v) => { setPaymentStatus(v); setPage(1); }, []);
   const handleSortChange = useCallback((v) => { setSort(v); setPage(1); }, []);
 
@@ -139,10 +146,10 @@ export default function AdminOrdersPage() {
           <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 border border-primary/20">
             <ShoppingBag size={20} className="text-primary" />
           </span>
-          Orders Management
+          {title}
         </h1>
         <p className="text-sm text-foreground-secondary mt-2 ml-[52px]">
-          View, manage, and fulfill all platform orders.
+          {description}
         </p>
       </motion.div>
 
@@ -153,6 +160,8 @@ export default function AdminOrdersPage() {
         onSearchChange={handleSearchChange}
         fulfillmentStatus={fulfillmentStatus}
         onFulfillmentChange={handleFulfillmentChange}
+        tagAssignmentStatus={tagAssignmentStatus}
+        onTagAssignmentChange={handleTagAssignmentChange}
         paymentStatus={paymentStatus}
         onPaymentChange={handlePaymentChange}
         sort={sort}

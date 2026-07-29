@@ -21,6 +21,13 @@ const FULFILLMENT_OPTIONS = [
   { value: 'returned', label: 'Returned' },
 ];
 
+const TAG_ASSIGNMENT_OPTIONS = [
+  { value: 'all', label: 'All Tags' },
+  { value: 'pending_assignment', label: 'Pending QR Assignment' },
+  { value: 'complete', label: 'QR Assigned' },
+  { value: 'none', label: 'No Tag' },
+];
+
 const PAYMENT_OPTIONS = [
   { value: 'all', label: 'All Payments' },
   { value: 'paid', label: 'Paid' },
@@ -40,6 +47,8 @@ export default function OrdersFilters({
   onSearchChange,
   fulfillmentStatus,
   onFulfillmentChange,
+  tagAssignmentStatus,
+  onTagAssignmentChange,
   paymentStatus,
   onPaymentChange,
   sort,
@@ -52,9 +61,9 @@ export default function OrdersFilters({
       animate={{ opacity: 1, y: 0 }}
       className="flex flex-col gap-3 sm:gap-4"
     >
-      <div className="flex flex-col sm:flex-row gap-3">
+      <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
         {/* Search */}
-        <div className="relative flex-1">
+        <div className="relative flex-1 min-w-[200px]">
           <Search
             size={16}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary pointer-events-none"
@@ -67,9 +76,21 @@ export default function OrdersFilters({
           />
         </div>
 
+        {/* Tag Assignment filter */}
+        <Select value={tagAssignmentStatus} onValueChange={onTagAssignmentChange}>
+          <SelectTrigger className="w-full sm:w-44 h-9">
+            <SelectValue placeholder="All Tags" />
+          </SelectTrigger>
+          <SelectContent>
+            {TAG_ASSIGNMENT_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         {/* Fulfillment status filter */}
         <Select value={fulfillmentStatus} onValueChange={onFulfillmentChange}>
-          <SelectTrigger className="w-full sm:w-40 h-9">
+          <SelectTrigger className="w-full sm:w-36 h-9">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -81,7 +102,7 @@ export default function OrdersFilters({
 
         {/* Payment status filter */}
         <Select value={paymentStatus} onValueChange={onPaymentChange}>
-          <SelectTrigger className="w-full sm:w-36 h-9">
+          <SelectTrigger className="w-full sm:w-32 h-9">
             <SelectValue placeholder="All Payments" />
           </SelectTrigger>
           <SelectContent>
@@ -93,7 +114,7 @@ export default function OrdersFilters({
 
         {/* Sort */}
         <Select value={sort} onValueChange={onSortChange}>
-          <SelectTrigger className="w-full sm:w-40 h-9">
+          <SelectTrigger className="w-full sm:w-36 h-9">
             <SelectValue placeholder="Newest First" />
           </SelectTrigger>
           <SelectContent>

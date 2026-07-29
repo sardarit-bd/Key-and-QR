@@ -147,8 +147,13 @@ import {
         id: 'admin-orders',
         title: 'Orders',
         icon: ShoppingBag,
-        href: '/new-dashboard/admin/orders',
         visibility: MENU_VISIBILITY.ADMIN,
+        children: [
+          { id: 'admin-orders-all', title: 'All Orders', href: '/new-dashboard/admin/orders', visibility: MENU_VISIBILITY.ADMIN },
+          { id: 'admin-orders-pending-qr', title: 'Pending QR Assignment', href: '/new-dashboard/admin/orders/pending-qr', visibility: MENU_VISIBILITY.ADMIN },
+          { id: 'admin-orders-completed', title: 'Completed Orders', href: '/new-dashboard/admin/orders/completed', visibility: MENU_VISIBILITY.ADMIN },
+          { id: 'admin-orders-qr-assignment', title: 'QR Assignment', href: '/new-dashboard/admin/orders/qr-assignment', visibility: MENU_VISIBILITY.ADMIN },
+        ],
       },
       {
         id: 'admin-products',

@@ -6,6 +6,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import Link from 'next/link';
 import {
   ShoppingBag,
   User,
@@ -13,8 +14,8 @@ import {
   CreditCard,
   Package,
   Clock,
-  Calendar,
-  Hash,
+  QrCode,
+  ExternalLink,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -35,10 +36,16 @@ const PAYMENT_STYLES = {
   cancelled: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
 };
 
+const TAG_STATUS_STYLES = {
+  complete:           'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  pending_assignment: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  partial:            'bg-blue-500/10 text-blue-400 border-blue-500/20',
+  none:               'bg-slate-500/10 text-slate-400 border-slate-500/20',
+};
+
 function formatDate(iso) {
   if (!iso) return '—';
-  const d = new Date(iso);
-  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  return new Date(iso).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
 function formatPrice(price) {
@@ -68,6 +75,12 @@ function Row({ label, value, className = '' }) {
 export default function OrderViewDialog({ open, onOpenChange, order, isLoading = false }) {
   const fulfillmentStyle = FULFILLMENT_STYLES[order?.fulfillmentStatus] || '';
   const paymentStyle = PAYMENT_STYLES[order?.paymentStatus] || '';
+  const tagStatusStyle = TAG_STATUS_STYLES[order?.tagAssignmentStatus] || TAG_STATUS_STYLES.none;
+
+  const isCancelledOrReturned = order?.fulfillmentStatus === 'cancelled' || order?.fulfillmentStatus === 'returned';
+  const assignedTag = order?.assignedTags?.[0]?.tag;
+  const assignedBy = order?.assignedTags?.[0]?.assignedBy;
+  const assignedAt = order?.assignedTags?.[0]?.assignedAt;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -85,13 +98,46 @@ export default function OrderViewDialog({ open, onOpenChange, order, isLoading =
             {/* Order identity */}
             <div className="flex items-center justify-between">
               <div>
- <p className="text-xs text-foreground-tertiary ">#{order._id?.slice(-8).toUpperCase()}</p>
+                <p className="text-xs text-foreground-tertiary">#{order._id?.slice(-8).toUpperCase()}</p>
                 <p className="text-sm font-semibold text-foreground">{order.orderNumber || ''}</p>
               </div>
               <span className={`text-[10px] px-2 py-0.5 rounded-full border ${fulfillmentStyle}`}>
                 {order.fulfillmentStatus}
               </span>
             </div>
+
+            {/* QR Tag Assignment — display only */}
+            {!isCancelledOrReturned && (
+              <Section icon={QrCode} title="QR Tag Assignment">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs text-foreground-tertiary">Status</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full border ${tagStatusStyle}`}>
+                    {order.tagAssignmentStatus === 'pending_assignment' ? 'Pending QR Assignment'
+                      : order.tagAssignmentStatus === 'complete' ? 'Assigned'
+                      : order.tagAssignmentStatus === 'partial' ? 'Partial'
+                      : 'No Tag'}
+                  </span>
+                </div>
+
+                {assignedTag ? (
+                  <div className="bg-muted/30 rounded-lg p-2.5 mb-2">
+                    <p className="text-sm font-medium text-foreground">{assignedTag.tagCode}</p>
+                    {assignedBy && <p className="text-[10px] text-foreground-tertiary">Assigned by: {assignedBy}</p>}
+                    {assignedAt && <p className="text-[10px] text-foreground-tertiary">{formatDate(assignedAt)}</p>}
+                  </div>
+                ) : (
+                  <p className="text-xs text-foreground-tertiary mb-2">No tag assigned</p>
+                )}
+
+                <Link
+                  href="/new-dashboard/admin/orders/qr-assignment"
+                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium mt-1 transition-colors"
+                >
+                  <ExternalLink size={12} />
+                  Manage QR Assignment
+                </Link>
+              </Section>
+            )}
 
             {/* Customer Information */}
             <Section icon={User} title="Customer">
