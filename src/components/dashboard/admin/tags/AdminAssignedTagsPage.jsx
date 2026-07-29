@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { CheckCircle } from 'lucide-react';
+import { CheckCircle, Trash2 } from 'lucide-react';
 import Card from '@/components/dashboard/user/dashboard/Card';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import { adminTagsService } from '@/services/dashboard-service/admin-tags.service';
@@ -39,7 +39,11 @@ export default function AdminAssignedTagsPage() {
   const [unassignTag, setUnassignTag] = useState(null);
   const [unassignOpen, setUnassignOpen] = useState(false);
 
-  // User/Order sheet state
+  // Bulk selection
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkLoading, setBulkLoading] = useState(false);
+
   const [viewUserOpen, setViewUserOpen] = useState(false);
   const [viewUser, setViewUser] = useState(null);
   const [viewOrderOpen, setViewOrderOpen] = useState(false);
@@ -58,8 +62,9 @@ export default function AdminAssignedTagsPage() {
   const tags = data?.data || [];
   const meta = data?.meta || { page: 1, totalPage: 0, total: 0 };
 
-  const handleSearchChange = useCallback((v) => { setSearch(v); setPage(1); }, []);
-  const handlePlanChange = useCallback((v) => { setSubscriptionType(v); setPage(1); }, []);
+  const handleSearchChange = useCallback((v) => { setSearch(v); setPage(1); setSelectedIds([]); }, []);
+  const handlePlanChange = useCallback((v) => { setSubscriptionType(v); setPage(1); setSelectedIds([]); }, []);
+  const handlePageChange = useCallback((p) => { setPage(p); setSelectedIds([]); }, []);
 
   const handleShowQR = useCallback((tag) => setQrTag(tag), []);
 
@@ -72,15 +77,13 @@ export default function AdminAssignedTagsPage() {
       const res = await adminUsersService.getUserById({ userId: tag.owner._id, useMock: false });
       setViewUser(res.data);
       setViewUserOpen(true);
-    } catch (err) {
-      // Fallback: show basic data from tag.owner
+    } catch {
       setViewUser(tag.owner);
       setViewUserOpen(true);
     }
   }, []);
 
   const handleViewOrder = useCallback(async (tag) => {
-    // Search for orders containing this tag
     try {
       const res = await adminOrdersService.getOrderById(tag._id);
       setViewOrder(res.data);
@@ -90,6 +93,7 @@ export default function AdminAssignedTagsPage() {
     setViewOrderOpen(true);
   }, []);
 
+  // Single unassign
   const handleUnassign = useCallback((tag) => {
     setUnassignTag(tag);
     setUnassignOpen(true);
@@ -108,6 +112,42 @@ export default function AdminAssignedTagsPage() {
     }
   }, [unassignTag, queryClient]);
 
+  // Bulk selection
+  const handleToggleSelect = useCallback((id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    if (selectedIds.length === tags.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(tags.map((t) => t._id));
+    }
+  }, [tags, selectedIds]);
+
+  // Bulk unassign
+  const handleBulkUnassign = useCallback(() => {
+    setBulkOpen(true);
+  }, []);
+
+  const handleBulkConfirm = useCallback(async () => {
+    if (selectedIds.length === 0) return;
+    setBulkLoading(true);
+    try {
+      await adminTagsService.bulkUnassign(selectedIds);
+      toast.success(`${selectedIds.length} tag(s) unassigned successfully`);
+      setBulkOpen(false);
+      setSelectedIds([]);
+      queryClient.invalidateQueries({ queryKey: ['admin-tags', 'assigned'] });
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to unassign tags');
+    } finally {
+      setBulkLoading(false);
+    }
+  }, [selectedIds, queryClient]);
+
   if (isLoading && tags.length === 0) {
     return (
       <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 animate-pulse">
@@ -123,7 +163,9 @@ export default function AdminAssignedTagsPage() {
     return (
       <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
-          <CheckCircle size={28} className="mx-auto mb-3 text-destructive" />
+          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
+            <CheckCircle size={28} className="text-destructive" />
+          </div>
           <p className="text-destructive text-sm mb-2 font-medium">Failed to load assigned tags</p>
           <p className="text-foreground-tertiary text-xs mb-6">{error?.message || 'An unexpected error occurred.'}</p>
           <button onClick={() => refetch()} className="px-6 py-3 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors cursor-pointer">Try Again</button>
@@ -163,7 +205,18 @@ export default function AdminAssignedTagsPage() {
         </Select>
       </div>
 
-      <p className="text-xs text-foreground-tertiary">{meta.total} assigned tags</p>
+      <div className="flex items-center justify-between">
+        <p className="text-xs text-foreground-tertiary">{meta.total} assigned tags</p>
+        {selectedIds.length > 0 && (
+          <button
+            onClick={handleBulkUnassign}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-destructive/10 text-destructive text-xs font-medium hover:bg-destructive/20 transition-colors cursor-pointer"
+          >
+            <Trash2 size={13} />
+            Unassign Selected ({selectedIds.length})
+          </button>
+        )}
+      </div>
 
       {!isLoading && tags.length === 0 && (
         <Card className="p-10 sm:p-12">
@@ -176,15 +229,34 @@ export default function AdminAssignedTagsPage() {
       )}
 
       {tags.length > 0 && (
-        <AssignedTagsTable tags={tags} onShowQR={handleShowQR} onUnassign={handleUnassign} onViewUser={handleViewUser} onViewOrder={handleViewOrder} />
+        <AssignedTagsTable
+          tags={tags}
+          selectedIds={selectedIds}
+          onToggleSelect={handleToggleSelect}
+          onSelectAll={handleSelectAll}
+          onShowQR={handleShowQR}
+          onUnassign={handleUnassign}
+          onViewUser={handleViewUser}
+          onViewOrder={handleViewOrder}
+        />
       )}
 
       {meta.totalPage > 1 && (
-        <Pagination currentPage={meta.page} totalPages={meta.totalPage} onPageChange={setPage} className="pt-2" />
+        <Pagination currentPage={meta.page} totalPages={meta.totalPage} onPageChange={handlePageChange} className="pt-2" />
       )}
 
       <TagQRDialog open={!!qrTag} onOpenChange={(o) => { if (!o) setQrTag(null); }} tag={qrTag} />
       <ConfirmDialog open={unassignOpen} onOpenChange={setUnassignOpen} variant="delete" userName={unassignTag?.tagCode || ''} onConfirm={handleUnassignConfirm} isLoading={false} />
+
+      {/* Bulk unassign confirmation */}
+      <ConfirmDialog
+        open={bulkOpen}
+        onOpenChange={setBulkOpen}
+        variant="delete"
+        userName={`${selectedIds.length} tag(s)`}
+        onConfirm={handleBulkConfirm}
+        isLoading={bulkLoading}
+      />
 
       <UserViewDialog open={viewUserOpen} onOpenChange={setViewUserOpen} user={viewUser} />
       <OrderViewDialog open={viewOrderOpen} onOpenChange={setViewOrderOpen} order={viewOrder} />

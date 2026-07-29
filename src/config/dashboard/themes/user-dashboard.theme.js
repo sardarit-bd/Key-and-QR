@@ -69,7 +69,7 @@ export const USER_DASHBOARD_THEME = {
     
     // Typography - Premium fonts
     typography: {
-      fontFamily: 'var(--font-inter)',
+      fontFamily: 'var(--font-sans)',
       headingFont: 'var(--font-sans)',
       monoFont: 'var(--font-sans)',
       baseSize: '16px',

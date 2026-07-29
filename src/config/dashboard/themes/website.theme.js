@@ -68,7 +68,7 @@ export const WEBSITE_THEME = {
     
     // Typography
     typography: {
-      fontFamily: 'var(--font-inter)',
+      fontFamily: 'var(--font-sans)',
       headingFont: 'var(--font-sans)',
       monoFont: 'var(--font-sans)',
       baseSize: '16px',

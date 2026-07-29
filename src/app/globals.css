@@ -7,8 +7,7 @@
 
 @theme inline {
   /* Fonts - single font family across the entire app */
-  --font-sans: var(--font-inter);
- --: var(--font-inter);
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
 
   /* Colors - mapped from CSS variables */
   --color-background: var(--background);

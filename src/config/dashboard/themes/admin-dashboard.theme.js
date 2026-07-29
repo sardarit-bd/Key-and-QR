@@ -69,8 +69,8 @@ export const ADMIN_DASHBOARD_THEME = {
     
     // Typography - Clean, Professional
     typography: {
-      fontFamily: 'var(--font-inter)',
-      headingFont: 'var(--font-inter)',
+      fontFamily: 'var(--font-sans)',
+      headingFont: 'var(--font-sans)',
       monoFont: 'var(--font-sans)',
       baseSize: '14px',
       scale: 1.2,

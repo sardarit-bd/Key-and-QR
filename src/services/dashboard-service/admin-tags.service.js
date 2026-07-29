@@ -42,25 +42,17 @@ export const adminTagsService = {
     return response.data;
   },
 
-  /** Fetch assigned tags (activated + with owner) */
+  /** Fetch assigned tags (activated + with owner) — server-side pagination + filter */
   getAssignedTags: async ({ page = 1, limit = 10, search = '', subscriptionType = '' } = {}) => {
     const params = { page, limit, isActivated: 'true', isActive: 'true' };
     if (search) params.search = search;
+    if (subscriptionType && subscriptionType !== 'all') params.subscriptionType = subscriptionType;
 
     const response = await api.get('/tags', { params });
-    const result = response.data;
-    let tags = result?.data?.data || [];
-
-    if (subscriptionType && subscriptionType !== 'all') {
-      tags = tags.filter((t) => t.subscriptionType === subscriptionType);
-    }
-
-    const totalItems = tags.length;
-    const totalPages = Math.max(1, Math.ceil(totalItems / limit));
-
+    const result = response.data?.data;
     return {
-      meta: { page, limit, total: totalItems, totalPage: totalPages },
-      data: tags,
+      meta: result?.meta || { page: 1, limit, total: 0, totalPage: 0 },
+      data: result?.data || [],
     };
   },
 
@@ -78,6 +70,12 @@ export const adminTagsService = {
       assigned: tags.filter((t) => t.owner).length,
       unassigned: tags.filter((t) => !t.owner).length,
     };
+  },
+
+  /** Bulk unassign tags */
+  bulkUnassign: async (tagIds) => {
+    const response = await api.post('/tags/bulk-unassign', { tagIds });
+    return response.data;
   },
 };
 
