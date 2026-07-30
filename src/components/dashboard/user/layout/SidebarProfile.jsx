@@ -8,7 +8,7 @@ export default function SidebarProfile({ profile, isCollapsed }) {
  if (isCollapsed) {
  return (
  <div className="flex justify-center px-4 mb-6">
- <div className="relative w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-primary/80 flex items-center justify-center text-primary-foreground text-lg ring-1 ring-accent/40 shadow-[0_0_15px_rgba(227,186,133,0.15)] overflow-hidden">
+  <div className="relative w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-primary/80 flex items-center justify-center text-primary-foreground text-lg overflow-hidden">
  {hasAvatar ? (
  <img
  src={hasAvatar}
