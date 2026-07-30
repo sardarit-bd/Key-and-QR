@@ -6,7 +6,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import Link from 'next/link';
 import {
   ShoppingBag,
   User,
@@ -15,7 +14,6 @@ import {
   Package,
   Clock,
   QrCode,
-  ExternalLink,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
@@ -128,14 +126,6 @@ export default function OrderViewDialog({ open, onOpenChange, order, isLoading =
                 ) : (
                   <p className="text-xs text-foreground-tertiary mb-2">No tag assigned</p>
                 )}
-
-                <Link
-                  href="/new-dashboard/admin/orders/qr-assignment"
-                  className="inline-flex items-center gap-1.5 text-xs text-primary hover:text-primary/80 font-medium mt-1 transition-colors"
-                >
-                  <ExternalLink size={12} />
-                  Manage QR Assignment
-                </Link>
               </Section>
             )}
 

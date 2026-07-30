@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
@@ -13,6 +13,7 @@ import { adminUsersService } from '@/services/dashboard-service/admin-users.serv
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import AssignedTagsTable from './AssignedTagsTable';
 import TagQRDialog from './TagQRDialog';
+import AssignTagModal from '../orders/AssignTagModal';
 import UserViewDialog from '../shared/UserViewDialog';
 import OrderViewDialog from '../shared/OrderViewDialog';
 import ConfirmDialog from '../shared/ConfirmDialog';
@@ -39,6 +40,10 @@ export default function AdminAssignedTagsPage() {
   const [unassignTag, setUnassignTag] = useState(null);
   const [unassignOpen, setUnassignOpen] = useState(false);
 
+  // Replace
+  const [replaceTag, setReplaceTag] = useState(null);
+  const [replaceOpen, setReplaceOpen] = useState(false);
+
   // Bulk selection
   const [selectedIds, setSelectedIds] = useState([]);
   const [bulkOpen, setBulkOpen] = useState(false);
@@ -62,6 +67,13 @@ export default function AdminAssignedTagsPage() {
   const tags = data?.data || [];
   const meta = data?.meta || { page: 1, totalPage: 0, total: 0 };
 
+  const invalidateAll = useCallback(() => {
+    queryClient.invalidateQueries({ queryKey: ['admin-tags', 'assigned'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-tags'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-assignment'] });
+  }, [queryClient]);
+
   const handleSearchChange = useCallback((v) => { setSearch(v); setPage(1); setSelectedIds([]); }, []);
   const handlePlanChange = useCallback((v) => { setSubscriptionType(v); setPage(1); setSelectedIds([]); }, []);
   const handlePageChange = useCallback((p) => { setPage(p); setSelectedIds([]); }, []);
@@ -84,14 +96,46 @@ export default function AdminAssignedTagsPage() {
   }, []);
 
   const handleViewOrder = useCallback(async (tag) => {
+    const orderId = tag.assignedOrderId;
+    if (!orderId) {
+      setViewOrder({ _id: '—', orderNumber: '—', user: tag.owner });
+      setViewOrderOpen(true);
+      return;
+    }
     try {
-      const res = await adminOrdersService.getOrderById(tag._id);
+      const res = await adminOrdersService.getOrderById(orderId);
       setViewOrder(res.data);
     } catch {
-      setViewOrder({ _id: '—', orderNumber: '—', user: tag.owner });
+      setViewOrder({ _id: orderId, orderNumber: '—', user: tag.owner });
     }
     setViewOrderOpen(true);
   }, []);
+
+  // Replace
+  const handleReplace = useCallback((tag) => {
+    setReplaceTag(tag);
+    setReplaceOpen(true);
+  }, []);
+
+  const handleReplaceConfirm = useCallback(async (newTagId) => {
+    if (!replaceTag?.assignedOrderId) {
+      toast.error('This tag is not linked to an order. Cannot replace.');
+      return;
+    }
+    try {
+      await adminOrdersService.replaceOrderTag({
+        orderId: replaceTag.assignedOrderId,
+        oldTagId: replaceTag._id,
+        newTagId,
+      });
+      toast.success(`Tag replaced successfully`);
+      setReplaceOpen(false);
+      setReplaceTag(null);
+      invalidateAll();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to replace tag');
+    }
+  }, [replaceTag, invalidateAll]);
 
   // Single unassign
   const handleUnassign = useCallback((tag) => {
@@ -101,16 +145,23 @@ export default function AdminAssignedTagsPage() {
 
   const handleUnassignConfirm = useCallback(async () => {
     if (!unassignTag) return;
+    const orderId = unassignTag.assignedOrderId;
+    const tagId = unassignTag._id;
     try {
-      await adminTagsService.updateTag(unassignTag._id, { isActive: true, isActivated: false });
-      toast.success(`Tag "${unassignTag.tagCode}" unassigned`);
+      if (orderId) {
+        await adminOrdersService.removeTagFromOrder({ orderId, tagId });
+        toast.success(`Tag "${unassignTag.tagCode}" unassigned from order`);
+      } else {
+        await adminTagsService.updateTag(tagId, { isActive: true, isActivated: false });
+        toast.success(`Tag "${unassignTag.tagCode}" unassigned`);
+      }
       setUnassignOpen(false);
       setUnassignTag(null);
-      queryClient.invalidateQueries({ queryKey: ['admin-tags', 'assigned'] });
+      invalidateAll();
     } catch (err) {
       toast.error(err?.response?.data?.message || err?.message || 'Failed to unassign tag');
     }
-  }, [unassignTag, queryClient]);
+  }, [unassignTag, invalidateAll]);
 
   // Bulk selection
   const handleToggleSelect = useCallback((id) => {
@@ -140,13 +191,13 @@ export default function AdminAssignedTagsPage() {
       toast.success(`${selectedIds.length} tag(s) unassigned successfully`);
       setBulkOpen(false);
       setSelectedIds([]);
-      queryClient.invalidateQueries({ queryKey: ['admin-tags', 'assigned'] });
+      invalidateAll();
     } catch (err) {
       toast.error(err?.response?.data?.message || err?.message || 'Failed to unassign tags');
     } finally {
       setBulkLoading(false);
     }
-  }, [selectedIds, queryClient]);
+  }, [selectedIds, invalidateAll]);
 
   if (isLoading && tags.length === 0) {
     return (
@@ -238,6 +289,7 @@ export default function AdminAssignedTagsPage() {
           onUnassign={handleUnassign}
           onViewUser={handleViewUser}
           onViewOrder={handleViewOrder}
+          onReplace={handleReplace}
         />
       )}
 
@@ -246,6 +298,14 @@ export default function AdminAssignedTagsPage() {
       )}
 
       <TagQRDialog open={!!qrTag} onOpenChange={(o) => { if (!o) setQrTag(null); }} tag={qrTag} />
+
+      {/* Replace tag modal */}
+      <AssignTagModal
+        open={replaceOpen}
+        onOpenChange={(o) => { if (!o) { setReplaceOpen(false); setReplaceTag(null); } }}
+        onAssign={handleReplaceConfirm}
+      />
+
       <ConfirmDialog open={unassignOpen} onOpenChange={setUnassignOpen} variant="delete" userName={unassignTag?.tagCode || ''} onConfirm={handleUnassignConfirm} isLoading={false} />
 
       {/* Bulk unassign confirmation */}

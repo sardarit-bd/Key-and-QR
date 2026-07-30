@@ -65,8 +65,8 @@ function OrderCard({ order, onView, onStatus, onCancel, onDelete }) {
  <p className="text-xs text-foreground-tertiary mt-0.5">#{idShort(order._id)}</p>
         <p className="text-xs text-foreground-tertiary truncate mt-0.5">{productNames}</p>
         <div className="flex items-center gap-2 mt-2 flex-wrap">
-          <span className={`text-[10px] px-2 py-0.5 rounded-full border ${paymentStyle}`}>{order.paymentStatus}</span>
-          <span className={`text-[10px] px-2 py-0.5 rounded-full border ${fulfillmentStyle}`}>{order.fulfillmentStatus}</span>
+          <span className={`text-[10px] px-2 py-0.5 rounded-full border ${paymentStyle}`}>{order.paymentStatus?.charAt(0).toUpperCase() + order.paymentStatus?.slice(1)}</span>
+          <span className={`text-[10px] px-2 py-0.5 rounded-full border ${fulfillmentStyle}`}>{order.fulfillmentStatus?.charAt(0).toUpperCase() + order.fulfillmentStatus?.slice(1)}</span>
           <span className="text-xs font-semibold text-foreground ml-auto">{formatPrice(order.grandTotal)}</span>
           <span className="text-[10px] text-foreground-tertiary">{formatDate(order.createdAt)}</span>
         </div>

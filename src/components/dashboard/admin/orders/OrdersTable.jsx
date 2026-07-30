@@ -69,11 +69,11 @@ function OrderRow({ order, onView, onStatus, onCancel, onDelete }) {
       <div className="text-sm font-semibold text-foreground">{formatPrice(order.grandTotal)}</div>
 
       <div>
-        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${paymentStyle}`}>{order.paymentStatus}</span>
+        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${paymentStyle}`}>{order.paymentStatus?.charAt(0).toUpperCase() + order.paymentStatus?.slice(1)}</span>
       </div>
 
       <div>
-        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${fulfillmentStyle}`}>{order.fulfillmentStatus}</span>
+        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${fulfillmentStyle}`}>{order.fulfillmentStatus?.charAt(0).toUpperCase() + order.fulfillmentStatus?.slice(1)}</span>
       </div>
 
       <div className="flex justify-end">

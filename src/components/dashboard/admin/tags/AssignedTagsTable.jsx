@@ -19,6 +19,7 @@ export default function AssignedTagsTable({
   onUnassign,
   onViewUser,
   onViewOrder,
+  onReplace,
 }) {
   if (tags.length === 0) return null;
 
@@ -100,6 +101,7 @@ export default function AssignedTagsTable({
                       { label: 'View User', onClick: () => onViewUser(tag) },
                       { label: 'View Order', onClick: () => onViewOrder(tag) },
                       { separator: true },
+                      { label: 'Replace Tag', onClick: () => onReplace(tag) },
                       { label: 'Unassign Tag', onClick: () => onUnassign(tag), destructive: true },
                     ]}
                   />

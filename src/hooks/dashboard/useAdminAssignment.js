@@ -43,6 +43,7 @@ export function useAdminAssignmentActions() {
   const invalidateAll = () => {
     queryClient.invalidateQueries({ queryKey: ['admin-assignment'] });
     queryClient.invalidateQueries({ queryKey: ['admin-tags'] });
+    queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
   };
 
   const assignTag = useMutation({
