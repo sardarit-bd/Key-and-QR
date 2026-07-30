@@ -17,7 +17,7 @@ export default function SidebarMenuItem({
  href={href}
  onClick={onClick}
  className={`
- group flex items-center gap-4 px-4 py-3.5 rounded-xl text-[15px] 
+ group flex items-center gap-4 px-4 py-3 rounded-xl text-sm 
  transition-all duration-200 relative
  ${isActive 
  ? 'bg-sidebar-accent text-sidebar-primary' 
@@ -61,3 +61,7 @@ export default function SidebarMenuItem({
  </Link>
  );
 }
+
+
+
+

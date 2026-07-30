@@ -65,8 +65,8 @@ export default function UserDashboardLayout({ children }) {
         {/* Sidebar Component */}
         <Sidebar user={user} />
 
-        <main className="flex-1 w-full transition-all duration-300">
-          <div className="min-h-screen pb-20 lg:pb-0">
+        <main className="flex-1 w-full lg:ml-72 transition-all duration-300">
+          <div className="pb-20 lg:pb-0">
             {children}
           </div>
         </main>
