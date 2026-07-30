@@ -37,6 +37,7 @@ const initialState = {
 
   // Selection
   selectedElementIds: [],
+  activeToolId: null,
 
   // Audio
   audio: null,
@@ -85,7 +86,7 @@ const useEditorStore = create((set, get) => ({
 
   addElement: (element) => {
     const state = get();
-    if (state.elements.length >= MAX_ELEMENTS) return false;
+    if (state.elements.length >= MAX_ELEMENTS) return null;
     const newElement = { ...element, id: element.id || generateId() };
     state.pushHistory();
     state.incrementVersion();
@@ -94,7 +95,7 @@ const useEditorStore = create((set, get) => ({
       selectedElementIds: [newElement.id],
       isDirty: true,
     });
-    return true;
+    return newElement;
   },
 
   updateElement: (id, updates) => {
@@ -108,6 +109,16 @@ const useEditorStore = create((set, get) => ({
     });
   },
 
+  /** Update element WITHOUT creating a history entry (for live keystroke sync) */
+  patchElement: (id, updates) => {
+    set((state) => ({
+      elements: state.elements.map((el) =>
+        el.id === id ? { ...el, ...updates } : el
+      ),
+      isDirty: true,
+    }));
+  },
+
   updateElementData: (id, dataKey, dataValue) => {
     const state = get();
     state.pushHistory();
@@ -119,6 +130,18 @@ const useEditorStore = create((set, get) => ({
       ),
       isDirty: true,
     });
+  },
+
+  /** Update element sub-data WITHOUT creating a history entry */
+  patchElementData: (id, dataKey, dataValue) => {
+    set((state) => ({
+      elements: state.elements.map((el) =>
+        el.id === id
+          ? { ...el, [dataKey]: { ...el[dataKey], ...dataValue } }
+          : el
+      ),
+      isDirty: true,
+    }));
   },
 
   removeElement: (id) => {
@@ -177,6 +200,10 @@ const useEditorStore = create((set, get) => ({
 
   setSelection: (ids) => {
     set({ selectedElementIds: Array.isArray(ids) ? ids : (ids ? [ids] : []) });
+  },
+
+  setActiveTool: (toolId) => {
+    set({ activeToolId: toolId });
   },
 
   addToSelection: (id) => {

@@ -191,6 +191,31 @@ export function updateObjectTransform(id, props) {
   return true;
 }
 
+/**
+ * Update text properties on an existing Fabric text object in-place.
+ * Does NOT recreate the object — only changes the specified properties.
+ */
+export function updateTextProperties(id, props) {
+  const obj = getObjectById(id);
+  if (!obj) return false;
+  if (!obj.isType?.('textbox') && !obj.isType?.('i-text')) return false;
+
+  if (props.fontFamily !== undefined) obj.set('fontFamily', props.fontFamily);
+  if (props.fontSize !== undefined) obj.set('fontSize', props.fontSize);
+  if (props.fontWeight !== undefined) obj.set('fontWeight', props.fontWeight);
+  if (props.fontStyle !== undefined) obj.set('fontStyle', props.fontStyle);
+  if (props.lineHeight !== undefined) obj.set('lineHeight', props.lineHeight);
+  if (props.charSpacing !== undefined) obj.set('charSpacing', props.charSpacing);
+  if (props.textAlign !== undefined) obj.set('textAlign', props.textAlign);
+  if (props.fill !== undefined) obj.set('fill', props.fill);
+  if (props.opacity !== undefined) obj.set('opacity', props.opacity);
+  if (props.angle !== undefined) obj.set('angle', props.angle);
+
+  obj.setCoords();
+  canvasInstance.renderAll();
+  return true;
+}
+
 // ============================================================
 // Full re-render from store data (structural changes only)
 // Preserves zoom/viewport between re-renders.

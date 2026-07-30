@@ -2,7 +2,8 @@
 
 import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Quote } from 'lucide-react';
+import { Quote, PenSquare } from 'lucide-react';
+import Link from 'next/link';
 import Card from '@/components/dashboard/user/dashboard/Card';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import { useAdminQuotes, useAdminQuoteActions } from '@/hooks/dashboard/useAdminQuotes';
@@ -117,15 +118,26 @@ export default function AdminQuotesPage() {
   return (
     <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
-          <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20">
-            <Quote size={20} className="text-purple-400" />
-          </span>
-          All Quotes
-        </h1>
-        <p className="text-sm text-foreground-secondary mt-2 ml-[52px]">
-          Browse and manage the curated quote collection.
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20">
+                <Quote size={20} className="text-purple-400" />
+              </span>
+              All Quotes
+            </h1>
+            <p className="text-sm text-foreground-secondary mt-2 ml-[52px]">
+              Browse and manage the curated quote collection.
+            </p>
+          </div>
+          <Link
+            href="/new-dashboard/admin/quotes/create-visual"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors text-sm"
+          >
+            <PenSquare size={16} />
+            Create Visual Quote
+          </Link>
+        </div>
       </motion.div>
 
       {/* Filters */}
@@ -204,7 +216,16 @@ export default function AdminQuotesPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-end gap-1">
-                    <button
+                  {quote.editorData && (
+                    <Link
+                      href={`/new-dashboard/admin/quotes/${quote._id}/edit-visual`}
+                      className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center hover:bg-emerald-500/20 transition-colors cursor-pointer"
+                      title="Edit Visual"
+                    >
+                      <PenSquare size={12} className="text-emerald-400" />
+                    </Link>
+                  )}
+                  <button
                       onClick={() => setViewQuote(quote)}
                       className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center hover:bg-primary/20 transition-colors cursor-pointer"
                       title="View Details"

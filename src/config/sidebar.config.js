@@ -240,6 +240,12 @@ export const SIDEBAR_CONFIG = {
           visibility: MENU_VISIBILITY.ADMIN,
         },
         {
+          id: "admin-visual-quotes",
+          title: "Create Quotes",
+          href: "/new-dashboard/admin/quotes/create-visual",
+          visibility: MENU_VISIBILITY.ADMIN,
+        },
+        {
           id: "admin-quotes-pending",
           title: "Pending Quotes",
           href: "/new-dashboard/admin/quotes/pending",
