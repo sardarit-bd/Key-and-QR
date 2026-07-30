@@ -72,9 +72,9 @@ export const adminTagsService = {
     };
   },
 
-  /** Bulk unassign tags */
+  /** Bulk unassign tags — calls Order module for full synchronization */
   bulkUnassign: async (tagIds) => {
-    const response = await api.post('/tags/bulk-unassign', { tagIds });
+    const response = await api.post('/orders/bulk-unassign', { tagIds });
     return response.data;
   },
 };
