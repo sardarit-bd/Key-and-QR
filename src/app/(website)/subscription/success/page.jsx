@@ -70,7 +70,7 @@ function SubscriptionSuccessContent() {
                     <div className="bg-purple-50 rounded-lg p-4 mb-6">
                         <div className="flex items-center justify-center gap-2 text-purple-700">
                             <Crown size={16} />
-                            <span className="font-mono font-semibold">{tagCode}</span>
+ <span className=" font-semibold">{tagCode}</span>
                             <span className="text-sm">is now premium!</span>
                         </div>
                     </div>

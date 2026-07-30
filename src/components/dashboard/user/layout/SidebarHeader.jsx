@@ -11,7 +11,7 @@ export default function SidebarHeader({ isCollapsed }) {
   return (
     <div className="flex items-center justify-between">
       <Link
-        href="/new-dashboard/user"
+        href="/"
         aria-label="Dashboard home"
         className={`flex justify-center ${
           isCollapsed ? 'px-3' : 'px-5'

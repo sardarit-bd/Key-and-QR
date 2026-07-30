@@ -212,7 +212,7 @@ export default function EditAssignmentModal({ isOpen, onClose, assignment, onSuc
                                         >
                                             <div className="flex items-center justify-between">
                                                 <div>
-                                                    <span className="font-mono text-sm">{t.tagCode}</span>
+ <span className=" text-sm">{t.tagCode}</span>
                                                     {t.owner && (
                                                         <span className="ml-2 text-xs text-gray-500">
                                                             → {t.owner?.name || "Unknown"}

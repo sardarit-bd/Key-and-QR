@@ -41,7 +41,7 @@ export default function AssignmentCard({
                 ) : (
                     <User size={14} className="text-green-500" />
                 )}
-                <span className="text-sm text-gray-700 font-mono">
+ <span className="text-sm text-gray-700 ">
                     {getAssignedToLabel()}
                 </span>
             </div>

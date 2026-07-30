@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useCallback } from 'react';
+import { usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 import { useSubscriptionStore } from '@/store/subscriptionStore';
 import { 
@@ -18,6 +19,7 @@ import {
  * Custom hook for sidebar data and logic
  */
 export const useSidebar = () => {
+  const pathname = usePathname();
   const { user, isAuthenticated, isLoading, isInitialized } = useAuthStore();
   // ✅ Single source of truth for subscription data — same store the
   // Subscription page and Dashboard Header read from.
@@ -42,11 +44,11 @@ export const useSidebar = () => {
     return getUserPlan(user, subscriptions);
   }, [user, subscriptions]);
 
-  // Get filtered menu items
+  // Get filtered menu items — respects current dashboard context
   const menuItems = useMemo(() => {
     const { menuItems, adminMenuItems } = SIDEBAR_CONFIG;
-    return getFilteredMenuItems(menuItems, userPlan, adminMenuItems);
-  }, [userPlan]);
+    return getFilteredMenuItems(menuItems, userPlan, adminMenuItems, pathname);
+  }, [userPlan, pathname]);
 
   // Get upgrade card config
   const upgradeCard = useMemo(() => {

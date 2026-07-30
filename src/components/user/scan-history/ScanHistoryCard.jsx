@@ -150,11 +150,11 @@ export default function ScanHistoryCard({
         style={{ backgroundImage: `url(${backgroundImage})` }}
         onClick={() => onViewDetail(item)}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/70" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/10 to-black/10" />
         
         {/* Category Badge */}
         <div className="absolute top-3 right-3">
-          <span className={`text-[10px] px-2.5 py-1 rounded-full border ${categoryColor} backdrop-blur-sm`}>
+          <span className={`text-[10px] px-2.5 py-1 rounded-full border border-gray-400 capitalize ${categoryColor} backdrop-blur-sm`}>
             {categoryLabel}
           </span>
         </div>

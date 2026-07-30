@@ -25,7 +25,7 @@ export default function InactiveQrScreen({ tagCode }) {
                         <p className="text-xs text-gray-500 font-medium mb-1">
                             Scanned code:
                         </p>
-                        <p className="text-xs font-mono text-gray-600 bg-white rounded px-2 py-1 inline-block break-all border border-gray-200">
+ <p className="text-xs text-gray-600 bg-white rounded px-2 py-1 inline-block break-all border border-gray-200">
                             {tagCode}
                         </p>
                     </div>

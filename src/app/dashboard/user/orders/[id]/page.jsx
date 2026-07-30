@@ -362,7 +362,7 @@ export default function OrderDetailsPage() {
                 <div className="flex flex-wrap justify-between items-start gap-4">
                     <div>
                         <h1 className="text-2xl md:text-3xl font-bold text-gray-900">Order Details</h1>
-                        <p className="text-gray-600 mt-2 font-mono text-sm md:text-base">
+                        <p className="text-gray-600 mt-2 text-sm md:text-base">
                             Order ID: #{order._id?.slice(-12).toUpperCase()}
                         </p>
                     </div>
@@ -815,7 +815,7 @@ export default function OrderDetailsPage() {
                                         <Tag className="w-3 h-3" />
                                         Assigned Tag
                                     </p>
-                                    <p className="font-medium text-gray-900 font-mono">
+                                    <p className="font-medium text-gray-900">
                                         {typeof order.assignedTag === "object" ? order.assignedTag.tagCode : order.assignedTag}
                                     </p>
                                 </div>

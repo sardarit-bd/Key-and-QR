@@ -276,7 +276,7 @@ export default function UseExistingQuote({ editingAssignment, onClose, onSuccess
                     >
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1">
-                          <span className="font-mono text-sm font-medium">{getTagOwnerText(t)}</span>
+ <span className=" text-sm font-medium">{getTagOwnerText(t)}</span>
                           {!t.isActive && (
                             <span className="ml-2 text-xs text-red-500">(Inactive)</span>
                           )}

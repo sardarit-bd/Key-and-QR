@@ -1,22 +1,10 @@
-"use client";
-
-import { ThemeProvider } from "@/config/dashboard/engine/ThemeProvider";
-import { THEME_IDS } from "@/config/dashboard/themes";
-import Sidebar from "@/components/dashboard/user/layout/Sidebar";
-
+/**
+ * Dashboard route-group layout — pure pass-through.
+ *
+ * ThemeProvider and Sidebar are owned by each child layout
+ * (new-dashboard/user, new-dashboard/admin) so they never double-wrap.
+ * Legacy dashboard pages have self-contained layouts and don't need wrapping here.
+ */
 export default function DashboardLayout({ children }) {
-  return (
-    <ThemeProvider themeId={THEME_IDS.USER_DASHBOARD}>
-      <div className="min-h-screen flex bg-background">
-        <Sidebar />
-
-        {/* Added min-w-0 to prevent flex container blowout on mobile */}
-        <main className="flex-1 lg:ml-[288px] min-w-0">
-          <div className="min-h-screen">
-            {children}
-          </div>
-        </main>
-      </div>
-    </ThemeProvider>
-  );
+  return children;
 }

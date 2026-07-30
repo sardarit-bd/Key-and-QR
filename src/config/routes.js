@@ -100,6 +100,8 @@ export const protectedPatterns = [
 export const adminPatterns = [
     "/dashboard/admin",
     "/dashboard/admin/:path*",
+    "/new-dashboard/admin",
+    "/new-dashboard/admin/:path*",
     "/admin",
     "/admin/:path*",
 ];

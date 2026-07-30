@@ -1,8 +1,9 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useCartStore } from "@/store/cartStore";
+import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
-import { Check, Loader2 } from "lucide-react";
+import { Check, Loader2, ShieldBan } from "lucide-react";
 import QuantitySelector from "./QuantitySelector";
 import toast from "react-hot-toast";
 
@@ -12,16 +13,13 @@ export const AddToCartSection = ({
     selectedOption,
     customMessage,
 }) => {
-    // ************* Subscribe to cart state directly *************
-    // This creates a subscription and triggers re-renders when cart changes
     const cart = useCartStore((state) => state.cart);
-    
-    // ************* Derive values from subscribed state *************
+    const user = useAuthStore((state) => state.user);
+    const isAdmin = user?.role === "admin";
+
     const isProductInCart = cart.some(item => item.id === product._id);
     const cartItem = cart.find(item => item.id === product._id) || null;
 
-    // ************* Get action methods *************
-    // These don't need to trigger re-renders
     const addToCart = useCartStore((state) => state.addToCart);
     const removeFromCart = useCartStore((state) => state.removeFromCart);
     const updateQuantity = useCartStore((state) => state.updateQuantity);
@@ -30,7 +28,7 @@ export const AddToCartSection = ({
     const [isAdding, setIsAdding] = useState(false);
 
     const handleAddToCart = async () => {
-        if (!product || product.stock <= 0 || isAdding) return;
+        if (!product || product.stock <= 0 || isAdding || isAdmin) return;
 
         setIsAdding(true);
         const qtyToAdd = Math.min(quantity, product.stock);
@@ -70,7 +68,15 @@ export const AddToCartSection = ({
         }
     };
 
-    // ************* Product is in cart - Show "Added" state *************
+    if (isAdmin) {
+        return (
+            <div className="flex items-center gap-2 px-4 py-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-400 text-sm">
+                <ShieldBan size={16} />
+                <span>Admin accounts cannot purchase products.</span>
+            </div>
+        );
+    }
+
     if (isProductInCart && cartItem) {
         return (
             <div className="flex flex-col gap-3 w-full">
@@ -108,7 +114,6 @@ export const AddToCartSection = ({
         );
     }
 
-    // ************* Product not in cart - Show "Add to Cart" *************
     const isOutOfStock = product.stock <= 0;
 
     return (

@@ -274,7 +274,7 @@ export default function AdminSubscriptionsPage() {
                                 subscriptions.map((sub) => (
                                     <tr key={sub._id} className="hover:bg-gray-50 transition">
                                         <td className="p-4">
-                                            <span className="font-mono text-sm font-medium text-black">
+ <span className=" text-sm font-medium text-black">
                                                 {sub.tag?.tagCode || "N/A"}
                                             </span>
                                         </td>

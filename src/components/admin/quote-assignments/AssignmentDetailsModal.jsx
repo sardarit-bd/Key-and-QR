@@ -83,7 +83,7 @@ export default function AssignmentDetailsModal({ isOpen, onClose, assignment }) 
                             <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                                 <Tag size={16} className="text-gray-400" />
                                 <span className="text-sm text-gray-500">Tag:</span>
-                                <span className="font-mono text-sm">{assignment?.tag?.tagCode || "N/A"}</span>
+ <span className=" text-sm">{assignment?.tag?.tagCode || "N/A"}</span>
                                 {assignment?.tag?.owner && (
                                     <span className="text-xs text-gray-400">(Owned)</span>
                                 )}

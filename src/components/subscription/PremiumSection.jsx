@@ -237,7 +237,7 @@ export default function PremiumSection({ selectedCategory }) {
                     className="w-4 h-4 text-gray-800 focus:ring-gray-800"
                   />
                   <div className="flex-1">
-                    <p className="font-mono font-medium text-gray-900">{tag.tagCode}</p>
+ <p className=" font-medium text-gray-900">{tag.tagCode}</p>
                     {tag.activatedAt && (
                       <p className="text-xs text-gray-400">
                         Activated: {new Date(tag.activatedAt).toLocaleDateString()}
