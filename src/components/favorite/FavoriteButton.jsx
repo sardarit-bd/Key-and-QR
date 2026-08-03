@@ -64,8 +64,8 @@ export default function FavoriteButton({
       disabled={isLoading}
       className={cn(
         'relative transition-colors',
-        isFavorite 
-          ? 'text-rose-500 hover:text-rose-600 hover:bg-rose-500/10' 
+        isFavorite
+          ? 'text-rose-500 hover:text-rose-500 hover:bg-rose-500/10'
           : 'text-gray-400 hover:text-white hover:bg-white/5',
         className
       )}
