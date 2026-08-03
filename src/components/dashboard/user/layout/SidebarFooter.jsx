@@ -13,17 +13,17 @@ export default function SidebarFooter({ isCollapsed }) {
 
   if (isCollapsed) {
     return (
-      <div className="flex flex-col items-center gap-3">
+      <div className="flex flex-col items-center gap-2.5">
         <button
           onClick={handleLogout}
-          className="p-2 text-muted-foreground hover:text-destructive rounded-lg hover:bg-destructive/10 transition-colors"
+          className="p-2.5 text-muted-foreground hover:text-destructive rounded-xl hover:bg-destructive/10 transition-all duration-200 hover:scale-105"
           aria-label="Logout"
         >
           <LogOut size={20} />
         </button>
         <Link
           href="/new-dashboard/user/profile"
-          className="p-2 text-muted-foreground hover:text-foreground rounded-lg hover:bg-muted transition-colors"
+          className="p-2.5 text-muted-foreground hover:text-foreground rounded-xl hover:bg-muted transition-all duration-200 hover:scale-105"
           aria-label="Settings"
         >
           <SettingsIcon size={20} />
@@ -33,13 +33,13 @@ export default function SidebarFooter({ isCollapsed }) {
   }
 
   return (
-    <div className="space-y-2">      
+    <div className="space-y-1.5 border-t border-sidebar-border pt-4">
       <button
         onClick={handleLogout}
-        className="w-full flex items-center gap-3 px-3 py-2 text-sm text-destructive hover:text-destructive/80 rounded-lg hover:bg-destructive/10 transition-colors cursor-pointer"
+        className="w-full flex items-center gap-3 px-3.5 py-2.5 text-sm text-muted-foreground hover:text-destructive rounded-xl hover:bg-destructive/10 transition-all duration-200 cursor-pointer group"
       >
-        <LogOut size={18} />
-        <span>Logout</span>
+        <LogOut size={17} className="transition-transform duration-200 group-hover:-translate-x-0.5" />
+        <span className="font-medium">Logout</span>
       </button>
     </div>
   );

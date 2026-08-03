@@ -136,41 +136,51 @@ export function mapCategories(categories) {
 }
 
 /**
- * Map /dashboard/home latestInspiration + dailyUsage onto the props
- * DailyQuoteBanner renders (quote, author, ctaText).
+ * Map /dashboard/home latestInspiration onto the Latest Inspiration card
+ * (client image: background image, quote preview, author, favorite, share,
+ * read again, daily usage badge).
  */
-export function mapBanner(latestInspiration, dailyUsage) {
+export function mapLatestInspiration(latestInspiration, dailyUsage) {
   const quote = latestInspiration?.latestQuote || null;
 
   return {
-    quote: quote?.previewText || quote?.fullText || 'Welcome to InspireTag',
+    hasReceivedQuote: !!latestInspiration?.hasReceivedQuote,
+    id: quote?.id || quote?.quoteId || null,
+    quoteId: quote?.quoteId || quote?.id || null,
+    text: quote?.fullText || quote?.previewText || '',
+    previewText: quote?.previewText || '',
     author: quote?.author || 'InspireTag',
-    ctaText: quote
-      ? `My Daily Quote`
-      : dailyUsage?.isLimitReached
-        ? 'Come Back Tomorrow'
-        : 'Receive Your Quote',
-    hasQuote: !!quote,
+    image: quote?.image?.url || quote?.image || null,
+    theme: quote?.theme || null,
+    category: quote?.category || null,
+    receivedAt: quote?.receivedAt || null,
+    favorite: !!quote?.favorite,
+    favoriteId: quote?.favoriteId || null,
+    dailyUsage: dailyUsage
+      ? {
+          usedToday: dailyUsage.usedToday ?? 0,
+          dailyLimit: dailyUsage.dailyLimit ?? 0,
+        }
+      : null,
   };
 }
 
 /**
- * Map /dashboard/home latestInspiration onto the RecentQuotesCard list.
- * Uses the latest received quote so the list stays fresh from the engine.
+ * Map received-quote history docs onto the RecentQuotesCard list shape.
+ * Each item carries its receivedQuoteId so clicking it triggers Read Again.
  */
-export function mapRecentQuotes(latestInspiration) {
-  const quote = latestInspiration?.latestQuote;
-  if (!quote) return [];
-
-  const style = getCategoryStyle(quote?.category?.slug || quote?.category?.name);
-
-  return [
-    {
-      id: quote.id || quote.quoteId || 0,
-      title: quote.fullText || quote.previewText || 'No quote available',
-      category: quote?.category?.name || 'Inspiration',
-      date: quote.receivedAt
-        ? new Date(quote.receivedAt).toLocaleDateString('en-US', {
+export function mapHistoryQuotes(historyData) {
+  const items = Array.isArray(historyData) ? historyData : [];
+  return items.map((rq) => {
+    const quote = rq?.quote || {};
+    const style = getCategoryStyle(rq?.category?.slug || rq?.categorySlug || quote?.category);
+    return {
+      id: rq?._id,
+      receivedQuoteId: rq?._id,
+      title: quote?.text || 'No quote available',
+      category: rq?.category?.name || rq?.categorySlug || 'Inspiration',
+      date: rq?.receivedAt
+        ? new Date(rq.receivedAt).toLocaleDateString('en-US', {
             month: 'short',
             day: 'numeric',
             year: 'numeric',
@@ -181,8 +191,8 @@ export function mapRecentQuotes(latestInspiration) {
       bgClass: style.bgClass,
       badgeIcon: style.icon,
       badgeColor: style.colorClass,
-    },
-  ];
+    };
+  });
 }
 
 /**
@@ -193,17 +203,21 @@ export function buildDashboardProps(data) {
   const home = data || {};
 
   return {
-    greeting: buildGreeting(home?.user?.name),
-    banner: mapBanner(home?.latestInspiration, home?.dailyUsage),
-    recentQuotes: mapRecentQuotes(home?.latestInspiration),
+    // Prefer the server-computed greeting; fall back to client time.
+    greeting: home?.greeting?.text
+      ? { text: home.greeting.text, name: home.greeting.name || home.user?.name || 'there' }
+      : buildGreeting(home?.user?.name),
+    latestInspiration: mapLatestInspiration(home?.latestInspiration, home?.dailyUsage),
     streak: mapStreak(home?.streak),
     statistics: mapStatistics(home?.statistics, {
       totalQuotes: home?.statistics?.totalQuotesReceived,
       favorites: home?.statistics?.favoriteCount,
+      scans: home?.statistics?.scans,
+      tags: home?.statistics?.tags,
     }),
     categories: mapCategories(home?.categories),
     user: home?.user || null,
-    subscription: {
+    subscription: home?.subscription || {
       plan: home?.dailyUsage?.plan || 'free',
       status: null,
       currentPeriodEnd: null,

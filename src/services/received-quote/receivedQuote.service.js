@@ -75,6 +75,30 @@ export const receivedQuoteService = {
       };
     }
   },
+
+  /**
+   * Read a received quote again
+   * GET /received-quotes/:id/read
+   * Side-effect free: does NOT increase streak, does NOT consume daily usage,
+   * does NOT create new history.
+   */
+  readAgain: async (receivedQuoteId) => {
+    try {
+      const response = await api.get(`/received-quotes/${receivedQuoteId}/read`);
+      return {
+        success: true,
+        data: response.data?.data || null,
+        status: response.status,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to load quote',
+        status: error.response?.status || 500,
+        data: null,
+      };
+    }
+  },
 };
 
 export default receivedQuoteService;

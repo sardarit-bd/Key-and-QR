@@ -57,6 +57,7 @@ export default function Sidebar({ isCollapsed = false, onToggle }) {
     ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
     lg:translate-x-0
     flex flex-col
+    shadow-[4px_0_32px_-16px_rgb(0_0_0/0.6)]
   `;
 
   // Don't render if not authenticated
@@ -69,7 +70,7 @@ export default function Sidebar({ isCollapsed = false, onToggle }) {
       {/* Mobile overlay */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-foreground/50 lg:hidden"
+          className="fixed inset-0 z-40 bg-foreground/50 lg:hidden backdrop-blur-sm"
           onClick={() => setIsMobileOpen(false)}
           aria-hidden="true"
         />
@@ -78,7 +79,7 @@ export default function Sidebar({ isCollapsed = false, onToggle }) {
       {/* Mobile toggle button */}
       <button
         onClick={toggleSidebar}
-        className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-lg bg-sidebar text-primary shadow-lg border border-primary/20"
+        className="fixed top-4 left-4 z-50 lg:hidden p-2 rounded-xl bg-sidebar text-primary shadow-lg border border-primary/20"
         aria-label={isMobileOpen ? 'Close sidebar' : 'Open sidebar'}
       >
         {isMobileOpen ? <X size={20} /> : <Menu size={20} />}
@@ -90,23 +91,23 @@ export default function Sidebar({ isCollapsed = false, onToggle }) {
         <div className="flex-shrink-0">
           <SidebarHeader isCollapsed={isDesktopCollapsed} />
           <div className="mt-4">
-            <SidebarProfile 
-              profile={sidebarData.profile} 
-              isCollapsed={isDesktopCollapsed} 
+            <SidebarProfile
+              profile={sidebarData.profile}
+              isCollapsed={isDesktopCollapsed}
             />
           </div>
         </div>
 
         {/* SECTION 2: Scrollable Navigation */}
         <div className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar min-h-0">
-          <SidebarMenu 
+          <SidebarMenu
             menuItems={sidebarData.menuItems}
-            pathname={pathname} 
-            isCollapsed={isDesktopCollapsed} 
+            pathname={pathname}
+            isCollapsed={isDesktopCollapsed}
           />
 
-          <div className="mt-4 px-4">
-            <SidebarUpgradeCard 
+          <div className="mt-5">
+            <SidebarUpgradeCard
               isCollapsed={isDesktopCollapsed}
               config={sidebarData.upgradeCard}
               userPlan={sidebarData.userPlan}

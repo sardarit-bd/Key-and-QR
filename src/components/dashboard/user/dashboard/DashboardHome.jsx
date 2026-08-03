@@ -1,52 +1,133 @@
 'use client';
 
-import { getCategoryStyle } from '@/utils/dashboard.utils';
-import StatsSection from './StatsSection';
-import InspirationStreak from './InspirationStreak';
-import RecentQuotesCard from './RecentQuotesCard';
+import { useMemo, useRef, useState } from 'react';
+import GreetingSection from './GreetingSection';
+import WelcomeCard from './WelcomeCard';
+import LatestInspirationCard from './LatestInspirationCard';
 import CategorySection from './CategorySection';
-import DailyQuoteBanner from './DailyQuoteBanner';
-import WelcomeSection from './WelcomeSection';
+import RecentQuotesCard from './RecentQuotesCard';
+import InspirationStreak from './InspirationStreak';
+import StatsSection from './StatsSection';
+import ReceiveOverlay from './ReceiveOverlay';
+import { useReceiveQuoteMutation, useReadAgainMutation, useReceivedQuoteHistory } from '@/hooks/received-quote/useReceivedQuote';
+import { mapHistoryQuotes } from '@/utils/dashboard.utils';
 
-function mapQuotes(quotes) {
-  if (!Array.isArray(quotes)) return [];
-  return quotes.map((q, i) => {
-    const style = getCategoryStyle(q.category);
-    return {
-      id: q._id || i,
-      title: q.text || 'No quote available',
-      category: q.category || 'Motivation',
-      date: q.scannedAt ? new Date(q.scannedAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '',
-      icon: style.icon,
-      colorClass: style.colorClass,
-      bgClass: style.bgClass,
-      badgeIcon: style.icon,
-      badgeColor: style.colorClass,
-    };
-  });
-}
+/**
+ * User Dashboard home — client-approved layout:
+ * Greeting + Today's Inspiration (or Welcome) | Categories | Recent Quotes +
+ * Streak | Statistics. Category clicks open the loading → reveal overlay.
+ */
+export default function DashboardHome({
+  greeting,
+  latestInspiration,
+  streak,
+  statistics,
+  categories,
+  user,
+  subscription,
+  dailyUsage,
+}) {
+  const receiveQuote = useReceiveQuoteMutation();
+  const readAgain = useReadAgainMutation();
 
-export default function DashboardHome({ greeting, banner, recentQuotes, streak, statistics, categories, recentActivity, user, subscription }) {
-  const quotes = mapQuotes(recentQuotes);
+  // Real history for "Your Recent Quotes" (latest 5).
+  const { data: historyData } = useReceivedQuoteHistory({ page: 1, limit: 5 });
+  const historyQuotes = useMemo(() => mapHistoryQuotes(historyData?.data), [historyData]);
+
+  const overlayCategoryRef = useRef(null);
+
+  // Reveal state: null = closed, { quote } = revealing.
+  const [revealState, setRevealState] = useState(null);
+  const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+
+  const hasReceivedQuote = latestInspiration?.hasReceivedQuote;
+
+  const handleSelectCategory = (category) => {
+    overlayCategoryRef.current = category?.name || 'Inspiration';
+    setRevealState({ quote: null });
+    setIsOverlayOpen(true);
+    receiveQuote.mutate(category?.slug || 'inspire', {
+      onSuccess: (quote) => {
+        // Small delay so the loading messages are visible (~1s feel)
+        setTimeout(() => setRevealState({ quote }), 600);
+      },
+      onError: () => {
+        setIsOverlayOpen(false);
+        setRevealState(null);
+      },
+    });
+  };
+
+  const handleReceiveFirst = () => {
+    handleSelectCategory({ slug: 'inspire', name: 'Inspiration' });
+  };
+
+  const handleReadAgain = (receivedQuoteId) => {
+    readAgain.mutate(receivedQuoteId, {
+      onSuccess: (data) => {
+        overlayCategoryRef.current = data?.category?.name || 'Inspiration';
+        setRevealState({ quote: data });
+        setIsOverlayOpen(true);
+      },
+    });
+  };
+
+  const handleCloseOverlay = () => {
+    setIsOverlayOpen(false);
+    setTimeout(() => setRevealState(null), 200);
+  };
+
+  const handleShare = async () => {
+    const text = latestInspiration?.text
+      ? `"${latestInspiration.text}" — ${latestInspiration.author}`
+      : 'MyInspireTag — daily inspiration';
+    try {
+      if (navigator.share) {
+        await navigator.share({ text });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+      }
+    } catch {
+      // user cancelled or unsupported — ignore
+    }
+  };
 
   return (
     <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6">
-      
-      {/* Row 1: Welcome & Daily Quote */}
+      {/* Row 1: Greeting + Today's Inspiration / Welcome */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6 min-h-[180px] sm:min-h-[200px] lg:min-h-[220px]">
-        <WelcomeSection greeting={greeting} user={user} subscription={subscription} />
-        <DailyQuoteBanner banner={banner} />
+        <GreetingSection greeting={greeting} user={user} subscription={subscription} />
+        {hasReceivedQuote ? (
+          <LatestInspirationCard
+            inspiration={latestInspiration}
+            onShare={handleShare}
+            onReadAgain={() => latestInspiration?.id && handleReadAgain(latestInspiration.id)}
+          />
+        ) : (
+          <WelcomeCard
+            userName={user?.name}
+            onReceive={handleReceiveFirst}
+            isReceiving={receiveQuote.isPending}
+          />
+        )}
       </div>
 
-      {/* Row 2: Categories */}
+      {/* Row 2: Explore Categories */}
       <section>
-        <CategorySection categories={categories} />
+        <CategorySection
+          categories={categories}
+          onSelectCategory={handleSelectCategory}
+          disabled={receiveQuote.isPending}
+        />
       </section>
 
       {/* Row 3: Recent Quotes & Streak */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
         <div className="xl:col-span-2">
-          <RecentQuotesCard quotes={quotes} />
+          <RecentQuotesCard
+            quotes={historyQuotes}
+            onQuoteClick={(q) => handleReadAgain(q.receivedQuoteId)}
+          />
         </div>
         <div className="xl:col-span-1">
           <InspirationStreak streak={streak} />
@@ -57,7 +138,14 @@ export default function DashboardHome({ greeting, banner, recentQuotes, streak, 
       <section>
         <StatsSection statistics={statistics} />
       </section>
-      
+
+      {/* Category receive → loading → reveal overlay */}
+      <ReceiveOverlay
+        isOpen={isOverlayOpen && revealState !== null}
+        quote={revealState?.quote || null}
+        categoryName={overlayCategoryRef.current}
+        onClose={handleCloseOverlay}
+      />
     </div>
   );
 }

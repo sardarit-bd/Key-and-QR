@@ -69,14 +69,13 @@ export default function UserDashboardPage() {
   return (
     <DashboardHome
       greeting={props.greeting}
-      banner={props.banner}
-      recentQuotes={props.recentQuotes}
+      latestInspiration={props.latestInspiration}
       streak={props.streak}
       statistics={props.statistics}
       categories={props.categories}
-      recentActivity={null}
       user={props.user}
       subscription={props.subscription}
+      dailyUsage={props.dailyUsage}
     />
   );
 }
