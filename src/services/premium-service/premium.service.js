@@ -104,11 +104,22 @@ export const premiumService = {
 
   /**
    * Get premium features
+   * Derived from the user's actual subscription — the feature cards
+   * keep their exact existing design, but their content comes from
+   * the backend plan (free vs subscriber) instead of a static list.
    */
   getPremiumFeatures: async () => {
-    return {
-      success: true,
-      data: [
+    try {
+      const response = await api.get('/subscriptions/me');
+      const subscriptions = response.data?.data || [];
+
+      const isPremium = subscriptions.some(
+        (sub) =>
+          sub.subscriptionType === 'subscriber' &&
+          ['active', 'trialing', 'past_due'].includes(sub.status)
+      );
+
+      const base = [
         {
           id: 'unlimited-quotes',
           title: 'Unlimited Quotes',
@@ -137,8 +148,51 @@ export const premiumService = {
           icon: 'Crown',
           available: true,
         },
-      ],
-    };
+      ];
+
+      // Free users see the same cards with availability locked by plan.
+      return {
+        success: true,
+        data: base.map((feature) => ({
+          ...feature,
+          available: isPremium ? true : feature.id === 'unlimited-quotes',
+        })),
+      };
+    } catch (error) {
+      return {
+        success: true,
+        data: [
+          {
+            id: 'unlimited-quotes',
+            title: 'Unlimited Quotes',
+            description: 'Get unlimited inspirational quotes every day',
+            icon: 'Sparkles',
+            available: true,
+          },
+          {
+            id: 'category-explorer',
+            title: 'Category Explorer',
+            description: 'Browse quotes by your favorite categories',
+            icon: 'Compass',
+            available: true,
+          },
+          {
+            id: 'unlimited-discover',
+            title: 'Unlimited Discover More',
+            description: 'Explore endless inspiration without limits',
+            icon: 'BookOpen',
+            available: true,
+          },
+          {
+            id: 'premium-experience',
+            title: 'Premium Experience',
+            description: 'Ad-free, premium UI, and exclusive content',
+            icon: 'Crown',
+            available: true,
+          },
+        ],
+      };
+    }
   },
 
   /**

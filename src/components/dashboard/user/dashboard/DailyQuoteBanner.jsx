@@ -1,12 +1,18 @@
 'use client';
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { Quote, Sparkles } from "lucide-react";
 
 export default function DailyQuoteBanner({ banner }) {
+ const router = useRouter();
  const quote = banner?.quote || "Stay positive, work hard, make it happen.";
  const author = banner?.author || "InspireTag";
  const ctaText = banner?.ctaText || "Your Daily Quote";
+
+ const handleCta = () => {
+  router.push("/new-dashboard/user/premium");
+ };
 
  return (
  <section className="relative h-full min-h-[180px] sm:min-h-[200px] lg:min-h-[240px] w-full overflow-hidden rounded-[20px] sm:rounded-[24px] border border-border bg-card shadow-lg">
@@ -46,7 +52,7 @@ export default function DailyQuoteBanner({ banner }) {
  — {author}
  </p>
 
- <button className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-accent/30 bg-background-secondary/90 px-3 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-[12px] md:text-[13px] font-medium text-accent backdrop-blur-sm transition-all duration-300 hover:bg-accent/10 hover:border-accent/50 hover:shadow-[0_0_15px_rgba(253,182,92,0.15)]">
+ <button onClick={handleCta} className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-accent/30 bg-background-secondary/90 px-3 sm:px-4 py-1.5 sm:py-2 text-[11px] sm:text-[12px] md:text-[13px] font-medium text-accent backdrop-blur-sm transition-all duration-300 hover:bg-accent/10 hover:border-accent/50 hover:shadow-[0_0_15px_rgba(253,182,92,0.15)]">
  <Sparkles size={14} className="w-[12px] h-[12px] sm:w-[14px] sm:h-[14px]" />
  {ctaText}
  </button>

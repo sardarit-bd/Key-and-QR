@@ -11,6 +11,7 @@ import {
   MyQuoteEmptyState,
 } from '@/components/my-quotes';
 import useMyQuotes from '@/hooks/my-quotes-service/useMyQuotes';
+import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
 
 /**
  * My Quotes Page
@@ -37,6 +38,8 @@ export default function MyQuotesPage() {
     resetFilters,
     isAuthenticated,
   } = useMyQuotes();
+
+  const { data: quoteCategories = [] } = useQuoteCategories();
 
   // Always ensure quotes is an array
   const quoteList = Array.isArray(quotes) ? quotes : [];
@@ -106,6 +109,7 @@ export default function MyQuotesPage() {
             category={category}
             sort={sort}
             view={view}
+            categories={quoteCategories}
             onSearchChange={setSearch}
             onCategoryChange={setCategory}
             onSortChange={setSort}

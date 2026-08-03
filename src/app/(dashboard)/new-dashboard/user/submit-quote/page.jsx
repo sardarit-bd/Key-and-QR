@@ -1,28 +1,34 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Send, CheckCircle, Clock, XCircle, Quote } from 'lucide-react';
+import { Send, CheckCircle } from 'lucide-react';
 import { useState } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
-
-const CATEGORIES = [
-  { value: 'love', label: 'Love' },
-  { value: 'strength', label: 'Strength' },
-  { value: 'healing', label: 'Healing' },
-  { value: 'faith', label: 'Faith' },
-  { value: 'gratitude', label: 'Gratitude' },
-  { value: 'other', label: 'Other' },
-];
+import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
 
 export default function SubmitQuotePage() {
   const { user } = useAuthStore();
+  const { data: categories = [], isLoading: categoriesLoading } = useQuoteCategories();
   const [text, setText] = useState('');
   const [author, setAuthor] = useState('');
   const [category, setCategory] = useState('other');
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
+
+  // Build category options from the backend (with 'other' always available)
+  const categoryOptions = [
+    ...categories.map((cat) => ({
+      value: cat.slug || cat.id,
+      label: cat.name,
+    })),
+    { value: 'other', label: 'Other' },
+  ];
+  // Deduplicate by value
+  const uniqueCategories = categoryOptions.filter(
+    (cat, i, arr) => arr.findIndex((c) => c.value === cat.value) === i
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -136,20 +142,24 @@ export default function SubmitQuotePage() {
               Category <span className="text-foreground-tertiary">(optional)</span>
             </label>
             <div className="flex flex-wrap gap-2">
-              {CATEGORIES.map((cat) => (
-                <button
-                  key={cat.value}
-                  type="button"
-                  onClick={() => setCategory(cat.value)}
-                  className={`px-4 py-2 rounded-xl text-sm transition-colors ${
-                    category === cat.value
-                      ? 'bg-accent text-accent-foreground font-medium'
-                      : 'bg-muted text-foreground-secondary hover:bg-muted/80'
-                  }`}
-                >
-                  {cat.label}
-                </button>
-              ))}
+              {categoriesLoading ? (
+                <span className="text-foreground-tertiary text-sm">Loading categories...</span>
+              ) : (
+                uniqueCategories.map((cat) => (
+                  <button
+                    key={cat.value}
+                    type="button"
+                    onClick={() => setCategory(cat.value)}
+                    className={`px-4 py-2 rounded-xl text-sm transition-colors ${
+                      category === cat.value
+                        ? 'bg-accent text-accent-foreground font-medium'
+                        : 'bg-muted text-foreground-secondary hover:bg-muted/80'
+                    }`}
+                  >
+                    {cat.label}
+                  </button>
+                ))
+              )}
             </div>
           </div>
 

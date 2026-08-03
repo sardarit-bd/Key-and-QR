@@ -5,6 +5,7 @@ import { User, Mail, Camera, Save, Loader2, ChevronRight, Bell, Shield, HelpCirc
 import { useState } from 'react';
 import Link from 'next/link';
 import { useAuthStore } from '@/store/authStore';
+import { formatMemberSince } from '@/utils/sidebar.utils';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -129,6 +130,11 @@ export default function ProfilePage() {
             <p className="text-foreground font-medium">{user?.name}</p>
             <p className="text-muted-foreground text-sm">{user?.email}</p>
             <p className="text-foreground-tertiary text-xs mt-1 capitalize">{user?.role} account</p>
+            {user?.createdAt && (
+              <p className="text-foreground-tertiary text-xs mt-1">
+                Member since {formatMemberSince(user.createdAt)}
+              </p>
+            )}
           </div>
         </div>
 

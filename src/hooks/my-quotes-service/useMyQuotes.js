@@ -67,6 +67,17 @@ export const useMyQuotes = () => {
         // Sync with favorite store
         setFavorites(rawData);
         
+        // Compute distinct categories from loaded favorites
+        const distinctCategories = new Set();
+        rawData.forEach((item) => {
+          const cat = item.quote?.category || item.category;
+          if (cat) distinctCategories.add(cat);
+        });
+        setStats(prev => ({
+          ...prev,
+          categories: distinctCategories.size || prev.categories,
+        }));
+        
         // Filter by category if needed
         let filteredData = rawData;
         if (category !== 'all') {
@@ -121,15 +132,15 @@ export const useMyQuotes = () => {
         
         // Calculate additional stats
         const quotesCount = statsData.quotes || 0;
-        const categoriesCount = 5;
         const recentlyAdded = quotesCount > 0 ? Math.min(3, quotesCount) : 0;
 
-        setStats({
+        setStats(prev => ({
           total: statsData.total || 0,
           quotes: quotesCount,
-          categories: categoriesCount,
+          // Preserve categories computed from loaded favorites in fetchQuotes
+          categories: prev.categories || 0,
           recentlyAdded,
-        });
+        }));
       }
     } catch (err) {
       console.error('Failed to fetch stats:', err);

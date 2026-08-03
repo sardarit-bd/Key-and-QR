@@ -1,6 +1,6 @@
 'use client';
 
-import { Sparkles, Heart, Quote as QuoteIcon } from 'lucide-react';
+import { getCategoryStyle } from '@/utils/dashboard.utils';
 import StatsSection from './StatsSection';
 import InspirationStreak from './InspirationStreak';
 import RecentQuotesCard from './RecentQuotesCard';
@@ -8,20 +8,10 @@ import CategorySection from './CategorySection';
 import DailyQuoteBanner from './DailyQuoteBanner';
 import WelcomeSection from './WelcomeSection';
 
-const CATEGORY_ICONS = {
-  faith: { icon: QuoteIcon, colorClass: 'text-purple-400', bgClass: 'bg-purple-500/10 border border-purple-500/20' },
-  love: { icon: Heart, colorClass: 'text-pink-400', bgClass: 'bg-pink-500/10 border border-pink-500/20' },
-  strength: { icon: Sparkles, colorClass: 'text-accent', bgClass: 'bg-accent/10 border border-accent/20' },
-  healing: { icon: Sparkles, colorClass: 'text-green-400', bgClass: 'bg-green-500/10 border border-green-500/20' },
-  gratitude: { icon: Sparkles, colorClass: 'text-yellow-400', bgClass: 'bg-yellow-500/10 border border-yellow-500/20' },
-  motivation: { icon: Sparkles, colorClass: 'text-accent', bgClass: 'bg-accent/10 border border-accent/20' },
-};
-
 function mapQuotes(quotes) {
   if (!Array.isArray(quotes)) return [];
   return quotes.map((q, i) => {
-    const cat = (q.category || 'motivation').toLowerCase();
-    const style = CATEGORY_ICONS[cat] || CATEGORY_ICONS.motivation;
+    const style = getCategoryStyle(q.category);
     return {
       id: q._id || i,
       title: q.text || 'No quote available',
@@ -36,7 +26,7 @@ function mapQuotes(quotes) {
   });
 }
 
-export default function DashboardHome({ greeting, banner, recentQuotes, streak, statistics, categories, recentActivity }) {
+export default function DashboardHome({ greeting, banner, recentQuotes, streak, statistics, categories, recentActivity, user, subscription }) {
   const quotes = mapQuotes(recentQuotes);
 
   return (
@@ -44,7 +34,7 @@ export default function DashboardHome({ greeting, banner, recentQuotes, streak, 
       
       {/* Row 1: Welcome & Daily Quote */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6 min-h-[180px] sm:min-h-[200px] lg:min-h-[220px]">
-        <WelcomeSection greeting={greeting} />
+        <WelcomeSection greeting={greeting} user={user} subscription={subscription} />
         <DailyQuoteBanner banner={banner} />
       </div>
 

@@ -1,7 +1,7 @@
 'use client';
 
-export default function WelcomeSection({ greeting, userName }) {
- const name = greeting?.name || userName || "there";
+export default function WelcomeSection({ greeting, user }) {
+ const name = greeting?.name || user?.name || "there";
  const timeGreeting = greeting?.text || "Welcome";
 
  return (

@@ -2,10 +2,12 @@ import api from "@/lib/api";
 
 export const dashboardService = {
     /**
-     * GET /dashboard/overview — single aggregated endpoint
+     * GET /dashboard/home — single aggregated endpoint
+     * (quote receive engine: latestInspiration, dailyUsage, streak,
+     * categories with lock state, statistics, favorite count)
      */
     getOverview: async () => {
-        const response = await api.get("/dashboard/overview");
+        const response = await api.get("/dashboard/home");
         return response.data;
     },
 };

@@ -11,15 +11,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-const CATEGORIES = [
-  { id: 'all', name: 'All Categories' },
-  { id: 'love', name: 'Love' },
-  { id: 'strength', name: 'Strength' },
-  { id: 'healing', name: 'Healing' },
-  { id: 'faith', name: 'Faith' },
-  { id: 'gratitude', name: 'Gratitude' },
-];
-
 const SORT_OPTIONS = [
   { id: 'newest', name: 'Newest First' },
   { id: 'oldest', name: 'Oldest First' },
@@ -35,6 +26,7 @@ export default function MyQuoteFilters({
   category,
   sort,
   view,
+  categories = [],
   onSearchChange,
   onCategoryChange,
   onSortChange,
@@ -42,6 +34,19 @@ export default function MyQuoteFilters({
   onReset,
 }) {
   const hasActiveFilters = search || category !== 'all' || sort !== 'newest';
+
+  // Build dropdown from backend categories (fallback to 'All Categories' only)
+  const categoryOptions = [
+    { id: 'all', name: 'All Categories' },
+    ...categories.map((cat) => ({
+      id: cat.slug || cat.id,
+      name: cat.name,
+    })),
+  ];
+  // Deduplicate by id
+  const uniqueCategoryOptions = categoryOptions.filter(
+    (cat, i, arr) => arr.findIndex((c) => c.id === cat.id) === i
+  );
 
   return (
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -64,7 +69,7 @@ export default function MyQuoteFilters({
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent className="bg-card border-border text-foreground">
-            {CATEGORIES.map((cat) => (
+            {uniqueCategoryOptions.map((cat) => (
               <SelectItem key={cat.id} value={cat.id}>
                 {cat.name}
               </SelectItem>
