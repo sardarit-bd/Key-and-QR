@@ -1,6 +1,8 @@
 'use client';
 
+import { useMemo } from 'react';
 import { useDashboardOverview } from '@/hooks/dashboard/useDashboardOverview';
+import { buildDashboardProps } from '@/utils/dashboard.utils';
 import DashboardHome from '@/components/dashboard/user/dashboard/DashboardHome';
 
 /**
@@ -8,10 +10,15 @@ import DashboardHome from '@/components/dashboard/user/dashboard/DashboardHome';
  * Route: /new-dashboard/user
  * 
  * Restores original dashboard design exactly.
- * Only replaces hardcoded data with real backend data from GET /dashboard/overview.
+ * Only replaces hardcoded data with real backend data from GET /dashboard/home
+ * (quote receive engine). The UI is kept pixel-identical — this page only
+ * maps backend data onto the exact props each section already renders.
  */
 export default function UserDashboardPage() {
   const { data, isLoading, error, refetch } = useDashboardOverview();
+
+  // Normalize the /dashboard/home payload once per data change
+  const props = useMemo(() => buildDashboardProps(data), [data]);
 
   // Loading state — show skeleton matching original layout
   if (isLoading) {
@@ -61,13 +68,14 @@ export default function UserDashboardPage() {
   // Original dashboard layout with dynamic data
   return (
     <DashboardHome
-      greeting={data?.greeting}
-      banner={data?.banner}
-      recentQuotes={data?.recentQuotes}
-      streak={data?.streak}
-      statistics={data?.statistics}
-      categories={data?.categories}
-      recentActivity={data?.recentActivity}
+      greeting={props.greeting}
+      latestInspiration={props.latestInspiration}
+      streak={props.streak}
+      statistics={props.statistics}
+      categories={props.categories}
+      user={props.user}
+      subscription={props.subscription}
+      dailyUsage={props.dailyUsage}
     />
   );
 }

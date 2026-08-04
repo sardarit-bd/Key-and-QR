@@ -3,67 +3,71 @@
 import Card from "./Card";
 
 export default function StatCard({
- icon: Icon,
- title,
- value,
- subtitle,
- colorTheme,
- customIconRender,
+  icon: Icon,
+  title,
+  value,
+  subtitle,
+  colorTheme,
+  customIconRender,
 }) {
- const themeMap = {
- purple: {
- border: "border-purple-500/30",
- bg: "bg-purple-900/20",
- icon: "text-purple-400",
- glow: "shadow-[0_0_15px_rgba(168,85,247,0.1)]",
- },
- pink: {
- border: "border-pink-500/30",
- bg: "bg-pink-900/20",
- icon: "text-pink-400",
- glow: "shadow-[0_0_15px_rgba(244,114,182,0.15)]",
- },
- blue: {
- border: "border-info/30",
- bg: "bg-info/10",
- icon: "text-info",
- glow: "shadow-[0_0_15px_rgba(140,166,235,0.1)]",
- },
- gold: {
- border: "border-accent/30",
- bg: "bg-accent/10",
- icon: "text-accent",
- glow: "shadow-[0_0_15px_rgba(227,186,133,0.15)]",
- },
- };
+  const themeMap = {
+    purple: {
+      border: "border-purple-500/25",
+      bg: "bg-gradient-to-br from-purple-500/20 to-purple-500/5",
+      icon: "text-purple-400",
+      glow: "shadow-[0_0_24px_-4px_rgba(168,85,247,0.25)]",
+      ring: "ring-purple-500/20",
+    },
+    pink: {
+      border: "border-pink-500/25",
+      bg: "bg-gradient-to-br from-pink-500/20 to-pink-500/5",
+      icon: "text-pink-400",
+      glow: "shadow-[0_0_24px_-4px_rgba(244,114,182,0.25)]",
+      ring: "ring-pink-500/20",
+    },
+    blue: {
+      border: "border-info/25",
+      bg: "bg-gradient-to-br from-info/20 to-info/5",
+      icon: "text-info",
+      glow: "shadow-[0_0_24px_-4px_rgba(140,166,235,0.25)]",
+      ring: "ring-info/20",
+    },
+    gold: {
+      border: "border-accent/25",
+      bg: "bg-gradient-to-br from-accent/20 to-accent/5",
+      icon: "text-accent",
+      glow: "shadow-[0_0_24px_-4px_rgba(227,186,133,0.3)]",
+      ring: "ring-accent/20",
+    },
+  };
 
- const theme = themeMap[colorTheme] || themeMap.purple;
+  const theme = themeMap[colorTheme] || themeMap.purple;
 
- return (
- <Card className="p-4 sm:p-5 md:p-6 hover:bg-background-secondary transition-colors cursor-default cursor-pointer">
- <div className="flex items-center justify-between gap-4 sm:gap-5 px-10">
- <div className={`relative w-[44px] sm:w-[48px] md:w-[52px] h-[44px] sm:h-[48px] md:h-[52px] rounded-full border ${theme.border} ${theme.bg} ${theme.glow} flex items-center justify-center flex-shrink-0`}>
- {customIconRender ? (
- customIconRender()
- ) : (
- <Icon size={22} className={`w-[18px] h-[18px] sm:w-5 sm:h-5 md:w-[22px] md:h-[22px] ${theme.icon}`} />
- )}
- </div>
+  return (
+    <Card className="p-5 sm:p-6 h-full transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_-16px_rgb(0_0_0/0.5)]">
+      <div className="flex items-center justify-between gap-4 sm:gap-5">
+        <div className={`relative w-[52px] sm:w-[56px] md:w-[60px] h-[52px] sm:h-[56px] md:h-[60px] rounded-2xl border ${theme.border} ${theme.bg} ${theme.glow} ring-1 ${theme.ring} flex items-center justify-center flex-shrink-0 transition-transform duration-300 hover:scale-105`}>
+          {customIconRender ? (
+            customIconRender()
+          ) : (
+            <Icon size={22} className={`w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] ${theme.icon}`} />
+          )}
+        </div>
 
- <div className="text-center">
- <p className="text-foreground-secondary text-[10px] sm:text-[11px] md:text-xs font-medium">
- {title}
- </p>
+        <div className="text-right min-w-0">
+          <p className="text-foreground-tertiary text-[11px] sm:text-xs font-medium tracking-wide">
+            {title}
+          </p>
 
- <h3 className="text-[22px] sm:text-[24px] md:text-[28px] leading-tight text-foreground">
- {value}
- </h3>
+          <h3 className="text-[26px] sm:text-[30px] md:text-[34px] leading-tight text-foreground font-semibold tracking-tight">
+            {value}
+          </h3>
 
- <p className="text-foreground-tertiary text-[10px] sm:text-[11px]">
- {subtitle}
- </p>
- </div>
- </div>
- </Card>
- );
+          <p className="text-foreground-tertiary text-[11px] sm:text-xs truncate">
+            {subtitle}
+          </p>
+        </div>
+      </div>
+    </Card>
+  );
 }

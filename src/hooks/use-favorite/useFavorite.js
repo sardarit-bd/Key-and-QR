@@ -1,8 +1,11 @@
 import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
 import { useFavoriteStore } from '@/store/favoriteStore';
+import { favoriteKeys } from '@/hooks/favorite-service/useFavorites';
+import { myQuoteKeys } from '@/hooks/my-quotes-service/useMyQuotes';
 import api from '@/lib/api';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -19,6 +22,7 @@ export const useFavorite = (options = {}) => {
   } = options;
 
   const router = useRouter();
+  const queryClient = useQueryClient();
   const { user, isInitialized } = useAuthStore();
   
   // Use shallow comparison for performance
@@ -86,6 +90,10 @@ export const useFavorite = (options = {}) => {
           removeFavorite(id);
           toast.success('Removed from favorites');
           
+          // Keep Favorites + My Quotes caches in sync.
+          queryClient.invalidateQueries({ queryKey: favoriteKeys.all });
+          queryClient.invalidateQueries({ queryKey: myQuoteKeys.all });
+
           if (onSuccess) {
             onSuccess({ action: 'remove', favorite: response.data?.data });
           }
@@ -107,6 +115,10 @@ export const useFavorite = (options = {}) => {
           addFavorite(id, newFavorite);
           toast.success('Added to favorites');
           
+          // Keep Favorites + My Quotes caches in sync.
+          queryClient.invalidateQueries({ queryKey: favoriteKeys.all });
+          queryClient.invalidateQueries({ queryKey: myQuoteKeys.all });
+
           if (onSuccess) {
             onSuccess({ action: 'add', favorite: newFavorite });
           }
@@ -130,7 +142,7 @@ export const useFavorite = (options = {}) => {
       setIsLoading(false);
       setLoading(false);
     }
-  }, [id, type, isFav, favorite, user, router, addFavorite, removeFavorite, setLoading, setError, onSuccess, onError]);
+  }, [id, type, isFav, favorite, user, router, addFavorite, removeFavorite, setLoading, setError, onSuccess, onError, queryClient]);
 
   /**
    * Check favorite status

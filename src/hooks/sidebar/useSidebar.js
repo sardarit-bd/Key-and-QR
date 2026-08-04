@@ -65,7 +65,7 @@ export const useSidebar = () => {
   const profile = useMemo(() => {
     return {
       name: user?.name || 'User',
-      email: user?.email || 'user@example.com',
+      email: user?.email || '',
       initials: getUserInitials(user?.name),
       avatar: user?.profileImage || null,
       memberSince: formatMemberSince(user?.createdAt),

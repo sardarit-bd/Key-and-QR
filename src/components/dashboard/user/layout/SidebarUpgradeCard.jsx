@@ -45,31 +45,32 @@ export default function SidebarUpgradeCard({
  );
  }
 
- return (
- <div className="mx-5 mt-6 mb-4 rounded-2xl p-5 bg-background-secondary border border-border relative">
- <div className="relative z-10 flex flex-col items-start text-left">
- <div className="flex items-start gap-3 mb-2">
- <Icon 
- size={20} 
- className="text-accent flex-shrink-0 mt-0.5" 
- fill="currentColor" 
- />
- <h4 className=" text-accent text-[15px] leading-[1.3] tracking-wide">
- {config.title}
- </h4>
- </div>
- 
- <p className="text-[13px] text-foreground-secondary mb-5 ml-8 leading-snug">
- {config.description}
- </p>
- 
- <Link
- href={config.ctaHref || '/subscription'}
- className="w-full flex items-center justify-center py-2.5 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground rounded-xl text-[14px] font-semibold hover:opacity-90 transition-opacity"
- >
- {config.ctaText}
- </Link>
- </div>
- </div>
- );
+  return (
+  <div className="mx-4 mt-6 mb-2 rounded-2xl p-5 bg-gradient-to-b from-background-secondary to-background-secondary/40 border border-accent/15 relative overflow-hidden">
+  <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,rgba(253,182,92,0.08),transparent_65%)]" />
+  <div className="relative z-10 flex flex-col items-start text-left">
+  <div className="flex items-start gap-3 mb-2">
+  <Icon 
+  size={20} 
+  className="text-accent flex-shrink-0 mt-0.5" 
+  fill="currentColor" 
+  />
+  <h4 className=" text-accent text-[15px] leading-[1.3] tracking-wide">
+  {config.title}
+  </h4>
+  </div>
+  
+  <p className="text-[13px] text-foreground-secondary mb-5 ml-8 leading-snug">
+  {config.description}
+  </p>
+  
+  <Link
+  href={config.ctaHref || '/subscription'}
+  className="w-full flex items-center justify-center py-2.5 bg-gradient-to-r from-accent to-accent/80 text-accent-foreground rounded-xl text-[14px] font-semibold hover:opacity-90 hover:shadow-[0_8px_24px_-8px_rgba(253,182,92,0.4)] transition-all duration-300 active:scale-[0.98]"
+  >
+  {config.ctaText}
+  </Link>
+  </div>
+  </div>
+  );
 }

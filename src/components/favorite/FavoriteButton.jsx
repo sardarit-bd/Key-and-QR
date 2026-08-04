@@ -63,10 +63,10 @@ export default function FavoriteButton({
       onClick={handleClick}
       disabled={isLoading}
       className={cn(
-        'relative transition-colors',
-        isFavorite 
-          ? 'text-rose-500 hover:text-rose-600 hover:bg-rose-500/10' 
-          : 'text-gray-400 hover:text-white hover:bg-white/5',
+        'relative transition-all duration-300',
+        isFavorite
+          ? '!text-rose-500 hover:!text-rose-500 hover:bg-rose-500/10'
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
         className
       )}
       aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}

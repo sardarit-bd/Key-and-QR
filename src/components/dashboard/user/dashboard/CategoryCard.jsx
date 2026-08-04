@@ -6,11 +6,13 @@ export default function CategoryCard({
   subtitle,
   colorClass,
   isActive,
+  isLocked,
   onClick,
 }) {
   return (
     <button
       onClick={onClick}
+      disabled={isLocked}
       className={`
         relative flex 
         h-[72px] sm:h-[80px] md:h-[88px] 
@@ -19,16 +21,18 @@ export default function CategoryCard({
         overflow-hidden rounded-[14px] sm:rounded-[16px] md:rounded-[18px] 
         border transition-all duration-300
         flex-shrink-0
-        ${isActive 
-          ? `border-primary/60 bg-gradient-to-b from-primary/20 via-primary/10 to-background shadow-[0_0_30px_rgba(168,85,247,0.3)] scale-[1.02] ring-1 ring-primary/30`
-          :
-            `border-border bg-gradient-to-b from-card to-background-secondary hover:-translate-y-0.5 hover:border-primary/30
-            hover:bg-muted hover:shadow-lg`
+        ${isLocked 
+          ? 'border-border bg-gradient-to-b from-card to-background-secondary opacity-70 cursor-not-allowed'
+          : isActive 
+            ? `border-primary/60 bg-gradient-to-b from-primary/20 via-primary/10 to-background shadow-[0_0_30px_rgba(168,85,247,0.3)] scale-[1.02] ring-1 ring-primary/30`
+            :
+              `border-border bg-gradient-to-b from-card to-background-secondary hover:-translate-y-0.5 hover:border-primary/30
+              hover:bg-muted hover:shadow-lg`
         }
       `}
     >
       {/* Active Glow Effect */}
-      {isActive && (
+      {isActive && !isLocked && (
         <>
           <div className="absolute inset-0 rounded-[18px] bg-primary/20 blur-xl" />
           <div className="absolute inset-[1px] rounded-[17px] border border-primary/20" />
@@ -36,7 +40,7 @@ export default function CategoryCard({
       )}
 
       {/* Inactive Hover Glow */}
-      {!isActive && (
+      {!isActive && !isLocked && (
         <div className="absolute inset-0 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
           <div className="absolute inset-0 rounded-[18px] bg-foreground/[0.02]" />
         </div>
@@ -50,9 +54,11 @@ export default function CategoryCard({
           className={`
             w-4 h-4 sm:w-[18px] sm:h-[18px] md:w-5 md:h-5
             transition-all duration-300
-            ${isActive 
-              ? 'text-accent' 
-              : colorClass || 'text-muted-foreground'
+            ${isLocked 
+              ? 'text-muted-foreground' 
+              : isActive 
+                ? 'text-accent' 
+                : colorClass || 'text-muted-foreground'
             }
           `}
         />

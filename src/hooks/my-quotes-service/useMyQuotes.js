@@ -1,260 +1,203 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuthStore } from '@/store/authStore';
-import { useRouter } from 'next/navigation';
-import { useFavoriteStore } from '@/store/favoriteStore';
+import { toast } from 'react-hot-toast';
 import myQuotesService from '@/services/myquotes-service/myQuotes.service';
+import favoriteService from '@/services/favorite-service/favorite.service';
+import { favoriteKeys } from '@/hooks/favorite-service/useFavorites';
 
-/**
- * Custom hook for managing user's saved quotes
- */
-export const useMyQuotes = () => {
-  const router = useRouter();
-  const { user, isInitialized } = useAuthStore();
-  const { favorites, setFavorites, updateStats, stats: storeStats } = useFavoriteStore();
-  
-  const [quotes, setQuotes] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('all');
-  const [sort, setSort] = useState('newest');
-  const [view, setView] = useState('grid');
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: 12,
-    total: 0,
-    totalPages: 0,
-  });
-  const [stats, setStats] = useState({
-    total: 0,
-    quotes: 0,
-    categories: 0,
-    recentlyAdded: 0,
-  });
+// ============================================================
+// QUERY KEYS — My Quotes library (received quotes)
+// ============================================================
 
-  // Check authentication
-  useEffect(() => {
-    if (isInitialized && !user) {
-      router.push('/login?redirect=/new-dashboard/user/my-quotes');
-    }
-  }, [isInitialized, user, router]);
-
-  /**
-   * Fetch user's quotes
-   */
-  const fetchQuotes = useCallback(async () => {
-    if (!user) return;
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const { page, limit } = pagination;
-      
-      const result = await myQuotesService.getMyQuotes({
-        page,
-        limit,
-        type: 'quote',
-        sortBy: sort === 'newest' ? 'createdAt' : sort === 'oldest' ? 'createdAt' : 'text',
-        sortOrder: sort === 'newest' ? 'desc' : sort === 'oldest' ? 'asc' : 'asc',
-        search,
-      });
-
-      if (result.success) {
-        // Always ensure data is an array
-        const rawData = Array.isArray(result.data) ? result.data : [];
-        
-        // Sync with favorite store
-        setFavorites(rawData);
-        
-        // Filter by category if needed
-        let filteredData = rawData;
-        if (category !== 'all') {
-          filteredData = rawData.filter((item) => {
-            const cat = item.quote?.category?.toLowerCase();
-            return cat === category.toLowerCase();
-          });
-        }
-
-        // Update pagination
-        const total = result.meta?.total ?? rawData.length;
-        const totalPages = result.meta?.totalPage ?? Math.ceil(total / limit);
-        
-        setPagination(prev => ({
-          ...prev,
-          total,
-          totalPages,
-        }));
-
-        setQuotes(filteredData);
-      } else {
-        setError(result.message);
-        setQuotes([]);
-      }
-    } catch (err) {
-      console.error('Failed to load quotes:', err);
-      setError('Failed to load your quotes. Please try again.');
-      setQuotes([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [user, pagination.page, pagination.limit, search, category, sort, setFavorites]);
-
-  /**
-   * Fetch statistics
-   */
-  const fetchStats = useCallback(async () => {
-    if (!user) return;
-
-    try {
-      const result = await myQuotesService.getFavoriteStats();
-      
-      if (result.success) {
-        const statsData = result.data || {};
-        
-        // Update store stats
-        updateStats({
-          total: statsData.total || 0,
-          products: statsData.products || 0,
-          quotes: statsData.quotes || 0,
-        });
-        
-        // Calculate additional stats
-        const quotesCount = statsData.quotes || 0;
-        const categoriesCount = 5;
-        const recentlyAdded = quotesCount > 0 ? Math.min(3, quotesCount) : 0;
-
-        setStats({
-          total: statsData.total || 0,
-          quotes: quotesCount,
-          categories: categoriesCount,
-          recentlyAdded,
-        });
-      }
-    } catch (err) {
-      console.error('Failed to fetch stats:', err);
-    }
-  }, [user, updateStats]);
-
-  /**
-   * Remove a quote from favorites
-   */
-  const removeQuote = useCallback(async (favoriteId) => {
-    if (!favoriteId) return false;
-
-    try {
-      const result = await myQuotesService.removeFavorite(favoriteId);
-      
-      if (result.success) {
-        // Remove from local state
-        setQuotes(prev => prev.filter(item => item._id !== favoriteId));
-        setPagination(prev => ({
-          ...prev,
-          total: prev.total - 1,
-          totalPages: Math.ceil((prev.total - 1) / prev.limit),
-        }));
-        // Update stats
-        setStats(prev => ({
-          ...prev,
-          total: prev.total - 1,
-          quotes: prev.quotes - 1,
-        }));
-        return true;
-      }
-      return false;
-    } catch (err) {
-      console.error('Failed to remove quote:', err);
-      return false;
-    }
-  }, []);
-
-  /**
-   * Handle page change
-   */
-  const handlePageChange = useCallback((newPage) => {
-    setPagination(prev => ({
-      ...prev,
-      page: newPage,
-    }));
-  }, []);
-
-  /**
-   * Handle search
-   */
-  const handleSearch = useCallback((value) => {
-    setSearch(value);
-    setPagination(prev => ({ ...prev, page: 1 }));
-  }, []);
-
-  /**
-   * Handle category change
-   */
-  const handleCategoryChange = useCallback((value) => {
-    setCategory(value);
-    setPagination(prev => ({ ...prev, page: 1 }));
-  }, []);
-
-  /**
-   * Handle sort change
-   */
-  const handleSortChange = useCallback((value) => {
-    setSort(value);
-    setPagination(prev => ({ ...prev, page: 1 }));
-  }, []);
-
-  /**
-   * Handle view change
-   */
-  const handleViewChange = useCallback((newView) => {
-    setView(newView);
-  }, []);
-
-  /**
-   * Reset filters
-   */
-  const resetFilters = useCallback(() => {
-    setSearch('');
-    setCategory('all');
-    setSort('newest');
-    setPagination(prev => ({ ...prev, page: 1 }));
-  }, []);
-
-  // Initial data fetch
-  useEffect(() => {
-    if (user && isInitialized) {
-      fetchQuotes();
-      fetchStats();
-    }
-  }, [user, isInitialized, fetchQuotes, fetchStats]);
-
-  // Refetch on filter/sort/page change
-  useEffect(() => {
-    if (user && isInitialized) {
-      fetchQuotes();
-    }
-  }, [search, category, sort, pagination.page, user, isInitialized, fetchQuotes]);
-
-  return {
-    quotes,
-    loading,
-    error,
-    search,
-    category,
-    sort,
-    view,
-    pagination,
-    stats,
-    storeStats,
-    setSearch: handleSearch,
-    setCategory: handleCategoryChange,
-    setSort: handleSortChange,
-    setView: handleViewChange,
-    handlePageChange,
-    removeQuote,
-    resetFilters,
-    fetchQuotes,
-    isAuthenticated: !!user,
-  };
+export const myQuoteKeys = {
+  all: ['my-quotes'],
+  lists: () => [...myQuoteKeys.all, 'list'],
+  list: (filters) => [...myQuoteKeys.lists(), { ...filters }],
+  stats: () => [...myQuoteKeys.all, 'stats'],
 };
 
-export default useMyQuotes;
+// ============================================================
+// HOOKS
+// ============================================================
+
+/**
+ * Get the user's complete quote library.
+ * GET /received-quotes/history
+ * Backend-paginated via { page, limit }.
+ */
+export function useMyQuotesList(params = {}) {
+  const { page = 1, limit = 12, category = '', source = '' } = params;
+  const { isAuthenticated } = useAuthStore();
+
+  return useQuery({
+    queryKey: myQuoteKeys.list({ page, limit, category, source }),
+    queryFn: () =>
+      myQuotesService.getMyQuotes({ page, limit, category, source }),
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
+    retry: 1,
+    enabled: isAuthenticated(),
+    select: (result) => ({
+      data: result.data || [],
+      meta: result.meta || { page: 1, limit, total: 0, totalPage: 0 },
+    }),
+  });
+}
+
+/**
+ * Get quote library statistics.
+ * GET /received-quotes/statistics
+ */
+export function useMyQuoteStats(enabled = true) {
+  const { isAuthenticated } = useAuthStore();
+
+  return useQuery({
+    queryKey: myQuoteKeys.stats(),
+    queryFn: () => myQuotesService.getMyQuoteStats(),
+    staleTime: 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 1,
+    enabled: enabled && isAuthenticated(),
+    select: (result) =>
+      result.data || {
+        totalQuotes: 0,
+        favorites: 0,
+        unread: 0,
+        today: 0,
+        categoryDistribution: [],
+      },
+  });
+}
+
+// ============================================================
+// FAVORITE SYNC
+// ============================================================
+
+/**
+ * Add a quote to favorites (bookmarks).
+ * POST /favorites  { quoteId }
+ * Invalidates BOTH the favorites cache and the my-quotes library cache
+ * (so favorite state on My Quotes stays fresh). Optimistic update included.
+ */
+export function useAddQuoteFavoriteMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (quoteId) => favoriteService.addFavorite({ quoteId }),
+    onMutate: async (quoteId) => {
+      // Optimistically mark the quote as favorited in the library cache.
+      await queryClient.cancelQueries({ queryKey: myQuoteKeys.all });
+      const snapshot = queryClient.getQueriesData({
+        queryKey: myQuoteKeys.lists(),
+      });
+      queryClient.setQueriesData({ queryKey: myQuoteKeys.lists() }, (old) => {
+        if (!old?.data) return old;
+        return {
+          ...old,
+          data: old.data.map((item) =>
+            item?.quote?._id === quoteId ? { ...item, favorite: true } : item
+          ),
+        };
+      });
+      return { snapshot };
+    },
+    onSuccess: (data, quoteId) => {
+      // Store the returned favoriteId so un-favoriting works immediately
+      // without an extra check request.
+      const newFavoriteId = data?.data?._id;
+      if (newFavoriteId) {
+        queryClient.setQueriesData({ queryKey: myQuoteKeys.lists() }, (old) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: old.data.map((item) =>
+              item?.quote?._id === quoteId
+                ? { ...item, favorite: true, favoriteId: newFavoriteId }
+                : item
+            ),
+          };
+        });
+      }
+      queryClient.invalidateQueries({ queryKey: favoriteKeys.all });
+      queryClient.invalidateQueries({ queryKey: myQuoteKeys.all });
+      toast.success('Added to favorites ❤️');
+    },
+    onError: (error, _quoteId, context) => {
+      if (context?.snapshot) {
+        queryClient.setQueriesData({ queryKey: myQuoteKeys.lists() }, context.snapshot);
+      }
+      toast.error(error.response?.data?.message || 'Failed to add favorite');
+    },
+  });
+}
+
+/**
+ * Remove a quote from favorites (bookmarks).
+ * DELETE /favorites/:id
+ * Invalidates both caches. The quote REMAINS in My Quotes.
+ */
+export function useRemoveQuoteFavoriteMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (favoriteId) => favoriteService.removeFavorite(favoriteId),
+    onMutate: async (favoriteId) => {
+      await queryClient.cancelQueries({ queryKey: myQuoteKeys.all });
+      const snapshot = queryClient.getQueriesData({
+        queryKey: myQuoteKeys.lists(),
+      });
+      queryClient.setQueriesData({ queryKey: myQuoteKeys.lists() }, (old) => {
+        if (!old?.data) return old;
+        return {
+          ...old,
+          data: old.data.map((item) =>
+            item?.favoriteId === favoriteId
+              ? { ...item, favorite: false, favoriteId: null }
+              : item
+          ),
+        };
+      });
+      return { snapshot };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: favoriteKeys.all });
+      queryClient.invalidateQueries({ queryKey: myQuoteKeys.all });
+      toast.success('Removed from favorites 💔');
+    },
+    onError: (error, _favoriteId, context) => {
+      if (context?.snapshot) {
+        queryClient.setQueriesData({ queryKey: myQuoteKeys.lists() }, context.snapshot);
+      }
+      toast.error(error.response?.data?.message || 'Failed to remove favorite');
+    },
+  });
+}
+
+/**
+ * Toggle favorite state for a quote.
+ * Uses the mutation matching the current state.
+ * When un-favoriting without a favoriteId (the history list only exposes a
+ * boolean), resolves the favoriteId via GET /favorites/check?quoteId= first.
+ */
+export function useToggleQuoteFavorite() {
+  const addFavorite = useAddQuoteFavoriteMutation();
+  const removeFavorite = useRemoveQuoteFavoriteMutation();
+
+  return async ({ quoteId, isFavorite, favoriteId }) => {
+    if (isFavorite) {
+      let resolvedId = favoriteId;
+      if (!resolvedId) {
+        const check = await favoriteService.checkFavorite({ quoteId });
+        resolvedId = check.data?.favoriteId || null;
+      }
+      if (!resolvedId) {
+        toast.error('Favorite not found');
+        return false;
+      }
+      await removeFavorite.mutateAsync(resolvedId);
+    } else {
+      await addFavorite.mutateAsync(quoteId);
+    }
+    return true;
+  };
+}

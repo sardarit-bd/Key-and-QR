@@ -2,24 +2,41 @@
 
 import { motion } from 'framer-motion';
 import { Lock } from 'lucide-react';
+import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
 
-const CATEGORIES = [
-  { id: 'random', label: 'Random', icon: '✨' },
-  { id: 'love', label: 'Love', icon: '❤️' },
-  { id: 'strength', label: 'Strength', icon: '💪' },
-  { id: 'healing', label: 'Healing', icon: '🌿' },
-  { id: 'faith', label: 'Faith', icon: '🙏' },
-  { id: 'gratitude', label: 'Gratitude', icon: '☀️' },
-];
+const EMOJI_FALLBACK = {
+  love: '❤️',
+  strength: '💪',
+  healing: '🌿',
+  faith: '🙏',
+  gratitude: '☀️',
+  inspire: '✨',
+  courage: '🛡️',
+  wisdom: '📖',
+};
 
 /**
  * Premium Category Selector
+ * Loads categories from the backend (GET /categories) — the chip design
+ * stays exactly the same, only the source of the category list changed.
  */
 export default function PremiumCategorySelector({
   selectedCategory,
   onCategoryChange,
   isPremium,
 }) {
+  const { data: backendCategories = [] } = useQuoteCategories();
+
+  // Build the chip list: "Random" first, then all active backend categories.
+  const categories = [
+    { id: 'random', label: 'Random', icon: '✨' },
+    ...backendCategories.map((category) => ({
+      id: category?.slug || category?._id,
+      label: category?.name || category?.slug,
+      icon: EMOJI_FALLBACK[category?.slug] || '✨',
+    })),
+  ];
+
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
@@ -33,7 +50,7 @@ export default function PremiumCategorySelector({
       </div>
 
       <div className="flex flex-wrap gap-2">
-        {CATEGORIES.map((category) => {
+        {categories.map((category) => {
           const isSelected = selectedCategory === category.id;
           const isLocked = !isPremium && category.id !== 'random';
 
