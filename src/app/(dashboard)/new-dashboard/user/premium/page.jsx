@@ -44,12 +44,17 @@ const FAQ_ITEMS = [
   { q: 'What payment methods are accepted?', a: 'All major credit and debit cards through Stripe, our secure payment processor.' },
 ];
 
-// Resolve price from subscription data. The Stripe price lives in Stripe;
-// the subscription model stores the price ID. We derive the display price
-// from the plan type — the actual billing amount is always driven by Stripe.
-function resolvePrice(subscription) {
+// Resolve price dynamically from the backend plans configuration.
+// /subscriptions/plans returns { name: 'subscriber', price: 4.99, ... }.
+// The actual billing amount is always driven by Stripe — the plan price
+// is the canonical display value configured server-side.
+function resolvePrice(subscription, plans) {
   if (!subscription || subscription.subscriptionType !== 'subscriber') return null;
-  return { amount: '$4.99', cycle: '/month' };
+  const plan = Array.isArray(plans)
+    ? plans.find((p) => p.name === 'subscriber')
+    : null;
+  const priceAmount = plan?.price ?? 4.99;
+  return { amount: '$' + priceAmount.toFixed(2), cycle: '/month' };
 }
 
 export default function SubscriptionPage() {
@@ -70,7 +75,7 @@ export default function SubscriptionPage() {
   const planType = subscription?.subscriptionType || 'free';
   const cancelAtPeriodEnd = subscription?.cancelAtPeriodEnd || false;
   const currentPeriodEnd = subscription?.currentPeriodEnd;
-  const price = resolvePrice(subscription);
+  const price = resolvePrice(subscription, plans);
 
   const totalQuotes = dashboard?.statistics?.totalQuotesReceived || 0;
   const scans = dashboard?.statistics?.scans || 0;
@@ -88,9 +93,24 @@ export default function SubscriptionPage() {
     finally { setPortalLoading(false); }
   }, []);
 
-  const handleDownloadInvoice = useCallback(() => {
-    handleManageSubscription(); // Stripe Portal → invoices tab
-  }, [handleManageSubscription]);
+  const handleDownloadInvoice = useCallback(async () => {
+    try {
+      const result = await premiumService.getLatestInvoice();
+      if (!result.success) {
+        toast.error(result.message || 'Failed to fetch invoice');
+        return;
+      }
+      const { invoicePdf, hostedInvoiceUrl } = result.data || {};
+      const target = invoicePdf || hostedInvoiceUrl;
+      if (target) {
+        window.open(target, '_blank');
+      } else {
+        toast('No invoice is available for this billing period.', { icon: '📄' });
+      }
+    } catch {
+      toast.error('Failed to download invoice. Please try again.');
+    }
+  }, []);
 
   const StatusBadge = () => {
     const isActive = status === 'active' || status === 'trialing';

@@ -216,6 +216,28 @@ export const premiumService = {
       };
     }
   },
+
+  /**
+   * Get the latest paid invoice PDF URL.
+   * GET /subscriptions/latest-invoice
+   */
+  getLatestInvoice: async () => {
+    try {
+      const response = await api.get('/subscriptions/latest-invoice');
+      return {
+        success: true,
+        data: response.data?.data || { invoicePdf: null, hostedInvoiceUrl: null },
+        status: response.status,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch invoice',
+        status: error.response?.status || 500,
+        data: { invoicePdf: null, hostedInvoiceUrl: null },
+      };
+    }
+  },
 };
 
 export default premiumService;
