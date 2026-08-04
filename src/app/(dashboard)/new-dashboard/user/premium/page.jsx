@@ -45,16 +45,19 @@ const FAQ_ITEMS = [
 ];
 
 // Resolve price dynamically from the backend plans configuration.
-// /subscriptions/plans returns { name: 'subscriber', price: 4.99, ... }.
-// The actual billing amount is always driven by Stripe — the plan price
-// is the canonical display value configured server-side.
+// /subscriptions/plans returns the live Stripe Price attached to the active
+// subscription price ID (single source of truth). No hardcoded fallback —
+// if the backend cannot resolve a price, we display "—" rather than a guess.
 function resolvePrice(subscription, plans) {
   if (!subscription || subscription.subscriptionType !== 'subscriber') return null;
   const plan = Array.isArray(plans)
     ? plans.find((p) => p.name === 'subscriber')
     : null;
-  const priceAmount = plan?.price ?? 4.99;
-  return { amount: '$' + priceAmount.toFixed(2), cycle: '/month' };
+  if (plan?.price == null) return null;
+  return {
+    amount: '$' + Number(plan.price).toFixed(2),
+    cycle: plan.interval === 'year' ? '/year' : '/month',
+  };
 }
 
 export default function SubscriptionPage() {
