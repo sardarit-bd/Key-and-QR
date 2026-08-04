@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import Image from 'next/image';
-import { Quote, Share2, BookOpen, Sparkles, Heart } from 'lucide-react';
-import FavoriteButton from '@/components/favorite/FavoriteButton';
+import Image from "next/image";
+import { Quote, Share2, BookOpen, Sparkles, Heart } from "lucide-react";
+import FavoriteButton from "@/components/favorite/FavoriteButton";
 
 export default function LatestInspirationCard({
   inspiration,
@@ -10,7 +10,7 @@ export default function LatestInspirationCard({
   onReadAgain,
   onFavoriteChange,
 }) {
-  const quote = inspiration?.text || '';
+  const quote = inspiration?.text || "";
   const image = inspiration?.image || null;
   const category = inspiration?.category || null;
   const usedToday = inspiration?.dailyUsage?.usedToday ?? 0;
@@ -18,11 +18,10 @@ export default function LatestInspirationCard({
   const quoteId = inspiration?.quoteId || inspiration?.id || null;
 
   const usageLabel =
-    dailyLimit > 0 ? `${usedToday} of ${dailyLimit} used today` : '';
+    dailyLimit > 0 ? `${usedToday} of ${dailyLimit} used today` : "";
 
   return (
     <section className="group relative h-full min-h-[280px] sm:min-h-[320px] lg:min-h-[360px] w-full overflow-hidden rounded-[26px] bg-card shadow-[0_24px_60px_-18px_rgb(0_0_0/0.6)] transition-[box-shadow,border-color] duration-500 ease-out group-hover:border-white/15 group-hover:shadow-[0_32px_80px_-20px_rgb(0_0_0/0.7)] light:border-[#E8D5AF]/80 light:bg-[#FDF8F0]/70 light:shadow-[0_24px_60px_-18px_rgba(120,85,30,0.28),0_8px_24px_-8px_rgba(120,85,30,0.14),0_0_32px_-10px_rgba(232,201,133,0.22)] light:backdrop-blur-[2px] light:group-hover:border-[#DCB878]/90 light:group-hover:shadow-[0_32px_80px_-20px_rgba(120,85,30,0.36),0_12px_32px_-10px_rgba(120,85,30,0.18),0_0_48px_-10px_rgba(232,201,133,0.3)]">
-
       {/* ===== Layer 1: Full-bleed background image (fills entire card) ===== */}
       {image ? (
         <div className="absolute inset-0">
@@ -53,7 +52,7 @@ export default function LatestInspirationCard({
             className="pointer-events-none absolute inset-0"
             style={{
               background:
-                'radial-gradient(ellipse 70% 90% at 20% 50%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 45%, transparent 75%)',
+                "radial-gradient(ellipse 70% 90% at 20% 50%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 45%, transparent 75%)",
             }}
           />
 
@@ -62,7 +61,7 @@ export default function LatestInspirationCard({
             className="pointer-events-none absolute inset-0"
             style={{
               background:
-                'linear-gradient(90deg, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0.28) 55%, rgba(0,0,0,0.05) 80%, transparent 100%)',
+                "linear-gradient(90deg, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0.28) 55%, rgba(0,0,0,0.05) 80%, transparent 100%)",
             }}
           />
 
@@ -86,7 +85,7 @@ export default function LatestInspirationCard({
               className="absolute inset-0"
               style={{
                 background:
-                  'radial-gradient(ellipse 75% 95% at 18% 50%, rgba(255,250,243,0.90) 0%, rgba(255,247,236,0.55) 40%, transparent 75%)',
+                  "radial-gradient(ellipse 75% 95% at 18% 50%, rgba(255,250,243,0.90) 0%, rgba(255,247,236,0.55) 40%, transparent 75%)",
               }}
             />
 
@@ -95,7 +94,7 @@ export default function LatestInspirationCard({
               className="absolute inset-0"
               style={{
                 background:
-                  'linear-gradient(90deg, rgba(255,250,242,0.95) 0%, rgba(255,248,240,0.60) 40%, transparent 75%)',
+                  "linear-gradient(90deg, rgba(255,250,242,0.95) 0%, rgba(255,248,240,0.60) 40%, transparent 75%)",
               }}
             />
 
@@ -118,7 +117,6 @@ export default function LatestInspirationCard({
           {usageLabel}
         </div>
       ) : null}
-
       {/* ===== Layer 6: Content — sits on top of everything, left-aligned ===== */}
       <div className="relative z-20 flex h-full w-full items-center px-6 sm:px-8 md:px-10 lg:px-12 py-8 sm:py-10">
         <div className="flex w-full max-w-[420px] lg:max-w-[440px] flex-col items-start text-left">
@@ -147,13 +145,13 @@ export default function LatestInspirationCard({
             <Image
               src="/logo/white-logo-1.png"
               alt="MyInspireTag"
-              width={16}
-              height={16}
-              className="h-4 w-4 rounded-full object-contain"
+              width={260}
+              height={260}
+              className="h-10 w-30 rounded-full object-contain"
             />
-            <span className="text-[11px] font-semibold tracking-[0.08em] text-white/80 light:text-[#6F5D46]">
+            {/* <span className="text-[11px] font-semibold tracking-[0.08em] text-white/80 light:text-[#6F5D46]">
               MyInspireTag
-            </span>
+            </span> */}
           </div>
 
           {/* Category pill */}
