@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { memo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Calendar, Tag, Share2, Copy } from 'lucide-react';
+import { X, Calendar, Tag, Share2, Copy, Quote as QuoteIcon } from 'lucide-react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
@@ -10,193 +10,260 @@ import FavoriteButton from '@/components/favorite/FavoriteButton';
 import { format } from 'date-fns';
 
 const DEFAULT_IMAGES = {
- love: '/images/quote-bg/love.jpg',
- strength: '/images/quote-bg/strength.jpg',
- healing: '/images/quote-bg/healing.jpg',
- faith: '/images/quote-bg/faith.jpg',
- gratitude: '/images/quote-bg/gratitude.jpg',
+  love: '/images/quote-bg/love.jpg',
+  strength: '/images/quote-bg/strength.jpg',
+  healing: '/images/quote-bg/healing.jpg',
+  faith: '/images/quote-bg/faith.jpg',
+  gratitude: '/images/quote-bg/gratitude.jpg',
+};
+
+// Premium chip per category (mirrors the card chips) — readable in both themes.
+const CATEGORY_CHIPS = {
+  love: 'border-rose-500/35 bg-rose-500/20 text-rose-300 dark:text-rose-200 light:text-rose-800',
+  strength: 'border-orange-500/35 bg-orange-500/20 text-orange-300 dark:text-orange-200 light:text-orange-800',
+  healing: 'border-emerald-500/35 bg-emerald-500/20 text-emerald-300 dark:text-emerald-200 light:text-emerald-800',
+  faith: 'border-amber-500/35 bg-amber-500/20 text-amber-300 dark:text-amber-200 light:text-amber-800',
+  gratitude: 'border-yellow-500/35 bg-yellow-500/20 text-yellow-300 dark:text-yellow-200 light:text-yellow-800',
+};
+
+// Light, cheap entrance — no spring physics, no layout thrash.
+const BACKDROP_VARIANTS = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: 0.18 } },
+  exit: { opacity: 0, transition: { duration: 0.15 } },
+};
+
+const PANEL_VARIANTS = {
+  hidden: { opacity: 0, scale: 0.97, y: 12 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    y: 0,
+    transition: { duration: 0.2, ease: 'easeOut' },
+  },
+  exit: {
+    opacity: 0,
+    scale: 0.98,
+    y: 8,
+    transition: { duration: 0.15, ease: 'easeIn' },
+  },
 };
 
 /**
  * Scan History Detail Modal
+ * Optimized: cheap tween animations, lighter backdrop, memoized content.
+ * Functionality preserved (Escape, focus trap, scroll lock, portal, actions).
  */
-export default function ScanHistoryDetailModal({ isOpen, onClose, data }) {
- const modalRef = useRef(null);
- 
- // ✅ Moved hooks BEFORE any conditional returns
- // Handle escape key
- useEffect(() => {
- const handleEscape = (e) => {
- if (e.key === 'Escape' && isOpen) {
- onClose();
- }
- };
+function ScanHistoryDetailModal({ isOpen, onClose, data }) {
+  const modalRef = useRef(null);
 
- if (isOpen) {
- document.addEventListener('keydown', handleEscape);
- document.body.style.overflow = 'hidden';
- }
+  // Handle escape key + body scroll lock
+  useEffect(() => {
+    const handleEscape = (e) => {
+      if (e.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
 
- return () => {
- document.removeEventListener('keydown', handleEscape);
- document.body.style.overflow = 'unset';
- };
- }, [isOpen, onClose]);
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'hidden';
+    }
 
- // Focus trap
- useEffect(() => {
- if (isOpen && modalRef.current) {
- modalRef.current.focus();
- }
- }, [isOpen]);
+    return () => {
+      document.removeEventListener('keydown', handleEscape);
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen, onClose]);
 
- // ✅ Now we can do conditional returns AFTER all hooks
- if (!data) return null;
- if (!isOpen) return null;
+  // Focus trap
+  useEffect(() => {
+    if (isOpen && modalRef.current) {
+      modalRef.current.focus();
+    }
+  }, [isOpen]);
 
- const quote = data?.quote;
- const tag = data?.tag;
- const category = quote?.category || 'motivation';
- const backgroundImage = quote?.image?.url || DEFAULT_IMAGES[category] || DEFAULT_IMAGES.motivation;
- 
- const formattedDate = data.createdAt
- ? format(new Date(data.createdAt), 'MMMM d, yyyy')
- : '';
- const formattedTime = data.createdAt
- ? format(new Date(data.createdAt), 'h:mm a')
- : '';
+  if (!data) return null;
+  if (!isOpen) return null;
 
- const handleShare = async () => {
- const shareText = `"${quote?.text || ''}" — ${quote?.author || 'InspireTag'}`;
- 
- if (navigator.share) {
- try {
- await navigator.share({
- title: 'InspireTag Quote',
- text: shareText,
- url: window.location.href,
- });
- } catch (err) {
- if (err.name !== 'AbortError') {
- handleCopy();
- }
- }
- } else {
- handleCopy();
- }
- };
+  const quote = data?.quote;
+  const tag = data?.tag;
+  const category = quote?.category || 'motivation';
+  const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
+  const chip = CATEGORY_CHIPS[category] || CATEGORY_CHIPS.love;
+  const backgroundImage = quote?.image?.url || DEFAULT_IMAGES[category] || DEFAULT_IMAGES.motivation;
 
- const handleCopy = () => {
- const text = `"${quote?.text || ''}" — ${quote?.author || 'InspireTag'}`;
- navigator.clipboard?.writeText(text);
- toast.success('Quote copied!');
- };
+  const formattedDate = data.createdAt
+    ? format(new Date(data.createdAt), 'MMMM d, yyyy')
+    : '';
+  const formattedTime = data.createdAt
+    ? format(new Date(data.createdAt), 'h:mm a')
+    : '';
 
- return createPortal(
- <AnimatePresence>
- <motion.div
- initial={{ opacity: 0 }}
- animate={{ opacity: 1 }}
- exit={{ opacity: 0 }}
- className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-foreground/80 backdrop-blur-sm"
- onClick={onClose}
- >
- <motion.div
- ref={modalRef}
- initial={{ scale: 0.9, opacity: 0, y: 20 }}
- animate={{ scale: 1, opacity: 1, y: 0 }}
- exit={{ scale: 0.9, opacity: 0, y: 20 }}
- transition={{ type: 'spring', damping: 25, stiffness: 300 }}
- className="relative w-full max-w-lg bg-card rounded-2xl border border-border shadow-2xl max-h-[90vh] overflow-hidden"
- onClick={(e) => e.stopPropagation()}
- tabIndex={-1}
- role="dialog"
- aria-modal="true"
- >
- {/* Close button */}
- <button
- onClick={onClose}
- className="absolute top-4 right-4 z-10 p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors cursor-pointer"
- aria-label="Close modal"
- >
- <X className="w-5 h-5" />
- </button>
+  const handleShare = async () => {
+    const shareText = `"${quote?.text || ''}" — ${quote?.author || 'InspireTag'}`;
 
- {/* Content */}
- <div className="p-6 pt-14">
- {/* Background Image */}
- <div
- className="relative h-48 rounded-xl bg-cover bg-center mb-6"
- style={{ backgroundImage: `url(${backgroundImage})` }}
- >
- <div className="absolute inset-0 bg-gradient-to-b from-black/5 via-black/10 to-black/10 rounded-xl" />
- 
- {/* Category Badge */}
- <div className="absolute top-3 right-3">
- <span className="text-[10px] px-2.5 py-1 rounded-full border border-border bg-muted text-foreground backdrop-blur-sm capitalize">
- {category}
- </span>
- </div>
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'InspireTag Quote',
+          text: shareText,
+          url: window.location.href,
+        });
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          handleCopy();
+        }
+      }
+    } else {
+      handleCopy();
+    }
+  };
 
- {/* Quote Text */}
- <div className="absolute inset-0 flex items-center justify-center p-4">
- <p className="text-lg text-foreground text-center leading-relaxed">
- "{quote?.text || ''}"
- </p>
- </div>
- </div>
+  const handleCopy = () => {
+    const text = `"${quote?.text || ''}" — ${quote?.author || 'InspireTag'}`;
+    navigator.clipboard?.writeText(text);
+    toast.success('Quote copied!');
+  };
 
- {/* Author */}
- {quote?.author && (
- <p className="text-center text-amber-400/80 text-sm mb-4">
- — {quote.author} —
- </p>
- )}
+  return createPortal(
+    <AnimatePresence>
+      <motion.div
+        variants={BACKDROP_VARIANTS}
+        initial="hidden"
+        animate="visible"
+        exit="exit"
+        className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm light:bg-black/30"
+        onClick={onClose}
+      >
+        <motion.div
+          ref={modalRef}
+          variants={PANEL_VARIANTS}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          className="relative w-full max-w-lg overflow-hidden rounded-[22px] border border-white/6 bg-card shadow-[0_32px_80px_-24px_rgb(0_0_0/0.6)] max-h-[90vh] light:border-[#E8DFCE]/80 light:bg-[#FBF7EF]/95 light:shadow-[0_32px_80px_-28px_rgba(100,72,24,0.4)]"
+          onClick={(e) => e.stopPropagation()}
+          tabIndex={-1}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Scan detail"
+        >
+          {/* Ambient glow orbs — Overview Card DNA */}
+          <div className="pointer-events-none absolute -left-24 -top-24 h-64 w-64 rounded-full bg-primary/[0.05] blur-3xl" />
+          <div className="pointer-events-none absolute -bottom-24 -right-24 h-64 w-64 rounded-full bg-accent/[0.05] blur-3xl" />
+          {/* Top sheen */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
- {/* Details */}
- <div className="space-y-2 text-sm text-muted-foreground">
- <div className="flex items-center gap-2">
- <Tag className="w-4 h-4 text-foreground-tertiary" />
- <span>Tag: <span className="text-foreground-secondary ">{tag?.tagCode || 'N/A'}</span></span>
- </div>
- <div className="flex items-center gap-2">
- <Calendar className="w-4 h-4 text-foreground-tertiary" />
- <span>Scanned on: <span className="text-foreground-secondary">{formattedDate} at {formattedTime}</span></span>
- </div>
- </div>
+          {/* Close button */}
+          <button
+            onClick={onClose}
+            className="absolute right-4 top-4 z-20 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/15 bg-black/30 text-white/90 backdrop-blur-md transition-all duration-300 hover:rotate-90 hover:bg-black/50 hover:text-white light:border-[#E8DFCE]/80 light:bg-white/80 light:text-[#4A3C2D] light:hover:bg-white"
+            aria-label="Close modal"
+          >
+            <X className="h-4 w-4" />
+          </button>
 
- {/* Actions */}
- <div className="flex items-center justify-center gap-3 mt-6 pt-4 border-t border-border">
- <FavoriteButton
- id={quote?._id}
- type="quote"
- size="default"
- variant="ghost"
- className="text-muted-foreground hover:text-foreground"
- />
- <Button
- variant="ghost"
- size="sm"
- onClick={handleShare}
- className="text-muted-foreground hover:text-foreground hover:bg-muted/50"
- >
- <Share2 className="w-4 h-4 mr-2" />
- Share
- </Button>
- <Button
- variant="ghost"
- size="sm"
- onClick={handleCopy}
- className="text-muted-foreground hover:text-foreground hover:bg-muted/50"
- >
- <Copy className="w-4 h-4 mr-2" />
- Copy
- </Button>
- </div>
- </div>
- </motion.div>
- </motion.div>
- </AnimatePresence>,
- document.body
- );
+          <div className="relative z-10 max-h-[90vh] overflow-y-auto">
+            {/* Hero image */}
+            <div
+              className="relative h-56 w-full bg-cover bg-center"
+              style={{ backgroundImage: `url(${backgroundImage})` }}
+            >
+              {/* Dark-mode cinematic overlay */}
+              <div className="absolute inset-0 hidden bg-gradient-to-b from-black/35 via-black/15 to-card dark:block" />
+              <div
+                className="pointer-events-none absolute inset-0 hidden dark:block"
+                style={{
+                  background:
+                    'radial-gradient(ellipse 90% 70% at 50% 100%, rgba(0,0,0,0.4) 0%, transparent 70%)',
+                }}
+              />
+              {/* Light-mode warm ivory blend into the card body */}
+              <div className="pointer-events-none absolute inset-0 light:bg-gradient-to-b light:from-[#FDFBF6]/30 light:via-[#F8F2E7]/20 light:to-[#FBF7EF]" />
+
+              {/* Category chip */}
+              <div className="absolute left-5 top-5">
+                <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-semibold capitalize backdrop-blur-md ${chip}`}>
+                  {categoryLabel}
+                </span>
+              </div>
+            </div>
+
+            {/* Body */}
+            <div className="px-6 pb-6 sm:px-8 sm:pb-8">
+              {/* Quote */}
+              <div className="relative -mt-6 text-center">
+                <div className="mx-auto mb-4 flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-500/25 bg-emerald-500/15 shadow-[0_0_20px_-4px_rgba(52,211,153,0.3)] backdrop-blur-sm">
+                  <QuoteIcon className="h-5 w-5 text-emerald-400" />
+                </div>
+                <p className="text-xl leading-[1.55] font-medium text-foreground sm:text-[22px]">
+                  &ldquo;{quote?.text || ''}&rdquo;
+                </p>
+
+                {/* Author */}
+                {quote?.author && (
+                  <p className="mt-3 text-sm font-medium text-accent">
+                    — {quote.author} —
+                  </p>
+                )}
+              </div>
+
+              {/* Detail rows */}
+              <div className="mt-6 space-y-2.5 rounded-2xl border border-white/6 bg-background-secondary/40 p-4 text-sm text-foreground-tertiary light:border-[#E8DFCE]/80 light:bg-[#FBF7EF]/60">
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10">
+                    <Tag className="h-3.5 w-3.5 text-accent" />
+                  </span>
+                  <span>
+                    Tag: <span className="font-medium text-foreground-secondary">{tag?.tagCode || 'N/A'}</span>
+                  </span>
+                </div>
+                <div className="flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent/10">
+                    <Calendar className="h-3.5 w-3.5 text-accent" />
+                  </span>
+                  <span>
+                    Scanned on: <span className="font-medium text-foreground-secondary">{formattedDate} at {formattedTime}</span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="mt-6 flex items-center justify-center gap-2.5 border-t border-white/6 pt-5 light:border-[#E8DFCE]/80">
+                <FavoriteButton
+                  id={quote?._id}
+                  type="quote"
+                  size="default"
+                  variant="ghost"
+                  className="h-10 cursor-pointer rounded-xl px-3 text-foreground-tertiary transition-all duration-300 hover:-translate-y-0.5 hover:text-foreground hover:bg-muted/60"
+                />
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleShare}
+                  className="h-10 cursor-pointer gap-2 rounded-xl px-4 text-foreground-tertiary transition-all duration-300 hover:-translate-y-0.5 hover:text-foreground hover:bg-muted/60"
+                >
+                  <Share2 className="h-4 w-4" />
+                  Share
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleCopy}
+                  className="h-10 cursor-pointer gap-2 rounded-xl px-4 text-foreground-tertiary transition-all duration-300 hover:-translate-y-0.5 hover:text-foreground hover:bg-muted/60"
+                >
+                  <Copy className="h-4 w-4" />
+                  Copy
+                </Button>
+              </div>
+            </div>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>,
+    document.body
+  );
 }
+
+export default memo(ScanHistoryDetailModal);

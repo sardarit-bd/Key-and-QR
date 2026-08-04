@@ -89,6 +89,14 @@ export const SIDEBAR_CONFIG = {
       icon: PenLine,
       href: "/new-dashboard/user/submit-quote",
       visibility: MENU_VISIBILITY.ALL,
+      children: [
+        {
+          id: "submission-history",
+          title: "Submission History",
+          href: "/new-dashboard/user/submit-quote/history",
+          visibility: MENU_VISIBILITY.ALL,
+        },
+      ],
     },
     {
       id: "favorites",

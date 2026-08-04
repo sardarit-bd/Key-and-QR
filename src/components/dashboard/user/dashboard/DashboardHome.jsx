@@ -42,6 +42,26 @@ export default function DashboardHome({
 
   const hasReceivedQuote = latestInspiration?.hasReceivedQuote;
 
+  // Flatten the backend payload (quote nested under .quote) onto the shape
+  // ReceiveOverlay renders: top-level text/author/description/image/category/
+  // favorite/favoriteId.
+  const flattenQuotePayload = (payload) => {
+    const q = payload?.quote || payload || {};
+    return {
+      _id: q._id,
+      receivedQuoteId: payload?.receivedQuoteId || payload?._id,
+      text: q.text,
+      author: q.author || 'InspireTag',
+      description: q.description || null,
+      image: q.image || null,
+      theme: q.theme || null,
+      category: payload?.category || null,
+      receivedAt: payload?.receivedAt || null,
+      favorite: !!payload?.favorite,
+      favoriteId: payload?.favoriteId || null,
+    };
+  };
+
   const handleSelectCategory = (category) => {
     overlayCategoryRef.current = category?.name || 'Inspiration';
     setRevealState({ quote: null });
@@ -49,7 +69,7 @@ export default function DashboardHome({
     receiveQuote.mutate(category?.slug || 'inspire', {
       onSuccess: (quote) => {
         // Small delay so the loading messages are visible (~1s feel)
-        setTimeout(() => setRevealState({ quote }), 600);
+        setTimeout(() => setRevealState({ quote: flattenQuotePayload(quote) }), 600);
       },
       onError: () => {
         setIsOverlayOpen(false);
@@ -66,7 +86,7 @@ export default function DashboardHome({
     readAgain.mutate(receivedQuoteId, {
       onSuccess: (data) => {
         overlayCategoryRef.current = data?.category?.name || 'Inspiration';
-        setRevealState({ quote: data });
+        setRevealState({ quote: flattenQuotePayload(data) });
         setIsOverlayOpen(true);
       },
     });

@@ -7,6 +7,7 @@ export default function InspirationStreak({ streak }) {
  const current = streak?.current ?? 0;
  const longest = streak?.longest ?? 0;
  const weekActivity = streak?.weekActivity ?? [false, false, false, false, false, false, false];
+ const weekDates = streak?.weekDates ?? [];
 
  // Calculate ring progress: 7-day weekly cycle
  // 0 days = 0%, 7 days = 100%
@@ -19,6 +20,17 @@ export default function InspirationStreak({ streak }) {
 
  // Monday → Sunday labels
  const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
+
+ // Weekday letter per entry, derived from the actual date when available.
+ // Backend emits weekActivity as a rolling last-7-days window (oldest →
+ // newest, ending today), so each entry's own date determines its label.
+ const dayLabel = (dateStr, fallbackIndex) => {
+   if (!dateStr) return DAYS[fallbackIndex] || '';
+   const d = new Date(`${dateStr}T00:00:00Z`);
+   if (Number.isNaN(d.getTime())) return DAYS[fallbackIndex] || '';
+   const WEEKDAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S']; // getUTCDay(): 0=Sun
+   return WEEKDAY_LETTERS[d.getUTCDay()];
+ };
 
  return (
  <Card className="relative overflow-hidden rounded-[26px] border border-accent/20 p-5 sm:p-6 h-full">
@@ -114,8 +126,8 @@ export default function InspirationStreak({ streak }) {
  <div className="mt-6 sm:mt-8 w-full rounded-[18px] bg-background-secondary/90 px-3 sm:px-5 py-3 sm:py-4">
  <div className="flex justify-between">
  {DAYS.map((day, i) => (
- <div key={i} className="flex flex-col items-center gap-2 sm:gap-3">
- <span className="text-xs sm:text-sm text-foreground-secondary">{day}</span>
+  <div key={i} className="flex flex-col items-center gap-2 sm:gap-3">
+  <span className="text-xs sm:text-sm text-foreground-secondary">{dayLabel(weekDates[i], i)}</span>
 
  <div
  className={`flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full border ${

@@ -77,7 +77,15 @@ export const favoriteService = {
    */
   getFavorites: async (params = {}) => {
     try {
-      const queryParams = new URLSearchParams(params);
+      const queryParams = new URLSearchParams();
+      if (params.page) queryParams.set('page', params.page);
+      if (params.limit) queryParams.set('limit', params.limit);
+      if (params.type) queryParams.set('type', params.type);
+      if (params.search) queryParams.set('search', params.search);
+      if (params.category && params.category !== 'all') queryParams.set('category', params.category);
+      if (params.sortBy) queryParams.set('sortBy', params.sortBy);
+      if (params.sortOrder) queryParams.set('sortOrder', params.sortOrder);
+
       const response = await api.get(`/favorites?${queryParams}`);
       return {
         success: true,

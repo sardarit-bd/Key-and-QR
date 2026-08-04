@@ -1,18 +1,50 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Calendar, Tag, Eye, Share2, Copy } from 'lucide-react';
+import { Calendar, Tag, Eye, Share2, Quote as QuoteIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import FavoriteButton from '@/components/favorite/FavoriteButton';
 import { format } from 'date-fns';
 
-const CATEGORY_COLORS = {
-  love: 'border-rose-500/30 bg-rose-500/10 text-rose-400',
-  strength: 'border-orange-500/30 bg-orange-500/10 text-orange-400',
-  healing: 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400',
-  faith: 'border-amber-500/30 bg-amber-500/10 text-amber-400',
-  gratitude: 'border-yellow-500/30 bg-yellow-500/10 text-yellow-400',
+// Per-category chip theme — Overview design language, boosted contrast:
+// stronger tinted surface + border, bright readable text in both themes.
+const CATEGORY_CHIPS = {
+  love: {
+    border: 'border-rose-500/35',
+    bg: 'bg-rose-500/20',
+    text: 'text-rose-300 dark:text-rose-200',
+    lightText: 'light:text-rose-800',
+    glow: 'shadow-[0_0_16px_-4px_rgba(251,113,133,0.4)]',
+  },
+  strength: {
+    border: 'border-orange-500/35',
+    bg: 'bg-orange-500/20',
+    text: 'text-orange-300 dark:text-orange-200',
+    lightText: 'light:text-orange-800',
+    glow: 'shadow-[0_0_16px_-4px_rgba(251,146,60,0.4)]',
+  },
+  healing: {
+    border: 'border-emerald-500/35',
+    bg: 'bg-emerald-500/20',
+    text: 'text-emerald-300 dark:text-emerald-200',
+    lightText: 'light:text-emerald-800',
+    glow: 'shadow-[0_0_16px_-4px_rgba(52,211,153,0.4)]',
+  },
+  faith: {
+    border: 'border-amber-500/35',
+    bg: 'bg-amber-500/20',
+    text: 'text-amber-300 dark:text-amber-200',
+    lightText: 'light:text-amber-800',
+    glow: 'shadow-[0_0_16px_-4px_rgba(251,191,36,0.4)]',
+  },
+  gratitude: {
+    border: 'border-yellow-500/35',
+    bg: 'bg-yellow-500/20',
+    text: 'text-yellow-300 dark:text-yellow-200',
+    lightText: 'light:text-yellow-800',
+    glow: 'shadow-[0_0_16px_-4px_rgba(250,204,21,0.4)]',
+  },
 };
 
 const CATEGORY_LABELS = {
@@ -31,8 +63,16 @@ const DEFAULT_IMAGES = {
   motivation: '/images/quote-bg/strength.jpg',
 };
 
+// Overview card DNA: EXACT match to the Summary Statistics card surface —
+// same radius, bg-card + border-white/6, warm ivory glass in light mode,
+// identical warm shadows and elevation.
+const CARD_SURFACE =
+  'rounded-2xl bg-card border border-white/6 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.45)] ' +
+  'light:border-[#E8DFCE]/80 light:bg-[#FBF7EF]/55 light:shadow-[0_20px_50px_-20px_rgba(100,72,24,0.28),0_10px_30px_-18px_rgba(100,72,24,0.16)]';
+
 /**
- * Scan History Card
+ * Scan History Card — collectible card
+ * Shares the Overview card DNA (surface, shadows, chips, typography).
  */
 export default function ScanHistoryCard({
   item,
@@ -43,9 +83,9 @@ export default function ScanHistoryCard({
   const tag = item?.tag;
   const category = quote?.category || 'motivation';
   const categoryLabel = CATEGORY_LABELS[category] || category;
-  const categoryColor = CATEGORY_COLORS[category] || CATEGORY_COLORS.motivation;
+  const chip = CATEGORY_CHIPS[category] || CATEGORY_CHIPS.healing;
   const backgroundImage = quote?.image?.url || DEFAULT_IMAGES[category] || DEFAULT_IMAGES.motivation;
-  
+
   const formattedDate = item.createdAt
     ? format(new Date(item.createdAt), 'MMM d, yyyy')
     : '';
@@ -53,9 +93,11 @@ export default function ScanHistoryCard({
     ? format(new Date(item.createdAt), 'h:mm a')
     : '';
 
-  const handleShare = async () => {
+  const handleShare = async (e) => {
+    e.stopPropagation();
+    e.preventDefault();
     const shareText = `"${quote?.text || ''}" — ${quote?.author || 'InspireTag'}`;
-    
+
     if (navigator.share) {
       try {
         await navigator.share({
@@ -79,28 +121,42 @@ export default function ScanHistoryCard({
     toast.success('Quote copied!');
   };
 
+  const handleView = (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onViewDetail(item);
+  };
+
+  // Action icons — Overview hover language: subtle lift, soft bg tint.
+  // NOTE: no text color here so the FavoriteButton's own active rose state
+  // (text-rose-500 + fill) is never overridden by twMerge.
+  const actionIconClass =
+    'h-8 w-8 cursor-pointer transition-all duration-300 hover:-translate-y-0.5 hover:bg-white/15 active:scale-95 dark:hover:bg-white/10 light:hover:bg-[#E8DFCE]/60';
+
   if (view === 'list') {
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-card border border-border rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4 hover:border-accent/30 transition-colors"
+        className={`group flex flex-col gap-4 border ${CARD_SURFACE} p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-[0_20px_40px_-16px_rgb(0_0_0/0.5)] sm:flex-row sm:items-center`}
       >
-        <div className="flex-1 min-w-0">
-          <p className="text-sm text-foreground font-medium line-clamp-2">
-            "{quote?.text || ''}"
+        <div className="min-w-0 flex-1">
+          <p className="line-clamp-2 text-sm font-medium text-foreground">
+            &ldquo;{quote?.text || ''}&rdquo;
           </p>
-          <div className="flex flex-wrap items-center gap-2 mt-2">
-            <span className="text-xs text-muted-foreground">{quote?.author || 'InspireTag'}</span>
-            <span className={`text-[10px] px-2 py-0.5 rounded-full ${categoryColor}`}>
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            <span className="text-xs text-foreground-tertiary">
+              {quote?.author || 'InspireTag'}
+            </span>
+            <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold capitalize ${chip.border} ${chip.bg} ${chip.text} ${chip.lightText}`}>
               {categoryLabel}
             </span>
-            <span className="text-[10px] text-foreground-tertiary flex items-center gap-1">
-              <Tag className="w-3 h-3" />
+            <span className="flex items-center gap-1 text-[10px] text-foreground-tertiary">
+              <Tag className="h-3 w-3" />
               {tag?.tagCode || 'N/A'}
             </span>
-            <span className="text-[10px] text-foreground-tertiary flex items-center gap-1">
-              <Calendar className="w-3 h-3" />
+            <span className="flex items-center gap-1 text-[10px] text-foreground-tertiary">
+              <Calendar className="h-3 w-3" />
               {formattedDate} at {formattedTime}
             </span>
           </div>
@@ -112,105 +168,127 @@ export default function ScanHistoryCard({
             type="quote"
             size="sm"
             variant="ghost"
-            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            className="h-8 w-8 text-foreground-tertiary hover:text-foreground hover:bg-muted/50"
           />
           <Button
             variant="ghost"
             size="icon"
             onClick={handleShare}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            className="h-8 w-8 cursor-pointer text-foreground-tertiary hover:text-foreground hover:bg-muted/50"
           >
-            <Share2 className="w-4 h-4" />
+            <Share2 className="h-4 w-4" />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            onClick={() => onViewDetail(item)}
-            className="h-8 w-8 text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            onClick={handleView}
+            className="h-8 w-8 cursor-pointer text-foreground-tertiary hover:text-foreground hover:bg-muted/50"
           >
-            <Eye className="w-4 h-4" />
+            <Eye className="h-4 w-4" />
           </Button>
         </div>
       </motion.div>
     );
   }
 
-  // Grid view
+  // Grid view — collectible card
   return (
     <motion.div
-      initial={{ opacity: 0, scale: 0.95 }}
+      initial={{ opacity: 0, scale: 0.96 }}
       animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ scale: 1.02, y: -4 }}
-      transition={{ duration: 0.2 }}
-      className="group relative bg-card border border-border rounded-2xl overflow-hidden hover:border-accent/30 transition-all"
+      whileHover={{ scale: 1.015, y: -5 }}
+      transition={{ duration: 0.25, ease: 'easeOut' }}
+      className={`group relative overflow-hidden ${CARD_SURFACE} transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-[0_24px_48px_-16px_rgb(0_0_0/0.55)]`}
     >
-      {/* Background Image */}
+      {/* Clickable image area — opens detail modal */}
       <div
-        className="relative h-48 bg-cover bg-center cursor-pointer"
+        className="relative h-52 cursor-pointer bg-cover bg-center sm:h-56"
         style={{ backgroundImage: `url(${backgroundImage})` }}
         onClick={() => onViewDetail(item)}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-black/15 via-black/10 to-black/10" />
-        
-        {/* Category Badge */}
-        <div className="absolute top-3 right-3">
-          <span className={`text-[10px] px-2.5 py-1 rounded-full border border-gray-400 capitalize ${categoryColor} backdrop-blur-sm`}>
+        {/* Cinematic gradient stack — dark mode only, for text readability */}
+        <div className="absolute inset-0 hidden bg-gradient-to-b from-black/25 via-black/10 to-black/45 dark:block" />
+        <div
+          className="pointer-events-none absolute inset-0 hidden dark:block"
+          style={{
+            background:
+              'radial-gradient(ellipse 90% 80% at 50% 0%, rgba(0,0,0,0.2) 0%, transparent 60%)',
+          }}
+        />
+
+        {/* Light-mode warm ivory wash — blends the photo into the Summary-card surface */}
+        <div className="pointer-events-none absolute inset-0 light:bg-gradient-to-b light:from-[#FDFBF6]/40 light:via-[#F8F2E7]/35 light:to-[#FBF7EF]/85" />
+
+        {/* Top chips (display-only, not clickable) */}
+        <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-2">
+          {/* Tag chip — matches category chip height/padding/border */}
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/30 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/95 backdrop-blur-md light:border-[#E8DFCE]/80 light:bg-white/70 light:text-[#4A3C2D]">
+            <Tag className="h-3 w-3" />
+            {tag?.tagCode || 'N/A'}
+          </span>
+
+          {/* Category chip — readable in both themes */}
+          <span
+            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize backdrop-blur-md ${chip.border} ${chip.bg} ${chip.text} ${chip.lightText} ${chip.glow}`}
+          >
             {categoryLabel}
           </span>
         </div>
 
-        {/* Tag Code */}
-        <div className="absolute top-3 left-3">
-            <span className="text-[10px] px-2.5 py-1 rounded-full bg-muted/70 border border-border text-foreground-secondary backdrop-blur-sm">
-            {tag?.tagCode || 'N/A'}
-          </span>
-        </div>
-
-        {/* Quote Text */}
-        <div className="absolute inset-0 flex items-center justify-center p-4">
-          <p className="text-sm text-foreground font-medium text-center leading-relaxed line-clamp-4">
-            "{quote?.text || ''}"
-          </p>
-        </div>
-
-        {/* Bottom Actions */}
-        <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-          <span className="text-[10px] text-muted-foreground">
-            {quote?.author || 'InspireTag'}
-          </span>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleShare}
-              className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
-            >
-              <Share2 className="w-3.5 h-3.5" />
-            </Button>
-            <FavoriteButton
-              id={quote?._id}
-              type="quote"
-              size="sm"
-              variant="ghost"
-              className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
-            />
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => onViewDetail(item)}
-              className="h-7 w-7 text-muted-foreground hover:text-foreground hover:bg-muted"
-            >
-              <Eye className="w-3.5 h-3.5" />
-            </Button>
+        {/* Quote area */}
+        <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 py-10 pt-14">
+          <div className="text-center">
+            <QuoteIcon className="mx-auto mb-2 h-4 w-4 text-white/60 dark:text-white/60 light:text-[#8A7558]" strokeWidth={2} />
+            <p className="line-clamp-4 text-[15px] font-medium leading-[1.6] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.55)] dark:text-white dark:drop-shadow-[0_2px_10px_rgba(0,0,0,0.55)] light:text-[#201A15] light:drop-shadow-none">
+              &ldquo;{quote?.text || ''}&rdquo;
+            </p>
           </div>
         </div>
 
-        {/* Date/Time */}
-        <div className="absolute bottom-3 left-1/2 -translate-x-1/2">
-          <span className="text-[10px] text-foreground-tertiary flex items-center gap-1">
-            <Calendar className="w-3 h-3" />
-            {formattedDate} · {formattedTime}
-          </span>
+        {/* Glass footer */}
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 border-t border-white/10 bg-gradient-to-t from-black/75 via-black/35 to-transparent px-3.5 pb-2.5 pt-8 dark:border-white/10 light:border-[#E8DFCE]/80 light:from-[#FBF7EF]/95 light:via-[#FBF7EF]/60 light:to-transparent">
+          <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+            {/* Brand — left */}
+            <span className="truncate text-[11px] font-medium text-white/80 light:text-[#6F5D46]">
+              {quote?.author || 'MyInspireTag'}
+            </span>
+
+            {/* Date — center */}
+            <span className="flex items-center gap-1 text-[10px] font-medium whitespace-nowrap text-white/65 light:text-[#8A7558]">
+              <Calendar className="h-3 w-3" />
+              {formattedDate} · {formattedTime}
+            </span>
+
+            {/* Actions — right (interactive, re-enable pointer events) */}
+            <div className="pointer-events-auto flex items-center justify-end gap-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleShare}
+                aria-label="Share quote"
+                className={`${actionIconClass} rounded-full bg-white/10 text-white/90 backdrop-blur-md hover:text-white light:text-[#6F5D46] light:hover:text-[#4A3C2D]`}
+              >
+                <Share2 className="h-3.5 w-3.5" />
+              </Button>
+              <FavoriteButton
+                id={quote?._id}
+                type="quote"
+                size="sm"
+                variant="ghost"
+                aria-label="Favorite quote"
+                className={`${actionIconClass} rounded-full bg-white/10 text-white/90 backdrop-blur-md hover:text-white light:text-[#6F5D46] light:hover:text-[#4A3C2D]`}
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleView}
+                aria-label="View quote details"
+                className={`${actionIconClass} rounded-full bg-white/10 text-white/90 backdrop-blur-md hover:text-white light:text-[#6F5D46] light:hover:text-[#4A3C2D]`}
+              >
+                <Eye className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </div>
         </div>
       </div>
     </motion.div>

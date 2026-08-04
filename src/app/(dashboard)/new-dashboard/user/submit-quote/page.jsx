@@ -1,92 +1,85 @@
 'use client';
 
+import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Send, CheckCircle } from 'lucide-react';
-import { useState } from 'react';
-import api from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
-import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
+import {
+  SubmitQuoteHeader,
+  QuoteWriter,
+  AuthorInput,
+  CategoryPills,
+  SubmitButton,
+  SubmitSuccessState,
+} from '@/components/submit-quote';
+import { useSubmitQuoteMutation } from '@/hooks/pending-quote/usePendingQuote';
 
+const MAX_LENGTH = 500;
+
+/**
+ * Submit Quote Page — clean, focused, premium publishing experience.
+ * Single-column layout: header → quote writer → author → category → helper → publish.
+ * Route: /new-dashboard/user/submit-quote
+ */
 export default function SubmitQuotePage() {
-  const { user } = useAuthStore();
-  const { data: categories = [], isLoading: categoriesLoading } = useQuoteCategories();
   const [text, setText] = useState('');
   const [author, setAuthor] = useState('');
-  const [category, setCategory] = useState('other');
-  const [submitting, setSubmitting] = useState(false);
+  const [category, setCategory] = useState('inspire');
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
 
-  // Build category options from the backend (with 'other' always available)
-  const categoryOptions = [
-    ...categories.map((cat) => ({
-      value: cat.slug || cat.id,
-      label: cat.name,
-    })),
-    { value: 'other', label: 'Other' },
-  ];
-  // Deduplicate by value
-  const uniqueCategories = categoryOptions.filter(
-    (cat, i, arr) => arr.findIndex((c) => c.value === cat.value) === i
+  const submitQuote = useSubmitQuoteMutation();
+
+  const handleSubmit = useCallback(
+    async (e) => {
+      e.preventDefault();
+      if (text.trim().length < 3) {
+        setError('Quote must be at least 3 characters');
+        return;
+      }
+      if (text.trim().length > MAX_LENGTH) {
+        setError(`Quote cannot exceed ${MAX_LENGTH} characters`);
+        return;
+      }
+
+      setError(null);
+      try {
+        await submitQuote.mutateAsync({
+          text: text.trim(),
+          category,
+          author: author.trim() || null,
+          type: 'community',
+        });
+        setSubmitted(true);
+        setText('');
+        setAuthor('');
+        setCategory('inspire');
+      } catch (err) {
+        setError(err?.message || 'Failed to submit quote');
+      }
+    },
+    [text, author, category, submitQuote]
   );
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (text.trim().length < 3) {
-      setError('Quote must be at least 3 characters');
-      return;
-    }
-
-    setSubmitting(true);
+  const handleWriteAnother = useCallback(() => {
+    setSubmitted(false);
     setError(null);
+  }, []);
 
-    try {
-      await api.post('/pending-quotes/submit', {
-        text: text.trim(),
-        category,
-        author: author.trim() || null,
-        type: 'community',
-      });
-      setSubmitted(true);
-      setText('');
-      setAuthor('');
-      setCategory('other');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to submit quote');
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
+  // Success state
   if (submitted) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="text-center max-w-md mx-auto px-4"
-        >
-          <CheckCircle className="mx-auto text-green-500" size={64} />
-          <h2 className="mt-6 text-2xl font-bold text-foreground">Quote Submitted!</h2>
-          <p className="mt-3 text-muted-foreground">
-            Your quote has been submitted for review. You&apos;ll see it in your quotes once approved by an admin.
-          </p>
-          <div className="mt-6 flex gap-3 justify-center">
-            <button
-              onClick={() => setSubmitted(false)}
-              className="px-6 py-3 bg-accent text-accent-foreground font-medium rounded-xl hover:bg-accent/90 transition-colors"
-            >
-              Submit Another
-            </button>
-            <button
-              onClick={() => window.location.href = '/new-dashboard/user/my-quotes'}
-              className="px-6 py-3 bg-muted text-foreground rounded-xl hover:bg-muted/80 transition-colors"
-            >
-              View My Quotes
-            </button>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.3 }}
+        className="min-h-screen bg-background"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24">
+          <SubmitQuoteHeader />
+          <div className="mt-10">
+            <SubmitSuccessState onWriteAnother={handleWriteAnother} />
           </div>
-        </motion.div>
-      </div>
+        </div>
+      </motion.div>
     );
   }
 
@@ -94,92 +87,48 @@ export default function SubmitQuotePage() {
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
       className="min-h-screen bg-background"
     >
-      <div className="max-w-2xl mx-auto px-4 sm:px-6 py-6 pb-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24">
         {/* Header */}
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Submit a Quote</h1>
-          <p className="text-sm text-muted-foreground mt-1">Share an inspirational quote with the community</p>
+        <SubmitQuoteHeader />
+
+        {/* Centered writing column */}
+        <div className="mx-auto mt-10 w-full max-w-2xl">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Quote textarea */}
+            <QuoteWriter text={text} onChange={setText} />
+
+            {/* Author input */}
+            <AuthorInput author={author} onChange={setAuthor} />
+
+            {/* Category selection */}
+            <CategoryPills value={category} onChange={setCategory} />
+
+            {/* Error */}
+            {error && (
+              <div className="rounded-xl border border-red-500/25 bg-red-500/10 p-3.5 text-sm text-red-400">
+                {error}
+              </div>
+            )}
+
+            {/* Helper text */}
+            <p className="text-center text-[13px] leading-relaxed text-foreground-tertiary">
+              Your quote will be reviewed before publishing.
+              <br className="hidden sm:block" />
+              We&apos;ll notify you once it&apos;s approved.
+            </p>
+
+            {/* Publish button */}
+            <div className="flex justify-center pt-1">
+              <SubmitButton
+                submitting={submitQuote.isPending}
+                disabled={text.trim().length < 3}
+              />
+            </div>
+          </form>
         </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit} className="mt-8 space-y-6">
-          {/* Quote Text */}
-          <div>
-            <label className="block text-sm font-medium text-foreground-secondary mb-2">
-              Quote <span className="text-destructive">*</span>
-            </label>
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Enter the inspirational quote..."
-              rows={4}
-              maxLength={500}
-              className="w-full px-4 py-3 bg-muted border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent/50 resize-none"
-            />
-            <p className="mt-1 text-xs text-foreground-tertiary">{text.length}/500 characters</p>
-          </div>
-
-          {/* Author */}
-          <div>
-            <label className="block text-sm font-medium text-foreground-secondary mb-2">
-              Author <span className="text-foreground-tertiary">(optional)</span>
-            </label>
-            <input
-              type="text"
-              value={author}
-              onChange={(e) => setAuthor(e.target.value)}
-              placeholder="Who said this? (e.g., Maya Angelou)"
-              maxLength={100}
-              className="w-full px-4 py-3 bg-muted border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-accent/50"
-            />
-          </div>
-
-          {/* Category */}
-          <div>
-            <label className="block text-sm font-medium text-foreground-secondary mb-2">
-              Category <span className="text-foreground-tertiary">(optional)</span>
-            </label>
-            <div className="flex flex-wrap gap-2">
-              {categoriesLoading ? (
-                <span className="text-foreground-tertiary text-sm">Loading categories...</span>
-              ) : (
-                uniqueCategories.map((cat) => (
-                  <button
-                    key={cat.value}
-                    type="button"
-                    onClick={() => setCategory(cat.value)}
-                    className={`px-4 py-2 rounded-xl text-sm transition-colors ${
-                      category === cat.value
-                        ? 'bg-accent text-accent-foreground font-medium'
-                        : 'bg-muted text-foreground-secondary hover:bg-muted/80'
-                    }`}
-                  >
-                    {cat.label}
-                  </button>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Error */}
-          {error && (
-            <div className="p-3 bg-destructive/10 border border-destructive/30 rounded-xl text-destructive text-sm">
-              {error}
-            </div>
-          )}
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={submitting || text.trim().length < 3}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-accent text-accent-foreground font-medium rounded-xl hover:bg-accent/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <Send size={18} />
-            {submitting ? 'Submitting...' : 'Submit Quote'}
-          </button>
-        </form>
       </div>
     </motion.div>
   );

@@ -29,8 +29,8 @@ export function useFavorites(params = {}) {
     const { isAuthenticated } = useAuthStore();
 
     return useQuery({
-        queryKey: favoriteKeys.list({ page, limit }),
-        queryFn: () => favoriteService.getFavorites({ page, limit }),
+        queryKey: favoriteKeys.list(params),
+        queryFn: () => favoriteService.getFavorites(params),
         staleTime: 30 * 1000,
         gcTime: 5 * 60 * 1000,
         retry: 1,

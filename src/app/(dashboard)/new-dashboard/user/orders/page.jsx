@@ -5,6 +5,7 @@ import { Package, Clock, CheckCircle, XCircle, Truck, ChevronRight, Search } fro
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/api';
+import Pagination from '@/components/ui/Pagination';
 
 const STATUS_TABS = [
   { id: 'all', label: 'All' },
@@ -192,24 +193,12 @@ export default function OrdersPage() {
 
         {/* Pagination */}
         {meta.totalPage > 1 && (
-          <div className="mt-8 flex items-center justify-center gap-2">
-            <button
-              onClick={() => setPage(Math.max(1, page - 1))}
-              disabled={page === 1}
-              className="px-4 py-2 bg-muted rounded-lg text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/80"
-            >
-              Previous
-            </button>
-            <span className="text-muted-foreground text-sm">
-              Page {page} of {meta.totalPage}
-            </span>
-            <button
-              onClick={() => setPage(Math.min(meta.totalPage, page + 1))}
-              disabled={page === meta.totalPage}
-              className="px-4 py-2 bg-muted rounded-lg text-foreground disabled:opacity-50 disabled:cursor-not-allowed hover:bg-muted/80"
-            >
-              Next
-            </button>
+          <div className="mt-8">
+            <Pagination
+              currentPage={page}
+              totalPages={meta.totalPage}
+              onPageChange={setPage}
+            />
           </div>
         )}
       </div>

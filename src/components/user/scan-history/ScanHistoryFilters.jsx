@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, X } from 'lucide-react';
+import { Search, X, SlidersHorizontal } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,8 +25,14 @@ const SORT_OPTIONS = [
   { id: 'oldest', name: 'Oldest First' },
 ];
 
+// Shared premium control chrome — matches Overview surface language:
+// background-secondary surface + white/6 border + accent focus glow.
+const CONTROL_CLASS =
+  'h-11 cursor-pointer rounded-xl border border-white/6 bg-background-secondary/50 backdrop-blur-md transition-all duration-300 hover:border-white/12 hover:bg-background-secondary/70 focus-within:border-accent/50 focus-within:ring-2 focus-within:ring-accent/20 light:border-[#E8DFCE]/80 light:bg-white/70';
+
 /**
  * Scan History Filters
+ * Premium glass search + select controls with focus glow.
  */
 export default function ScanHistoryFilters({
   search,
@@ -43,23 +49,25 @@ export default function ScanHistoryFilters({
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full md:w-auto">
         {/* Search */}
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <div className={`relative w-full sm:w-72 ${CONTROL_CLASS}`}>
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-tertiary" />
           <Input
             type="text"
             placeholder="Search by quote or tag..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full bg-card border-border rounded-xl h-11 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-emerald-500/50"
+            className="h-full w-full border-0 bg-transparent pl-11 pr-4 text-sm text-foreground placeholder:text-foreground-tertiary focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
           />
         </div>
 
         {/* Category Filter */}
         <Select value={category} onValueChange={onCategoryChange}>
-          <SelectTrigger className="w-full sm:w-44 bg-card border-border rounded-xl h-11 text-foreground-secondary hover:bg-muted">
+          <SelectTrigger
+            className={`w-full sm:w-44 ${CONTROL_CLASS} bg-transparent text-foreground-secondary`}
+          >
             <SelectValue placeholder="Category" />
           </SelectTrigger>
-          <SelectContent className="bg-card border-border text-foreground">
+          <SelectContent className="rounded-xl border border-white/6 bg-popover text-foreground shadow-xl backdrop-blur-xl light:border-[#E8DFCE]/80">
             {CATEGORIES.map((cat) => (
               <SelectItem key={cat.id} value={cat.id}>
                 {cat.name}
@@ -70,10 +78,12 @@ export default function ScanHistoryFilters({
 
         {/* Sort */}
         <Select value={sort} onValueChange={onSortChange}>
-          <SelectTrigger className="w-full sm:w-40 bg-card border-border rounded-xl h-11 text-foreground-secondary hover:bg-muted">
+          <SelectTrigger
+            className={`w-full sm:w-40 ${CONTROL_CLASS} bg-transparent text-foreground-secondary`}
+          >
             <SelectValue placeholder="Sort By" />
           </SelectTrigger>
-          <SelectContent className="bg-card border-border text-foreground">
+          <SelectContent className="rounded-xl border border-white/6 bg-popover text-foreground shadow-xl backdrop-blur-xl light:border-[#E8DFCE]/80">
             {SORT_OPTIONS.map((opt) => (
               <SelectItem key={opt.id} value={opt.id}>
                 {opt.name}
@@ -88,15 +98,16 @@ export default function ScanHistoryFilters({
             variant="ghost"
             size="sm"
             onClick={onReset}
-            className="text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            className="h-11 cursor-pointer gap-1.5 rounded-xl px-3.5 text-foreground-tertiary transition-all duration-300 hover:bg-background-secondary/70 hover:text-foreground"
           >
-            <X className="w-4 h-4 mr-1" />
+            <X className="h-4 w-4" />
             Reset
           </Button>
         )}
       </div>
 
-      <div className="text-sm text-foreground-tertiary">
+      <div className="flex items-center gap-1.5 text-sm text-foreground-tertiary">
+        <SlidersHorizontal className="h-3.5 w-3.5" />
         {hasActiveFilters ? 'Filters applied' : 'All scans'}
       </div>
     </div>

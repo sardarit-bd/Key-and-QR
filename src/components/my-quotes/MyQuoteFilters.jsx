@@ -1,6 +1,6 @@
 'use client';
 
-import { Search, Grid, List, X } from 'lucide-react';
+import { Search, X, SlidersHorizontal, Grid, List } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,9 +17,15 @@ const SORT_OPTIONS = [
   { id: 'alphabetical', name: 'A-Z' },
 ];
 
+// Shared premium control chrome — matches Overview surface language:
+// background-secondary surface + white/6 border + accent focus glow.
+const CONTROL_CLASS =
+  'h-11 cursor-pointer rounded-xl border border-white/6 bg-background-secondary/50 backdrop-blur-md transition-all duration-300 hover:border-white/12 hover:bg-background-secondary/70 focus-within:border-accent/50 focus-within:ring-2 focus-within:ring-accent/20 light:border-[#E8DFCE]/80 light:bg-white/70';
+
 /**
  * My Quote Filters
- * Search, Category filter, Sort dropdown, View toggle
+ * Search, Category filter, Sort dropdown, View toggle.
+ * Premium glass controls — same language as Overview / Scan History.
  */
 export default function MyQuoteFilters({
   search,
@@ -52,23 +58,25 @@ export default function MyQuoteFilters({
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 w-full md:w-auto">
         {/* Search */}
-        <div className="relative w-full sm:w-64">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <div className={`relative w-full sm:w-72 ${CONTROL_CLASS}`}>
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-tertiary" />
           <Input
             type="text"
             placeholder="Search your quotes..."
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="w-full bg-card border-border rounded-xl h-11 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus-visible:ring-violet-500/50"
+            className="h-full w-full border-0 bg-transparent pl-11 pr-4 text-sm text-foreground placeholder:text-foreground-tertiary focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
           />
         </div>
 
         {/* Category Filter */}
         <Select value={category} onValueChange={onCategoryChange}>
-          <SelectTrigger className="w-full sm:w-44 bg-card border-border rounded-xl h-11 text-foreground-secondary hover:bg-muted">
+          <SelectTrigger
+            className={`w-full sm:w-44 ${CONTROL_CLASS} bg-transparent text-foreground-secondary`}
+          >
             <SelectValue placeholder="Category" />
           </SelectTrigger>
-          <SelectContent className="bg-card border-border text-foreground">
+          <SelectContent className="rounded-xl border border-white/6 bg-popover text-foreground shadow-xl backdrop-blur-xl light:border-[#E8DFCE]/80">
             {uniqueCategoryOptions.map((cat) => (
               <SelectItem key={cat.id} value={cat.id}>
                 {cat.name}
@@ -79,10 +87,12 @@ export default function MyQuoteFilters({
 
         {/* Sort */}
         <Select value={sort} onValueChange={onSortChange}>
-          <SelectTrigger className="w-full sm:w-44 bg-card border-border rounded-xl h-11 text-foreground-secondary hover:bg-muted">
+          <SelectTrigger
+            className={`w-full sm:w-40 ${CONTROL_CLASS} bg-transparent text-foreground-secondary`}
+          >
             <SelectValue placeholder="Sort By" />
           </SelectTrigger>
-          <SelectContent className="bg-card border-border text-foreground">
+          <SelectContent className="rounded-xl border border-white/6 bg-popover text-foreground shadow-xl backdrop-blur-xl light:border-[#E8DFCE]/80">
             {SORT_OPTIONS.map((opt) => (
               <SelectItem key={opt.id} value={opt.id}>
                 {opt.name}
@@ -91,48 +101,58 @@ export default function MyQuoteFilters({
           </SelectContent>
         </Select>
 
-        {/* Reset Filters */}
+        {/* Reset */}
         {hasActiveFilters && (
           <Button
             variant="ghost"
             size="sm"
             onClick={onReset}
-            className="text-muted-foreground hover:text-foreground hover:bg-muted/50"
+            className="h-11 cursor-pointer gap-1.5 rounded-xl px-3.5 text-foreground-tertiary transition-all duration-300 hover:bg-background-secondary/70 hover:text-foreground"
           >
-            <X className="w-4 h-4 mr-1" />
+            <X className="h-4 w-4" />
             Reset
           </Button>
         )}
       </div>
 
-      {/* View Toggle */}
-      <div className="flex items-center gap-1.5">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onViewChange('grid')}
-          className={`rounded-lg ${
-            view === 'grid'
-              ? 'bg-primary/20 text-primary'
-              : 'bg-card text-foreground-tertiary hover:bg-muted'
-          }`}
-          aria-label="Grid view"
-        >
-          <Grid className="w-4 h-4" />
-        </Button>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => onViewChange('list')}
-          className={`rounded-lg ${
-            view === 'list'
-              ? 'bg-primary/20 text-primary'
-              : 'bg-card text-foreground-tertiary hover:bg-muted'
-          }`}
-          aria-label="List view"
-        >
-          <List className="w-4 h-4" />
-        </Button>
+      {/* Right side: filter status + view toggle */}
+      <div className="flex w-full items-center justify-between gap-3 sm:w-auto sm:justify-end">
+        <span className="flex items-center gap-1.5 text-sm text-foreground-tertiary">
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          {hasActiveFilters ? 'Filters applied' : 'All quotes'}
+        </span>
+
+        {/* View Toggle — segmented glass control */}
+        <div className="flex items-center gap-1 rounded-xl border border-white/6 bg-background-secondary/50 p-1 backdrop-blur-md light:border-[#E8DFCE]/80 light:bg-white/70">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onViewChange('grid')}
+            aria-label="Grid view"
+            aria-pressed={view === 'grid'}
+            className={`h-8 w-8 cursor-pointer rounded-lg transition-all duration-300 ${
+              view === 'grid'
+                ? 'bg-primary/20 text-primary shadow-[0_0_16px_-4px_rgba(168,85,247,0.3)] dark:text-violet-300'
+                : 'text-foreground-tertiary hover:bg-background-secondary/70 hover:text-foreground'
+            }`}
+          >
+            <Grid className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onViewChange('list')}
+            aria-label="List view"
+            aria-pressed={view === 'list'}
+            className={`h-8 w-8 cursor-pointer rounded-lg transition-all duration-300 ${
+              view === 'list'
+                ? 'bg-primary/20 text-primary shadow-[0_0_16px_-4px_rgba(168,85,247,0.3)] dark:text-violet-300'
+                : 'text-foreground-tertiary hover:bg-background-secondary/70 hover:text-foreground'
+            }`}
+          >
+            <List className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
     </div>
   );

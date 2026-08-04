@@ -2,41 +2,43 @@ import api from '@/lib/api';
 
 /**
  * My Quotes Service
- * Handles all quote-related API calls for the personal library
+ * Handles all quote-library API calls for the personal library.
+ *
+ * "My Quotes" is the user's COMPLETE quote library (all received quotes),
+ * served by the received-quotes API — NOT the favorites API.
+ * Favorites (bookmarked quotes) is a separate concept served by /favorites.
  */
 export const myQuotesService = {
   /**
-   * Get user's favorite quotes
-   * GET /favorites
+   * Get the user's complete quote library.
+   * GET /received-quotes/history
+   * Each item is a ReceivedQuote doc:
+   * { _id, quote: {_id,text,author,category,description,image,theme},
+   *   category: {_id,name,slug,icon,color}, categorySlug, receivedAt,
+   *   source, dayKey, isRead, favorite, metadata }
    */
   getMyQuotes: async (params = {}) => {
     try {
-      const { page = 1, limit = 20, type = 'quote', sortBy = 'createdAt', sortOrder = 'desc', search = '' } = params;
-      
+      const {
+        page = 1,
+        limit = 12,
+        category = '',
+        source = '',
+      } = params;
+
       const queryParams = new URLSearchParams({
         page,
         limit,
-        type,
-        sortBy,
-        sortOrder,
-        ...(search && { search }),
       });
+      if (category) queryParams.set('category', category);
+      if (source) queryParams.set('source', source);
 
-      const response = await api.get(`/favorites?${queryParams}`);
-      
-      // Normalize response — handle all possible shapes:
-      // - []
-      // - { data: [] }
-      // - { data: { quotes: [] } }
-      // - { success: true, data: [...] }
-      const raw = response.data;
-      const dataList = normalizeData(raw?.data);
-      const meta = normalizeMeta(raw?.meta, dataList.length);
-      
+      const response = await api.get(`/received-quotes/history?${queryParams}`);
+
       return {
         success: true,
-        data: dataList,
-        meta,
+        data: Array.isArray(response.data?.data) ? response.data.data : [],
+        meta: response.data?.meta || {},
         status: response.status,
       };
     } catch (error) {
@@ -45,19 +47,56 @@ export const myQuotesService = {
         message: error.response?.data?.message || 'Failed to fetch your quotes',
         status: error.response?.status || 500,
         data: [],
-        meta: { page: 1, limit: 20, total: 0, totalPage: 0 },
+        meta: { page: 1, limit: 12, total: 0, totalPage: 0 },
       };
     }
   },
 
   /**
-   * Remove quote from favorites
+   * Get quote library statistics.
+   * GET /received-quotes/statistics
+   * Returns { totalQuotes, favorites, unread, today, categoryDistribution }
+   */
+  getMyQuoteStats: async () => {
+    try {
+      const response = await api.get('/received-quotes/statistics');
+
+      return {
+        success: true,
+        data: response.data?.data || {
+          totalQuotes: 0,
+          favorites: 0,
+          unread: 0,
+          today: 0,
+          categoryDistribution: [],
+        },
+        status: response.status,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to fetch quote statistics',
+        status: error.response?.status || 500,
+        data: {
+          totalQuotes: 0,
+          favorites: 0,
+          unread: 0,
+          today: 0,
+          categoryDistribution: [],
+        },
+      };
+    }
+  },
+
+  /**
+   * Remove a quote from favorites (bookmarks).
    * DELETE /favorites/:id
+   * NOTE: This only removes the bookmark. The quote stays in the library.
    */
   removeFavorite: async (favoriteId) => {
     try {
       const response = await api.delete(`/favorites/${favoriteId}`);
-      
+
       return {
         success: true,
         data: response.data?.data || null,
@@ -71,63 +110,6 @@ export const myQuotesService = {
       };
     }
   },
-
-  /**
-   * Get favorite statistics
-   * GET /favorites/stats
-   */
-  getFavoriteStats: async () => {
-    try {
-      const response = await api.get('/favorites/stats');
-      
-      return {
-        success: true,
-        data: response.data?.data || { total: 0, products: 0, quotes: 0 },
-        status: response.status,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        data: { total: 0, products: 0, quotes: 0 },
-        status: error.response?.status || 500,
-      };
-    }
-  },
 };
-
-/**
- * Normalize API data response to always return an array.
- * Handles: [], { data: [] }, { data: { quotes: [] } }, { success: true, data: [...] }
- */
-function normalizeData(raw) {
-  if (Array.isArray(raw)) return raw;
-  if (raw && typeof raw === 'object') {
-    // { data: { quotes: [...] } }
-    if (Array.isArray(raw.quotes)) return raw.quotes;
-    // { data: { data: [...] } }
-    if (Array.isArray(raw.data)) return raw.data;
-  }
-  return [];
-}
-
-/**
- * Normalize meta response to always return pagination info.
- */
-function normalizeMeta(raw, fallbackTotal = 0) {
-  if (raw && typeof raw === 'object') {
-    return {
-      page: raw.page || 1,
-      limit: raw.limit || 20,
-      total: raw.total ?? fallbackTotal,
-      totalPage: raw.totalPage ?? Math.ceil(fallbackTotal / (raw.limit || 20)),
-    };
-  }
-  return {
-    page: 1,
-    limit: 20,
-    total: fallbackTotal,
-    totalPage: Math.ceil(fallbackTotal / 20),
-  };
-}
 
 export default myQuotesService;

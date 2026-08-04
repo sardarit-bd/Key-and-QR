@@ -51,8 +51,10 @@ export function buildGreeting(name) {
 }
 
 /**
- * Map /dashboard/home streak (weekActivity: [{date, active}]) onto the
- * [bool x7] shape InspirationStreak renders (Monday → Sunday).
+ * Map /dashboard/home streak onto the shape InspirationStreak renders:
+ * weekActivity → [bool x7] (backend order: rolling last-7-days, oldest →
+ * newest), plus weekDates so the component can label each entry with its
+ * actual weekday. Falls back to Monday → Sunday when no dates are present.
  */
 export function mapStreak(streak) {
   if (!streak) {
@@ -60,19 +62,24 @@ export function mapStreak(streak) {
       current: 0,
       longest: 0,
       weekActivity: [false, false, false, false, false, false, false],
+      weekDates: [],
     };
   }
 
   let weekActivity = streak.weekActivity;
+  let weekDates = [];
 
-  // /home returns [{date, active}] — flatten to booleans.
+  // /home returns [{date, active}] — flatten to booleans, keep the dates so
+  // InspirationStreak can derive the correct weekday label per entry.
   if (Array.isArray(weekActivity) && weekActivity.length > 0 && typeof weekActivity[0] === 'object') {
+    weekDates = weekActivity.map((entry) => entry.date);
     weekActivity = weekActivity.map((entry) => !!entry.active);
   }
 
   // Ensure exactly 7 entries, aligned Monday → Sunday (index 0 = Monday).
   if (!Array.isArray(weekActivity) || weekActivity.length === 0) {
     weekActivity = [false, false, false, false, false, false, false];
+    weekDates = [];
   }
   if (weekActivity.length !== 7) {
     const padded = [false, false, false, false, false, false, false];
@@ -80,12 +87,15 @@ export function mapStreak(streak) {
       if (i < 7) padded[i] = !!active;
     });
     weekActivity = padded;
+    // Pad dates to match (empty strings → component falls back to M T W T F S S).
+    weekDates = Array.from({ length: 7 }, (_, i) => weekDates[i] || '');
   }
 
   return {
     current: streak.current || 0,
     longest: streak.longest || 0,
     weekActivity,
+    weekDates,
   };
 }
 

@@ -31,6 +31,10 @@ export default function ScanHistoryPage() {
     isAuthenticated,
   } = useScanHistory();
 
+  // User has scan history if the stats endpoint reports any total scans.
+  const hasAnyHistory = (stats?.totalScans ?? 0) > 0;
+  const hasFilters = Boolean(search || category !== 'all' || sort !== 'newest');
+
   // Loading state
   if (loading && history.length === 0) {
     return (
@@ -59,8 +63,8 @@ export default function ScanHistoryPage() {
     );
   }
 
-  // Empty state
-  if (!loading && history.length === 0) {
+  // Empty state — only when the user has NEVER scanned anything.
+  if (!loading && history.length === 0 && !hasFilters) {
     return (
       <div className="min-h-screen bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
@@ -113,6 +117,9 @@ export default function ScanHistoryPage() {
             pagination={pagination}
             onPageChange={handlePageChange}
             onViewDetail={viewDetail}
+            hasAnyHistory={hasAnyHistory}
+            hasFilters={hasFilters}
+            onResetFilters={resetFilters}
           />
         </div>
       </div>

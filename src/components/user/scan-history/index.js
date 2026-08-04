@@ -5,5 +5,6 @@ export { default as ScanHistoryGrid } from './ScanHistoryGrid';
 export { default as ScanHistoryCard } from './ScanHistoryCard';
 export { default as ScanHistoryDetailModal } from './ScanHistoryDetailModal';
 export { default as ScanHistoryEmptyState } from './ScanHistoryEmptyState';
+export { default as ScanHistoryFilterEmptyState } from './ScanHistoryFilterEmptyState';
 export { default as ScanHistorySkeleton } from './ScanHistorySkeleton';
 export { default as ScanHistoryErrorState } from './ScanHistoryErrorState';

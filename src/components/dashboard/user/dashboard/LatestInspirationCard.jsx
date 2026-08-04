@@ -21,7 +21,7 @@ export default function LatestInspirationCard({
     dailyLimit > 0 ? `${usedToday} of ${dailyLimit} used today` : '';
 
   return (
-    <section className="group relative h-full min-h-[280px] sm:min-h-[320px] lg:min-h-[360px] w-full overflow-hidden rounded-[26px] border border-white/6 bg-card shadow-[0_24px_60px_-18px_rgb(0_0_0/0.6)] transition-[box-shadow,border-color] duration-500 ease-out group-hover:border-white/15 group-hover:shadow-[0_32px_80px_-20px_rgb(0_0_0/0.7)] light:border-[#E8D5AF]/80 light:bg-[#FDF8F0]/70 light:shadow-[0_24px_60px_-18px_rgba(120,85,30,0.28),0_8px_24px_-8px_rgba(120,85,30,0.14),0_0_32px_-10px_rgba(232,201,133,0.22)] light:backdrop-blur-[2px] light:group-hover:border-[#DCB878]/90 light:group-hover:shadow-[0_32px_80px_-20px_rgba(120,85,30,0.36),0_12px_32px_-10px_rgba(120,85,30,0.18),0_0_48px_-10px_rgba(232,201,133,0.3)]">
+    <section className="group relative h-full min-h-[280px] sm:min-h-[320px] lg:min-h-[360px] w-full overflow-hidden rounded-[26px] bg-card shadow-[0_24px_60px_-18px_rgb(0_0_0/0.6)] transition-[box-shadow,border-color] duration-500 ease-out group-hover:border-white/15 group-hover:shadow-[0_32px_80px_-20px_rgb(0_0_0/0.7)] light:border-[#E8D5AF]/80 light:bg-[#FDF8F0]/70 light:shadow-[0_24px_60px_-18px_rgba(120,85,30,0.28),0_8px_24px_-8px_rgba(120,85,30,0.14),0_0_32px_-10px_rgba(232,201,133,0.22)] light:backdrop-blur-[2px] light:group-hover:border-[#DCB878]/90 light:group-hover:shadow-[0_32px_80px_-20px_rgba(120,85,30,0.36),0_12px_32px_-10px_rgba(120,85,30,0.18),0_0_48px_-10px_rgba(232,201,133,0.3)]">
 
       {/* ===== Layer 1: Full-bleed background image (fills entire card) ===== */}
       {image ? (
