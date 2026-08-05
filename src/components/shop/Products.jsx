@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useMemo, useState, useCallback, useEffect, Fragment } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
@@ -16,12 +16,11 @@ import {
   Sparkles,
   Check,
   RotateCcw,
-  Loader2,
 } from "lucide-react";
-import Loader from "@/shared/Loader";
 import { ProductImage } from "@/components/ui/ProductImage";
 import ProductCard from "@/components/shop/ProductCard";
 import ShopBreadcrumb from "@/components/shop/ShopBreadcrumb";
+import ShopSkeleton from "@/components/skeletons/ShopSkeleton";
 import {
   Select,
   SelectContent,
@@ -35,9 +34,9 @@ import { useProducts } from "@/hooks/product-service/useProducts";
 import { useDebounce } from "@/hooks/search-with-debounce/useDebounce";
 
 /* ============================================================
-   Premium Shop â€” MyInspireTag
-   Layout: breadcrumb â†’ [sticky sidebar | promo banner â†’ toolbar
-           â†’ product grid â†’ pagination]
+   Premium Shop — MyInspireTag
+   Layout: breadcrumb → [sticky sidebar | promo banner → toolbar
+           → product grid → pagination]
 
    Facets are REAL product data (category API, stock, price).
    Search is server-side (name/category/brand, debounced).
@@ -46,8 +45,8 @@ import { useDebounce } from "@/hooks/search-with-debounce/useDebounce";
 const PRICE_BUCKETS = [
   { id: "all", label: "All Prices", min: 0, max: Infinity },
   { id: "under-25", label: "Under $25", min: 0, max: 25 },
-  { id: "25-50", label: "$25 â€“ $50", min: 25, max: 50 },
-  { id: "50-100", label: "$50 â€“ $100", min: 50, max: 100 },
+  { id: "25-50", label: "$25–$50", min: 25, max: 50 },
+  { id: "50-100", label: "$50–$100", min: 50, max: 100 },
   { id: "over-100", label: "Over $100", min: 100, max: Infinity },
 ];
 
@@ -99,7 +98,7 @@ function PromoBanner() {
     >
       {imageUrl ? (
         <>
-          {/* Campaign image â€” fully covers, luxury brand feel */}
+          {/* Campaign image — fully covers, luxury brand feel */}
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             src={imageUrl}
@@ -278,9 +277,9 @@ export default function ShopGrid() {
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
   }, []);
 
-  // Loading state
+  // Loading state — premium skeleton, no layout shift
   if (isLoading && serverProducts.length === 0) {
-    return <Loader text="Qkey..." size={50} fullScreen />;
+    return <ShopSkeleton />;
   }
 
   if (error) {
@@ -425,7 +424,7 @@ export default function ShopGrid() {
                 <p className="text-sm font-medium text-[#8A7A5C]">
                   Showing{" "}
                   <span className="font-bold text-[#2E2A24]">
-                    {filteredProducts.length > 0 ? (page - 1) * limit + 1 : 0}â€“
+                    {filteredProducts.length > 0 ? (page - 1) * limit + 1 : 0}–
                     {Math.min((page - 1) * limit + limit, meta.total)}
                   </span>{" "}
                   of <span className="font-bold text-[#2E2A24]">{meta.total}</span> products
@@ -474,7 +473,7 @@ export default function ShopGrid() {
 
               {/* Search + selects */}
               <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
-                {/* Premium search â€” icon, clear button, loading state */}
+                {/* Premium search — icon, clear button, loading state */}
                 <div className="relative flex-1 md:max-w-xs">
                   <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-[#A99B7F]" />
                   <input
@@ -485,9 +484,12 @@ export default function ShopGrid() {
                     className="h-10 w-full rounded-xl border border-[#E5DCC8] bg-white pl-10 pr-10 text-sm text-[#2E2A24] placeholder:text-[#A99B7F] transition-all duration-300 focus:border-[#C6922D]/60 focus:outline-none focus:ring-2 focus:ring-[#C6922D]/15"
                     aria-label="Search products"
                   />
-                  {/* Loading spinner while fetching */}
+                  {/* Loading indicator while fetching */}
                   {isFetching && search && (
-                    <Loader2 size={15} className="absolute right-3.5 top-1/2 -translate-y-1/2 animate-spin text-[#C6922D]" />
+                    <span className="absolute right-3.5 top-1/2 -translate-y-1/2 flex h-2 w-2">
+                      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C6922D] opacity-60" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-[#C6922D]" />
+                    </span>
                   )}
                   {/* Clear (X) button */}
                   {search && !isFetching && (
@@ -502,7 +504,7 @@ export default function ShopGrid() {
                   )}
                 </div>
 
-                {/* Category â€” shadcn Select */}
+                {/* Category — shadcn Select */}
                 <div className="flex-1 md:max-w-[180px]">
                   <Select
                     value={category || "all"}
@@ -523,7 +525,7 @@ export default function ShopGrid() {
                   </Select>
                 </div>
 
-                {/* Sort â€” shadcn Select */}
+                {/* Sort — shadcn Select */}
                 <div className="flex-1 md:max-w-[180px]">
                   <Select value={sort} onValueChange={(val) => { setSort(val); setPage(1); }}>
                     <SelectTrigger className="h-10 w-full bg-white text-[#2E2A24] [&>span]:text-[#2E2A24]" aria-label="Sort products">
@@ -549,7 +551,10 @@ export default function ShopGrid() {
                   exit={{ opacity: 0 }}
                   className="mb-4 flex items-center gap-2 rounded-xl bg-[#F5EDDC]/60 px-4 py-2.5 text-[13px] text-[#8A7A5C]"
                 >
-                  <Loader2 size={14} className="animate-spin text-[#C6922D]" />
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C6922D] opacity-60" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-[#C6922D]" />
+                  </span>
                   Updating results...
                 </motion.div>
               )}

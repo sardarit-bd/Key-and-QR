@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import Loader from "@/shared/Loader";
+import CheckoutSkeleton from "@/components/skeletons/CheckoutSkeleton";
 import { CHECKOUT_CONFIG, formatPrice, getCountryName } from "@/config/checkout.config";
 import { validateCheckoutForm } from "@/lib/validators/checkout.validator";
 import { ChevronDown, ShieldCheck, Lock, CreditCard, Gift } from "lucide-react";
@@ -25,16 +25,16 @@ const PLACEHOLDER_IMAGE = "https://placehold.co/400x400/e2e8f0/1e293b?text=No+Im
 
 // Shared input styling for consistent premium form fields
 const inputClass = (hasError) =>
-  `w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-gray-900 placeholder:text-gray-400 transition-all duration-300 focus:outline-none focus:ring-2 ${
+  `w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-[#2E2A24] placeholder:text-[#A99B7F] transition-all duration-300 focus:outline-none focus:ring-2 ${
     hasError
       ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
-      : "border-gray-300 focus:border-gray-900 focus:ring-gray-900/10 hover:border-gray-400"
+      : "border-[#E5DCC8] focus:border-[#C6922D]/60 focus:ring-[#C6922D]/15 hover:border-[#C9BB9C]"
   }`;
 
 function Field({ label, htmlFor, required = false, error, children }) {
   return (
     <div>
-      <label htmlFor={htmlFor} className="mb-1.5 block text-[13px] font-medium text-gray-700">
+      <label htmlFor={htmlFor} className="mb-1.5 block text-[13px] font-medium text-[#5C5346]">
         {label} {required && <span className="text-red-500">*</span>}
       </label>
       {children}
@@ -301,19 +301,22 @@ export default function Checkout() {
         return item.img || PLACEHOLDER_IMAGE;
     };
 
-    // Loading state
+    // Loading state — premium skeleton, no layout shift
     if (pageLoading) {
-        return <Loader text="Loading order..." size={50} fullScreen />;
+        return <CheckoutSkeleton />;
     }
 
     // Redirecting state - Show loading while redirecting to Stripe
     if (isRedirecting) {
         return (
             <section className="max-w-7xl mx-auto py-32 px-4 text-center">
-                <div className="bg-gray-50 p-8 rounded-lg max-w-md mx-auto">
+                <div className="bg-[#FDFBF6] p-8 rounded-2xl border border-[#EDE4D0] max-w-md mx-auto">
                     <div className="flex flex-col items-center gap-4">
-                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black"></div>
-                        <p className="text-gray-600">Redirecting to secure payment...</p>
+                        <span className="relative flex h-3 w-3">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C6922D] opacity-60" />
+                            <span className="relative inline-flex h-3 w-3 rounded-full bg-[#C6922D]" />
+                        </span>
+                        <p className="text-[#8A7A5C]">Redirecting to secure payment...</p>
                     </div>
                 </div>
             </section>
@@ -324,12 +327,12 @@ export default function Checkout() {
     if (!orderId && !hasItems() && !isSubmitting && !loading) {
         return (
             <section className="max-w-7xl mx-auto py-32 px-4 text-center">
-                <div className="bg-gray-50 p-8 rounded-lg max-w-md mx-auto">
-                    <h2 className="text-2xl font-semibold mb-4">Your cart is empty</h2>
-                    <p className="text-gray-600 mb-6">Add some products to your cart before checking out.</p>
+                <div className="bg-[#FDFBF6] p-8 rounded-2xl border border-[#EDE4D0] max-w-md mx-auto">
+                    <h2 className="text-2xl font-bold text-[#2E2A24] mb-4">Your cart is empty</h2>
+                    <p className="text-[#8A7A5C] mb-6">Add some products to your cart before checking out.</p>
                     <Link
                         href="/shop"
-                        className="inline-block bg-black text-white px-6 py-3 rounded-lg hover:bg-gray-900 transition cursor-pointer"
+                        className="inline-block bg-[#2E2A24] text-white px-6 py-3 rounded-xl hover:bg-[#1F1C18] transition cursor-pointer"
                     >
                         Continue Shopping
                     </Link>
@@ -346,20 +349,20 @@ export default function Checkout() {
             initial={reduceMotion ? false : { opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-            className="max-w-7xl mx-auto py-12 sm:py-16 px-4"
+            className="max-w-7xl mx-auto py-12 sm:py-16 px-4 sm:px-6 bg-[#FDFBF6] text-[#2E2A24]"
         >
             <div className="mb-8 flex flex-wrap items-center justify-between gap-3">
                 <div>
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-gray-900">
+                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2E2A24]">
                         {orderId ? "Complete Payment" : "Checkout"}
                     </h1>
-                    <p className="mt-1 text-sm text-gray-500">
+                    <p className="mt-1 text-sm text-[#8A7A5C]">
                         {orderId ? "Finish securing your order" : "Secure checkout — fill in your details to continue"}
                     </p>
                 </div>
                 <Link
                     href={orderId ? "/new-dashboard/user/orders" : "/cart"}
-                    className="text-sm font-medium text-gray-500 transition-colors hover:text-gray-900 cursor-pointer"
+                    className="text-sm font-medium text-[#A99B7F] transition-colors hover:text-[#A6782B] cursor-pointer"
                 >
                     ← {orderId ? "Back to Orders" : "Back to Cart"}
                 </Link>
@@ -370,9 +373,9 @@ export default function Checkout() {
                 <div className="lg:col-span-3">
                     <form onSubmit={handleSubmit} className="space-y-8">
                         {/* Contact */}
-                        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-[0_4px_20px_-8px_rgb(0_0_0/0.06)]">
-                            <h2 className="mb-5 flex items-center gap-2 text-base font-bold tracking-tight text-gray-900">
-                                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-900 text-[13px] font-bold text-white">1</span>
+                        <div className="rounded-2xl border border-[#EDE4D0]/80 bg-white p-5 sm:p-6 shadow-[0_2px_12px_-4px_rgb(60_45_15/0.06)]">
+                            <h2 className="mb-5 flex items-center gap-2 text-base font-bold tracking-tight text-[#2E2A24]">
+                                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#2E2A24] text-[13px] font-bold text-white">1</span>
                                 Contact
                             </h2>
 
@@ -419,9 +422,9 @@ export default function Checkout() {
                         </div>
 
                         {/* Shipping Information */}
-                        <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-[0_4px_20px_-8px_rgb(0_0_0/0.06)]">
-                            <h2 className="mb-5 flex items-center gap-2 text-base font-bold tracking-tight text-gray-900">
-                                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-900 text-[13px] font-bold text-white">2</span>
+                        <div className="rounded-2xl border border-[#EDE4D0]/80 bg-white p-5 sm:p-6 shadow-[0_2px_12px_-4px_rgb(60_45_15/0.06)]">
+                            <h2 className="mb-5 flex items-center gap-2 text-base font-bold tracking-tight text-[#2E2A24]">
+                                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#2E2A24] text-[13px] font-bold text-white">2</span>
                                 Shipping Information
                             </h2>
 
@@ -458,21 +461,21 @@ export default function Checkout() {
                                             aria-label="Select country"
                                             aria-expanded={countryOpen}
                                         >
-                                            <span className={formData.country ? 'text-gray-900' : 'text-gray-400'}>
+                                            <span className={formData.country ? 'text-[#2E2A24]' : 'text-[#A99B7F]'}>
                                                 {formData.country ? getCountryName(formData.country) : 'Select your country'}
                                             </span>
-                                            <ChevronDown size={18} className={`shrink-0 text-gray-400 transition-transform ${countryOpen ? 'rotate-180' : ''}`} />
+                                            <ChevronDown size={18} className={`shrink-0 text-[#A99B7F] transition-transform ${countryOpen ? 'rotate-180' : ''}`} />
                                         </button>
 
                                         {countryOpen && (
-                                            <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-gray-200 bg-white shadow-xl">
+                                            <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-[#E5DCC8] bg-white shadow-xl">
                                                 <button
                                                     type="button"
                                                     onClick={() => {
                                                         setFormData({ ...formData, country: '' });
                                                         setCountryOpen(false);
                                                     }}
-                                                    className="w-full cursor-pointer px-4 py-2.5 text-left text-sm text-gray-500 transition-colors hover:bg-gray-50"
+                                                    className="w-full cursor-pointer px-4 py-2.5 text-left text-sm text-[#8A7A5C] transition-colors hover:bg-[#F5EDDC]/60"
                                                 >
                                                     Select your country
                                                 </button>
@@ -488,8 +491,8 @@ export default function Checkout() {
                                                                 setFieldErrors(prev => ({ ...prev, country: errors.country }));
                                                             }
                                                         }}
-                                                        className={`w-full cursor-pointer px-4 py-2.5 text-left text-sm transition-colors hover:bg-gray-50 ${
-                                                            formData.country === c.code ? "font-semibold text-gray-900" : "text-gray-700"
+                                                        className={`w-full cursor-pointer px-4 py-2.5 text-left text-sm transition-colors hover:bg-[#F5EDDC]/60 ${
+                                                            formData.country === c.code ? "font-semibold text-[#2E2A24]" : "text-[#5C5346]"
                                                         }`}
                                                     >
                                                         {c.name}
@@ -581,9 +584,9 @@ export default function Checkout() {
 
                         {/* Purchase Type - Only for single item or new orders */}
                         {!orderId && checkoutItems.length <= 1 && (
-                            <div className="rounded-2xl border border-gray-100 bg-white p-5 sm:p-6 shadow-[0_4px_20px_-8px_rgb(0_0_0/0.06)]">
-                                <h2 className="mb-5 flex items-center gap-2 text-base font-bold tracking-tight text-gray-900">
-                                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-gray-900 text-[13px] font-bold text-white">3</span>
+                            <div className="rounded-2xl border border-[#EDE4D0]/80 bg-white p-5 sm:p-6 shadow-[0_2px_12px_-4px_rgb(60_45_15/0.06)]">
+                                <h2 className="mb-5 flex items-center gap-2 text-base font-bold tracking-tight text-[#2E2A24]">
+                                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#2E2A24] text-[13px] font-bold text-white">3</span>
                                     Gift Information
                                 </h2>
 
@@ -601,7 +604,7 @@ export default function Checkout() {
                                         >
                                             <SelectTrigger
                                                 id="purchaseType"
-                                                className="h-11 w-full bg-white text-gray-900 [&>span]:text-gray-900"
+                                                className="h-11 w-full bg-white text-[#2E2A24] [&>span]:text-[#2E2A24]"
                                                 aria-label="Purchase type"
                                             >
                                                 <SelectValue placeholder="Select purchase type" />
@@ -646,7 +649,7 @@ export default function Checkout() {
 
                         {/* Multiple Items Notice */}
                         {!orderId && checkoutItems.length > 1 && (
-                            <div className="flex items-start gap-3 rounded-xl bg-blue-50 p-4 text-sm text-blue-700">
+                            <div className="flex items-start gap-3 rounded-xl bg-[#EAF0F8] p-4 text-sm text-[#4A6A8A]">
                                 <Gift size={16} className="mt-0.5 shrink-0" />
                                 <div>
                                     <p className="font-semibold">Multiple Items</p>
@@ -663,16 +666,16 @@ export default function Checkout() {
                             disabled={isSubmitting || loading || isRedirecting || checkoutItems.length === 0}
                             className={`w-full flex items-center justify-center gap-2 rounded-xl py-4 text-sm font-bold transition-all duration-300 ${
                                 isSubmitting || loading || isRedirecting || checkoutItems.length === 0
-                                    ? "bg-gray-200 text-gray-400 cursor-not-allowed"
-                                    : "bg-gray-900 text-white hover:bg-gray-700 active:scale-[0.99] cursor-pointer"
+                                    ? "bg-[#EDE4D0] text-[#A99B7F] cursor-not-allowed"
+                                    : "bg-[#2E2A24] text-white hover:bg-[#1F1C18] active:scale-[0.99] cursor-pointer"
                             }`}
                         >
                             {isSubmitting || loading ? (
                                 <span className="flex items-center justify-center gap-2">
-                                    <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
+                                    <span className="relative flex h-2 w-2">
+                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-60" />
+                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
+                                    </span>
                                     Processing...
                                 </span>
                             ) : (
@@ -684,7 +687,7 @@ export default function Checkout() {
                         </button>
 
                         {/* Security note */}
-                        <p className="flex items-center justify-center gap-1.5 text-xs text-gray-400">
+                        <p className="flex items-center justify-center gap-1.5 text-xs text-[#A99B7F]">
                             <ShieldCheck size={14} className="text-green-600" />
                             Your payment information is encrypted and processed securely.
                         </p>
@@ -693,13 +696,13 @@ export default function Checkout() {
 
                 {/* RIGHT: Sticky Order Summary */}
                 <div className="lg:col-span-2">
-                    <div className="rounded-2xl border border-gray-100 bg-white p-6 shadow-[0_12px_40px_-16px_rgb(0_0_0/0.12)] lg:sticky lg:top-8">
-                        <h2 className="text-lg font-bold tracking-tight text-gray-900">
+                    <div className="rounded-2xl border border-[#EDE4D0]/80 bg-white p-6 shadow-[0_12px_40px_-16px_rgb(60_45_15/0.12)] lg:sticky lg:top-8">
+                        <h2 className="text-lg font-bold tracking-tight text-[#2E2A24]">
                             Order Summary ({checkoutItems.reduce((sum, i) => sum + (i.qty || 1), 0)} items)
                         </h2>
 
                         {checkoutItems.length === 0 ? (
-                            <div className="py-8 text-center text-gray-500">
+                            <div className="py-8 text-center text-[#A99B7F]">
                                 No items in cart
                             </div>
                         ) : (
@@ -708,7 +711,7 @@ export default function Checkout() {
                                 <div className="mt-5 space-y-4 max-h-80 overflow-y-auto pr-1">
                                     {checkoutItems.map((item) => (
                                         <div key={item.id} className="flex items-center gap-4">
-                                            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-gray-100">
+                                            <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-[#F5F0E4]">
                                                 <ProductImage
                                                     src={getImageUrl(item)}
                                                     alt={item.name}
@@ -717,15 +720,15 @@ export default function Checkout() {
                                                     className="h-full w-full object-cover"
                                                     fill={false}
                                                 />
-                                                <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-gray-900 px-1 text-[11px] font-bold text-white">
+                                                <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#2E2A24] px-1 text-[11px] font-bold text-white">
                                                     {item.qty || 1}
                                                 </span>
                                             </div>
                                             <div className="min-w-0 flex-1">
-                                                <h3 className="truncate text-sm font-semibold text-gray-900">{item.name}</h3>
-                                                <p className="text-xs text-gray-500">{formatPrice(item.price)} each</p>
+                                                <h3 className="truncate text-sm font-semibold text-[#2E2A24]">{item.name}</h3>
+                                                <p className="text-xs text-[#8A7A5C]">{formatPrice(item.price)} each</p>
                                             </div>
-                                            <p className="text-sm font-semibold text-gray-900 tabular-nums">
+                                            <p className="text-sm font-semibold text-[#2E2A24] tabular-nums">
                                                 {formatPrice((item.price || 0) * (item.qty || 1))}
                                             </p>
                                         </div>
@@ -733,22 +736,22 @@ export default function Checkout() {
                                 </div>
 
                                 {/* Totals */}
-                                <div className="mt-6 space-y-2.5 border-t border-gray-100 pt-5 text-sm">
-                                    <div className="flex justify-between text-gray-600">
+                                <div className="mt-6 space-y-2.5 border-t border-[#EDE4D0]/70 pt-5 text-sm">
+                                    <div className="flex justify-between text-[#8A7A5C]">
                                         <span>Subtotal</span>
-                                        <span className="font-medium text-gray-900 tabular-nums">{formatPrice(subtotal)}</span>
+                                        <span className="font-medium text-[#2E2A24] tabular-nums">{formatPrice(subtotal)}</span>
                                     </div>
-                                    <div className="flex justify-between text-gray-600">
+                                    <div className="flex justify-between text-[#8A7A5C]">
                                         <span>Shipping</span>
-                                        <span className="font-medium text-green-600">{CHECKOUT_CONFIG.shipping.label}</span>
+                                        <span className="font-medium text-[#2E5B3A]">{CHECKOUT_CONFIG.shipping.label}</span>
                                     </div>
                                     {hasMultipleItems && (
-                                        <div className="flex justify-between text-gray-400 text-xs italic">
+                                        <div className="flex justify-between text-[#A99B7F] text-xs italic">
                                             <span>Multiple items</span>
                                             <span>✓</span>
                                         </div>
                                     )}
-                                    <div className="flex justify-between border-t border-gray-100 pt-4 text-base font-bold text-gray-900">
+                                    <div className="flex justify-between border-t border-[#EDE4D0]/70 pt-4 text-base font-bold text-[#2E2A24]">
                                         <span>Total</span>
                                         <span className="tabular-nums">{formatPrice(total)}</span>
                                     </div>
@@ -757,16 +760,16 @@ export default function Checkout() {
                         )}
 
                         {/* Trust badges */}
-                        <div className="mt-6 space-y-3 border-t border-gray-100 pt-5">
-                            <p className="flex items-center gap-2.5 text-xs text-gray-500">
-                                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-green-50">
-                                    <ShieldCheck size={15} className="text-green-600" />
+                        <div className="mt-6 space-y-3 border-t border-[#EDE4D0]/70 pt-5">
+                            <p className="flex items-center gap-2.5 text-xs text-[#8A7A5C]">
+                                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#E4F2E8]">
+                                    <ShieldCheck size={15} className="text-[#2E5B3A]" />
                                 </span>
                                 Secure 256-bit SSL encrypted checkout
                             </p>
-                            <p className="flex items-center gap-2.5 text-xs text-gray-500">
-                                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-50">
-                                    <CreditCard size={15} className="text-blue-600" />
+                            <p className="flex items-center gap-2.5 text-xs text-[#8A7A5C]">
+                                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#EAF0F8]">
+                                    <CreditCard size={15} className="text-[#4A6A8A]" />
                                 </span>
                                 Payments processed securely by Stripe
                             </p>

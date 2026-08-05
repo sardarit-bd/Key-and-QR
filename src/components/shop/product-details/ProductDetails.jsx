@@ -15,7 +15,7 @@ import ProductActions from "@/components/product-details/ProductActions";
 import FeatureHighlights from "@/components/product-details/FeatureHighlights";
 import ProductInfoTabs from "@/components/product-details/ProductInfoTabs";
 import StickyMobileBar from "@/components/product-details/StickyMobileBar";
-import ProductSkeleton from "@/components/product-details/ProductSkeleton";
+import ProductDetailsSkeleton from "@/components/skeletons/ProductDetailsSkeleton";
 import RelatedProducts from "@/components/shop/Relatedproduct";
 
 /**
@@ -52,7 +52,7 @@ export const ProductDetails = () => {
 
   // ************* Loading State *************
   if (isLoading) {
-    return <ProductSkeleton />;
+    return <ProductDetailsSkeleton />;
   }
 
   // ************* Error State *************

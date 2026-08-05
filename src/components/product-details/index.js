@@ -1,5 +1,4 @@
 export { default as ProductBreadcrumb } from './ProductBreadcrumb';
-export { default as ProductSkeleton } from './ProductSkeleton';
 export { default as ProductSummary } from './ProductSummary';
 export { default as ProductActions } from './ProductActions';
 export { default as FeatureHighlights } from './FeatureHighlights';
