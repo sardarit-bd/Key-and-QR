@@ -200,7 +200,7 @@ export const ProductGallery = ({ product }) => {
 
       {/* Thumbnail rail */}
       {hasMultipleImages && (
-        <div className="mt-4 flex gap-3 overflow-x-auto pb-1 hide-scrollbar">
+        <div className="mt-4 px-4 py-4 flex gap-3 overflow-x-auto pb-1 hide-scrollbar">
           {gallery.map((img, index) => (
             <button
               key={img.url + index}
