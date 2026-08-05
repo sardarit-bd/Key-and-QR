@@ -8,23 +8,11 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import FavoriteButton from '@/components/favorite/FavoriteButton';
 import { format } from 'date-fns';
-
-const DEFAULT_IMAGES = {
-  love: '/images/quote-bg/love.jpg',
-  strength: '/images/quote-bg/strength.jpg',
-  healing: '/images/quote-bg/healing.jpg',
-  faith: '/images/quote-bg/faith.jpg',
-  gratitude: '/images/quote-bg/gratitude.jpg',
-};
-
-// Premium chip per category (mirrors the card chips) — readable in both themes.
-const CATEGORY_CHIPS = {
-  love: 'border-rose-500/35 bg-rose-500/20 text-rose-300 dark:text-rose-200 light:text-rose-800',
-  strength: 'border-orange-500/35 bg-orange-500/20 text-orange-300 dark:text-orange-200 light:text-orange-800',
-  healing: 'border-emerald-500/35 bg-emerald-500/20 text-emerald-300 dark:text-emerald-200 light:text-emerald-800',
-  faith: 'border-amber-500/35 bg-amber-500/20 text-amber-300 dark:text-amber-200 light:text-amber-800',
-  gratitude: 'border-yellow-500/35 bg-yellow-500/20 text-yellow-300 dark:text-yellow-200 light:text-yellow-800',
-};
+import {
+  getCategoryChipTheme,
+  getCategoryLabel,
+  resolveBackgroundImage,
+} from '@/components/category';
 
 // Light, cheap entrance — no spring physics, no layout thrash.
 const BACKDROP_VARIANTS = {
@@ -89,9 +77,10 @@ function ScanHistoryDetailModal({ isOpen, onClose, data }) {
   const quote = data?.quote;
   const tag = data?.tag;
   const category = quote?.category || 'motivation';
-  const categoryLabel = category.charAt(0).toUpperCase() + category.slice(1);
-  const chip = CATEGORY_CHIPS[category] || CATEGORY_CHIPS.love;
-  const backgroundImage = quote?.image?.url || DEFAULT_IMAGES[category] || DEFAULT_IMAGES.motivation;
+  const categoryLabel = getCategoryLabel(category);
+  const chip = getCategoryChipTheme(category);
+  const chipClass = `${chip.border} ${chip.bg} ${chip.text} ${chip.lightText}`.trim();
+  const backgroundImage = quote?.image?.url || resolveBackgroundImage(category);
 
   const formattedDate = data.createdAt
     ? format(new Date(data.createdAt), 'MMMM d, yyyy')
@@ -184,7 +173,7 @@ function ScanHistoryDetailModal({ isOpen, onClose, data }) {
 
               {/* Category chip */}
               <div className="absolute left-5 top-5">
-                <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-semibold capitalize backdrop-blur-md ${chip}`}>
+                <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1 text-[11px] font-semibold capitalize backdrop-blur-md ${chipClass}`}>
                   {categoryLabel}
                 </span>
               </div>

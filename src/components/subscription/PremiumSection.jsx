@@ -20,12 +20,15 @@ import toast from "react-hot-toast";
 import api from "@/lib/api";
 import { Crown, Sparkles, Check } from "lucide-react";
 import { TiTickOutline } from "react-icons/ti";
+import { useQuoteCategories } from "@/hooks/category/useQuoteCategories";
+import { getCategoryLabel } from "@/components/category";
 
 export default function PremiumSection({ selectedCategory }) {
   const router = useRouter();
   const { user } = useAuthStore();
   const { createCheckout, mySubscriptions, fetchMySubscriptions } =
     useSubscriptionStore();
+  const { data: backendCategories = [] } = useQuoteCategories();
 
   const [subscribing, setSubscribing] = useState(false);
   const [selectedTag, setSelectedTag] = useState("");
@@ -33,46 +36,25 @@ export default function PremiumSection({ selectedCategory }) {
   const [showTagSelector, setShowTagSelector] = useState(false);
   const [loadingTags, setLoadingTags] = useState(false);
 
-  // Category display config with React Icons and Colors
+  // Category display config with React Icons and Colors. Icons/names come
+  // from the centralized layer + backend category list; the glass-card color
+  // theme is a per-slug fallback (marketing surface only).
   const categoryConfig = {
-    motivation: { 
-      label: "Motivation", 
-      icon: FaFire, 
-      bgColor: "bg-orange-100", 
-      iconColor: "text-orange-600",
-      borderColor: "border-orange-200"
-    },
-    love: { 
-      label: "Love", 
-      icon: FaHeart, 
-      bgColor: "bg-pink-100", 
-      iconColor: "text-pink-600",
-      borderColor: "border-pink-200"
-    },
-    faith: { 
-      label: "Faith", 
-      icon: FaPrayingHands, 
-      bgColor: "bg-purple-100", 
-      iconColor: "text-purple-600",
-      borderColor: "border-purple-200"
-    },
-    success: { 
-      label: "Success", 
-      icon: FaTrophy, 
-      bgColor: "bg-yellow-100", 
-      iconColor: "text-yellow-600",
-      borderColor: "border-yellow-200"
-    },
-    hope: { 
-      label: "Hope", 
-      icon: FaStar, 
-      bgColor: "bg-green-100", 
-      iconColor: "text-green-600",
-      borderColor: "border-green-200"
-    },
+    motivation: { label: "Motivation", icon: FaFire, bgColor: "bg-orange-100", iconColor: "text-orange-600", borderColor: "border-orange-200" },
+    love: { label: "Love", icon: FaHeart, bgColor: "bg-pink-100", iconColor: "text-pink-600", borderColor: "border-pink-200" },
+    faith: { label: "Faith", icon: FaPrayingHands, bgColor: "bg-purple-100", iconColor: "text-purple-600", borderColor: "border-purple-200" },
+    success: { label: "Success", icon: FaTrophy, bgColor: "bg-yellow-100", iconColor: "text-yellow-600", borderColor: "border-yellow-200" },
+    hope: { label: "Hope", icon: FaStar, bgColor: "bg-green-100", iconColor: "text-green-600", borderColor: "border-green-200" },
   };
 
-  const currentCategory = categoryConfig[selectedCategory] || categoryConfig.motivation;
+  const currentCategory =
+    categoryConfig[selectedCategory] || {
+      label: getCategoryLabel(selectedCategory),
+      icon: FaStar,
+      bgColor: "bg-gray-100",
+      iconColor: "text-gray-600",
+      borderColor: "border-gray-200",
+    };
   const CategoryIcon = currentCategory.icon;
 
   const isAlreadySubscribed = () => {
@@ -275,7 +257,7 @@ export default function PremiumSection({ selectedCategory }) {
               {[
                 "3 quotes per day (instead of 1)",
                 "Choose from premium categories",
-                "Faith, Love, Hope, Success, Motivation",
+                "All categories available",
                 "New quotes added weekly",
                 "Priority customer support",
               ].map((item, i) => (

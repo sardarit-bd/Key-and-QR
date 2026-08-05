@@ -27,6 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import toast from 'react-hot-toast';
+import { getCategoryBadgeClass, getCategoryLabel } from '@/components/category';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -210,8 +211,8 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
                       </div>
                       <div className="text-xs text-foreground-secondary truncate">{quote.user?.name || 'Unknown'}</div>
                       <div>
-                        <span className="text-[10px] px-2 py-0.5 rounded-full border bg-indigo-500/10 text-indigo-400 border-indigo-500/20 capitalize">
-                          {quote.category}
+                        <span className={`text-[10px] px-2 py-0.5 rounded-full border capitalize ${getCategoryBadgeClass(quote.category)}`}>
+                          {getCategoryLabel(quote.category)}
                         </span>
                       </div>
                       <div>
@@ -254,7 +255,7 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
                   <p className="text-xs text-foreground-tertiary mb-2">by {quote.user?.name || 'Unknown'}</p>
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <span className="text-[10px] px-2 py-0.5 rounded-full border bg-indigo-500/10 text-indigo-400 border-indigo-500/20 capitalize">{quote.category}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full border capitalize ${getCategoryBadgeClass(quote.category)}`}>{getCategoryLabel(quote.category)}</span>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full border capitalize ${statusStyle}`}>{quote.status}</span>
                     </div>
                     <div className="flex items-center gap-1">
@@ -291,7 +292,7 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
                 </div>
                 <div>
                   <p className="text-[11px] text-foreground-tertiary font-medium uppercase tracking-wider">Category</p>
-                  <p className="text-sm text-foreground capitalize mt-0.5">{viewQuote.category}</p>
+                  <p className="text-sm text-foreground capitalize mt-0.5">{getCategoryLabel(viewQuote.category)}</p>
                 </div>
                 <div>
                   <p className="text-[11px] text-foreground-tertiary font-medium uppercase tracking-wider">Status</p>

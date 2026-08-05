@@ -1,18 +1,37 @@
 "use client";
 
 import { FaFire, FaHeart, FaPrayingHands, FaTrophy, FaStar } from "react-icons/fa";
+import { useQuoteCategories } from "@/hooks/category/useQuoteCategories";
+
+// Slug → icon fallback for the marketing subscription selector.
+const CATEGORY_ICON_FALLBACK = {
+  motivation: FaFire,
+  love: FaHeart,
+  faith: FaPrayingHands,
+  success: FaTrophy,
+  hope: FaStar,
+};
 
 export default function PremiumQuoteCategories({
   selectedCategory,
   setSelectedCategory,
 }) {
-  const quoteCategories = [
-    { label: "Motivation", value: "motivation", icon: FaFire },
-    { label: "Love", value: "love", icon: FaHeart },
-    { label: "Faith", value: "faith", icon: FaPrayingHands },
-    { label: "Success", value: "success", icon: FaTrophy },
-    { label: "Hope", value: "hope", icon: FaStar },
-  ];
+  const { data: backendCategories = [] } = useQuoteCategories();
+
+  const quoteCategories =
+    backendCategories.length > 0
+      ? backendCategories.map((category) => ({
+          label: category.name || category.slug,
+          value: category.slug,
+          icon: CATEGORY_ICON_FALLBACK[category.slug] || FaStar,
+        }))
+      : [
+          { label: "Motivation", value: "motivation", icon: FaFire },
+          { label: "Love", value: "love", icon: FaHeart },
+          { label: "Faith", value: "faith", icon: FaPrayingHands },
+          { label: "Success", value: "success", icon: FaTrophy },
+          { label: "Hope", value: "hope", icon: FaStar },
+        ];
 
   return (
     <section className="bg-white py-20">
@@ -27,7 +46,7 @@ export default function PremiumQuoteCategories({
             return (
               <button
                 onClick={() => setSelectedCategory(item.value)}
-                key={index}
+                key={item.value || index}
                 className={`
                   text-md px-4 lg:px-5 py-2 rounded-full 
                   flex items-center gap-2 border 

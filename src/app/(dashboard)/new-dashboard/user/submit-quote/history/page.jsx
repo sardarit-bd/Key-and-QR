@@ -8,6 +8,7 @@ import {
   SubmissionGrid,
 } from '@/components/submit-quote';
 import { useSubmissionHistory } from '@/hooks/pending-quote/usePendingQuote';
+import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
 
 const SUBMISSIONS_PER_PAGE = 12;
 
@@ -36,6 +37,7 @@ export default function SubmissionHistoryPage() {
     status,
     sortBy: sort,
   });
+  const { data: quoteCategories = [] } = useQuoteCategories();
 
   const submissions = data?.data || [];
   const meta = data?.meta || { page: 1, limit: SUBMISSIONS_PER_PAGE, total: 0, totalPage: 0 };
@@ -124,6 +126,7 @@ export default function SubmissionHistoryPage() {
             category={category}
             status={status}
             sort={sort}
+            categories={quoteCategories}
             onSearchChange={setSearch}
             onCategoryChange={setCategory}
             onStatusChange={setStatus}

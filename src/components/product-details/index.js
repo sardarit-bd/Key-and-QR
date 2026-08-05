@@ -1,0 +1,11 @@
+export { default as ProductBreadcrumb } from './ProductBreadcrumb';
+export { default as ProductSummary } from './ProductSummary';
+export { default as ProductActions } from './ProductActions';
+export { default as FeatureHighlights } from './FeatureHighlights';
+export { default as ProductInfoTabs } from './ProductInfoTabs';
+export { default as OverviewPanel } from './OverviewPanel';
+export { default as SpecificationPanel } from './SpecificationPanel';
+export { default as ShippingPanel } from './ShippingPanel';
+export { default as ReturnsPanel } from './ReturnsPanel';
+export { default as HowItWorksPanel } from './HowItWorksPanel';
+export { default as StickyMobileBar } from './StickyMobileBar';

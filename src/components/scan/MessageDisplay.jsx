@@ -6,24 +6,10 @@ import { usePathname, useRouter } from "next/navigation";
 import api from "@/lib/api";
 import { useAuthStore } from "@/store/authStore";
 import { toast } from "react-hot-toast";
-
-const DEFAULT_IMAGES = {
- love: "/images/quote-bg/love.jpg",
- strength: "/images/quote-bg/strength.jpg",
- healing: "/images/quote-bg/healing.jpg",
- faith: "/images/quote-bg/faith.jpg",
- gratitude: "/images/quote-bg/gratitude.jpg",
- personal: "/images/quote-bg/peace.jpg",
-};
-
-const CATEGORY_LABELS = {
- love: "Love ♥",
- strength: "Strength ◐",
- healing: "Healing ✦",
- faith: "Faith ☾",
- gratitude: "Gratitude ☀",
- personal: "Personal ♥",
-};
+import {
+  getPrettyCategoryLabel,
+  resolveBackgroundImage,
+} from "@/components/category";
 
 export default function MessageDisplay({
  message,
@@ -62,10 +48,9 @@ export default function MessageDisplay({
  const backgroundImage =
  quoteData?.image?.url ||
  quoteData?.image ||
- DEFAULT_IMAGES[finalCategory] ||
- DEFAULT_IMAGES.faith;
+ resolveBackgroundImage(finalCategory);
 
- const categoryLabel = CATEGORY_LABELS[finalCategory] || CATEGORY_LABELS.faith;
+ const categoryLabel = getPrettyCategoryLabel(finalCategory);
 
  const finalQuoteId = quoteData?._id || quoteId;
 

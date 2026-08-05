@@ -7,24 +7,10 @@ import { toast } from "react-hot-toast";
 import api from "@/lib/api";
 import favoriteService from "@/services/favorite-service/favorite.service";
 import { useAuthStore } from "@/store/authStore";
-
-const DEFAULT_IMAGES = {
- love: "/images/quote-bg/love.jpg",
- strength: "/images/quote-bg/strength.jpg",
- healing: "/images/quote-bg/healing.jpg",
- faith: "/images/quote-bg/faith.jpg",
- gratitude: "/images/quote-bg/gratitude.jpg",
- personal: "/images/quote-bg/peace.jpg",
-};
-
-const CATEGORY_LABELS = {
- love: "Love ♥",
- strength: "Strength ◐",
- healing: "Healing ✦",
- faith: "Faith ☾",
- gratitude: "Gratitude ☀",
- personal: "Personal ♥",
-};
+import {
+  getPrettyCategoryLabel,
+  resolveBackgroundImage,
+} from "@/components/category";
 
 export default function PublicQuoteDisplay({ data, tagCode }) {
  const router = useRouter();
@@ -37,9 +23,9 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
  const category = isPersonalMessage ? "personal" : data?.category || "faith";
 
  const backgroundImage =
- data?.image || DEFAULT_IMAGES[category] || DEFAULT_IMAGES.faith;
+ data?.image || resolveBackgroundImage(category);
 
- const categoryLabel = CATEGORY_LABELS[category] || CATEGORY_LABELS.faith;
+ const categoryLabel = getPrettyCategoryLabel(category);
 
  const canFavorite = !isPersonalMessage;
 

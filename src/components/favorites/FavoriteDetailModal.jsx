@@ -6,7 +6,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
-import { CATEGORY_CHIPS, CATEGORY_LABELS, DEFAULT_IMAGES } from './favorites.constants';
+import {
+  getCategoryChipTheme,
+  getCategoryLabel,
+  resolveBackgroundImage,
+} from '@/components/category';
 
 export default function FavoriteDetailModal({ favorite, onClose, onRemove }) {
   const [isRemoving, setIsRemoving] = useState(false);
@@ -14,8 +18,8 @@ export default function FavoriteDetailModal({ favorite, onClose, onRemove }) {
 
   const quote = favorite.quote;
   const category = quote.category || 'motivation';
-  const categoryLabel = CATEGORY_LABELS[category] || category;
-  const chip = CATEGORY_CHIPS[category] || CATEGORY_CHIPS.healing;
+  const categoryLabel = getCategoryLabel(category);
+  const chip = getCategoryChipTheme(category);
   const hasImage = Boolean(quote.image?.url);
   const formattedDate = favorite.createdAt ? format(new Date(favorite.createdAt), 'MMM d, yyyy') : '';
 

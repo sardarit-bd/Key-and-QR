@@ -1,13 +1,16 @@
 'use client';
 
 import { Sparkles } from 'lucide-react';
-import { SUBMISSION_CATEGORIES } from './submitQuote.constants';
+import { useSubmissionCategoryOptions } from './submitQuote.constants';
 
 /**
  * Premium category pills — horizontally scrollable on mobile,
- * animated selection state.
+ * animated selection state. Options come from the backend Category
+ * collection (single source of truth) filtered to the valid submission set.
  */
 export default function CategoryPills({ value, onChange }) {
+  const { options } = useSubmissionCategoryOptions();
+
   return (
     <div className="space-y-2.5">
       <div className="flex items-center gap-2">
@@ -21,7 +24,7 @@ export default function CategoryPills({ value, onChange }) {
 
       {/* Horizontal scroll on mobile, wrap on desktop */}
       <div className="hide-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1.5 sm:flex-wrap sm:overflow-visible sm:pb-0">
-        {SUBMISSION_CATEGORIES.map((cat) => {
+        {options.map((cat) => {
           const isSelected = value === cat.id;
           return (
             <button

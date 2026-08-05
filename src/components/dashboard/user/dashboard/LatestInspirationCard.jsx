@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Quote, Share2, BookOpen, Sparkles, Heart } from "lucide-react";
 import FavoriteButton from "@/components/favorite/FavoriteButton";
 
@@ -10,6 +11,7 @@ export default function LatestInspirationCard({
   onReadAgain,
   onFavoriteChange,
 }) {
+  const reduceMotion = useReducedMotion();
   const quote = inspiration?.text || "";
   const image = inspiration?.image || null;
   const category = inspiration?.category || null;
@@ -21,7 +23,11 @@ export default function LatestInspirationCard({
     dailyLimit > 0 ? `${usedToday} of ${dailyLimit} used today` : "";
 
   return (
-    <section className="group relative h-full min-h-[280px] sm:min-h-[320px] lg:min-h-[360px] w-full overflow-hidden rounded-[26px] bg-card shadow-[0_24px_60px_-18px_rgb(0_0_0/0.6)] transition-[box-shadow,border-color] duration-500 ease-out group-hover:border-white/15 group-hover:shadow-[0_32px_80px_-20px_rgb(0_0_0/0.7)] light:border-[#E8D5AF]/80 light:bg-[#FDF8F0]/70 light:shadow-[0_24px_60px_-18px_rgba(120,85,30,0.28),0_8px_24px_-8px_rgba(120,85,30,0.14),0_0_32px_-10px_rgba(232,201,133,0.22)] light:backdrop-blur-[2px] light:group-hover:border-[#DCB878]/90 light:group-hover:shadow-[0_32px_80px_-20px_rgba(120,85,30,0.36),0_12px_32px_-10px_rgba(120,85,30,0.18),0_0_48px_-10px_rgba(232,201,133,0.3)]">
+    <motion.section
+      whileHover={reduceMotion ? undefined : { scale: 1.012, y: -3 }}
+      transition={{ type: "spring", stiffness: 260, damping: 24 }}
+      className="group relative h-full min-h-[280px] sm:min-h-[320px] lg:min-h-[360px] w-full overflow-hidden rounded-[26px] bg-card shadow-[0_24px_60px_-18px_rgb(0_0_0/0.6)] transition-[box-shadow,border-color] duration-500 ease-out group-hover:border-white/15 group-hover:shadow-[0_32px_80px_-20px_rgb(0_0_0/0.7)] light:border-[#E8D5AF]/80 light:bg-[#FDF8F0]/70 light:shadow-[0_24px_60px_-18px_rgba(120,85,30,0.28),0_8px_24px_-8px_rgba(120,85,30,0.14),0_0_32px_-10px_rgba(232,201,133,0.22)] light:backdrop-blur-[2px] light:group-hover:border-[#DCB878]/90 light:group-hover:shadow-[0_32px_80px_-20px_rgba(120,85,30,0.36),0_12px_32px_-10px_rgba(120,85,30,0.18),0_0_48px_-10px_rgba(232,201,133,0.3)]"
+    >
       {/* ===== Layer 1: Full-bleed background image (fills entire card) ===== */}
       {image ? (
         <div className="absolute inset-0">
@@ -135,10 +141,19 @@ export default function LatestInspirationCard({
             </span>
           </div>
 
-          {/* Quote */}
-          <h2 className="italic text-[19px] sm:text-[22px] md:text-[25px] lg:text-[28px] leading-[1.35] tracking-wide text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] line-clamp-3 text-balance light:text-[#201A15] light:drop-shadow-none">
-            {quote}
-          </h2>
+          {/* Quote — smooth fade when the quote changes */}
+          <AnimatePresence mode="wait">
+            <motion.h2
+              key={quote}
+              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
+              transition={{ duration: 0.35, ease: "easeOut" }}
+              className="italic text-[19px] sm:text-[22px] md:text-[25px] lg:text-[28px] leading-[1.35] tracking-wide text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] line-clamp-3 text-balance light:text-[#201A15] light:drop-shadow-none"
+            >
+              {quote}
+            </motion.h2>
+          </AnimatePresence>
 
           {/* Premium branding */}
           <div className="mt-3 flex items-center gap-1.5 opacity-85">
@@ -180,7 +195,7 @@ export default function LatestInspirationCard({
             <button
               onClick={onShare}
               aria-label="Share quote"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/90 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/50 hover:text-primary hover:shadow-[0_8px_24px_-6px_rgba(168,85,247,0.4)] active:scale-95 light:border-[#E9DFC9]/80 light:bg-white/72 light:text-[#6F5D46] light:shadow-[0_4px_16px_-8px_rgba(120,85,30,0.22)] light:backdrop-blur-[12px] light:hover:bg-white/85 light:hover:-translate-y-0.5 light:hover:shadow-[0_8px_24px_-10px_rgba(120,85,30,0.3)]"
+              className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/90 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/50 hover:text-primary hover:shadow-[0_8px_24px_-6px_rgba(168,85,247,0.4)] active:scale-95 light:border-[#E9DFC9]/80 light:bg-white/72 light:text-[#6F5D46] light:shadow-[0_4px_16px_-8px_rgba(120,85,30,0.22)] light:backdrop-blur-[12px] light:hover:bg-white/85 light:hover:-translate-y-0.5 light:hover:shadow-[0_8px_24px_-10px_rgba(120,85,30,0.3)]"
             >
               <Share2 size={16} className="w-4 h-4" />
             </button>
@@ -188,13 +203,13 @@ export default function LatestInspirationCard({
             <button
               onClick={onReadAgain}
               aria-label="Read again"
-              className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/90 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/50 hover:text-accent hover:shadow-[0_8px_24px_-6px_rgba(253,182,92,0.4)] active:scale-95 light:border-[#E9DFC9]/80 light:bg-white/72 light:text-[#6F5D46] light:shadow-[0_4px_16px_-8px_rgba(120,85,30,0.22)] light:backdrop-blur-[12px] light:hover:bg-white/85 light:hover:-translate-y-0.5 light:hover:shadow-[0_8px_24px_-10px_rgba(120,85,30,0.3)]"
+              className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/90 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/50 hover:text-accent hover:shadow-[0_8px_24px_-6px_rgba(253,182,92,0.4)] active:scale-95 light:border-[#E9DFC9]/80 light:bg-white/72 light:text-[#6F5D46] light:shadow-[0_4px_16px_-8px_rgba(120,85,30,0.22)] light:backdrop-blur-[12px] light:hover:bg-white/85 light:hover:-translate-y-0.5 light:hover:shadow-[0_8px_24px_-10px_rgba(120,85,30,0.3)]"
             >
               <BookOpen size={16} className="w-4 h-4" />
             </button>
           </div>
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }

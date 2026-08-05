@@ -3,8 +3,10 @@
 import { useState, useEffect } from "react";
 import { useCartStore } from "@/store/cartStore";
 import { ProductImage } from "@/components/ui/ProductImage";
-import { Minus, Plus, Trash2, ShoppingBag } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ShieldCheck, ArrowRight, Lock } from "lucide-react";
 import Link from "next/link";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import CartSkeleton from "@/components/skeletons/CartSkeleton";
 import toast from "react-hot-toast";
 
 export default function Cart() {
@@ -18,9 +20,17 @@ export default function Cart() {
         hasItems,
         validateStock
     } = useCartStore();
+    const reduceMotion = useReducedMotion();
 
+    const [mounted, setMounted] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [removingId, setRemovingId] = useState(null);
+
+    // Hydration guard — show skeleton for one frame to avoid flash.
+    useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const subtotal = getTotalPrice();
     const totalItems = getTotalQuantity();
@@ -56,148 +66,243 @@ export default function Cart() {
 
     // Handle remove item
     const handleRemove = (id, name) => {
-        removeItem(id);
-        toast.success(`${name} removed from cart`);
+        setRemovingId(id);
+        // Slight delay so the removal animation is visible
+        setTimeout(() => {
+            removeItem(id);
+            setRemovingId(null);
+            toast.success(`${name} removed from cart`);
+        }, 200);
     };
+
+    // Hydration guard — show skeleton for one frame to avoid flash.
+    if (!mounted) {
+        return <CartSkeleton />;
+    }
 
     if (!hasItems()) {
         return (
-            <section className="max-w-7xl mx-auto my-18 px-4">
-                <div className="bg-gray-100 shadow rounded-xl p-12 text-center">
-                    <div className="flex flex-col items-center gap-4">
-                        <ShoppingBag size={48} className="text-gray-300" />
-                        <p className="text-gray-500">Your cart is empty.</p>
-                        <Link
-                            href="/shop"
-                            className="inline-block bg-black text-white px-6 py-2 rounded-lg hover:bg-gray-800 transition"
-                        >
-                            Start Shopping
-                        </Link>
+            <section className="mx-auto max-w-7xl my-16 sm:my-20 px-4 sm:px-6">
+                <motion.div
+                    initial={reduceMotion ? false : { opacity: 0, y: 16 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
+                    className="flex flex-col items-center justify-center rounded-3xl border border-[#EDE4D0]/70 bg-white px-6 py-20 text-center"
+                >
+                    <div className="flex h-20 w-20 items-center justify-center rounded-full bg-[#F5EDDC] shadow-[0_8px_30px_-8px_rgba(60_45_15/0.12)]">
+                        <ShoppingBag size={34} className="text-[#A6782B]" />
                     </div>
-                </div>
+                    <h2 className="mt-6 text-2xl font-bold tracking-tight text-[#2E2A24]">
+                        Your cart is empty
+                    </h2>
+                    <p className="mt-2 max-w-sm text-sm text-[#8A7A5C]">
+                        Looks like you haven't added anything yet. Explore our collection and find your next inspiration.
+                    </p>
+                    <Link
+                        href="/shop"
+                        className="mt-8 inline-flex items-center gap-2 rounded-full bg-[#2E2A24] px-6 py-3 text-sm font-semibold text-white transition-all duration-300 hover:-translate-y-0.5 hover:bg-[#1F1C18] active:scale-95 cursor-pointer"
+                    >
+                        Start Shopping
+                        <ArrowRight size={16} />
+                    </Link>
+                </motion.div>
             </section>
         );
     }
 
     return (
-        <section className="max-w-7xl mx-auto my-18 px-4 grid grid-cols-1 lg:grid-cols-3 gap-10">
-            {/* LEFT: Cart Items */}
-            <div className="lg:col-span-2">
-                <div className="bg-gray-100 shadow rounded-xl divide-y divide-gray-300 p-3">
-                    <div className="flex justify-between items-center px-4 py-2">
-                        <h2 className="text-lg font-semibold">Your Cart ({totalItems} items)</h2>
+        <section className="bg-[#FDFBF6] text-[#2E2A24] pb-16 sm:pb-20">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6">
+                {/* Header */}
+                <motion.div
+                    initial={reduceMotion ? false : { opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
+                    className="mb-8 flex flex-wrap items-center justify-between gap-4"
+                >
+                    <div>
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#2E2A24]">
+                            Shopping Cart
+                        </h1>
+                        <p className="mt-1 text-sm text-[#8A7A5C]">
+                            {totalItems} {totalItems === 1 ? 'item' : 'items'} in your cart
+                        </p>
+                    </div>
+                    <Link
+                        href="/shop"
+                        className="inline-flex items-center gap-1.5 text-sm font-medium text-[#A99B7F] transition-colors hover:text-[#A6782B] cursor-pointer"
+                    >
+                        Continue shopping
+                        <ArrowRight size={15} />
+                    </Link>
+                </motion.div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+                    {/* LEFT: Cart Items */}
+                    <div className="lg:col-span-2">
                         {isValidating && (
-                            <span className="text-sm text-gray-500">Validating stock...</span>
+                            <div className="mb-4 flex items-center gap-2 rounded-xl bg-[#F5EDDC]/50 px-4 py-3 text-sm text-[#8A7A5C]">
+                                <span className="relative flex h-2 w-2">
+                                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C6922D] opacity-60" />
+                                    <span className="relative inline-flex h-2 w-2 rounded-full bg-[#C6922D]" />
+                                </span>
+                                Validating stock...
+                            </div>
                         )}
+
+                        <div className="space-y-4">
+                            <AnimatePresence>
+                                {cart.map((item) => (
+                                    <motion.div
+                                        key={item.id}
+                                        layout
+                                        initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={reduceMotion ? undefined : { opacity: 0, x: -24 }}
+                                        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                                        className="flex flex-col sm:flex-row gap-4 rounded-2xl border border-[#EDE4D0]/80 bg-white p-4 shadow-[0_2px_12px_-4px_rgb(60_45_15/0.06)] transition-all duration-300 hover:border-[#C6922D]/30 hover:shadow-[0_16px_36px_-16px_rgb(60_45_15/0.2)]"
+                                    >
+                                        {/* Image + Info */}
+                                        <div className="flex flex-1 items-center gap-4 min-w-0">
+                                            <Link href={`/shop/${item.id}`} className="shrink-0 cursor-pointer">
+                                                <div className="relative h-20 w-20 overflow-hidden rounded-xl bg-[#F5F0E4]">
+                                                    <ProductImage
+                                                        src={item.img}
+                                                        alt={item.name}
+                                                        width={80}
+                                                        height={80}
+                                                        className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                                                        fill={false}
+                                                    />
+                                                </div>
+                                            </Link>
+
+                                            <div className="min-w-0 flex-1">
+                                                <Link href={`/shop/${item.id}`} className="cursor-pointer">
+                                                    <h3 className="truncate text-[15px] font-semibold text-[#2E2A24] transition-colors hover:text-[#A6782B]">
+                                                        {item.name}
+                                                    </h3>
+                                                </Link>
+                                                <p className="mt-1 text-sm font-medium text-[#5C5346]">
+                                                    ${Number(item.price).toFixed(2)}
+                                                </p>
+                                                {item.purchaseType === "gift" && (
+                                                    <span className="mt-1.5 inline-flex items-center rounded-full bg-[#FCE8E8] px-2 py-0.5 text-[11px] font-semibold text-[#C25B5B]">
+                                                        Gift
+                                                    </span>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {/* Controls */}
+                                        <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">
+                                            {/* Quantity */}
+                                            <div className="flex items-center overflow-hidden rounded-lg border border-[#E5DCC8] bg-white">
+                                                <button
+                                                    onClick={() => decreaseQty(item.id)}
+                                                    className="flex h-9 w-9 items-center justify-center text-[#8A7A5C] transition-colors hover:bg-[#F5EDDC] hover:text-[#2E2A24] cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                                                    disabled={isLoading || item.qty <= 1}
+                                                    aria-label="Decrease quantity"
+                                                >
+                                                    <Minus size={15} />
+                                                </button>
+                                                <span className="w-9 text-center text-sm font-semibold text-[#2E2A24] tabular-nums" aria-live="polite">
+                                                    {item.qty}
+                                                </span>
+                                                <button
+                                                    onClick={() => handleIncrease(item.id)}
+                                                    className="flex h-9 w-9 items-center justify-center text-[#8A7A5C] transition-colors hover:bg-[#F5EDDC] hover:text-[#2E2A24] cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                                                    disabled={isLoading}
+                                                    aria-label="Increase quantity"
+                                                >
+                                                    <Plus size={15} />
+                                                </button>
+                                            </div>
+
+                                            {/* Line total + remove */}
+                                            <div className="flex items-center gap-4">
+                                                <p className="w-20 text-right font-semibold text-[#2E2A24] tabular-nums">
+                                                    ${(item.price * item.qty).toFixed(2)}
+                                                </p>
+                                                <button
+                                                    onClick={() => handleRemove(item.id, item.name)}
+                                                    className="flex h-9 w-9 items-center justify-center rounded-full text-[#C25B5B] transition-all duration-200 hover:bg-[#FCE8E8] hover:text-[#C25B5B] cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                                                    disabled={isLoading || removingId === item.id}
+                                                    aria-label="Remove item"
+                                                >
+                                                    {removingId === item.id ? (
+                                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C25B5B]/40 border-t-transparent" />
+                                                    ) : (
+                                                        <Trash2 size={17} />
+                                                    )}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                            </AnimatePresence>
+                        </div>
                     </div>
 
-                    {cart.map((item) => (
-                        <div
-                            key={item.id}
-                            className="flex flex-col md:flex-row items-center gap-8 justify-between p-4"
-                        >
-                            {/* Image + Name */}
-                            <div className="flex items-center gap-4 w-full">
-                                <div className="relative w-16 h-16 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                                    <ProductImage
-                                        src={item.img}
-                                        alt={item.name}
-                                        width={64}
-                                        height={64}
-                                        className="object-cover"
-                                        fill={false}
-                                    />
+                    {/* RIGHT: Sticky Order Summary */}
+                    <div className="lg:col-span-1">
+                        <div className="rounded-2xl border border-[#EDE4D0]/80 bg-white p-6 shadow-[0_12px_40px_-16px_rgb(60_45_15/0.12)] lg:sticky lg:top-8">
+                            <h3 className="text-lg font-bold tracking-tight text-[#2E2A24]">
+                                Order Summary
+                            </h3>
+
+                            <div className="mt-5 space-y-3 text-sm">
+                                <div className="flex justify-between text-[#8A7A5C]">
+                                    <span>Subtotal ({totalItems} items)</span>
+                                    <span className="font-medium text-[#2E2A24] tabular-nums">${subtotal.toFixed(2)}</span>
+                                </div>
+                                <div className="flex justify-between text-[#8A7A5C]">
+                                    <span>Shipping</span>
+                                    <span className="font-medium text-[#2E5B3A]">Free</span>
                                 </div>
 
-                                <div className="flex-1 min-w-0">
-                                    <h3 className="font-medium text-gray-800 truncate">{item.name}</h3>
-                                    <p className="text-gray-400 text-sm">${item.price.toFixed(2)}</p>
+                                <div className="flex justify-between border-t border-[#EDE4D0]/70 pt-4 text-base font-bold text-[#2E2A24]">
+                                    <span>Total</span>
+                                    <span className="tabular-nums">${subtotal.toFixed(2)}</span>
                                 </div>
                             </div>
 
-                            {/* Controls */}
-                            <div className="flex items-center gap-5 w-full justify-start md:justify-end">
-                                {/* Quantity */}
-                                <div className="flex items-center gap-3 p-1 border-2 border-gray-400 rounded-lg">
+                            <div className="mt-6">
+                                <Link href="/checkout" className="block">
                                     <button
-                                        onClick={() => decreaseQty(item.id)}
-                                        className="px-3 py-1 cursor-pointer hover:bg-gray-200 rounded transition disabled:opacity-50"
-                                        disabled={isLoading}
-                                        aria-label="Decrease quantity"
+                                        disabled={isValidating || isLoading}
+                                        className={`w-full flex items-center justify-center gap-2 rounded-xl py-3.5 px-6 text-sm font-semibold transition-all duration-300 ${
+                                            isValidating || isLoading
+                                                ? "bg-[#EDE4D0] text-[#A99B7F] cursor-not-allowed"
+                                                : "bg-[#2E2A24] text-white hover:bg-[#1F1C18] active:scale-[0.99] cursor-pointer"
+                                        }`}
                                     >
-                                        <Minus size={16} />
+                                        {isValidating ? (
+                                            "Validating stock..."
+                                        ) : (
+                                            <>
+                                                Proceed to Checkout
+                                                <ArrowRight size={16} />
+                                            </>
+                                        )}
                                     </button>
+                                </Link>
+                            </div>
 
-                                    <span className="w-6 text-center font-medium">{item.qty}</span>
-
-                                    <button
-                                        onClick={() => handleIncrease(item.id)}
-                                        className="px-3 py-1 cursor-pointer hover:bg-gray-200 rounded transition disabled:opacity-50"
-                                        disabled={isLoading}
-                                        aria-label="Increase quantity"
-                                    >
-                                        <Plus size={16} />
-                                    </button>
-                                </div>
-
-                                {/* Total per item */}
-                                <p className="font-medium text-gray-800 w-[100px] text-right">
-                                    ${(item.price * item.qty).toFixed(2)}
+                            {/* Trust badges */}
+                            <div className="mt-6 space-y-2.5 border-t border-[#EDE4D0]/70 pt-5">
+                                <p className="flex items-center gap-2 text-xs text-[#8A7A5C]">
+                                    <ShieldCheck size={14} className="text-[#2E5B3A]" />
+                                    Secure 256-bit SSL encrypted checkout
                                 </p>
-
-                                {/* Remove */}
-                                <button
-                                    onClick={() => handleRemove(item.id, item.name)}
-                                    className="text-red-500 hover:text-red-600 transition cursor-pointer p-2 hover:bg-red-50 rounded-full"
-                                    disabled={isLoading}
-                                    aria-label="Remove item"
-                                >
-                                    <Trash2 size={20} />
-                                </button>
+                                <p className="flex items-center gap-2 text-xs text-[#8A7A5C]">
+                                    <Lock size={14} className="text-[#A99B7F]" />
+                                    Payments processed securely by Stripe
+                                </p>
                             </div>
                         </div>
-                    ))}
+                    </div>
                 </div>
-            </div>
-
-            {/* RIGHT: Order Summary */}
-            <div className="p-6 bg-gray-100 rounded-xl h-fit">
-                <h3 className="text-lg font-semibold mb-4">Order Summary</h3>
-
-                <div className="flex justify-between text-gray-700 py-2 border-b border-gray-300">
-                    <span>Subtotal ({totalItems} items):</span>
-                    <span>${subtotal.toFixed(2)}</span>
-                </div>
-
-                <div className="flex justify-between text-gray-700 py-2 border-b border-gray-300">
-                    <span>Shipping:</span>
-                    <span className="text-green-600">Free</span>
-                </div>
-
-                <div className="flex justify-between text-gray-900 py-3 font-medium text-lg">
-                    <span>Total:</span>
-                    <span>${subtotal.toFixed(2)}</span>
-                </div>
-
-                <div className="mt-5">
-                    <Link href="/checkout">
-                        <button
-                            disabled={isValidating || isLoading}
-                            className={`w-full py-3 text-center px-6 rounded-lg transition ${isValidating || isLoading
-                                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                                    : "bg-black text-white hover:bg-gray-800 cursor-pointer"
-                                }`}
-                        >
-                            {isValidating ? "Validating stock..." : "Proceed to Checkout"}
-                        </button>
-                    </Link>
-                </div>
-
-                {isValidating && (
-                    <p className="text-xs text-gray-400 mt-2 text-center">
-                        Checking stock availability...
-                    </p>
-                )}
             </div>
         </section>
     );

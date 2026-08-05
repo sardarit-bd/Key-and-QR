@@ -1,8 +1,9 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
+import { ArrowRight, ChevronRight } from "lucide-react";
+import ProductCard from "@/components/shop/ProductCard";
 import { useProductStore } from "@/store/productStore";
 
 export default function RelatedProducts({ currentProductId }) {
@@ -11,19 +12,11 @@ export default function RelatedProducts({ currentProductId }) {
     const [relatedProducts, setRelatedProducts] = useState([]);
 
     useEffect(() => {
-        // Get 6 random products excluding current product
+        // Get up to 6 random products excluding current product
         const otherProducts = products
             .filter(p => p._id !== currentProductId)
             .sort(() => 0.5 - Math.random())
-            .slice(0, 6)
-            .map(p => ({
-                id: p._id,
-                title: p.name,
-                desc: p.description?.substring(0, 50) + "...",
-                price: p.price,
-                // oldPrice: Math.round(p.price * 1.4), // Example old price
-                img: p.image?.url || "/placeholder.png"
-            }));
+            .slice(0, 6);
 
         setRelatedProducts(otherProducts);
     }, [products, currentProductId]);
@@ -32,68 +25,51 @@ export default function RelatedProducts({ currentProductId }) {
         setVisibleCount((prev) => prev + 4);
     };
 
-    const handleImageError = (e) => {
-        e.target.src = "/placeholder.png";
-        e.target.onerror = null;
-    };
-
     if (relatedProducts.length === 0) {
         return null;
     }
 
     return (
-        <section className="py-10 mt-16">
-            <h2 className="text-center text-3xl font-semibold mb-8">
-                Related Products
-            </h2>
-
-            {/* Product grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto px-4">
-                {relatedProducts.slice(0, visibleCount).map((item) => (
-                    <div key={item.id} className="bg-gray-100 rounded-md overflow-hidden">
-                        {/* Image */}
-                        <div className="relative w-full h-[220px]">
-                            <Link href={`/shop/${item.id}`}>
-                                <Image
-                                    src={item.img}
-                                    alt={item.title}
-                                    fill
-                                    className="object-cover"
-                                    onError={handleImageError}
-                                    unoptimized={true}
-                                />
-                            </Link>
-                        </div>
-
-                        {/* Content */}
-                        <div className="p-4">
-                            <h3 className="font-medium text-gray-900">
-                                <Link href={`/shop/${item.id}`}>{item.title}</Link>
-                            </h3>
-                            <p className="text-gray-500 text-sm">{item.desc}</p>
-
-                            <div className="mt-3 flex items-center gap-3">
-                                <span className="text-black font-semibold">
-                                    ${item.price}
-                                </span>
-                                {/* <span className="line-through text-gray-400">${item.oldPrice}</span> */}
-                            </div>
-                        </div>
+        <section className="mt-16 sm:mt-24 py-10">
+            <div className="mx-auto max-w-7xl px-4 sm:px-6">
+                <div className="mb-8 flex items-end justify-between gap-4">
+                    <div>
+                        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#A99B7F]">
+                            Keep exploring
+                        </span>
+                        <h2 className="mt-1.5 text-2xl sm:text-3xl font-bold tracking-tight text-[#2E2A24]">
+                            You may also like
+                        </h2>
                     </div>
-                ))}
-            </div>
-
-            {/* Show More button */}
-            {visibleCount < relatedProducts.length && (
-                <div className="flex justify-center mt-8">
-                    <button
-                        onClick={handleShowMore}
-                        className="px-6 py-2 border rounded-md hover:bg-gray-100 transition"
+                    <Link
+                        href="/shop"
+                        className="group inline-flex shrink-0 cursor-pointer items-center gap-1.5 text-sm font-semibold text-[#A6782B] transition-all duration-200 hover:gap-2.5"
                     >
-                        Show More
-                    </button>
+                        View all
+                        <ArrowRight size={15} />
+                    </Link>
                 </div>
-            )}
+
+                {/* Product grid — EXACT same card as the Shop page */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 lg:gap-6">
+                    {relatedProducts.slice(0, visibleCount).map((product, index) => (
+                        <ProductCard key={product._id} product={product} index={index} />
+                    ))}
+                </div>
+
+                {/* Show More button */}
+                {visibleCount < relatedProducts.length && (
+                    <div className="flex justify-center mt-10">
+                        <button
+                            onClick={handleShowMore}
+                            className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-[#E5DCC8] bg-white px-6 py-2.5 text-sm font-medium text-[#5C5346] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#C6922D]/50 hover:text-[#A6782B] active:scale-95"
+                        >
+                            Show More
+                            <ChevronRight size={15} />
+                        </button>
+                    </div>
+                )}
+            </div>
         </section>
     );
 }

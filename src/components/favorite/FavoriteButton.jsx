@@ -63,7 +63,7 @@ export default function FavoriteButton({
       onClick={handleClick}
       disabled={isLoading}
       className={cn(
-        'relative transition-all duration-300',
+        'relative cursor-pointer transition-all duration-300',
         isFavorite
           ? '!text-rose-500 hover:!text-rose-500 hover:bg-rose-500/10'
           : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   SubmitQuoteHeader,
@@ -11,6 +11,8 @@ import {
   SubmitSuccessState,
 } from '@/components/submit-quote';
 import { useSubmitQuoteMutation } from '@/hooks/pending-quote/usePendingQuote';
+import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
+import { SUBMISSION_CATEGORY_SLUGS } from '@/components/submit-quote/submitQuote.constants';
 
 const MAX_LENGTH = 500;
 
@@ -27,6 +29,16 @@ export default function SubmitQuotePage() {
   const [error, setError] = useState(null);
 
   const submitQuote = useSubmitQuoteMutation();
+  const { data: quoteCategories = [] } = useQuoteCategories();
+
+  // Default category — first valid submission slug from the backend list,
+  // otherwise the fallback 'inspire'.
+  const defaultCategory = useMemo(() => {
+    const first = quoteCategories.find(
+      (cat) => cat?.slug && SUBMISSION_CATEGORY_SLUGS.includes(cat.slug)
+    );
+    return first?.slug || 'inspire';
+  }, [quoteCategories]);
 
   const handleSubmit = useCallback(
     async (e) => {
@@ -51,12 +63,12 @@ export default function SubmitQuotePage() {
         setSubmitted(true);
         setText('');
         setAuthor('');
-        setCategory('inspire');
+        setCategory(defaultCategory);
       } catch (err) {
         setError(err?.message || 'Failed to submit quote');
       }
     },
-    [text, author, category, submitQuote]
+    [text, author, category, submitQuote, defaultCategory]
   );
 
   const handleWriteAnother = useCallback(() => {

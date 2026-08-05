@@ -11,6 +11,7 @@ import FavoriteCard from '@/components/favorites/FavoriteCard';
 import FavoriteDetailModal from '@/components/favorites/FavoriteDetailModal';
 import { FavoritesEmptyState, FavoritesFilteredEmpty } from '@/components/favorites/FavoritesEmptyStates';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
+import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
 
 const FAVORITES_PER_PAGE = 12;
 
@@ -45,6 +46,7 @@ export default function FavoritesPage() {
   });
   const { data: statsRaw } = useFavoriteStats();
   const removeFavorite = useRemoveFavoriteMutation();
+  const { data: quoteCategories = [] } = useQuoteCategories();
 
   const favorites = data?.data || [];
   const meta = data?.meta || { page: 1, limit: FAVORITES_PER_PAGE, total: 0, totalPage: 0 };
@@ -112,7 +114,7 @@ export default function FavoritesPage() {
         </div>
 
         <div className="mt-6">
-          <FavoritesFilters search={search} category={category} sort={sort} view={view}
+          <FavoritesFilters search={search} category={category} sort={sort} view={view} categories={quoteCategories}
             onSearchChange={setSearch} onCategoryChange={setCategory} onSortChange={setSort} onViewChange={setView} onReset={handleReset} />
         </div>
 

@@ -8,25 +8,10 @@ import { toast } from 'react-hot-toast';
 import FavoriteButton from '@/components/favorite/FavoriteButton';
 import GiftMessageButton from '@/components/user/gift-message/GiftMessageButton';
 import useFavorite from '@/hooks/use-favorite/useFavorite';
-
-const DEFAULT_IMAGES = {
- love: '/images/quote-bg/love.jpg',
- strength: '/images/quote-bg/strength.jpg',
- healing: '/images/quote-bg/healing.jpg',
- faith: '/images/quote-bg/faith.jpg',
- gratitude: '/images/quote-bg/gratitude.jpg',
- personal: '/images/quote-bg/peace.jpg',
-};
-
-const CATEGORY_LABELS = {
- love: 'Love ♥',
- strength: 'Strength ◐',
- healing: 'Healing ✦',
- faith: 'Faith ☾',
- gratitude: 'Gratitude ☀',
- motivation: 'Strength ◐',
- personal: 'Personal ♥',
-};
+import {
+  getPrettyCategoryLabel,
+  resolveBackgroundImage,
+} from '@/components/category';
 
 /**
  * QR Ready Component
@@ -46,8 +31,8 @@ export default function QRReady({
  const personalMessage = data?.personalMessage || null;
  
  const category = quote?.category || 'faith';
- const backgroundImage = quote?.image?.url || DEFAULT_IMAGES[category] || DEFAULT_IMAGES.faith;
- const categoryLabel = CATEGORY_LABELS[category] || CATEGORY_LABELS.faith;
+ const backgroundImage = quote?.image?.url || resolveBackgroundImage(category);
+ const categoryLabel = getPrettyCategoryLabel(category);
 
  // Use favorite hook for the quote
  const { isFavorite } = useFavorite({

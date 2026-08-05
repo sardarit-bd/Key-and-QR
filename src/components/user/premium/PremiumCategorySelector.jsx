@@ -4,17 +4,6 @@ import { motion } from 'framer-motion';
 import { Lock } from 'lucide-react';
 import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
 
-const EMOJI_FALLBACK = {
-  love: '❤️',
-  strength: '💪',
-  healing: '🌿',
-  faith: '🙏',
-  gratitude: '☀️',
-  inspire: '✨',
-  courage: '🛡️',
-  wisdom: '📖',
-};
-
 /**
  * Premium Category Selector
  * Loads categories from the backend (GET /categories) — the chip design
@@ -33,7 +22,7 @@ export default function PremiumCategorySelector({
     ...backendCategories.map((category) => ({
       id: category?.slug || category?._id,
       label: category?.name || category?.slug,
-      icon: EMOJI_FALLBACK[category?.slug] || '✨',
+      icon: '✨',
     })),
   ];
 

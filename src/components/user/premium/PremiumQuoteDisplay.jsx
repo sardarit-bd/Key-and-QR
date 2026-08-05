@@ -3,14 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { RefreshCw, Crown, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-
-const DEFAULT_IMAGES = {
- love: '/images/quote-bg/love.jpg',
- strength: '/images/quote-bg/strength.jpg',
- healing: '/images/quote-bg/healing.jpg',
- faith: '/images/quote-bg/faith.jpg',
- gratitude: '/images/quote-bg/gratitude.jpg',
-};
+import { resolveBackgroundImage } from '@/components/category';
 
 /**
  * Premium Quote Display
@@ -22,7 +15,7 @@ export default function PremiumQuoteDisplay({
  onLoadNew,
 }) {
  const category = quote?.category || 'love';
- const backgroundImage = quote?.image?.url || DEFAULT_IMAGES[category] || DEFAULT_IMAGES.love;
+ const backgroundImage = quote?.image?.url || resolveBackgroundImage(category);
 
  if (loading) {
  return (

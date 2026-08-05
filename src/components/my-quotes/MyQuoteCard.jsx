@@ -14,12 +14,14 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import {
   ACTION_ICON_CLASS,
-  CATEGORY_CHIPS,
-  CATEGORY_LABELS,
   CARD_SURFACE,
-  DEFAULT_IMAGES,
   HOVER_ELEVATION,
 } from './myQuoteCard.constants';
+import {
+  getCategoryChipTheme,
+  getCategoryLabel,
+  resolveBackgroundImage,
+} from '@/components/category';
 
 /**
  * My Quote Card
@@ -41,12 +43,12 @@ export default function MyQuoteCard({
   if (!quote) return null;
 
   const category = quote.category || 'motivation';
-  const categoryLabel = CATEGORY_LABELS[category] || category;
-  const chip = CATEGORY_CHIPS[category] || CATEGORY_CHIPS.healing;
+  const categoryLabel = getCategoryLabel(category);
+  const chip = getCategoryChipTheme(category);
   const hasImage = Boolean(quote.image?.url);
   const backgroundImage = hasImage
     ? quote.image.url
-    : DEFAULT_IMAGES[category] || DEFAULT_IMAGES.motivation;
+    : resolveBackgroundImage(category);
 
   const isFavorite = !!receivedQuote?.favorite;
   const favoriteId = receivedQuote?.favoriteId || null;
