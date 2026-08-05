@@ -1,6 +1,43 @@
 'use client';
 
+import { useEffect, useRef, useState } from 'react';
 import Card from "./Card";
+
+/**
+ * Count-up hook — eases the number up once on mount.
+ * Respects prefers-reduced-motion: jumps straight to the value.
+ */
+function useCountUp(target, duration = 900) {
+  const [value, setValue] = useState(0);
+  const frame = useRef(null);
+  const reduced = useRef(false);
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.matchMedia) {
+      reduced.current = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    }
+  }, []);
+
+  useEffect(() => {
+    const targetNum = Number(target) || 0;
+    if (reduced.current) {
+      setValue(targetNum);
+      return;
+    }
+    const start = performance.now();
+    const from = 0;
+    const tick = (now) => {
+      const p = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3); // easeOutCubic
+      setValue(Math.round(from + (targetNum - from) * eased));
+      if (p < 1) frame.current = requestAnimationFrame(tick);
+    };
+    frame.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame.current);
+  }, [target, duration]);
+
+  return value;
+}
 
 export default function StatCard({
   icon: Icon,
@@ -10,6 +47,7 @@ export default function StatCard({
   colorTheme,
   customIconRender,
 }) {
+  const animatedValue = useCountUp(value);
   const themeMap = {
     purple: {
       border: "border-purple-500/25",
@@ -59,8 +97,8 @@ export default function StatCard({
             {title}
           </p>
 
-          <h3 className="text-[26px] sm:text-[30px] md:text-[34px] leading-tight text-foreground font-semibold tracking-tight">
-            {value}
+          <h3 className="text-[26px] sm:text-[30px] md:text-[34px] leading-tight text-foreground font-semibold tracking-tight tabular-nums">
+            {animatedValue}
           </h3>
 
           <p className="text-foreground-tertiary text-[11px] sm:text-xs truncate">

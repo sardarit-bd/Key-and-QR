@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Crown, Sparkles, Shell } from 'lucide-react';
 
 /**
@@ -9,9 +10,26 @@ import { Crown, Sparkles, Shell } from 'lucide-react';
  * Premium image-based background with layered overlays for readability.
  */
 export default function GreetingSection({ greeting, user, subscription }) {
+  const reduceMotion = useReducedMotion();
   const name = greeting?.name || user?.name || 'there';
   const timeGreeting = greeting?.text || 'Welcome';
   const isPremium = !!subscription?.isPremium || subscription?.plan === 'subscriber';
+
+  const container = {
+    hidden: {},
+    show: {
+      transition: { staggerChildren: 0.08, delayChildren: 0.05 },
+    },
+  };
+
+  const item = {
+    hidden: reduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 },
+    show: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
+    },
+  };
 
   return (
     <section className="relative flex h-full w-full items-center overflow-hidden rounded-[26px] border border-white/8 bg-card px-6 sm:px-9 md:px-12 py-8 sm:py-10 lg:py-12 shadow-[0_20px_50px_-16px_rgb(0_0_0/0.55)] light:border-[#E8DFCE]/80 light:bg-[#FBF7EF]/55 light:shadow-[0_30px_70px_-24px_rgba(100,72,24,0.32),0_16px_40px_-20px_rgba(100,72,24,0.16),0_0_40px_-12px_rgba(198,146,45,0.14)] light:backdrop-blur-[2px]">
@@ -73,37 +91,51 @@ export default function GreetingSection({ greeting, user, subscription }) {
 
 
       {/* ===== Content ===== */}
-      <div className="relative z-10 flex w-full flex-col items-start justify-center">
+      <motion.div
+        variants={container}
+        initial={reduceMotion ? false : 'hidden'}
+        animate="show"
+        className="relative z-10 flex w-full flex-col items-start justify-center"
+      >
         {/* Small premium eyebrow */}
-        <div className="mb-3 flex items-center gap-2">
+        <motion.div variants={item} className="mb-3 flex items-center gap-2">
           <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-accent/25 bg-accent/10 shadow-[0_0_16px_rgba(253,182,92,0.12)]">
             <Sparkles size={13} className="text-accent" fill="currentColor" />
           </span>
           <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-accent">
             Daily Inspiration
           </span>
-        </div>
+        </motion.div>
 
         {/* Greeting */}
-        <h1 className="text-[28px] sm:text-[34px] md:text-[40px] lg:text-[40px] leading-[1.12] tracking-tight text-foreground">
+        <motion.h1
+          variants={item}
+          className="text-[28px] sm:text-[34px] md:text-[40px] lg:text-[40px] leading-[1.12] tracking-tight text-foreground"
+        >
           {timeGreeting},
           <br />
           {name}!
-        </h1>
+        </motion.h1>
 
         {/* Welcome text */}
-        <p className="mt-2.5 sm:mt-3 text-[14px] sm:text-[15px] md:text-[16px] font-normal tracking-wide">
+        <motion.p
+          variants={item}
+          className="mt-2.5 sm:mt-3 text-[14px] sm:text-[15px] md:text-[16px] font-normal tracking-wide"
+        >
           Welcome back to your inspiration journey.
-        </p>
+        </motion.p>
 
         {/* Premium Plan badge */}
         {isPremium ? (
-          <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-accent/25 bg-gradient-to-r from-accent/15 to-accent/5 px-4 py-1.5 text-[12px] font-semibold tracking-wide text-accent shadow-[0_0_24px_rgba(253,182,92,0.15)] backdrop-blur-sm">
+          <motion.div
+            variants={item}
+            className="mt-5 inline-flex items-center gap-2 rounded-full border border-accent/25 bg-gradient-to-r from-accent/15 to-accent/5 px-4 py-1.5 text-[12px] font-semibold tracking-wide text-accent shadow-[0_0_24px_rgba(253,182,92,0.15)] backdrop-blur-sm"
+          >
             <Crown size={13} className="w-3.5 h-3.5" />
             Premium Plan
-          </div>
+          </motion.div>
         ) : null}
-      </div>
+      </motion.div>
     </section>
   );
 }

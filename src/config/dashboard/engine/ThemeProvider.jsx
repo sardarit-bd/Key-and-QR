@@ -75,6 +75,18 @@ export function ThemeProvider({
     setStoredThemeMode(themeMode);
   }, [themeMode, isReady]);
 
+  // Restore the public light theme when leaving a dashboard.
+  // The public website is always light; only dashboards toggle dark/light.
+  useEffect(() => {
+    return () => {
+      const root = document.documentElement;
+      root.classList.remove('light', 'dark');
+      root.classList.add('light');
+      root.style.colorScheme = 'light';
+      root.setAttribute('data-theme-mode', 'light');
+    };
+  }, []);
+
   // Listen for system theme changes
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');

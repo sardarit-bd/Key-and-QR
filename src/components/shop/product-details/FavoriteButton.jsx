@@ -1,3 +1,5 @@
+"use client";
+
 import { Heart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useFavoriteStatus, useToggleFavoriteMutation } from "@/hooks/favorite-service/useFavorites";
@@ -7,7 +9,7 @@ import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 
-export const FavoriteButton = ({ productId }) => {
+export const FavoriteButton = ({ productId, className }) => {
     const router = useRouter();
     const { isAuthenticated } = useAuthStore();
 
@@ -33,7 +35,6 @@ export const FavoriteButton = ({ productId }) => {
                 favoriteId,
             });
         } catch (error) {
-            // Error handled by mutation
             console.error('Favorite error:', error);
         }
     };
@@ -44,15 +45,16 @@ export const FavoriteButton = ({ productId }) => {
             onClick={handleFavorite}
             disabled={isPending || isFavoriteLoading}
             className={cn(
-                "px-4 py-3 gap-2 cursor-pointer disabled:cursor-not-allowed",
-                isFavorite && "bg-red-500 hover:bg-red-600 border-red-500 text-white"
+                "h-12 px-5 py-3 gap-2 rounded-xl border-[#E5DCC8] bg-white text-[#5C5346] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#C6922D]/40 hover:text-[#C6922D] active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:hover:translate-y-0",
+                isFavorite && "!border-[#C25B5B]/30 !bg-[#FCE8E8] !text-[#C25B5B] hover:!border-[#C25B5B]/40 hover:!text-[#C25B5B]",
+                className
             )}
             aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
         >
             {isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
             ) : (
-                <Heart className={cn("w-4 h-4", isFavorite && "fill-white")} />
+                <Heart className={cn("w-4 h-4 transition-all duration-200", isFavorite && "fill-current")} />
             )}
             {isFavorite ? "Saved" : "Save"}
         </Button>

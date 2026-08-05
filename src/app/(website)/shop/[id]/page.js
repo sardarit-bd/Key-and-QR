@@ -1,4 +1,3 @@
-import Banner from "@/shared/Banner";
 import { HydrationBoundary, dehydrate, QueryClient } from "@tanstack/react-query";
 import { productKeys } from "@/hooks/product-service/useProducts";
 import productService from "@/services/product-service/product.service";
@@ -17,14 +16,6 @@ export default async function ProductDetailsPage({ params }) {
 
     return (
         <HydrationBoundary state={dehydrate(queryClient)}>
-            <Banner
-                title="Shop"
-                breadcrumbs={[
-                    { label: "Home", href: "/" },
-                    { label: "Shop", href: "/shop" },
-                    { label: "Product Details", href: "#" },
-                ]}
-            />
             <ProductDetails />
         </HydrationBoundary>
     );

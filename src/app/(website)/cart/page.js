@@ -1,18 +1,19 @@
 import Cart from "@/components/cart/Cart";
-import Banner from "@/shared/Banner";
+import ShopBreadcrumb from "@/components/shop/ShopBreadcrumb";
+
 export default function page() {
     return (
         <>
-            <Banner
-                title="Shop"
-                breadcrumbs={[
-                    { label: "Home", href: "/" },
-                    { label: "Shop", href: "/shop" },
-                    { label: "Product Details", href: "#" },
-                    { label: "Cart", href: "/cart" },
-                ]}
-            />
+            <div className="mx-auto max-w-7xl px-4 sm:px-6">
+                <ShopBreadcrumb
+                    items={[
+                        { label: "Home", href: "/" },
+                        { label: "Shop", href: "/shop" },
+                        { label: "Cart" },
+                    ]}
+                />
+            </div>
             <Cart />
         </>
-    )
+    );
 }

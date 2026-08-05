@@ -41,7 +41,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
                 <button
                   onClick={onClose}
                   aria-label="Close"
-                  className="absolute right-3 top-3 z-20 flex h-8 w-8 items-center justify-center rounded-full border border-border bg-background-secondary/80 text-foreground-secondary backdrop-blur-sm transition-colors hover:text-foreground"
+                  className="absolute right-3 top-3 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-background-secondary/80 text-foreground-secondary backdrop-blur-sm transition-colors hover:text-foreground"
                 >
                   <X size={16} className="w-4 h-4" />
                 </button>
@@ -73,7 +73,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.4, duration: 0.4 }}
                 >
-                  — {quote.author || 'InspireTag'}
+                  — {quote.author || 'MyInspireTag'}
                 </motion.p>
               </div>
             </motion.div>

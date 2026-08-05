@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { motion, useReducedMotion } from "framer-motion";
 import { Sparkles, Lock, Check, LayoutGrid, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Card from "./Card";
@@ -22,6 +23,7 @@ export default function CategorySection({
   disabled,
 }) {
   const router = useRouter();
+  const reduceMotion = useReducedMotion();
   const categoryList = Array.isArray(categories) ? categories : [];
 
   const handleClick = (category) => {
@@ -101,7 +103,7 @@ export default function CategorySection({
         <div className="w-full lg:flex-1 lg:w-auto">
           <div className="flex items-stretch gap-3 sm:gap-4 overflow-x-auto hide-scrollbar pb-2 -mx-1 px-1 lg:flex-nowrap lg:overflow-visible lg:justify-start">
             {categoryList.length > 0 ? (
-              categoryList.map((category) => {
+              categoryList.map((category, index) => {
                 const slug = category?.slug || category?.name || "";
                 const Icon = category?.iconComponent || Sparkles;
                 const isLocked =
@@ -109,26 +111,36 @@ export default function CategorySection({
                 const isPremium = !!category?.isPremium;
 
                 return (
-                  <button
+                  <motion.button
                     key={category?.id || slug}
                     onClick={() => handleClick(category)}
                     disabled={isLocked || disabled}
+                    initial={reduceMotion ? false : { opacity: 0, y: 10, scale: 0.96 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.4, delay: index * 0.05, ease: [0.22, 1, 0.36, 1] }}
+                    whileHover={!isLocked && !reduceMotion ? { y: -4, scale: 1.03 } : undefined}
+                    whileTap={!isLocked && !reduceMotion ? { scale: 0.97 } : undefined}
                     className={`
                       group relative flex min-h-[104px] min-w-[104px] shrink-0 flex-col items-center justify-center gap-1.5
                       rounded-[18px] border px-3 py-4
-                      transition-all duration-300 active:scale-95
+                      transition-colors duration-300
                       ${
                         isLocked
                           ? "border-white/6 bg-background-secondary/40 backdrop-blur-sm cursor-not-allowed"
-                          : "border-white/8 bg-gradient-to-b from-background-secondary/80 to-background-secondary/30 hover:-translate-y-1 hover:border-primary/30 hover:shadow-[0_16px_32px_-12px_rgb(0_0_0/0.5)]"
+                          : "border-white/8 bg-gradient-to-b from-background-secondary/80 to-background-secondary/30 cursor-pointer hover:border-primary/30 hover:shadow-[0_16px_32px_-12px_rgb(0_0_0/0.5)]"
                       }
                     `}
                   >
                     {/* Premium marker */}
                     {isPremium && (
-                      <span className="absolute -right-2 -top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-accent/40 bg-gradient-to-tr from-accent/30 to-accent/10 shadow-[0_0_14px_rgba(253,182,92,0.3)]">
+                      <motion.span
+                        initial={reduceMotion ? false : { scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: 0.15, type: "spring", stiffness: 260, damping: 16 }}
+                        className="absolute -right-2 -top-2 z-10 flex h-6 w-6 items-center justify-center rounded-full border border-accent/40 bg-gradient-to-tr from-accent/30 to-accent/10 shadow-[0_0_14px_rgba(253,182,92,0.3)]"
+                      >
                         <Sparkles size={11} className="text-accent" />
-                      </span>
+                      </motion.span>
                     )}
 
                     {/* Icon */}
@@ -136,17 +148,23 @@ export default function CategorySection({
                       className={`flex h-11 w-11 items-center justify-center rounded-2xl transition-all duration-300 ${
                         isLocked
                           ? "bg-background-tertiary/40"
-                          : "bg-background-tertiary/60 group-hover:bg-accent/10"
+                          : "bg-background-tertiary/60 group-hover:bg-accent/10 group-hover:shadow-[0_0_18px_-4px_rgba(253,182,92,0.35)]"
                       }`}
                     >
                       {isLocked ? (
                         <Lock size={18} className="text-muted-foreground" />
                       ) : (
-                        <Icon
-                          size={22}
-                          strokeWidth={2}
-                          className={`w-[20px] h-[20px] ${category?.colorClass || "text-accent"} transition-transform duration-300 group-hover:scale-110`}
-                        />
+                        <motion.span
+                          whileHover={reduceMotion ? undefined : { rotate: -6, scale: 1.12 }}
+                          transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                          className="flex items-center justify-center"
+                        >
+                          <Icon
+                            size={22}
+                            strokeWidth={2}
+                            className={`w-[20px] h-[20px] ${category?.colorClass || "text-accent"} transition-colors duration-300`}
+                          />
+                        </motion.span>
                       )}
                     </span>
 
@@ -168,7 +186,7 @@ export default function CategorySection({
                         Available
                       </span>
                     )}
-                  </button>
+                  </motion.button>
                 );
               })
             ) : (
@@ -178,9 +196,14 @@ export default function CategorySection({
             )}
 
             {/* View All — premium secondary action, last action item */}
-            <button
+            <motion.button
               onClick={handleViewAll}
-              className="group relative flex min-h-[104px] min-w-[104px] shrink-0 flex-col items-center justify-center gap-2 rounded-[18px] border border-dashed border-white/10 px-4 transition-all duration-300 hover:border-accent/30 hover:bg-accent/[0.04] active:scale-95"
+              initial={reduceMotion ? false : { opacity: 0, y: 10, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: 0.4, delay: categoryList.length * 0.05, ease: [0.22, 1, 0.36, 1] }}
+              whileHover={reduceMotion ? undefined : { y: -4, scale: 1.03 }}
+              whileTap={reduceMotion ? undefined : { scale: 0.97 }}
+              className="group relative flex min-h-[104px] min-w-[104px] shrink-0 flex-col items-center justify-center gap-2 rounded-[18px] border border-dashed border-white/10 px-4 cursor-pointer transition-colors duration-300 hover:border-accent/30 hover:bg-accent/[0.04]"
             >
               <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-background-tertiary/50 text-foreground-secondary transition-all duration-300 group-hover:text-accent group-hover:bg-accent/10">
                 <LayoutGrid size={20} className="w-5 h-5" />
@@ -195,7 +218,7 @@ export default function CategorySection({
               <span className="text-[10px] text-foreground-tertiary">
                 Categories
               </span>
-            </button>
+            </motion.button>
           </div>
         </div>
       </div>

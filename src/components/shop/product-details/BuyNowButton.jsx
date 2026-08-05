@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
-import { ShieldBan } from "lucide-react";
+import { ShieldBan, Zap } from "lucide-react";
 
 export const BuyNowButton = ({
     product,
@@ -39,7 +39,7 @@ export const BuyNowButton = ({
             <Button
                 variant="outline"
                 disabled
-                className="px-6 py-3 opacity-50 cursor-not-allowed"
+                className="h-12 px-6 py-3 rounded-xl opacity-50 cursor-not-allowed"
             >
                 <ShieldBan size={14} className="mr-1.5" />
                 Purchases Disabled
@@ -52,8 +52,9 @@ export const BuyNowButton = ({
             variant="default"
             onClick={handleBuyNow}
             disabled={product.stock <= 0}
-            className="px-6 py-3 bg-gray-700 hover:bg-gray-800 text-white cursor-pointer disabled:cursor-not-allowed"
+            className="h-12 px-7 py-3 rounded-xl bg-[#C6922D] hover:bg-[#A6782B] text-white shadow-[0_8px_24px_-8px_rgba(198,146,45,0.6)] transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] disabled:cursor-not-allowed disabled:hover:translate-y-0"
         >
+            <Zap size={14} className="mr-1.5" />
             Buy it Now
         </Button>
     );

@@ -1,12 +1,14 @@
 'use client';
 
 import { useRouter } from 'next/navigation';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Quote as QuoteIcon, ArrowRight } from 'lucide-react';
 import Card from './Card';
 import QuoteItem from './QuoteItem';
 
 export default function RecentQuotesCard({ quotes, onQuoteClick }) {
   const router = useRouter();
+  const reduceMotion = useReducedMotion();
 
   const handleViewAll = () => {
     router.push('/new-dashboard/user/my-quotes');
@@ -31,7 +33,7 @@ export default function RecentQuotesCard({ quotes, onQuoteClick }) {
         </div>
         <button
           onClick={handleViewAll}
-          className="group inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/8 bg-background-secondary/50 px-4 py-1.5 text-[12px] font-medium text-foreground-secondary transition-all duration-300 hover:border-accent/30 hover:text-foreground hover:bg-accent/5 active:scale-95"
+          className="group inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border border-white/8 bg-background-secondary/50 px-4 py-1.5 text-[12px] font-medium text-foreground-secondary transition-all duration-300 hover:border-accent/30 hover:text-foreground hover:bg-accent/5 active:scale-95"
         >
           View All
           <ArrowRight size={13} className="w-3.5 h-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
@@ -40,14 +42,19 @@ export default function RecentQuotesCard({ quotes, onQuoteClick }) {
 
       <div className="space-y-2.5 sm:space-y-3 flex-1">
         {quotes.length > 0 ? (
-          quotes.map((quote) => (
-            <button
+          quotes.map((quote, index) => (
+            <motion.button
               key={quote.id}
               onClick={() => handleClick(quote)}
+              initial={reduceMotion ? false : { opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.35, delay: index * 0.06, ease: [0.22, 1, 0.36, 1] }}
+              whileHover={reduceMotion ? undefined : { y: -2, scale: 1.005 }}
+              whileTap={reduceMotion ? undefined : { scale: 0.995 }}
               className="block w-full text-left cursor-pointer"
             >
               <QuoteItem quote={quote} />
-            </button>
+            </motion.button>
           ))
         ) : (
           <div className="flex flex-col items-center justify-center py-12 text-center">

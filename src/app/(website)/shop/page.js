@@ -1,4 +1,3 @@
-import Banner from "@/shared/Banner";
 import ShopGrid from "@/components/shop/Products";
 import { HydrationBoundary, dehydrate, QueryClient } from "@tanstack/react-query";
 import { productKeys } from "@/hooks/product-service/useProducts";
@@ -17,13 +16,6 @@ export default async function ShopPage() {
 
     return (
         <HydrationBoundary state={dehydrate(queryClient)}>
-            <Banner
-                title="Shop"
-                breadcrumbs={[
-                    { label: "Home", href: "/" },
-                    { label: "Shop", href: "/shop" },
-                ]}
-            />
             <ShopGrid />
         </HydrationBoundary>
     );

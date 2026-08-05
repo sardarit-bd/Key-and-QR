@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import GreetingSection from './GreetingSection';
 import WelcomeCard from './WelcomeCard';
 import LatestInspirationCard from './LatestInspirationCard';
@@ -16,6 +17,9 @@ import { mapHistoryQuotes } from '@/utils/dashboard.utils';
  * User Dashboard home — client-approved layout:
  * Greeting + Today's Inspiration (or Welcome) | Categories | Recent Quotes +
  * Streak | Statistics. Category clicks open the loading → reveal overlay.
+ *
+ * Page-level entrance uses a one-shot fade+rise so it never re-animates on
+ * every render; prefers-reduced-motion disables it entirely.
  */
 export default function DashboardHome({
   greeting,
@@ -27,6 +31,7 @@ export default function DashboardHome({
   subscription,
   dailyUsage,
 }) {
+  const reduceMotion = useReducedMotion();
   const receiveQuote = useReceiveQuoteMutation();
   const readAgain = useReadAgainMutation();
 
@@ -51,7 +56,7 @@ export default function DashboardHome({
       _id: q._id,
       receivedQuoteId: payload?.receivedQuoteId || payload?._id,
       text: q.text,
-      author: q.author || 'InspireTag',
+      author: q.author || 'MyInspireTag',
       description: q.description || null,
       image: q.image || null,
       theme: q.theme || null,
@@ -113,7 +118,12 @@ export default function DashboardHome({
   };
 
   return (
-    <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6">
+    <motion.div
+      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6"
+    >
       {/* Row 1: Greeting + Today's Inspiration / Welcome */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6 min-h-[180px] sm:min-h-[200px] lg:min-h-[220px]">
         <GreetingSection greeting={greeting} user={user} subscription={subscription} />
@@ -166,6 +176,6 @@ export default function DashboardHome({
         categoryName={overlayCategoryRef.current}
         onClose={handleCloseOverlay}
       />
-    </div>
+    </motion.div>
   );
 }
