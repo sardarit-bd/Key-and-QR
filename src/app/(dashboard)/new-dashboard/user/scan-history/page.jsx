@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion';
 import { ScanHistoryDetailModal, ScanHistoryEmptyState, ScanHistoryErrorState, ScanHistoryFilters, ScanHistoryGrid, ScanHistoryHeader, ScanHistorySkeleton, ScanHistoryStats } from '@/components/user/scan-history';
 import useScanHistory from '@/hooks/scan-history/useScanHistory';
+import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
 
 
 /**
@@ -30,6 +31,7 @@ export default function ScanHistoryPage() {
     resetFilters,
     isAuthenticated,
   } = useScanHistory();
+  const { data: quoteCategories = [] } = useQuoteCategories();
 
   // User has scan history if the stats endpoint reports any total scans.
   const hasAnyHistory = (stats?.totalScans ?? 0) > 0;
@@ -102,6 +104,7 @@ export default function ScanHistoryPage() {
             search={search}
             category={category}
             sort={sort}
+            categories={quoteCategories}
             onSearchChange={setSearch}
             onCategoryChange={setCategory}
             onSortChange={setSort}

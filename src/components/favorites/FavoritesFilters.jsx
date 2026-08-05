@@ -7,12 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import { useRef, useCallback } from 'react';
 
-const CATEGORIES = [
-  { id: 'all', name: 'All Categories' },
-  { id: 'love', name: 'Love' }, { id: 'strength', name: 'Strength' }, { id: 'healing', name: 'Healing' },
-  { id: 'faith', name: 'Faith' }, { id: 'gratitude', name: 'Gratitude' },
-];
-
 const SORT_OPTIONS = [
   { id: 'newest', name: 'Newest First' },
   { id: 'oldest', name: 'Oldest First' },
@@ -22,13 +16,19 @@ const CONTROL_CLASS =
   'h-11 cursor-pointer rounded-xl border border-white/6 bg-background-secondary/50 backdrop-blur-md transition-all duration-300 hover:border-white/12 hover:bg-background-secondary/70 focus-within:border-accent/50 focus-within:ring-2 focus-within:ring-accent/20 light:border-[#E8DFCE]/80 light:bg-white/70';
 
 export default function FavoritesFilters({
-  search, category, sort, view,
+  search, category, sort, view, categories = [],
   onSearchChange, onCategoryChange, onSortChange, onViewChange, onReset,
 }) {
   const inputRef = useRef(null);
   const hasActiveFilters = search || category !== 'all' || sort !== 'newest';
 
   const handleSearchChange = useCallback((value) => { onSearchChange(value); }, [onSearchChange]);
+
+  // Build dropdown from backend categories (fallback to 'All Categories' only).
+  const categoryOptions = [
+    { id: 'all', name: 'All Categories' },
+    ...categories.map((cat) => ({ id: cat.slug || cat.id, name: cat.name })),
+  ];
 
   return (
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -42,7 +42,7 @@ export default function FavoritesFilters({
         <Select value={category} onValueChange={onCategoryChange}>
           <SelectTrigger className={`w-full sm:w-40 ${CONTROL_CLASS} bg-transparent text-foreground-secondary`}><SelectValue placeholder="Category" /></SelectTrigger>
           <SelectContent className="rounded-xl border border-white/6 bg-popover text-foreground shadow-xl backdrop-blur-xl light:border-[#E8DFCE]/80">
-            {CATEGORIES.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+            {categoryOptions.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={sort} onValueChange={onSortChange}>

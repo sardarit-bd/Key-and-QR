@@ -10,7 +10,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { SUBMISSION_CATEGORIES } from './submitQuote.constants';
+import { useSubmissionCategoryOptions } from './submitQuote.constants';
 
 const STATUS_OPTIONS = [
   { id: 'all', name: 'All Statuses' },
@@ -36,6 +36,7 @@ export default function SubmissionFilters({
   category,
   status,
   sort,
+  categories,
   onSearchChange,
   onCategoryChange,
   onStatusChange,
@@ -43,6 +44,7 @@ export default function SubmissionFilters({
   onReset,
 }) {
   const hasActiveFilters = search || category !== 'all' || status !== 'all' || sort !== 'newest';
+  const { options: submissionCategoryOptions } = useSubmissionCategoryOptions(categories);
 
   return (
     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
@@ -66,7 +68,7 @@ export default function SubmissionFilters({
           </SelectTrigger>
           <SelectContent className="rounded-xl border border-white/6 bg-popover text-foreground shadow-xl backdrop-blur-xl light:border-[#E8DFCE]/80">
             <SelectItem value="all">All Categories</SelectItem>
-            {SUBMISSION_CATEGORIES.map((cat) => (
+            {submissionCategoryOptions.map((cat) => (
               <SelectItem key={cat.id} value={cat.id}>
                 {cat.label}
               </SelectItem>

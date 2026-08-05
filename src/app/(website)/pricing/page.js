@@ -225,7 +225,7 @@ export default function PricingPage() {
                                 </li>
                                 <li className="flex items-center gap-3 text-gray-600">
                                     <FaCheck size={14} className="text-purple-500 flex-shrink-0" />
-                                    <span className="text-sm">Faith, Love, Hope, Success, Motivation & more</span>
+                                    <span className="text-sm">New categories added regularly</span>
                                 </li>
                                 <li className="flex items-center gap-3 text-gray-600">
                                     <FaCheck size={14} className="text-purple-500 flex-shrink-0" />

@@ -6,62 +6,11 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 import FavoriteButton from '@/components/favorite/FavoriteButton';
 import { format } from 'date-fns';
-
-// Per-category chip theme — Overview design language, boosted contrast:
-// stronger tinted surface + border, bright readable text in both themes.
-const CATEGORY_CHIPS = {
-  love: {
-    border: 'border-rose-500/35',
-    bg: 'bg-rose-500/20',
-    text: 'text-rose-300 dark:text-rose-200',
-    lightText: 'light:text-rose-800',
-    glow: 'shadow-[0_0_16px_-4px_rgba(251,113,133,0.4)]',
-  },
-  strength: {
-    border: 'border-orange-500/35',
-    bg: 'bg-orange-500/20',
-    text: 'text-orange-300 dark:text-orange-200',
-    lightText: 'light:text-orange-800',
-    glow: 'shadow-[0_0_16px_-4px_rgba(251,146,60,0.4)]',
-  },
-  healing: {
-    border: 'border-emerald-500/35',
-    bg: 'bg-emerald-500/20',
-    text: 'text-emerald-300 dark:text-emerald-200',
-    lightText: 'light:text-emerald-800',
-    glow: 'shadow-[0_0_16px_-4px_rgba(52,211,153,0.4)]',
-  },
-  faith: {
-    border: 'border-amber-500/35',
-    bg: 'bg-amber-500/20',
-    text: 'text-amber-300 dark:text-amber-200',
-    lightText: 'light:text-amber-800',
-    glow: 'shadow-[0_0_16px_-4px_rgba(251,191,36,0.4)]',
-  },
-  gratitude: {
-    border: 'border-yellow-500/35',
-    bg: 'bg-yellow-500/20',
-    text: 'text-yellow-300 dark:text-yellow-200',
-    lightText: 'light:text-yellow-800',
-    glow: 'shadow-[0_0_16px_-4px_rgba(250,204,21,0.4)]',
-  },
-};
-
-const CATEGORY_LABELS = {
-  love: 'Love',
-  strength: 'Strength',
-  healing: 'Healing',
-  faith: 'Faith',
-  gratitude: 'Gratitude',
-};
-
-const DEFAULT_IMAGES = {
-  love: '/images/quote-bg/love.jpg',
-  strength: '/images/quote-bg/strength.jpg',
-  healing: '/images/quote-bg/healing.jpg',
-  faith: '/images/quote-bg/faith.jpg',
-  motivation: '/images/quote-bg/strength.jpg',
-};
+import {
+  getCategoryChipTheme,
+  getCategoryLabel,
+  resolveBackgroundImage,
+} from '@/components/category';
 
 // Overview card DNA: EXACT match to the Summary Statistics card surface —
 // same radius, bg-card + border-white/6, warm ivory glass in light mode,
@@ -82,9 +31,9 @@ export default function ScanHistoryCard({
   const quote = item?.quote;
   const tag = item?.tag;
   const category = quote?.category || 'motivation';
-  const categoryLabel = CATEGORY_LABELS[category] || category;
-  const chip = CATEGORY_CHIPS[category] || CATEGORY_CHIPS.healing;
-  const backgroundImage = quote?.image?.url || DEFAULT_IMAGES[category] || DEFAULT_IMAGES.motivation;
+  const categoryLabel = getCategoryLabel(category);
+  const chip = getCategoryChipTheme(category);
+  const backgroundImage = quote?.image?.url || resolveBackgroundImage(category);
 
   const formattedDate = item.createdAt
     ? format(new Date(item.createdAt), 'MMM d, yyyy')

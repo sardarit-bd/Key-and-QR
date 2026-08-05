@@ -1,6 +1,6 @@
 'use client';
 
-import { Sparkles, Heart, Dumbbell, Church, Shield, BookOpen, HandHeart, Bandage } from 'lucide-react';
+import { getCategoryIcon } from '@/components/category/categoryIcons';
 
 // ============================================================
 // Dashboard normalization layer
@@ -9,19 +9,21 @@ import { Sparkles, Heart, Dumbbell, Church, Shield, BookOpen, HandHeart, Bandage
 // No UI component was changed to accommodate these mappings.
 // ============================================================
 
-const CATEGORY_ICONS = {
-  inspire: { icon: Sparkles, colorClass: 'text-accent', bgClass: 'bg-accent/10 border border-accent/20' },
-  love: { icon: Heart, colorClass: 'text-pink-400', bgClass: 'bg-pink-500/10 border border-pink-500/20' },
-  strength: { icon: Dumbbell, colorClass: 'text-orange-400', bgClass: 'bg-orange-500/10 border border-orange-500/20' },
-  healing: { icon: Bandage, colorClass: 'text-green-400', bgClass: 'bg-green-500/10 border border-green-500/20' },
-  faith: { icon: Church, colorClass: 'text-yellow-200', bgClass: 'bg-yellow-500/10 border border-yellow-500/20' },
-  gratitude: { icon: HandHeart, colorClass: 'text-yellow-400', bgClass: 'bg-yellow-500/10 border border-yellow-500/20' },
-  courage: { icon: Shield, colorClass: 'text-orange-400', bgClass: 'bg-orange-500/10 border border-orange-500/20' },
-  wisdom: { icon: BookOpen, colorClass: 'text-emerald-400', bgClass: 'bg-emerald-500/10 border border-emerald-500/20' },
-  motivation: { icon: Sparkles, colorClass: 'text-accent', bgClass: 'bg-accent/10 border border-accent/20' },
+// Per-slug icon + tint used by QuoteItem (Overview recent quotes). New
+// categories fall back to a neutral accent style automatically.
+const CATEGORY_STYLES = {
+  inspire: { colorClass: 'text-accent', bgClass: 'bg-accent/10 border border-accent/20' },
+  love: { colorClass: 'text-pink-400', bgClass: 'bg-pink-500/10 border border-pink-500/20' },
+  strength: { colorClass: 'text-orange-400', bgClass: 'bg-orange-500/10 border border-orange-500/20' },
+  healing: { colorClass: 'text-green-400', bgClass: 'bg-green-500/10 border border-green-500/20' },
+  faith: { colorClass: 'text-yellow-200', bgClass: 'bg-yellow-500/10 border border-yellow-500/20' },
+  gratitude: { colorClass: 'text-yellow-400', bgClass: 'bg-yellow-500/10 border border-yellow-500/20' },
+  courage: { colorClass: 'text-orange-400', bgClass: 'bg-orange-500/10 border border-orange-500/20' },
+  wisdom: { colorClass: 'text-emerald-400', bgClass: 'bg-emerald-500/10 border border-emerald-500/20' },
+  motivation: { colorClass: 'text-accent', bgClass: 'bg-accent/10 border border-accent/20' },
 };
 
-const DEFAULT_STYLE = CATEGORY_ICONS.inspire;
+const DEFAULT_STYLE = CATEGORY_STYLES.inspire;
 
 /**
  * Map a backend category slug (or name) to the icon/badge style used
@@ -29,7 +31,12 @@ const DEFAULT_STYLE = CATEGORY_ICONS.inspire;
  */
 export function getCategoryStyle(slug) {
   const key = String(slug || 'inspire').toLowerCase();
-  return CATEGORY_ICONS[key] || DEFAULT_STYLE;
+  const style = CATEGORY_STYLES[key] || DEFAULT_STYLE;
+  return {
+    icon: getCategoryIcon(key),
+    colorClass: style.colorClass,
+    bgClass: style.bgClass,
+  };
 }
 
 /**

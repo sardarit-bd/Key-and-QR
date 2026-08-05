@@ -11,7 +11,9 @@ export const categoryKeys = {
 };
 
 /**
- * Get product categories
+ * Get product categories (from GET /products/categories).
+ * NOTE: this is the PRODUCT category list — not the quote category list.
+ * Quote categories come from useQuoteCategories() (GET /categories).
  */
 export function useCategories() {
     return useQuery({
@@ -20,15 +22,5 @@ export function useCategories() {
         staleTime: 10 * 60 * 1000, // 10 minutes
         gcTime: 30 * 60 * 1000, // 30 minutes
         retry: 2,
-        // Fallback for when API fails
-        placeholderData: {
-            data: [
-                { id: 'motivation', name: 'Motivation' },
-                { id: 'love', name: 'Love' },
-                { id: 'faith', name: 'Faith' },
-                { id: 'hope', name: 'Hope' },
-                { id: 'success', name: 'Success' },
-            ]
-        }
     });
 }

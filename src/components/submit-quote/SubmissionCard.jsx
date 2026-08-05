@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Calendar, Quote as QuoteIcon, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import StatusChip from './StatusChip';
-import { getCategoryChipClass, getCategoryLabel } from './submitQuote.constants';
+import { getCategoryChipClass, getSubmissionCategoryLabel } from './submitQuote.constants';
 
 function formatDate(iso) {
   if (!iso) return null;
@@ -18,8 +18,9 @@ function formatDate(iso) {
 export default function SubmissionCard({ submission, index = 0 }) {
   const status = submission?.status || 'pending';
   const category = submission?.category || 'other';
-  const chipClass = getCategoryChipClass(category);
-  const categoryLabel = getCategoryLabel(category);
+  const chip = getCategoryChipClass(category);
+  const chipClass = `${chip.border} ${chip.bg} ${chip.text} ${chip.lightText} ${chip.glow}`.trim();
+  const categoryLabel = getSubmissionCategoryLabel(category);
 
   const submittedDate = formatDate(submission?.createdAt);
   const reviewedAt = status === 'approved' ? submission?.approvedAt : submission?.rejectedAt;

@@ -8,8 +8,12 @@ import { Button } from '@/components/ui/button';
 import { format } from 'date-fns';
 import {
   FAVORITE_CARD_SURFACE, FAVORITE_HOVER, ACTION_ICON_CLASS,
-  CATEGORY_CHIPS, CATEGORY_LABELS, DEFAULT_IMAGES,
 } from './favorites.constants';
+import {
+  getCategoryChipTheme,
+  getCategoryLabel,
+  resolveBackgroundImage,
+} from '@/components/category';
 
 export default function FavoriteCard({ favorite, view = 'grid', onRemove, onViewDetail }) {
   const [isRemoving, setIsRemoving] = useState(false);
@@ -18,10 +22,10 @@ export default function FavoriteCard({ favorite, view = 'grid', onRemove, onView
   if (!quote) return null;
 
   const category = quote.category || 'motivation';
-  const categoryLabel = CATEGORY_LABELS[category] || category;
-  const chip = CATEGORY_CHIPS[category] || CATEGORY_CHIPS.healing;
+  const categoryLabel = getCategoryLabel(category);
+  const chip = getCategoryChipTheme(category);
   const hasImage = Boolean(quote.image?.url);
-  const backgroundImage = hasImage ? quote.image.url : DEFAULT_IMAGES[category] || DEFAULT_IMAGES.motivation;
+  const backgroundImage = hasImage ? quote.image.url : resolveBackgroundImage(category);
   const formattedDate = favorite.createdAt ? format(new Date(favorite.createdAt), 'MMM d, yyyy') : '';
 
   const handleShare = async () => {

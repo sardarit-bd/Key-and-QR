@@ -24,17 +24,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
+import { CATEGORY_BADGE_CLASSES, getCategoryBadgeClass, getCategoryLabel } from '@/components/category';
 
 const ITEMS_PER_PAGE = 10;
 
-const CATEGORY_OPTIONS = [
-  { value: 'all', label: 'All Categories' },
-  { value: 'love', label: 'Love' },
-  { value: 'strength', label: 'Strength' },
-  { value: 'healing', label: 'Healing' },
-  { value: 'faith', label: 'Faith' },
-  { value: 'gratitude', label: 'Gratitude' },
-];
+// Slugs the backend Quote collection actually stores (5-value core enum).
+// Only these categories can match when filtering GET /quotes?category=.
+const CORE_QUOTE_CATEGORY_SLUGS = ['love', 'strength', 'healing', 'faith', 'gratitude'];
 
 const ACTIVE_FILTERS = [
   { value: 'all', label: 'All Status' },
@@ -62,6 +59,17 @@ export default function AdminQuotesPage() {
   const [viewQuote, setViewQuote] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const { data: quoteCategories = [] } = useQuoteCategories();
+
+  // Category filter options — backend-driven, intersected with the slugs the
+  // backend Quote collection actually stores (so every option matches).
+  const categoryOptions = [
+    { value: 'all', label: 'All Categories' },
+    ...quoteCategories
+      .filter((cat) => CORE_QUOTE_CATEGORY_SLUGS.includes(cat.slug))
+      .map((cat) => ({ value: cat.slug, label: cat.name || cat.slug })),
+  ];
 
   const filters = { search: debouncedSearch, category, isActive, page, limit: ITEMS_PER_PAGE };
   const { data, isLoading, isError, error, refetch } = useAdminQuotes(filters);
@@ -151,7 +159,7 @@ export default function AdminQuotesPage() {
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
-            {CATEGORY_OPTIONS.map((o) => (
+            {categoryOptions.map((o) => (
               <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
             ))}
           </SelectContent>
@@ -206,8 +214,8 @@ export default function AdminQuotesPage() {
                   </div>
                   <div className="text-xs text-foreground-secondary truncate">{quote.author || 'InspireTag'}</div>
                   <div>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full border bg-indigo-500/10 text-indigo-400 border-indigo-500/20 capitalize">
-                      {quote.category}
+                    <span className={`text-[10px] px-2 py-0.5 rounded-full border capitalize ${getCategoryBadgeClass(quote.category)}`}>
+                      {getCategoryLabel(quote.category)}
                     </span>
                   </div>
                   <div>
@@ -262,7 +270,7 @@ export default function AdminQuotesPage() {
               <p className="text-sm text-foreground mb-2">&ldquo;{getExcerpt(quote.text, 100)}&rdquo;</p>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] px-2 py-0.5 rounded-full border bg-indigo-500/10 text-indigo-400 border-indigo-500/20 capitalize">{quote.category}</span>
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full border capitalize ${getCategoryBadgeClass(quote.category)}`}>{getCategoryLabel(quote.category)}</span>
                   <span className={`text-[10px] px-2 py-0.5 rounded-full border ${quote.isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
                     {quote.isActive ? 'Active' : 'Inactive'}
                   </span>
@@ -301,7 +309,7 @@ export default function AdminQuotesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-[11px] text-foreground-tertiary font-medium uppercase tracking-wider">Category</p>
-                  <p className="text-sm text-foreground capitalize mt-0.5">{viewQuote.category}</p>
+                  <p className="text-sm text-foreground capitalize mt-0.5">{getCategoryLabel(viewQuote.category)}</p>
                 </div>
                 <div>
                   <p className="text-[11px] text-foreground-tertiary font-medium uppercase tracking-wider">Status</p>

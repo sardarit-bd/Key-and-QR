@@ -11,15 +11,6 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-const CATEGORIES = [
-  { id: 'all', name: 'All Categories' },
-  { id: 'love', name: 'Love' },
-  { id: 'strength', name: 'Strength' },
-  { id: 'healing', name: 'Healing' },
-  { id: 'faith', name: 'Faith' },
-  { id: 'gratitude', name: 'Gratitude' },
-];
-
 const SORT_OPTIONS = [
   { id: 'newest', name: 'Newest First' },
   { id: 'oldest', name: 'Oldest First' },
@@ -38,12 +29,18 @@ export default function ScanHistoryFilters({
   search,
   category,
   sort,
+  categories = [],
   onSearchChange,
   onCategoryChange,
   onSortChange,
   onReset,
 }) {
   const hasActiveFilters = search || category !== 'all' || sort !== 'newest';
+
+  const categoryOptions = [
+    { id: 'all', name: 'All Categories' },
+    ...categories.map((cat) => ({ id: cat.slug || cat.id, name: cat.name })),
+  ];
 
   return (
     <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -68,7 +65,7 @@ export default function ScanHistoryFilters({
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent className="rounded-xl border border-white/6 bg-popover text-foreground shadow-xl backdrop-blur-xl light:border-[#E8DFCE]/80">
-            {CATEGORIES.map((cat) => (
+            {categoryOptions.map((cat) => (
               <SelectItem key={cat.id} value={cat.id}>
                 {cat.name}
               </SelectItem>
