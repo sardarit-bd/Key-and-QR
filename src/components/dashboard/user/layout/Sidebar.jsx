@@ -57,7 +57,6 @@ export default function Sidebar({ isCollapsed = false, onToggle }) {
     ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}
     lg:translate-x-0
     flex flex-col
-    shadow-[4px_0_32px_-16px_rgb(0_0_0/0.6)]
   `;
 
   // Don't render if not authenticated

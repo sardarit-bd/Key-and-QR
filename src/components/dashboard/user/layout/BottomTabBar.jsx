@@ -43,7 +43,7 @@ export default function BottomTabBar() {
             <Link
               key={tab.id}
               href={tab.href}
-              className={`flex flex-col items-center justify-center flex-1 h-full transition-colors ${
+              className={`flex flex-col items-center justify-center flex-1 h-full cursor-pointer transition-colors ${
                 active ? 'text-sidebar-primary' : 'text-muted-foreground'
               }`}
             >

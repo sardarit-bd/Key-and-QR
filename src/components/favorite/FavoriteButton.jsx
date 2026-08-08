@@ -63,10 +63,13 @@ export default function FavoriteButton({
       onClick={handleClick}
       disabled={isLoading}
       className={cn(
-        'relative cursor-pointer transition-all duration-300',
+        'relative cursor-pointer',
         isFavorite
-          ? '!text-rose-500 hover:!text-rose-500 hover:bg-rose-500/10'
-          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50',
+          ? '!text-rose-400 hover:!text-rose-300'
+          : '',
+        !showText && (isFavorite
+          ? 'hover:bg-rose-500/10'
+          : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'),
         className
       )}
       aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
@@ -89,7 +92,7 @@ export default function FavoriteButton({
         />
         
         {showText && (
-          <span className="ml-2 text-sm">
+          <span className="ml-1.5 text-inherit text-[13px] font-medium">
             {isFavorite ? 'Saved' : 'Save'}
           </span>
         )}
