@@ -45,6 +45,7 @@ const initialState = {
   // Metadata
   quoteId: null,
   quoteText: '',
+  quoteCategory: 'love',
   isDirty: false,
   isSaving: false,
   isLoading: false,

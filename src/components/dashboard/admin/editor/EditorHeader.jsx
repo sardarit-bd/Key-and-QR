@@ -3,6 +3,8 @@
 import { ArrowLeft, Undo2, Redo2, Eye, Send } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import useEditorStore from './editorStore';
+import api from '@/lib/api';
+import toast from 'react-hot-toast';
 
 const UNDO_LABEL = 'Undo';
 const REDO_LABEL = 'Redo';
@@ -14,14 +16,17 @@ export default function EditorHeader() {
   const quoteText = useEditorStore((s) => s.quoteText);
   const isDirty = useEditorStore((s) => s.isDirty);
   const isSaving = useEditorStore((s) => s.isSaving);
+  const setSaving = useEditorStore((s) => s.setSaving);
   const canUndo = useEditorStore((s) => s.canUndo());
   const canRedo = useEditorStore((s) => s.canRedo());
   const undo = useEditorStore((s) => s.undo);
   const redo = useEditorStore((s) => s.redo);
+  const quoteId = useEditorStore((s) => s.quoteId);
+  const toEditorData = useEditorStore((s) => s.toEditorData);
 
   const title = quoteText
     ? quoteText.length > 40
-      ? quoteText.slice(0, 40) + '…'
+      ? quoteText.slice(0, 40) + '\u2026'
       : quoteText
     : 'Untitled Quote';
 
@@ -35,17 +40,38 @@ export default function EditorHeader() {
     router.push('/new-dashboard/admin/quotes');
   };
 
-  const handlePreview = () => {
-    // Will be implemented in Phase 12
-  };
+  const handlePreview = () => {};
 
-  const handlePublish = () => {
-    // Will be implemented in Phase 10
+  const handlePublish = async () => {
+    const editorData = toEditorData();
+    if (!editorData?.elements?.length) {
+      toast.error('Add at least one element to the canvas before publishing.');
+      return;
+    }
+
+    setSaving(true);
+    try {
+      if (quoteId) {
+        await api.patch(`/quotes/${quoteId}`, { editorData });
+        toast.success('Quote updated successfully');
+      } else {
+        await api.post('/quotes', {
+          text: quoteText || 'Untitled Quote',
+          category: 'love',
+          editorData,
+        });
+        toast.success('Quote created successfully');
+      }
+      router.push('/new-dashboard/admin/quotes');
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to save quote');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
     <header className="flex items-center justify-between h-12 px-3 border-b border-border bg-background shrink-0">
-      {/* Left: Back + Title */}
       <div className="flex items-center gap-2 min-w-0">
         <button
           onClick={handleBack}
@@ -64,7 +90,6 @@ export default function EditorHeader() {
         )}
       </div>
 
-      {/* Right: Actions */}
       <div className="flex items-center gap-1">
         <button
           onClick={undo}
@@ -101,7 +126,7 @@ export default function EditorHeader() {
         >
           <Send size={13} />
           <span className="hidden sm:inline">
-            {isSaving ? 'Saving…' : PUBLISH_LABEL}
+            {isSaving ? 'Saving\u2026' : PUBLISH_LABEL}
           </span>
         </button>
       </div>

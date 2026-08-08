@@ -5,6 +5,7 @@ import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import useEditorStore from '@/components/dashboard/admin/editor/editorStore';
 import api from '@/lib/api';
+import { ensureEditorFontsLoaded } from '@/components/dashboard/admin/editor/editorFonts';
 
 export default function EditVisualQuotePage() {
   const params = useParams();
@@ -12,6 +13,10 @@ export default function EditVisualQuotePage() {
   const loadQuote = useEditorStore((s) => s.loadQuote);
   const setLoading = useEditorStore((s) => s.setLoading);
   const setQuoteId = useEditorStore((s) => s.setQuoteId);
+
+  useEffect(() => {
+    ensureEditorFontsLoaded();
+  }, []);
 
   useEffect(() => {
     const quoteId = params?.id;

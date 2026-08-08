@@ -3,7 +3,6 @@
 import { Type, Image, Palette, Square, Music, Layers } from 'lucide-react';
 import { useState, useCallback, useRef } from 'react';
 import useEditorStore from './editorStore';
-import { addObjectToCanvas, elementToFabricObject } from './editorFabric';
 
 const TOOLS = [
   { id: 'templates', label: 'Templates', icon: Layers, disabled: true },
@@ -31,14 +30,7 @@ export default function LeftSidebar() {
   const setQuoteText = useEditorStore((s) => s.setQuoteText);
   const fileRef = useRef(null);
 
-  const addAndRender = useCallback(async (el) => {
-    const created = addElement(el);
-    if (!created) return;
-    const fabObj = await elementToFabricObject(created);
-    if (fabObj) addObjectToCanvas(fabObj);
-  }, [addElement]);
-
-  const handleToolClick = useCallback(async (toolId) => {
+  const handleToolClick = useCallback((toolId) => {
     if (toolId === 'templates') return;
 
     if (toolId === 'background' || toolId === 'audio') {
@@ -62,31 +54,37 @@ export default function LeftSidebar() {
     setActiveTool(toolId === activeTool ? null : toolId);
 
     if (toolId === 'text') {
-      await addAndRender({
+      const canvas = useEditorStore.getState().canvas;
+      const elWidth = Math.round(canvas.width * 0.7);
+      const elHeight = 80;
+      const cx = Math.round((canvas.width - elWidth) / 2);
+      const cy = Math.round((canvas.height - elHeight) / 2);
+
+      addElement({
         type: 'text',
-        x: 40, y: 200, width: 720, height: 160,
+        x: cx, y: cy, width: elWidth, height: elHeight,
         rotation: 0, scaleX: 1, scaleY: 1,
         opacity: 1, visible: true, locked: false,
         zIndex: elements.length,
         textData: {
-          content: 'Type your quote here…',
-          fontFamily: 'Playfair Display', fontSize: 48,
-          fontWeight: '700', fontStyle: 'normal',
-          lineHeight: 1.3, letterSpacing: 0,
+          content: 'Type your quote here\u2026',
+          fontFamily: 'Inter', fontSize: 24,
+          fontWeight: '400', fontStyle: 'normal',
+          lineHeight: 1.4, letterSpacing: 0,
           textAlign: 'center', color: '#ffffff', wrap: true,
         },
       });
       setQuoteText('');
     }
-  }, [activeTool, elements.length, addAndRender, setQuoteText, storeSetActiveTool, showShapes]);
+  }, [activeTool, elements.length, addElement, setQuoteText, storeSetActiveTool, showShapes]);
 
-  const handleShapeSelect = useCallback(async (shapeType) => {
+  const handleShapeSelect = useCallback((shapeType) => {
     const shapes = {
       rect: { fillColor: '#e2e8f0', strokeColor: null, strokeWidth: 0, borderRadius: 0 },
       circle: { fillColor: '#e2e8f0', strokeColor: null, strokeWidth: 0 },
       line: { fillColor: null, strokeColor: '#000000', strokeWidth: 2 },
     };
-    await addAndRender({
+    addElement({
       type: 'shape',
       x: 200, y: 200,
       width: shapeType === 'line' ? 200 : 160,
@@ -98,13 +96,13 @@ export default function LeftSidebar() {
     });
     setShowShapes(false);
     setActiveTool(null);
-  }, [elements.length, addAndRender]);
+  }, [elements.length, addElement]);
 
-  const handleImageSelect = useCallback(async (e) => {
+  const handleImageSelect = useCallback((e) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const url = URL.createObjectURL(file);
-    await addAndRender({
+    addElement({
       type: 'image',
       x: 100, y: 100, width: 600, height: 400,
       rotation: 0, scaleX: 1, scaleY: 1,
@@ -114,7 +112,7 @@ export default function LeftSidebar() {
     });
     storeSetActiveTool(null);
     setActiveTool(null);
-  }, [elements.length, addAndRender, storeSetActiveTool]);
+  }, [elements.length, addElement, storeSetActiveTool]);
 
   const handleLayerClick = useCallback((id) => setSelection(id), [setSelection]);
 

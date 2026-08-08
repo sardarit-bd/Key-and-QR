@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import useEditorStore from './editorStore';
 import {
   updateTextProperties,
@@ -10,7 +10,9 @@ import {
 import {
   CURATED_FONTS,
   FONT_SIZES,
-  FONT_WEIGHTS,
+  FONT_SIZE_MIN,
+  FONT_SIZE_MAX,
+  CUSTOM_SIZE_VALUE,
   TEXT_ALIGN,
 } from './editorConstants';
 import {
@@ -22,35 +24,42 @@ import {
   Copy,
   Trash2,
 } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
-/**
- * TextProperties — right panel for editing the selected text element.
- *
- * Every property change updates:
- * 1. The Fabric object in-place (via updateTextProperties) — instant visual feedback
- * 2. The Zustand store (via patchElementData) — no history entry
- * 3. History entry is created on mouse-up/exit via object:modified in useEditorSync
- */
 export default function TextProperties() {
   const selectedId = useEditorStore((s) =>
     s.selectedElementIds.length === 1 ? s.selectedElementIds[0] : null
   );
   const elements = useEditorStore((s) => s.elements);
+  const canvas = useEditorStore((s) => s.canvas);
 
   const selectedEl = selectedId
     ? elements.find((el) => el.id === selectedId && el.type === 'text')
     : null;
 
+  const patchElement = useEditorStore((s) => s.patchElement);
   const patchElementData = useEditorStore((s) => s.patchElementData);
   const duplicateElement = useEditorStore((s) => s.duplicateElement);
   const removeElement = useEditorStore((s) => s.removeElement);
   const updateElementData = useEditorStore((s) => s.updateElementData);
 
+  const [customSize, setCustomSize] = useState('');
+  const [customSizeError, setCustomSizeError] = useState('');
+  const [isCustomSize, setIsCustomSize] = useState(false);
+
   if (!selectedEl || !selectedEl.textData) return null;
 
   const td = selectedEl.textData;
 
-  // Lazy accessor for Fabric object (declared BEFORE useCallback closures that reference it)
+  const currentSize = td.fontSize ?? 24;
+  const isPresetSize = FONT_SIZES.includes(currentSize) && !isCustomSize;
+
   const getFabObj = useCallback((id) => {
     return getObjectById(id);
   }, []);
@@ -58,7 +67,6 @@ export default function TextProperties() {
   const applyStyle = useCallback(
     (key, value) => {
       if (!selectedId) return;
-      // Convert store key → Fabric key
       const fabricMap = {
         fontFamily: 'fontFamily',
         fontSize: 'fontSize',
@@ -68,8 +76,6 @@ export default function TextProperties() {
         letterSpacing: (v) => ({ charSpacing: v * 10 }),
         textAlign: 'textAlign',
         color: 'fill',
-        opacity: 'opacity',
-        rotation: 'angle',
       };
 
       const mapping = fabricMap[key];
@@ -88,18 +94,72 @@ export default function TextProperties() {
     (e) => {
       const newContent = e.target.value;
       if (!selectedId) return;
-
-      // Update Fabric in-place
       const obj = getFabObj(selectedId);
       if (obj) {
         obj.set('text', newContent);
         obj.setCoords();
         obj.canvas?.renderAll();
       }
-
       patchElementData(selectedId, 'textData', { content: newContent });
     },
     [selectedId, patchElementData, getFabObj]
+  );
+
+  const applyFontSize = useCallback(
+    (size) => {
+      if (!selectedId) return;
+      const valid = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, Number(size) || FONT_SIZE_MIN));
+      updateTextProperties(selectedId, { fontSize: valid });
+      patchElementData(selectedId, 'textData', { fontSize: valid });
+    },
+    [selectedId, patchElementData]
+  );
+
+  const handlePresetSize = useCallback(
+    (val) => {
+      if (val === CUSTOM_SIZE_VALUE) {
+        setIsCustomSize(true);
+        setCustomSize(String(currentSize));
+        setCustomSizeError('');
+      } else {
+        setIsCustomSize(false);
+        setCustomSizeError('');
+        applyFontSize(Number(val));
+      }
+    },
+    [currentSize, applyFontSize]
+  );
+
+  const handleCustomSizeChange = useCallback(
+    (e) => {
+      setCustomSize(e.target.value);
+    },
+    []
+  );
+
+  const handleCustomSizeCommit = useCallback(() => {
+    const raw = customSize.trim();
+    if (!raw) {
+      setIsCustomSize(false);
+      setCustomSizeError('');
+      return;
+    }
+    const num = Number(raw);
+    if (!Number.isFinite(num) || num < FONT_SIZE_MIN || num > FONT_SIZE_MAX) {
+      setCustomSizeError(`Enter a size between ${FONT_SIZE_MIN}–${FONT_SIZE_MAX}`);
+      return;
+    }
+    setCustomSizeError('');
+    applyFontSize(num);
+  }, [customSize, applyFontSize]);
+
+  const handleCustomSizeKeyDown = useCallback(
+    (e) => {
+      if (e.key === 'Enter') {
+        handleCustomSizeCommit();
+      }
+    },
+    [handleCustomSizeCommit]
   );
 
   const handleDuplicate = useCallback(() => {
@@ -109,6 +169,12 @@ export default function TextProperties() {
   const handleDelete = useCallback(() => {
     if (selectedId) removeElement(selectedId);
   }, [selectedId, removeElement]);
+
+  const sizeDisplayValue = isCustomSize
+    ? CUSTOM_SIZE_VALUE
+    : isPresetSize
+      ? String(currentSize)
+      : CUSTOM_SIZE_VALUE;
 
   return (
     <div className="space-y-4">
@@ -131,33 +197,65 @@ export default function TextProperties() {
           <label className="text-[10px] text-foreground-tertiary block mb-0.5">
             Font
           </label>
-          <select
+          <Select
             value={td.fontFamily || 'Inter'}
-            onChange={(e) => applyStyle('fontFamily', e.target.value)}
-            className="w-full h-8 rounded-md border border-border bg-background text-xs text-foreground px-2 focus:outline-none focus:ring-1 focus:ring-primary/40"
+            onValueChange={(v) => applyStyle('fontFamily', v)}
           >
-            {CURATED_FONTS.map((f) => (
-              <option key={f.name} value={f.name}>
-                {f.label}
-              </option>
-            ))}
-          </select>
+            <SelectTrigger className="h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="max-h-[260px]">
+              {CURATED_FONTS.map((f) => (
+                <SelectItem key={f.name} value={f.name} className="text-xs">
+                  <span style={{ fontFamily: f.name }}>{f.label}</span>
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <label className="text-[10px] text-foreground-tertiary block mb-0.5">
             Size
           </label>
-          <select
-            value={td.fontSize || 48}
-            onChange={(e) => applyStyle('fontSize', Number(e.target.value))}
-            className="w-full h-8 rounded-md border border-border bg-background text-xs text-foreground px-2 focus:outline-none focus:ring-1 focus:ring-primary/40"
-          >
-            {FONT_SIZES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
+          {isCustomSize ? (
+            <input
+              type="number"
+              value={customSize}
+              onChange={handleCustomSizeChange}
+              onBlur={handleCustomSizeCommit}
+              onKeyDown={handleCustomSizeKeyDown}
+              min={FONT_SIZE_MIN}
+              max={FONT_SIZE_MAX}
+              placeholder={String(currentSize)}
+              className={`w-full h-8 rounded-md border bg-background text-xs text-foreground px-2 focus:outline-none focus:ring-1 focus:ring-primary/40 ${
+                customSizeError ? 'border-destructive' : 'border-border'
+              }`}
+            />
+          ) : (
+            <Select
+              value={sizeDisplayValue}
+              onValueChange={handlePresetSize}
+            >
+              <SelectTrigger className="h-8 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-[260px]">
+                {FONT_SIZES.map((s) => (
+                  <SelectItem key={s} value={String(s)} className="text-xs">
+                    {s}
+                  </SelectItem>
+                ))}
+                <SelectItem value={CUSTOM_SIZE_VALUE} className="text-xs text-accent">
+                  Custom Size
+                </SelectItem>
+              </SelectContent>
+            </Select>
+          )}
+          {customSizeError && (
+            <p className="text-[10px] text-destructive mt-0.5 leading-tight">
+              {customSizeError}
+            </p>
+          )}
         </div>
       </div>
 
@@ -222,12 +320,12 @@ export default function TextProperties() {
         <div className="flex items-center gap-2">
           <input
             type="color"
-            value={td.color || '#000000'}
+            value={td.color || '#ffffff'}
             onChange={(e) => applyStyle('color', e.target.value)}
             className="w-8 h-8 rounded-md border border-border cursor-pointer bg-background p-0.5"
           />
           <span className="text-xs text-foreground-tertiary font-mono">
-            {td.color || '#000000'}
+            {td.color || '#ffffff'}
           </span>
         </div>
       </div>
@@ -272,20 +370,18 @@ export default function TextProperties() {
           </label>
           <input
             type="range"
-            value={Math.round((selectedEl.opacity ?? 1) * 100)}
+            value={Math.round(Math.max(0, Math.min(1, selectedEl.opacity ?? 1)) * 100)}
             onChange={(e) => {
-              const v = Number(e.target.value) / 100;
-              patchElementData(selectedId, 'opacity', v);
-              if (selectedId) {
-                updateObjectTransform(selectedId, { opacity: v });
-              }
+              const v = Math.round(Math.max(0, Math.min(100, Number(e.target.value) || 0))) / 100;
+              patchElement(selectedId, { opacity: v });
+              updateObjectTransform(selectedId, { opacity: v });
             }}
             min={0}
             max={100}
             className="w-full accent-primary"
           />
           <span className="text-[10px] text-foreground-tertiary">
-            {Math.round((selectedEl.opacity ?? 1) * 100)}%
+            {Math.round(Math.max(0, Math.min(1, selectedEl.opacity ?? 1)) * 100)}%
           </span>
         </div>
         <div>
@@ -296,11 +392,9 @@ export default function TextProperties() {
             type="number"
             value={Math.round(selectedEl.rotation || 0)}
             onChange={(e) => {
-              const v = Number(e.target.value);
-              patchElementData(selectedId, 'rotation', v);
-              if (selectedId) {
-                updateObjectTransform(selectedId, { angle: v });
-              }
+              const v = Math.max(-360, Math.min(360, Number(e.target.value) || 0));
+              patchElement(selectedId, { rotation: v });
+              updateObjectTransform(selectedId, { angle: v });
             }}
             min={-360}
             max={360}

@@ -2,13 +2,14 @@
 
 import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Quote, PenSquare } from 'lucide-react';
+import { Quote, PenSquare, Plus } from 'lucide-react';
 import Link from 'next/link';
 import Card from '@/components/dashboard/user/dashboard/Card';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import { useAdminQuotes, useAdminQuoteActions } from '@/hooks/dashboard/useAdminQuotes';
 import ConfirmDialog from '../shared/ConfirmDialog';
 import Pagination from '@/components/ui/Pagination';
+import QuoteFormModal from './QuoteFormModal';
 import { Input } from '@/components/ui/input';
 import { Search, Eye, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import {
@@ -59,6 +60,8 @@ export default function AdminQuotesPage() {
   const [viewQuote, setViewQuote] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editQuote, setEditQuote] = useState(null);
 
   const { data: quoteCategories = [] } = useQuoteCategories();
 
@@ -138,13 +141,22 @@ export default function AdminQuotesPage() {
               Browse and manage the curated quote collection.
             </p>
           </div>
-          <Link
-            href="/new-dashboard/admin/quotes/create-visual"
-            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors text-sm"
-          >
-            <PenSquare size={16} />
-            Create Visual Quote
-          </Link>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { setEditQuote(null); setFormOpen(true); }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors text-sm cursor-pointer"
+            >
+              <Plus size={16} />
+              Create Quote
+            </button>
+            <Link
+              href="/new-dashboard/admin/quotes/create-visual"
+              className="inline-flex items-center gap-2 px-4 py-2 border border-border bg-card text-foreground font-medium rounded-xl hover:bg-muted transition-colors text-sm"
+            >
+              <PenSquare size={16} />
+              Visual Editor
+            </Link>
+          </div>
         </div>
       </motion.div>
 
@@ -224,6 +236,13 @@ export default function AdminQuotesPage() {
                     </span>
                   </div>
                   <div className="flex items-center justify-end gap-1">
+                  <button
+                    onClick={() => { setEditQuote(quote); setFormOpen(true); }}
+                    className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center hover:bg-primary/20 transition-colors cursor-pointer"
+                    title="Edit Quote"
+                  >
+                    <PenSquare size={12} className="text-primary" />
+                  </button>
                   {quote.editorData && (
                     <Link
                       href={`/new-dashboard/admin/quotes/${quote._id}/edit-visual`}
@@ -276,6 +295,13 @@ export default function AdminQuotesPage() {
                   </span>
                 </div>
                 <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => { setEditQuote(quote); setFormOpen(true); }}
+                    className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center hover:bg-primary/20 transition-colors cursor-pointer"
+                    title="Edit Quote"
+                  >
+                    <PenSquare size={12} className="text-primary" />
+                  </button>
                   <button onClick={() => setViewQuote(quote)} className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center hover:bg-primary/20 transition-colors cursor-pointer">
                     <Eye size={13} className="text-primary" />
                   </button>
@@ -336,6 +362,14 @@ export default function AdminQuotesPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Quote Form Modal */}
+      <QuoteFormModal
+        open={formOpen}
+        onOpenChange={(open) => { setFormOpen(open); if (!open) setEditQuote(null); }}
+        editQuote={editQuote}
+        onSuccess={refetch}
+      />
 
       {/* Delete confirmation */}
       <ConfirmDialog open={deleteOpen} onOpenChange={setDeleteOpen} variant="delete" onConfirm={handleDeleteConfirm} isLoading={deleteQuote.isPending} userName="" />
