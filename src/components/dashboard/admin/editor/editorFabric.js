@@ -12,7 +12,8 @@
  *   for every pixel change — only on object:modified (mouse-up after drag ends).
  * - Pan uses middle-mouse button to avoid conflicts with element manipulation.
  */
-import { CANVAS_DEFAULTS } from './editorConstants';
+import { CANVAS_DEFAULTS, DEFAULT_ICON_SIZE, DEFAULT_ICON_COLOR } from './editorConstants';
+import { getIconSvgColored } from './iconUtils';
 
 let fabric = null;
 let canvasInstance = null;
@@ -216,6 +217,67 @@ export function updateTextProperties(id, props) {
   return true;
 }
 
+/**
+ * Update icon properties on an existing Fabric group in-place.
+ * - color: updates stroke/fill on all child path elements
+ * - size:  scales the group proportionally
+ * - name: returns false (requires full re-render to reload SVG)
+ */
+export function updateIconProperties(id, props) {
+  const obj = getObjectById(id);
+  if (!obj) return false;
+  if (!obj.isType?.('group')) return false;
+
+  if (props.iconName !== undefined) {
+    // Changing the icon name requires reloading the SVG — signal caller
+    // to trigger a structural re-render via incrementVersion.
+    return false;
+  }
+
+  const currentSize = obj.data?.iconSize || DEFAULT_ICON_SIZE;
+  const currentColor = obj.data?.iconColor || DEFAULT_ICON_COLOR;
+
+  let needsRender = false;
+
+  if (props.color !== undefined) {
+    const paths = obj._objects || obj.objects || [];
+    paths.forEach((child) => {
+      if (child.set) {
+        if (child.stroke !== undefined && child.stroke !== null) {
+          child.set({ stroke: props.color });
+        }
+        if (child.fill !== undefined && child.fill !== null && child.fill !== 'none') {
+          child.set({ fill: props.color });
+        }
+      }
+    });
+    obj.set('data', { ...obj.data, iconColor: props.color });
+    needsRender = true;
+  }
+
+  if (props.size !== undefined && props.size > 0 && props.size !== currentSize) {
+    // Size change — trigger re-render for clean SVG regeneration
+    return false;
+  }
+
+  if (props.opacity !== undefined) {
+    obj.set('opacity', props.opacity);
+    needsRender = true;
+  }
+
+  if (props.angle !== undefined) {
+    obj.set('angle', props.angle);
+    needsRender = true;
+  }
+
+  if (needsRender) {
+    obj.setCoords();
+    canvasInstance.renderAll();
+    return true;
+  }
+  return false;
+}
+
 // ============================================================
 // Full re-render from store data (structural changes only)
 // Preserves zoom/viewport between re-renders.
@@ -358,6 +420,8 @@ export async function elementToFabricObject(el) {
       if (!el.textData) return null;
       const text = new f.Textbox(el.textData.content, {
         ...common,
+        originX: 'center',
+        originY: 'center',
         fontFamily: el.textData.fontFamily || 'Inter',
         fontSize: el.textData.fontSize || 48,
         fontWeight: el.textData.fontWeight || 'normal',
@@ -442,6 +506,43 @@ export async function elementToFabricObject(el) {
       return null;
     }
 
+    case 'icon': {
+      if (!el.iconData) return null;
+      const iconName = el.iconData.iconName || 'sparkles';
+      const iconColor = el.iconData.color || DEFAULT_ICON_COLOR;
+      const iconSize = el.iconData.size || DEFAULT_ICON_SIZE;
+      const svgString = getIconSvgColored(iconName, iconColor, iconSize);
+      return new Promise((resolve) => {
+        f.loadSVGFromString(svgString, (objects, options) => {
+          if (!objects || objects.length === 0) {
+            resolve(null);
+            return;
+          }
+          const group = new f.Group(objects, {
+            ...options,
+            left: el.x,
+            top: el.y,
+            originX: 'center',
+            originY: 'center',
+            angle: el.rotation || 0,
+            scaleX: el.scaleX || 1,
+            scaleY: el.scaleY || 1,
+            opacity: el.opacity ?? 1,
+            visible: el.visible !== false,
+            selectable: !el.locked,
+            evented: !el.locked,
+            data: {
+              elementId: el.id,
+              iconName,
+              iconColor,
+              iconSize,
+            },
+          });
+          resolve(group);
+        });
+      });
+    }
+
     default:
       return null;
   }
@@ -514,7 +615,7 @@ export function fabricObjectToElement(obj) {
     };
   }
 
-  if (obj.isType?.('rect') || obj.isType?.('ellipse') || obj.isType?.('line')) {
+   if (obj.isType?.('rect') || obj.isType?.('ellipse') || obj.isType?.('line')) {
     const isRect = obj.isType?.('rect');
     const isCircle = obj.isType?.('ellipse');
     return {
@@ -527,6 +628,19 @@ export function fabricObjectToElement(obj) {
         strokeWidth: obj.strokeWidth || undefined,
         borderRadius: isRect ? (obj.rx || 0) : undefined,
         radius: isCircle ? Math.min(obj.width, obj.height) / 2 : undefined,
+      },
+    };
+  }
+
+  // Icon groups carry iconName in data
+  if (obj.isType?.('group') && obj.data?.iconName) {
+    return {
+      ...base,
+      type: 'icon',
+      iconData: {
+        iconName: obj.data.iconName,
+        size: obj.data.iconSize || DEFAULT_ICON_SIZE,
+        color: obj.data.iconColor || DEFAULT_ICON_COLOR,
       },
     };
   }

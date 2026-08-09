@@ -17,11 +17,11 @@ export default function SidebarMenuItem({
       href={href}
       onClick={onClick}
       className={`
-        group relative flex items-center gap-3.5 px-4 py-3 rounded-xl text-[14px] font-medium
-        transition-all duration-200
+        group relative flex items-center gap-3.5 px-4 py-2.5 rounded-lg text-[14px] font-medium
+        transition-all duration-200 cursor-pointer
         ${isActive
-          ? 'bg-sidebar-accent text-sidebar-primary shadow-[inset_0_1px_0_rgb(255_255_255/0.06),0_4px_16px_-6px_rgb(0_0_0/0.4)]'
-          : 'text-sidebar-foreground hover:text-sidebar-primary hover:bg-sidebar-accent/40'
+          ? 'bg-sidebar-accent text-sidebar-primary'
+          : 'text-sidebar-foreground hover:text-sidebar-primary hover:bg-sidebar-accent/60'
         }
         ${isCollapsed ? 'justify-center px-0' : ''}
       `}

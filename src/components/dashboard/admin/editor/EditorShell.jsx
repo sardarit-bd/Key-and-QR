@@ -1,57 +1,41 @@
 'use client';
 
 import EditorHeader from './EditorHeader';
-import LeftSidebar from './LeftSidebar';
+import ElementsPanel from './ElementsPanel';
 import EditorCanvas from './EditorCanvas';
-import RightPanel from './RightPanel';
-import { Smartphone } from 'lucide-react';
+import PropertiesPanel from './PropertiesPanel';
+import Toolbar from './Toolbar';
+import useEditorStore from './editorStore';
 
-/**
- * EditorShell — the main layout container for the Quote Visual Editor.
- *
- * Layout (desktop):
- * ┌──────────────────────────────────────────────────────┐
- * │  Header                                             │
- * ├──────────┬───────────────────────────┬───────────────┤
- * │  Left    │                           │  Right        │
- * │  Sidebar │      EditorCanvas         │  Panel        │
- * │  260px   │      (flex-1)             │  280px        │
- * │          │                           │               │
- * ├──────────┴───────────────────────────┴───────────────┤
- * │  (Zoom controls are inside EditorCanvas)             │
- * └──────────────────────────────────────────────────────┘
- *
- * Tablet: sidebars collapse on width < 1024px
- * Mobile: shows "Desktop only" message
- */
 export default function EditorShell() {
-  return (
-    <>
-      {/* Mobile blocker */}
-      <div className="flex lg:hidden items-center justify-center min-h-screen bg-background p-6">
-        <div className="text-center max-w-sm">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
-            <Smartphone size={24} className="text-primary" />
-          </div>
-          <h2 className="text-lg font-semibold text-foreground mb-2">
-            Desktop Required
-          </h2>
-          <p className="text-sm text-foreground-tertiary leading-relaxed">
-            The Quote Visual Editor requires a larger screen. Please open it on
-            a desktop or tablet device.
-          </p>
-        </div>
-      </div>
+  const selectedElementIds = useEditorStore((s) => s.selectedElementIds);
+  const elements = useEditorStore((s) => s.elements);
+  const selectedEl = selectedElementIds.length === 1
+    ? elements.find((el) => el.id === selectedElementIds[0])
+    : null;
 
-      {/* Desktop/tablet layout */}
-      <div className="hidden lg:flex flex-col h-screen bg-background">
-        <EditorHeader />
-        <div className="flex flex-1 min-h-0">
-          <LeftSidebar />
-          <EditorCanvas />
-          <RightPanel />
+  return (
+    <div className="flex flex-col h-screen bg-background">
+      <EditorHeader />
+
+      <div className="flex flex-1 min-h-0">
+        {/* Left zone: elements card + empty space */}
+        <div className="w-[200px] shrink-0 flex flex-col">
+          <ElementsPanel />
+          <div className="flex-1" />
         </div>
+
+        {/* Center: workspace + canvas + toolbar */}
+        <div className="flex-1 flex flex-col min-w-0 overflow-hidden py-4">
+          <div className="flex-1 flex items-center justify-center overflow-auto px-4">
+            <EditorCanvas />
+          </div>
+          <Toolbar />
+        </div>
+
+        {/* Right: properties */}
+        <PropertiesPanel selectedEl={selectedEl} />
       </div>
-    </>
+    </div>
   );
 }

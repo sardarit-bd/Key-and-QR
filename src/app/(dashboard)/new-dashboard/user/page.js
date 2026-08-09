@@ -5,48 +5,51 @@ import { useDashboardOverview } from '@/hooks/dashboard/useDashboardOverview';
 import { buildDashboardProps } from '@/utils/dashboard.utils';
 import DashboardHome from '@/components/dashboard/user/dashboard/DashboardHome';
 
-/**
- * User Dashboard Page
- * Route: /new-dashboard/user
- * 
- * Restores original dashboard design exactly.
- * Only replaces hardcoded data with real backend data from GET /dashboard/home
- * (quote receive engine). The UI is kept pixel-identical — this page only
- * maps backend data onto the exact props each section already renders.
- */
 export default function UserDashboardPage() {
   const { data, isLoading, error, refetch } = useDashboardOverview();
 
-  // Normalize the /dashboard/home payload once per data change
   const props = useMemo(() => buildDashboardProps(data), [data]);
 
-  // Loading state — show skeleton matching original layout
   if (isLoading) {
     return (
-      <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6 animate-pulse">
-        {/* Row 1: Welcome & Banner skeleton */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6 min-h-[180px] sm:min-h-[200px] lg:min-h-[220px]">
-          <div className="bg-muted rounded-2xl h-full" />
-          <div className="bg-muted rounded-2xl h-full" />
+      <div className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10 space-y-8 sm:space-y-10 md:space-y-12 animate-pulse">
+        {/* Greeting skeleton */}
+        <div className="space-y-2">
+          <div className="h-10 bg-muted rounded w-64 sm:w-80" />
+          <div className="h-5 bg-muted rounded w-56" />
         </div>
-        {/* Row 2: Categories skeleton */}
-        <div className="bg-muted rounded-[22px] h-32" />
-        {/* Row 3: Quotes & Streak skeleton */}
-        <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-          <div className="xl:col-span-2 bg-muted rounded-2xl h-64" />
-          <div className="xl:col-span-1 bg-muted rounded-[26px] h-64" />
+
+        {/* Quote skeleton */}
+        <div className="bg-muted rounded-[24px] sm:rounded-[28px] h-[360px] sm:h-[420px] md:h-[460px]" />
+
+        {/* Categories skeleton — cards now */}
+        <div className="space-y-3">
+          <div className="h-6 bg-muted rounded w-40" />
+          <div className="flex gap-3 sm:gap-4">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-[100px] sm:h-[110px] bg-muted rounded-2xl w-[96px] sm:w-[104px] flex-shrink-0" />
+            ))}
+          </div>
         </div>
-        {/* Row 4: Stats skeleton */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5 lg:gap-6">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="bg-muted rounded-2xl h-28" />
-          ))}
+
+        {/* Library skeleton */}
+        <div className="space-y-3">
+          <div className="h-6 bg-muted rounded w-32" />
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:gap-4">
+            <div className="h-20 sm:h-24 bg-muted rounded-2xl" />
+            <div className="h-20 sm:h-24 bg-muted rounded-2xl" />
+          </div>
         </div>
+
+        {/* Streak skeleton — full width */}
+        <div className="h-[240px] sm:h-[260px] bg-muted rounded-2xl" />
+
+        {/* Stats skeleton */}
+        <div className="h-[80px] bg-muted rounded-2xl" />
       </div>
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -65,7 +68,6 @@ export default function UserDashboardPage() {
     );
   }
 
-  // Original dashboard layout with dynamic data
   return (
     <DashboardHome
       greeting={props.greeting}

@@ -1,25 +1,27 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import GreetingSection from './GreetingSection';
 import WelcomeCard from './WelcomeCard';
 import LatestInspirationCard from './LatestInspirationCard';
 import CategorySection from './CategorySection';
-import RecentQuotesCard from './RecentQuotesCard';
+import LibrarySection from './LibrarySection';
 import InspirationStreak from './InspirationStreak';
-import StatsSection from './StatsSection';
+import CompactStats from './CompactStats';
 import ReceiveOverlay from './ReceiveOverlay';
-import { useReceiveQuoteMutation, useReadAgainMutation, useReceivedQuoteHistory } from '@/hooks/received-quote/useReceivedQuote';
-import { mapHistoryQuotes } from '@/utils/dashboard.utils';
+import { useReceiveQuoteMutation, useReadAgainMutation } from '@/hooks/received-quote/useReceivedQuote';
 
 /**
- * User Dashboard home — client-approved layout:
- * Greeting + Today's Inspiration (or Welcome) | Categories | Recent Quotes +
- * Streak | Statistics. Category clicks open the loading → reveal overlay.
+ * User Dashboard — redesigned hierarchy:
+ * 1. Greeting (editorial, no card)
+ * 2. Today's Quote (PRIMARY FOCUS, full-width)
+ * 3. Explore Categories (compact card row)
+ * 4. Your Library (two compact cards)
+ * 5. Inspiration Streak (full-width clean card)
+ * 6. Compact Stats (inline row)
  *
- * Page-level entrance uses a one-shot fade+rise so it never re-animates on
- * every render; prefers-reduced-motion disables it entirely.
+ * The quote is the hero. Everything else supports it.
  */
 export default function DashboardHome({
   greeting,
@@ -35,21 +37,13 @@ export default function DashboardHome({
   const receiveQuote = useReceiveQuoteMutation();
   const readAgain = useReadAgainMutation();
 
-  // Real history for "Your Recent Quotes" (latest 5).
-  const { data: historyData } = useReceivedQuoteHistory({ page: 1, limit: 5 });
-  const historyQuotes = useMemo(() => mapHistoryQuotes(historyData?.data), [historyData]);
-
   const overlayCategoryRef = useRef(null);
 
-  // Reveal state: null = closed, { quote } = revealing.
   const [revealState, setRevealState] = useState(null);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
   const hasReceivedQuote = latestInspiration?.hasReceivedQuote;
 
-  // Flatten the backend payload (quote nested under .quote) onto the shape
-  // ReceiveOverlay renders: top-level text/author/description/image/category/
-  // favorite/favoriteId.
   const flattenQuotePayload = (payload) => {
     const q = payload?.quote || payload || {};
     return {
@@ -73,7 +67,6 @@ export default function DashboardHome({
     setIsOverlayOpen(true);
     receiveQuote.mutate(category?.slug || 'inspire', {
       onSuccess: (quote) => {
-        // Small delay so the loading messages are visible (~1s feel)
         setTimeout(() => setRevealState({ quote: flattenQuotePayload(quote) }), 600);
       },
       onError: () => {
@@ -117,57 +110,73 @@ export default function DashboardHome({
     }
   };
 
+  const handleGift = async () => {
+    const text = latestInspiration?.text
+      ? `A gift of inspiration for you:\n\n"${latestInspiration.text}"\n— ${latestInspiration.author}\n\nSent via MyInspireTag ❤️`
+      : 'A gift of inspiration from MyInspireTag!';
+    try {
+      if (navigator.share) {
+        await navigator.share({ title: 'A gift of inspiration', text });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+      }
+    } catch {
+      // user cancelled or unsupported — ignore
+    }
+  };
+
+  const savedCount = statistics?.favorites ?? 0;
+  const recentCount = statistics?.totalQuotes ?? 0;
+
   return (
     <motion.div
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6"
+      className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10 space-y-8 sm:space-y-10 md:space-y-12"
     >
-      {/* Row 1: Greeting + Today's Inspiration / Welcome */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6 min-h-[180px] sm:min-h-[200px] lg:min-h-[220px]">
-        <GreetingSection greeting={greeting} user={user} subscription={subscription} />
-        {hasReceivedQuote ? (
-          <LatestInspirationCard
-            inspiration={latestInspiration}
-            onShare={handleShare}
-            onReadAgain={() => latestInspiration?.id && handleReadAgain(latestInspiration.id)}
-          />
-        ) : (
-          <WelcomeCard
-            userName={user?.name}
-            onReceive={handleReceiveFirst}
-            isReceiving={receiveQuote.isPending}
-          />
-        )}
-      </div>
+      {/* 1. Greeting */}
+      <GreetingSection greeting={greeting} user={user} subscription={subscription} />
 
-      {/* Row 2: Explore Categories */}
-      <section>
-        <CategorySection
-          categories={categories}
-          onSelectCategory={handleSelectCategory}
-          disabled={receiveQuote.isPending}
+      {/* 2. Today's Quote — PRIMARY FOCUS */}
+      {hasReceivedQuote ? (
+        <LatestInspirationCard
+          inspiration={latestInspiration}
+          onShare={handleShare}
+          onGift={handleGift}
+          onReadAgain={() => latestInspiration?.id && handleReadAgain(latestInspiration.id)}
+        />
+      ) : (
+        <WelcomeCard
+          userName={user?.name}
+          onReceive={handleReceiveFirst}
+          isReceiving={receiveQuote.isPending}
+        />
+      )}
+
+      {/* 3. Explore Categories */}
+      <CategorySection
+        categories={categories}
+        onSelectCategory={handleSelectCategory}
+        disabled={receiveQuote.isPending}
+      />
+
+      {/* 4. Your Library */}
+      <section className="w-full">
+        <h2 className="text-[18px] sm:text-[19px] md:text-[20px] font-semibold tracking-tight text-foreground mb-4 sm:mb-5">
+          Your Library
+        </h2>
+        <LibrarySection
+          savedCount={savedCount}
+          recentCount={recentCount}
         />
       </section>
 
-      {/* Row 3: Recent Quotes & Streak */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-5 md:gap-6">
-        <div className="xl:col-span-2">
-          <RecentQuotesCard
-            quotes={historyQuotes}
-            onQuoteClick={(q) => handleReadAgain(q.receivedQuoteId)}
-          />
-        </div>
-        <div className="xl:col-span-1">
-          <InspirationStreak streak={streak} />
-        </div>
-      </div>
+      {/* 5. Inspiration Streak — full-width */}
+      <InspirationStreak streak={streak} />
 
-      {/* Row 4: Statistics */}
-      <section>
-        <StatsSection statistics={statistics} />
-      </section>
+      {/* 6. Compact Statistics */}
+      <CompactStats statistics={statistics} />
 
       {/* Category receive → loading → reveal overlay */}
       <ReceiveOverlay

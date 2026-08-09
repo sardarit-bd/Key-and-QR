@@ -2,211 +2,184 @@
 
 import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Quote, Share2, BookOpen, Sparkles, Heart } from "lucide-react";
+import { Sparkles, Heart, Share2, Gift } from "lucide-react";
 import FavoriteButton from "@/components/favorite/FavoriteButton";
 
 export default function LatestInspirationCard({
   inspiration,
   onShare,
+  onGift,
   onReadAgain,
   onFavoriteChange,
 }) {
   const reduceMotion = useReducedMotion();
   const quote = inspiration?.text || "";
+  const author = inspiration?.author || "";
   const image = inspiration?.image || null;
   const category = inspiration?.category || null;
   const usedToday = inspiration?.dailyUsage?.usedToday ?? 0;
   const dailyLimit = inspiration?.dailyUsage?.dailyLimit ?? 0;
   const quoteId = inspiration?.quoteId || inspiration?.id || null;
 
-  const usageLabel =
-    dailyLimit > 0 ? `${usedToday} of ${dailyLimit} used today` : "";
+  const remaining = dailyLimit > 0 ? Math.max(0, dailyLimit - usedToday) : 0;
+
+  const actionButtonClass =
+    "inline-flex h-9 sm:h-10 w-auto cursor-pointer items-center gap-1.5 rounded-full border border-white/10 bg-black/35 px-3 sm:px-4 text-[13px] font-medium text-white/80 transition-colors duration-150 ease-out hover:bg-white/10 hover:border-white/20 hover:text-white active:scale-[0.97]";
 
   return (
     <motion.section
-      whileHover={reduceMotion ? undefined : { scale: 1.012, y: -3 }}
-      transition={{ type: "spring", stiffness: 260, damping: 24 }}
-      className="group relative h-full min-h-[280px] sm:min-h-[320px] lg:min-h-[360px] w-full overflow-hidden rounded-[26px] bg-card shadow-[0_24px_60px_-18px_rgb(0_0_0/0.6)] transition-[box-shadow,border-color] duration-500 ease-out group-hover:border-white/15 group-hover:shadow-[0_32px_80px_-20px_rgb(0_0_0/0.7)] light:border-[#E8D5AF]/80 light:bg-[#FDF8F0]/70 light:shadow-[0_24px_60px_-18px_rgba(120,85,30,0.28),0_8px_24px_-8px_rgba(120,85,30,0.14),0_0_32px_-10px_rgba(232,201,133,0.22)] light:backdrop-blur-[2px] light:group-hover:border-[#DCB878]/90 light:group-hover:shadow-[0_32px_80px_-20px_rgba(120,85,30,0.36),0_12px_32px_-10px_rgba(120,85,30,0.18),0_0_48px_-10px_rgba(232,201,133,0.3)]"
+      initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+      className="group relative w-full overflow-hidden rounded-[24px] sm:rounded-[28px] md:rounded-[32px] min-h-[360px] sm:min-h-[420px] md:min-h-[460px]"
     >
-      {/* ===== Layer 1: Full-bleed background image (fills entire card) ===== */}
+      {/* ===== Full-bleed background image ===== */}
       {image ? (
         <div className="absolute inset-0">
           <Image
             src={image}
-            alt="Today's inspiration"
+            alt=""
             fill
             priority
-            sizes="100vw"
-            className="object-cover object-center transition-all "
+            sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 80vw"
+            className="object-cover"
           />
         </div>
       ) : (
-        <div className="absolute inset-0">
-          <div className="absolute -left-20 -top-20 h-72 w-72 rounded-full bg-accent/10 blur-3xl" />
-          <div className="absolute -bottom-24 -right-16 h-80 w-80 rounded-full bg-primary/10 blur-3xl" />
-          <div className="absolute inset-0 bg-gradient-to-br from-background-secondary/80 via-background to-background-tertiary/40" />
-        </div>
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]" />
       )}
 
-      {image ? (
-        <>
-          {/* ===== Layer 2: Strong horizontal dark gradient from left ===== */}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-r from-black/95 via-black/55 to-black/10" />
+      {/* ===== Dark gradient overlay — strongest behind text, lighter at bottom ===== */}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/45 to-black/35" />
+      <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/30 to-transparent" />
 
-          {/* ===== Layer 3: Radial vignette, center-left ===== */}
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{
-              background:
-                "radial-gradient(ellipse 70% 90% at 20% 50%, rgba(0,0,0,0.55) 0%, rgba(0,0,0,0.25) 45%, transparent 75%)",
-            }}
-          />
-
-          {/* ===== Layer 4: Secondary soft gradient for smooth blend ===== */}
-          <div
-            className="pointer-events-none absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(90deg, rgba(0,0,0,0.80) 0%, rgba(0,0,0,0.55) 30%, rgba(0,0,0,0.28) 55%, rgba(0,0,0,0.05) 80%, transparent 100%)",
-            }}
-          />
-
-          {/* ===== Layer 5: Top/bottom cinematic grade ===== */}
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/35 via-transparent to-black/45" />
-
-          {/* ===== Layer 6: Very soft warm accent glow (premium touch) ===== */}
-          <div className="pointer-events-none absolute -top-24 -left-10 h-72 w-72 rounded-full bg-accent/10 blur-[100px]" />
-          <div className="pointer-events-none absolute bottom-0 right-0 h-64 w-64 rounded-full bg-primary/10 blur-[100px]" />
-
-          {/* ============================================
-              LIGHT MODE ONLY — separate warm overlay system
-              (Dark mode never renders these)
-              ============================================ */}
-          <div className="pointer-events-none absolute inset-0 hidden light:block">
-            {/* L2 — very soft warm ivory tint */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#FFFDF9]/30 via-[#FCF7EF]/22 to-[#FCF7EF]/16" />
-
-            {/* L3 — large radial gradient from the left */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "radial-gradient(ellipse 75% 95% at 18% 50%, rgba(255,250,243,0.90) 0%, rgba(255,247,236,0.55) 40%, transparent 75%)",
-              }}
-            />
-
-            {/* L4 — soft horizontal blend, left → right */}
-            <div
-              className="absolute inset-0"
-              style={{
-                background:
-                  "linear-gradient(90deg, rgba(255,250,242,0.95) 0%, rgba(255,248,240,0.60) 40%, transparent 75%)",
-              }}
-            />
-
-            {/* L5 — very subtle gold glow */}
-            <div className="absolute -left-20 -top-20 h-80 w-80 rounded-full bg-[#E8C985]/15 blur-[100px]" />
-            <div className="absolute -right-16 -top-10 h-64 w-64 rounded-full bg-[#E8C985]/12 blur-[90px]" />
-
-            {/* L6 — very subtle lavender glow */}
-            <div className="absolute -bottom-24 -right-20 h-80 w-80 rounded-full bg-[#C7B8E8]/10 blur-[100px]" />
-
-            {/* Frosted glass sheen across the top */}
-            <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/80 to-transparent" />
-          </div>
-        </>
-      ) : null}
-
-      {/* ===== Daily usage badge ===== */}
-      {usageLabel ? (
-        <div className="absolute right-4 top-4 z-30 rounded-full border border-white/10 bg-background-secondary/80 px-3 py-1.5 text-[11px] font-semibold tracking-wide text-foreground-secondary backdrop-blur-md shadow-[0_4px_16px_-4px_rgb(0_0_0/0.4)] light:border-[#E8DCC7]/80 light:bg-white/90 light:text-[#4A3C2D] light:shadow-[0_4px_16px_-6px_rgba(120,85,30,0.18)] light:backdrop-blur-md">
-          {usageLabel}
-        </div>
-      ) : null}
-      {/* ===== Layer 6: Content — sits on top of everything, left-aligned ===== */}
-      <div className="relative z-20 flex h-full w-full items-center px-6 sm:px-8 md:px-10 lg:px-12 py-8 sm:py-10">
-        <div className="flex w-full max-w-[420px] lg:max-w-[440px] flex-col items-start text-left">
-          {/* Quote icon + label */}
-          <div className="mb-3 flex items-center gap-2.5">
-            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-accent/25 bg-accent/10 shadow-[0_0_18px_rgba(253,182,92,0.12)]">
-              <Quote
-                size={14}
-                className="text-accent"
-                fill="currentColor"
-                stroke="none"
-              />
+      {/* ===== Content ===== */}
+      <div className="relative z-10 flex flex-col justify-between h-full p-6 sm:p-8 md:p-10 lg:p-12">
+        {/* Top row: badge + usage */}
+        <div className="flex items-center justify-between">
+          {/* Today's Quote badge */}
+          <motion.span
+            initial={reduceMotion ? false : { opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-md px-3.5 py-1.5"
+          >
+            <Sparkles size={12} className="text-accent" fill="currentColor" />
+            <span className="text-[11px] sm:text-[12px] font-semibold uppercase tracking-[0.12em] text-white/90">
+              Today&apos;s Quote
             </span>
-            <span className="text-[11px] sm:text-[12px] font-semibold uppercase tracking-[0.14em] text-accent">
-              Today&apos;s Inspiration
-            </span>
-          </div>
+          </motion.span>
 
-          {/* Quote — smooth fade when the quote changes */}
-          <AnimatePresence mode="wait">
-            <motion.h2
-              key={quote}
-              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={reduceMotion ? undefined : { opacity: 0, y: -8 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-              className="italic text-[19px] sm:text-[22px] md:text-[25px] lg:text-[28px] leading-[1.35] tracking-wide text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.5)] line-clamp-3 text-balance light:text-[#201A15] light:drop-shadow-none"
+          {/* Usage indicator */}
+          {dailyLimit > 0 && (
+            <motion.span
+              initial={reduceMotion ? false : { opacity: 0, x: 8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.15 }}
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/8 backdrop-blur-md px-3 py-1.5"
             >
-              {quote}
-            </motion.h2>
+              <span className="text-[16px] leading-none">☀</span>
+              <span className="text-[11px] sm:text-[12px] font-medium text-white/80">
+                {remaining} remaining
+              </span>
+            </motion.span>
+          )}
+        </div>
+
+        {/* Middle: Quote + author — pushed down naturally */}
+        <div className="flex-1 flex flex-col justify-center my-8 sm:my-10 md:my-12">
+          <AnimatePresence mode="wait">
+            <motion.blockquote
+              key={quote}
+              initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: -12 }}
+              transition={{ duration: 0.45, ease: "easeOut" }}
+              className="max-w-[720px]"
+            >
+              <p className="text-[28px] sm:text-[36px] md:text-[44px] lg:text-[52px] xl:text-[58px] leading-[1.15] sm:leading-[1.18] tracking-tight text-white font-light sm:font-normal text-pretty drop-shadow-[0_2px_12px_rgba(0,0,0,0.3)]">
+                {quote}
+              </p>
+
+              {(author || category?.name) && (
+                <footer className="mt-6 sm:mt-8 flex items-center gap-3">
+                  {author && (
+                    <cite className="not-italic text-[15px] sm:text-[16px] md:text-[18px] text-white/75 font-medium tracking-wide drop-shadow-[0_1px_4px_rgba(0,0,0,0.2)]">
+                      &mdash; {author}
+                    </cite>
+                  )}
+                  {category?.name && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/8 backdrop-blur-md px-2.5 py-1 text-[11px] sm:text-[12px] font-medium text-white/70">
+                      <Sparkles size={10} className="text-accent" />
+                      {category.name}
+                    </span>
+                  )}
+                </footer>
+              )}
+            </motion.blockquote>
           </AnimatePresence>
+        </div>
 
-          {/* Premium branding */}
-          <div className="mt-3 flex items-center gap-1.5 opacity-85">
-            <Image
-              src="/logo/white-logo-1.png"
-              alt="MyInspireTag"
-              width={260}
-              height={260}
-              className="h-10 w-30 rounded-full object-contain"
-            />
-            {/* <span className="text-[11px] font-semibold tracking-[0.08em] text-white/80 light:text-[#6F5D46]">
-              MyInspireTag
-            </span> */}
-          </div>
+        {/* Bottom row: actions */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          {/* Inspire CTA */}
+          <motion.button
+            initial={reduceMotion ? false : { opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.25 }}
+            whileHover={reduceMotion ? undefined : { y: -2 }}
+            whileTap={reduceMotion ? undefined : { scale: 0.97 }}
+            onClick={onReadAgain}
+            className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-accent px-6 sm:px-7 py-3 sm:py-3.5 text-[14px] sm:text-[15px] font-semibold text-accent-foreground shadow-lg shadow-accent/25 transition-all duration-200 hover:shadow-xl hover:shadow-accent/35 hover:brightness-105 active:scale-[0.97]"
+          >
+            <Sparkles size={16} fill="currentColor" />
+            Inspire
+          </motion.button>
 
-          {/* Category pill */}
-          {category?.name ? (
-            <span className="mt-4 inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-[11px] font-medium text-white/90 backdrop-blur-md light:border-[#E9DFC9]/80 light:bg-white/80 light:text-[#4A3B2C] light:shadow-[0_4px_14px_-6px_rgba(120,85,30,0.14)] light:backdrop-blur-md">
-              <Sparkles size={11} className="w-2.5 h-2.5 text-accent" />
-              {category.name}
-            </span>
-          ) : null}
-
-          {/* Actions */}
-          <div className="mt-5 flex items-center justify-start gap-3 sm:gap-4">
+          {/* Secondary actions: Save / Share / Gift */}
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            {/* Save */}
             {quoteId ? (
               <FavoriteButton
                 id={quoteId}
                 type="quote"
+                showText
+                size="sm"
                 onToggle={(res) => onFavoriteChange && onFavoriteChange(res)}
-                className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 backdrop-blur-md transition-all duration-300 hover:brightness-110 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-8px_rgb(0_0_0/0.4)] active:scale-95 light:border-[#E9DFC9]/80 light:bg-white/72 light:text-[#6F5D46] light:shadow-[0_4px_16px_-8px_rgba(120,85,30,0.22)] light:backdrop-blur-[12px] light:hover:bg-white/85 light:hover:-translate-y-0.5 light:hover:shadow-[0_8px_24px_-10px_rgba(120,85,30,0.3)]"
+                className={actionButtonClass}
               />
             ) : (
-              <span className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/60 light:border-[#E9DFC9]/80 light:bg-white/72 light:text-[#A08A6A]">
-                <Heart size={16} className="w-4 h-4" />
+              <span className={`${actionButtonClass} !text-white/40 !cursor-not-allowed`}>
+                <Heart size={13} />
+                Save
               </span>
             )}
 
-            <button
+            {/* Share */}
+            <motion.button
+              initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.3 }}
               onClick={onShare}
               aria-label="Share quote"
-              className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/90 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/50 hover:text-primary hover:shadow-[0_8px_24px_-6px_rgba(168,85,247,0.4)] active:scale-95 light:border-[#E9DFC9]/80 light:bg-white/72 light:text-[#6F5D46] light:shadow-[0_4px_16px_-8px_rgba(120,85,30,0.22)] light:backdrop-blur-[12px] light:hover:bg-white/85 light:hover:-translate-y-0.5 light:hover:shadow-[0_8px_24px_-10px_rgba(120,85,30,0.3)]"
+              className={actionButtonClass}
             >
-              <Share2 size={16} className="w-4 h-4" />
-            </button>
+              <Share2 size={13} />
+              <span className="hidden sm:inline">Share</span>
+            </motion.button>
 
-            <button
-              onClick={onReadAgain}
-              aria-label="Read again"
-              className="inline-flex h-11 w-11 cursor-pointer items-center justify-center rounded-full border border-white/15 bg-white/10 text-white/90 backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/50 hover:text-accent hover:shadow-[0_8px_24px_-6px_rgba(253,182,92,0.4)] active:scale-95 light:border-[#E9DFC9]/80 light:bg-white/72 light:text-[#6F5D46] light:shadow-[0_4px_16px_-8px_rgba(120,85,30,0.22)] light:backdrop-blur-[12px] light:hover:bg-white/85 light:hover:-translate-y-0.5 light:hover:shadow-[0_8px_24px_-10px_rgba(120,85,30,0.3)]"
+            {/* Gift */}
+            <motion.button
+              initial={reduceMotion ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.35 }}
+              onClick={onGift}
+              aria-label="Gift this quote"
+              className={actionButtonClass}
             >
-              <BookOpen size={16} className="w-4 h-4" />
-            </button>
+              <Gift size={13} />
+              <span className="hidden sm:inline">Gift</span>
+            </motion.button>
           </div>
         </div>
       </div>

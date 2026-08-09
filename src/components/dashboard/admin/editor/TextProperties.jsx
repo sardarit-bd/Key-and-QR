@@ -1,330 +1,244 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback } from 'react';
 import useEditorStore from './editorStore';
+import { updateTextProperties, getObjectById } from './editorFabric';
 import {
-  updateTextProperties,
-  updateObjectTransform,
-  getObjectById,
-} from './editorFabric';
-import {
-  CURATED_FONTS,
-  FONT_SIZES,
-  FONT_WEIGHTS,
-  TEXT_ALIGN,
+  CURATED_FONTS, FONT_SIZES, FONT_SIZE_MIN, FONT_SIZE_MAX,
+  CUSTOM_SIZE_VALUE,
 } from './editorConstants';
 import {
-  Bold,
-  Italic,
-  AlignLeft,
-  AlignCenter,
-  AlignRight,
-  Copy,
-  Trash2,
-} from 'lucide-react';
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
+import { AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 
-/**
- * TextProperties — right panel for editing the selected text element.
- *
- * Every property change updates:
- * 1. The Fabric object in-place (via updateTextProperties) — instant visual feedback
- * 2. The Zustand store (via patchElementData) — no history entry
- * 3. History entry is created on mouse-up/exit via object:modified in useEditorSync
- */
-export default function TextProperties() {
-  const selectedId = useEditorStore((s) =>
-    s.selectedElementIds.length === 1 ? s.selectedElementIds[0] : null
-  );
-  const elements = useEditorStore((s) => s.elements);
+const FONT_WEIGHTS = [
+  { value: 'normal', label: 'Regular' },
+  { value: '500', label: 'Medium' },
+  { value: 'bold', label: 'Bold' },
+];
 
-  const selectedEl = selectedId
-    ? elements.find((el) => el.id === selectedId && el.type === 'text')
-    : null;
-
+export default function TextProperties({ selectedEl }) {
   const patchElementData = useEditorStore((s) => s.patchElementData);
-  const duplicateElement = useEditorStore((s) => s.duplicateElement);
-  const removeElement = useEditorStore((s) => s.removeElement);
-  const updateElementData = useEditorStore((s) => s.updateElementData);
+  const [customSize, setCustomSize] = useState(false);
+  const [localLineHeight, setLocalLineHeight] = useState(null);
+  const [localLetterSpacing, setLocalLetterSpacing] = useState(null);
 
-  if (!selectedEl || !selectedEl.textData) return null;
+  const selectedId = selectedEl?.id;
+  const td = selectedEl?.textData;
+  if (!td) return null;
 
-  const td = selectedEl.textData;
+  const safeNum = (v, fallback) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? n : (fallback ?? 1);
+  };
 
-  // Lazy accessor for Fabric object (declared BEFORE useCallback closures that reference it)
-  const getFabObj = useCallback((id) => {
-    return getObjectById(id);
-  }, []);
+  const currentSize = safeNum(td.fontSize, 24);
+  const currentLineHeight = safeNum(td.lineHeight, 1.3);
+  const currentLetterSpacing = safeNum(td.letterSpacing, 0);
 
-  const applyStyle = useCallback(
-    (key, value) => {
-      if (!selectedId) return;
-      // Convert store key → Fabric key
-      const fabricMap = {
-        fontFamily: 'fontFamily',
-        fontSize: 'fontSize',
-        fontWeight: 'fontWeight',
-        fontStyle: 'fontStyle',
-        lineHeight: 'lineHeight',
-        letterSpacing: (v) => ({ charSpacing: v * 10 }),
-        textAlign: 'textAlign',
-        color: 'fill',
-        opacity: 'opacity',
-        rotation: 'angle',
-      };
+  const apply = useCallback((key, value) => {
+    if (!selectedId) return;
+    const numericKeys = ['fontSize', 'lineHeight', 'letterSpacing'];
+    const sanitized = numericKeys.includes(key) ? safeNum(value, td[key]) : value;
+    if (numericKeys.includes(key) && sanitized === td[key] && Number(value) !== td[key]) return;
 
-      const mapping = fabricMap[key];
-      if (typeof mapping === 'function') {
-        updateTextProperties(selectedId, mapping(value));
-      } else if (mapping) {
-        updateTextProperties(selectedId, { [mapping]: value });
-      }
+    const fabricMap = {
+      fontFamily: 'fontFamily', fontSize: 'fontSize',
+      fontWeight: 'fontWeight', fontStyle: 'fontStyle',
+      lineHeight: 'lineHeight', textAlign: 'textAlign',
+      color: 'fill',
+      letterSpacing: (v) => ({ charSpacing: v * 10 }),
+    };
+    const mapping = fabricMap[key];
+    if (typeof mapping === 'function') {
+      updateTextProperties(selectedId, mapping(sanitized));
+    } else if (mapping) {
+      updateTextProperties(selectedId, { [mapping]: sanitized });
+    }
+    patchElementData(selectedId, 'textData', { [key]: sanitized });
+  }, [selectedId, patchElementData, td?.fontSize, td?.lineHeight, td?.letterSpacing]);
 
-      patchElementData(selectedId, 'textData', { [key]: value });
-    },
-    [selectedId, patchElementData]
-  );
+  const handleContentChange = useCallback((e) => {
+    if (!selectedId) return;
+    const obj = getObjectById(selectedId);
+    if (obj) { obj.set('text', e.target.value); obj.setCoords(); obj.canvas?.renderAll(); }
+    patchElementData(selectedId, 'textData', { content: e.target.value });
+  }, [selectedId, patchElementData]);
 
-  const handleContentChange = useCallback(
-    (e) => {
-      const newContent = e.target.value;
-      if (!selectedId) return;
-
-      // Update Fabric in-place
-      const obj = getFabObj(selectedId);
-      if (obj) {
-        obj.set('text', newContent);
-        obj.setCoords();
-        obj.canvas?.renderAll();
-      }
-
-      patchElementData(selectedId, 'textData', { content: newContent });
-    },
-    [selectedId, patchElementData, getFabObj]
-  );
-
-  const handleDuplicate = useCallback(() => {
-    if (selectedId) duplicateElement(selectedId);
-  }, [selectedId, duplicateElement]);
-
-  const handleDelete = useCallback(() => {
-    if (selectedId) removeElement(selectedId);
-  }, [selectedId, removeElement]);
+  const sectionLabel = 'text-[11px] font-semibold text-foreground-tertiary uppercase tracking-wider mb-3';
+  const fieldLabel = 'text-[10px] font-medium text-foreground-tertiary block mb-1.5';
+  const inputClass = 'w-full h-9 rounded-lg border border-border bg-background text-xs text-foreground px-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-shadow';
+  const activeBtn = 'bg-primary text-primary-foreground border-primary';
+  const normalBtn = 'bg-background text-foreground-secondary border-border hover:bg-muted hover:text-foreground';
+  const btn = 'flex-1 h-8 flex items-center justify-center rounded-lg border text-[11px] font-medium transition-all cursor-pointer';
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       {/* Content */}
       <div>
-        <label className="text-[11px] text-foreground-tertiary font-medium uppercase tracking-wider block mb-1.5">
-          Content
-        </label>
+        <p className={sectionLabel}>Content</p>
         <textarea
           value={td.content || ''}
           onChange={handleContentChange}
-          rows={3}
-          className="w-full px-2.5 py-1.5 rounded-md border border-border bg-background text-sm text-foreground resize-none focus:outline-none focus:ring-1 focus:ring-primary/40"
+          rows={4}
+          className={`${inputClass} resize-none`}
+          placeholder="Enter quote text..."
         />
       </div>
 
-      {/* Font family + size row */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="col-span-2">
-          <label className="text-[10px] text-foreground-tertiary block mb-0.5">
-            Font
-          </label>
-          <select
-            value={td.fontFamily || 'Inter'}
-            onChange={(e) => applyStyle('fontFamily', e.target.value)}
-            className="w-full h-8 rounded-md border border-border bg-background text-xs text-foreground px-2 focus:outline-none focus:ring-1 focus:ring-primary/40"
-          >
-            {CURATED_FONTS.map((f) => (
-              <option key={f.name} value={f.name}>
-                {f.label}
-              </option>
-            ))}
-          </select>
-        </div>
-        <div>
-          <label className="text-[10px] text-foreground-tertiary block mb-0.5">
-            Size
-          </label>
-          <select
-            value={td.fontSize || 48}
-            onChange={(e) => applyStyle('fontSize', Number(e.target.value))}
-            className="w-full h-8 rounded-md border border-border bg-background text-xs text-foreground px-2 focus:outline-none focus:ring-1 focus:ring-primary/40"
-          >
-            {FONT_SIZES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Weight + Style row */}
-      <div className="flex items-center gap-2">
-        <button
-          onClick={() =>
-            applyStyle('fontWeight', td.fontWeight === 'bold' ? 'normal' : 'bold')
-          }
-          className={`w-8 h-8 flex items-center justify-center rounded-md border text-xs transition-colors cursor-pointer ${
-            td.fontWeight === 'bold'
-              ? 'border-primary bg-primary/10 text-primary'
-              : 'border-border bg-background text-foreground-secondary hover:bg-muted'
-          }`}
-          title="Bold"
-        >
-          <Bold size={14} />
-        </button>
-        <button
-          onClick={() =>
-            applyStyle('fontStyle', td.fontStyle === 'italic' ? 'normal' : 'italic')
-          }
-          className={`w-8 h-8 flex items-center justify-center rounded-md border text-xs transition-colors cursor-pointer ${
-            td.fontStyle === 'italic'
-              ? 'border-primary bg-primary/10 text-primary'
-              : 'border-border bg-background text-foreground-secondary hover:bg-muted'
-          }`}
-          title="Italic"
-        >
-          <Italic size={14} />
-        </button>
-
-        <div className="w-px h-6 bg-border mx-1" />
-
-        {TEXT_ALIGN.map((a) => (
-          <button
-            key={a.value}
-            onClick={() => applyStyle('textAlign', a.value)}
-            className={`w-8 h-8 flex items-center justify-center rounded-md border text-xs transition-colors cursor-pointer ${
-              td.textAlign === a.value
-                ? 'border-primary bg-primary/10 text-primary'
-                : 'border-border bg-background text-foreground-secondary hover:bg-muted'
-            }`}
-            title={a.label}
-          >
-            {a.value === 'left' ? (
-              <AlignLeft size={14} />
-            ) : a.value === 'center' ? (
-              <AlignCenter size={14} />
-            ) : (
-              <AlignRight size={14} />
-            )}
-          </button>
-        ))}
-      </div>
-
-      {/* Color */}
+      {/* Typography */}
       <div>
-        <label className="text-[10px] text-foreground-tertiary block mb-0.5">
-          Color
-        </label>
-        <div className="flex items-center gap-2">
-          <input
-            type="color"
-            value={td.color || '#000000'}
-            onChange={(e) => applyStyle('color', e.target.value)}
-            className="w-8 h-8 rounded-md border border-border cursor-pointer bg-background p-0.5"
-          />
-          <span className="text-xs text-foreground-tertiary font-mono">
-            {td.color || '#000000'}
-          </span>
+        <p className={sectionLabel}>Typography</p>
+        <div className="space-y-3">
+          <div>
+            <label className={fieldLabel}>Font Family</label>
+            <Select value={td.fontFamily || 'Inter'} onValueChange={(v) => apply('fontFamily', v)}>
+              <SelectTrigger className="h-9 text-xs rounded-lg w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="max-h-[240px]">
+                {CURATED_FONTS.map((f) => (
+                  <SelectItem key={f.name} value={f.name} className="text-xs">{f.label}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className={fieldLabel}>Font Style</label>
+            <div className="flex items-center gap-1">
+              {FONT_WEIGHTS.map((w) => (
+                <button
+                  key={w.value}
+                  onClick={() => apply('fontWeight', w.value)}
+                  className={`${btn} ${td.fontWeight === w.value ? activeBtn : normalBtn}`}
+                >
+                  {w.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className={fieldLabel}>Font Size</label>
+            {customSize || !FONT_SIZES.includes(currentSize) ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="number"
+                  value={currentSize}
+                  onChange={(e) => {
+                    const v = Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, Number(e.target.value) || FONT_SIZE_MIN));
+                    apply('fontSize', v);
+                  }}
+                  min={FONT_SIZE_MIN} max={FONT_SIZE_MAX}
+                  className={inputClass}
+                />
+                <button
+                  onClick={() => setCustomSize(false)}
+                  className="text-[10px] text-foreground-tertiary hover:text-foreground-secondary cursor-pointer shrink-0"
+                >
+                  Presets
+                </button>
+              </div>
+            ) : (
+              <Select value={String(currentSize)} onValueChange={(v) => {
+                if (v === CUSTOM_SIZE_VALUE) { setCustomSize(true); return; }
+                apply('fontSize', Number(v));
+              }}>
+                <SelectTrigger className="h-9 text-xs rounded-lg w-full">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-[240px]">
+                  {FONT_SIZES.map((s) => (
+                    <SelectItem key={s} value={String(s)} className="text-xs">{s}</SelectItem>
+                  ))}
+                  <SelectItem value={CUSTOM_SIZE_VALUE} className="text-xs text-foreground-tertiary">Custom...</SelectItem>
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+
+          <div>
+            <label className={fieldLabel}>Text Alignment</label>
+            <div className="flex items-center gap-1">
+              {[
+                { v: 'left', icon: AlignLeft },
+                { v: 'center', icon: AlignCenter },
+                { v: 'right', icon: AlignRight },
+              ].map((a) => (
+                <button
+                  key={a.v}
+                  onClick={() => apply('textAlign', a.v)}
+                  className={`w-8 h-8 flex items-center justify-center rounded-lg border text-xs transition-all cursor-pointer ${td.textAlign === a.v ? activeBtn : normalBtn}`}
+                  title={a.v}
+                >
+                  <a.icon size={14} />
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Line height + Letter spacing */}
-      <div className="grid grid-cols-2 gap-2">
+      {/* Appearance */}
+      <div>
+        <p className={sectionLabel}>Appearance</p>
         <div>
-          <label className="text-[10px] text-foreground-tertiary block mb-0.5">
-            Line Height
-          </label>
-          <input
-            type="number"
-            value={td.lineHeight || 1.3}
-            onChange={(e) => applyStyle('lineHeight', Number(e.target.value))}
-            step={0.1}
-            min={0.5}
-            max={3}
-            className="w-full h-8 rounded-md border border-border bg-background text-xs text-foreground px-2 focus:outline-none focus:ring-1 focus:ring-primary/40"
-          />
-        </div>
-        <div>
-          <label className="text-[10px] text-foreground-tertiary block mb-0.5">
-            Letter Spacing
-          </label>
-          <input
-            type="number"
-            value={td.letterSpacing || 0}
-            onChange={(e) => applyStyle('letterSpacing', Number(e.target.value))}
-            step={0.5}
-            min={-2}
-            max={10}
-            className="w-full h-8 rounded-md border border-border bg-background text-xs text-foreground px-2 focus:outline-none focus:ring-1 focus:ring-primary/40"
-          />
+          <label className={fieldLabel}>Text Color</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="color"
+              value={td.color || '#000000'}
+              onChange={(e) => apply('color', e.target.value)}
+              className="w-8 h-8 rounded-lg border border-border cursor-pointer bg-background p-0.5"
+            />
+            <span className="text-xs text-foreground-tertiary font-mono">{td.color || '#000000'}</span>
+          </div>
         </div>
       </div>
 
-      {/* Opacity + Rotation */}
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className="text-[10px] text-foreground-tertiary block mb-0.5">
-            Opacity
-          </label>
-          <input
-            type="range"
-            value={Math.round((selectedEl.opacity ?? 1) * 100)}
-            onChange={(e) => {
-              const v = Number(e.target.value) / 100;
-              patchElementData(selectedId, 'opacity', v);
-              if (selectedId) {
-                updateObjectTransform(selectedId, { opacity: v });
-              }
-            }}
-            min={0}
-            max={100}
-            className="w-full accent-primary"
-          />
-          <span className="text-[10px] text-foreground-tertiary">
-            {Math.round((selectedEl.opacity ?? 1) * 100)}%
-          </span>
+      {/* Spacing */}
+      <div>
+        <p className={sectionLabel}>Spacing</p>
+        <div className="grid grid-cols-2 gap-2">
+          <div>
+            <label className={fieldLabel}>Line Height</label>
+            <input
+              type="number"
+              value={localLineHeight ?? currentLineHeight}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setLocalLineHeight(raw === '' ? '' : Number(raw));
+                const v = Number(raw);
+                if (raw !== '' && Number.isFinite(v) && v >= 0.5 && v <= 3) {
+                  apply('lineHeight', v);
+                }
+              }}
+              onBlur={() => setLocalLineHeight(null)}
+              step={0.1} min={0.5} max={3}
+              className={inputClass}
+            />
+          </div>
+          <div>
+            <label className={fieldLabel}>Letter Spacing</label>
+            <input
+              type="number"
+              value={localLetterSpacing ?? currentLetterSpacing}
+              onChange={(e) => {
+                const raw = e.target.value;
+                setLocalLetterSpacing(raw === '' ? '' : Number(raw));
+                const v = Number(raw);
+                if (raw !== '' && Number.isFinite(v) && v >= -2 && v <= 10) {
+                  apply('letterSpacing', v);
+                }
+              }}
+              onBlur={() => setLocalLetterSpacing(null)}
+              step={0.5} min={-2} max={10}
+              className={inputClass}
+            />
+          </div>
         </div>
-        <div>
-          <label className="text-[10px] text-foreground-tertiary block mb-0.5">
-            Rotation
-          </label>
-          <input
-            type="number"
-            value={Math.round(selectedEl.rotation || 0)}
-            onChange={(e) => {
-              const v = Number(e.target.value);
-              patchElementData(selectedId, 'rotation', v);
-              if (selectedId) {
-                updateObjectTransform(selectedId, { angle: v });
-              }
-            }}
-            min={-360}
-            max={360}
-            className="w-full h-8 rounded-md border border-border bg-background text-xs text-foreground px-2 focus:outline-none focus:ring-1 focus:ring-primary/40"
-          />
-        </div>
-      </div>
-
-      {/* Actions */}
-      <div className="flex items-center gap-2 pt-2 border-t border-border">
-        <button
-          onClick={handleDuplicate}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-border bg-background text-xs text-foreground-secondary hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
-        >
-          <Copy size={13} />
-          Duplicate
-        </button>
-        <button
-          onClick={handleDelete}
-          className="flex items-center gap-1.5 px-3 py-1.5 rounded-md border border-destructive/20 bg-destructive/5 text-xs text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
-        >
-          <Trash2 size={13} />
-          Delete
-        </button>
       </div>
     </div>
   );

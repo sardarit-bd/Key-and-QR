@@ -23,13 +23,26 @@ export const ZOOM = {
 export const CURATED_FONTS = [
   { name: 'Inter', label: 'Inter', category: 'sans-serif' },
   { name: 'Playfair Display', label: 'Playfair Display', category: 'serif' },
-  { name: 'Georgia', label: 'Georgia', category: 'serif' },
   { name: 'Montserrat', label: 'Montserrat', category: 'sans-serif' },
+  { name: 'Poppins', label: 'Poppins', category: 'sans-serif' },
+  { name: 'Roboto', label: 'Roboto', category: 'sans-serif' },
+  { name: 'Open Sans', label: 'Open Sans', category: 'sans-serif' },
+  { name: 'Lato', label: 'Lato', category: 'sans-serif' },
+  { name: 'Merriweather', label: 'Merriweather', category: 'serif' },
+  { name: 'Oswald', label: 'Oswald', category: 'sans-serif' },
+  { name: 'Raleway', label: 'Raleway', category: 'sans-serif' },
+  { name: 'Nunito', label: 'Nunito', category: 'sans-serif' },
+  { name: 'DM Sans', label: 'DM Sans', category: 'sans-serif' },
+  { name: 'Libre Baskerville', label: 'Libre Baskerville', category: 'serif' },
+  { name: 'Cormorant Garamond', label: 'Cormorant Garamond', category: 'serif' },
   { name: 'Pacifico', label: 'Pacifico', category: 'handwriting' },
-  { name: 'Courier New', label: 'Monospace', category: 'monospace' },
 ];
 
-export const FONT_SIZES = [24, 32, 48, 64, 72];
+export const FONT_SIZES = [8, 10, 12, 14, 16, 18, 20, 24, 28, 32, 36, 40, 48, 56, 64, 72, 96, 120];
+
+export const FONT_SIZE_MIN = 8;
+export const FONT_SIZE_MAX = 300;
+export const CUSTOM_SIZE_VALUE = '__custom__';
 
 export const FONT_WEIGHTS = [
   { value: 'normal', label: 'Normal' },
@@ -78,5 +91,19 @@ export const SNAP_THRESHOLD = 5;
 export const GRID_SIZE = 20;
 export const ROTATION_SNAP = 15;
 export const AUTO_SAVE_DELAY = 30000;
-export const DEFAULT_FONT_SIZE = 48;
-export const DEFAULT_FONT = 'Playfair Display';
+export const DEFAULT_FONT_SIZE = 24;
+export const DEFAULT_FONT = 'Inter';
+
+// Icon defaults
+export const DEFAULT_ICON_SIZE = 48;
+export const DEFAULT_ICON_COLOR = '#1a1a1a';
+
+// Desktop/Mobile preview modes
+export const PREVIEW_MODES = {
+  desktop: 'desktop',
+  mobile: 'mobile',
+};
+export const PREVIEW_ASPECT_RATIOS = {
+  desktop: { width: 16, height: 9 },
+  mobile: { width: 9, height: 19.5 },
+};

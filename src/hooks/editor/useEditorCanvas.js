@@ -2,10 +2,10 @@
  * useEditorCanvas — manages Fabric.js canvas lifecycle.
  *
  * Initializes the canvas when the container ref mounts,
- * handles resize, zoom, selection events, and cleanup on unmount.
- * Re-renders elements only when renderVersion changes (structural changes).
- * Property updates from Fabric do NOT trigger re-render — they flow
- * one-way: Fabric → useEditorSync → store (no loop).
+ * handles resize, zoom, selection events, keyboard interaction, and cleanup
+ * on unmount. Re-renders elements only when renderVersion changes
+ * (structural changes). Property updates from Fabric do NOT trigger re-render —
+ * they flow one-way: Fabric → useEditorSync → store (no loop).
  */
 import { useEffect, useRef, useCallback } from 'react';
 import useEditorStore from '@/components/dashboard/admin/editor/editorStore';
@@ -19,6 +19,7 @@ import {
   fitCanvasToContainer,
   renderElements,
   getSelectedObjectIds,
+  getObjectById,
 } from '@/components/dashboard/admin/editor/editorFabric';
 
 export function useEditorCanvas(canvasElRef, containerRef) {
@@ -30,6 +31,8 @@ export function useEditorCanvas(canvasElRef, containerRef) {
   const background = useEditorStore((s) => s.background);
   const setZoom = useEditorStore((s) => s.setZoom);
   const setSelection = useEditorStore((s) => s.setSelection);
+  const removeElements = useEditorStore((s) => s.removeElements);
+  const moveElements = useEditorStore((s) => s.moveElements);
 
   // ── Initialize canvas once ──
   useEffect(() => {
@@ -61,6 +64,70 @@ export function useEditorCanvas(canvasElRef, containerRef) {
       c.on('selection:cleared', () => {
         setSelection([]);
       });
+
+      // ── Keyboard interaction ──
+      const handleKeyDown = (e) => {
+        const canvas = getCanvas();
+        if (!canvas) return;
+
+        // Don't intercept keys when text is being edited
+        const active = canvas.getActiveObject();
+        if (active && active.isEditing) return;
+
+        // Delete / Backspace — remove selected elements
+        if (e.key === 'Delete' || e.key === 'Backspace') {
+          const ids = getSelectedObjectIds();
+          if (ids.length > 0) {
+            e.preventDefault();
+            e.stopPropagation();
+            removeElements(ids);
+          }
+          return;
+        }
+
+        // Arrow keys — move selected elements
+        if (e.key.startsWith('Arrow')) {
+          const ids = getSelectedObjectIds();
+          if (ids.length === 0) return;
+
+          e.preventDefault();
+
+          const step = e.shiftKey ? 10 : 1;
+          let dx = 0;
+          let dy = 0;
+          switch (e.key) {
+            case 'ArrowUp':
+              dy = -step;
+              break;
+            case 'ArrowDown':
+              dy = step;
+              break;
+            case 'ArrowLeft':
+              dx = -step;
+              break;
+            case 'ArrowRight':
+              dx = step;
+              break;
+          }
+
+          // Move Fabric objects in-place
+          ids.forEach((id) => {
+            const obj = getObjectById(id);
+            if (obj) {
+              obj.left += dx;
+              obj.top += dy;
+              obj.setCoords();
+            }
+          });
+          canvas.renderAll();
+
+          // Update store (single history entry for all selected elements)
+          moveElements(ids, dx, dy);
+        }
+      };
+
+      // Attach keyboard listener to the canvas element
+      el.addEventListener('keydown', handleKeyDown);
     });
 
     return () => {
