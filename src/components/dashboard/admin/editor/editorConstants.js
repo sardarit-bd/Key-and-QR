@@ -93,3 +93,17 @@ export const ROTATION_SNAP = 15;
 export const AUTO_SAVE_DELAY = 30000;
 export const DEFAULT_FONT_SIZE = 24;
 export const DEFAULT_FONT = 'Inter';
+
+// Icon defaults
+export const DEFAULT_ICON_SIZE = 48;
+export const DEFAULT_ICON_COLOR = '#1a1a1a';
+
+// Desktop/Mobile preview modes
+export const PREVIEW_MODES = {
+  desktop: 'desktop',
+  mobile: 'mobile',
+};
+export const PREVIEW_ASPECT_RATIOS = {
+  desktop: { width: 16, height: 9 },
+  mobile: { width: 9, height: 19.5 },
+};

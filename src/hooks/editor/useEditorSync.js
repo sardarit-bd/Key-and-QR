@@ -19,14 +19,14 @@ import {
 export function useEditorSync() {
   const patchElement = useEditorStore((s) => s.patchElement);
   const updateElement = useEditorStore((s) => s.updateElement);
-  const updateElementData = useEditorStore((s) => s.updateElementData);
+  const updateMultipleElements = useEditorStore((s) => s.updateMultipleElements);
   const setQuoteText = useEditorStore((s) => s.setQuoteText);
 
   useEffect(() => {
-    const canvas = getCanvas();
-    if (!canvas) return;
+    let cancelled = false;
+    let canvas = null;
+    let retryTimer = null;
 
-    // Fire on every keystroke — no history entry
     const handleTextChanged = (e) => {
       const obj = e.target;
       if (!obj?.data?.elementId) return;
@@ -34,18 +34,15 @@ export function useEditorSync() {
       patchElement(obj.data.elementId, { textData: el.textData });
 
       const elements = useEditorStore.getState().elements;
-      const firstText = elements.find((el) => el.type === 'text');
+      const firstText = elements.find((element) => element.type === 'text');
       if (firstText?.textData?.content) {
         setQuoteText(firstText.textData.content);
       }
     };
 
-    // Fire on mouse-up after drag/resize/rotate/transform — creates history entry
-    const handleModified = (e) => {
-      const obj = e.target;
-      if (!obj?.data?.elementId) return;
+    const buildElementUpdates = (obj) => {
       const el = fabricObjectToElement(obj);
-      updateElement(obj.data.elementId, {
+      return {
         x: el.x,
         y: el.y,
         width: el.width,
@@ -57,32 +54,72 @@ export function useEditorSync() {
         ...(el.textData ? { textData: el.textData } : {}),
         ...(el.imageData ? { imageData: el.imageData } : {}),
         ...(el.shapeData ? { shapeData: el.shapeData } : {}),
-      });
+        ...(el.iconData ? { iconData: el.iconData } : {}),
+      };
+    };
 
-      // Also sync quoteText on completion
+    const handleModified = (e) => {
+      const obj = e.target;
+      if (!obj) return;
+
+      // ActiveSelection (multi-object drag/resize/rotate) — batch into one history entry
+      if (obj.type === 'activeSelection') {
+        const children = typeof obj.getObjects === 'function' ? obj.getObjects() : [];
+        const updatesMap = {};
+        children.forEach((child) => {
+          if (child?.data?.elementId) {
+            updatesMap[child.data.elementId] = buildElementUpdates(child);
+          }
+        });
+        if (Object.keys(updatesMap).length > 0) {
+          updateMultipleElements(updatesMap);
+        }
+        return;
+      }
+
+      // Single object
+      if (!obj?.data?.elementId) return;
+      updateElement(obj.data.elementId, buildElementUpdates(obj));
+
+      const el = fabricObjectToElement(obj);
       if (el.textData?.content) {
         setQuoteText(el.textData.content);
       }
     };
 
-    // Fire when text editing exits (user clicks outside textbox or presses Escape)
     const handleEditingExited = (e) => {
       const obj = e.target;
       if (!obj?.data?.elementId) return;
+      updateElement(obj.data.elementId, buildElementUpdates(obj));
       const el = fabricObjectToElement(obj);
-      updateElement(obj.data.elementId, { textData: el.textData });
+      if (el.textData?.content) {
+        setQuoteText(el.textData.content);
+      }
     };
 
-    canvas.on('text:changed', handleTextChanged);
-    canvas.on('object:modified', handleModified);
-    canvas.on('text:editing:exited', handleEditingExited);
+    const attachListeners = () => {
+      if (cancelled) return;
+      canvas = getCanvas();
+      if (!canvas) {
+        retryTimer = window.setTimeout(attachListeners, 0);
+        return;
+      }
+
+      canvas.on('text:changed', handleTextChanged);
+      canvas.on('object:modified', handleModified);
+      canvas.on('text:editing:exited', handleEditingExited);
+    };
+
+    attachListeners();
 
     return () => {
-      if (canvas.off) {
+      cancelled = true;
+      if (retryTimer) window.clearTimeout(retryTimer);
+      if (canvas?.off) {
         canvas.off('text:changed', handleTextChanged);
         canvas.off('object:modified', handleModified);
         canvas.off('text:editing:exited', handleEditingExited);
       }
     };
-  }, [patchElement, updateElement, updateElementData, setQuoteText]);
+  }, [patchElement, updateElement, updateMultipleElements, setQuoteText]);
 }

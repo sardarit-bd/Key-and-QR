@@ -2,7 +2,6 @@
 
 import { ArrowLeft, Monitor, Smartphone, Eye } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useState } from 'react';
 import useEditorStore from './editorStore';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
@@ -10,7 +9,8 @@ import { Button } from '@/components/ui/button';
 
 export default function EditorHeader() {
   const router = useRouter();
-  const [device, setDevice] = useState('desktop');
+  const previewMode = useEditorStore((s) => s.previewMode);
+  const setPreviewMode = useEditorStore((s) => s.setPreviewMode);
   const isDirty = useEditorStore((s) => s.isDirty);
   const isSaving = useEditorStore((s) => s.isSaving);
   const setSaving = useEditorStore((s) => s.setSaving);
@@ -53,6 +53,13 @@ export default function EditorHeader() {
     }
   };
 
+  const handlePreview = () => {
+    const data = toEditorData();
+    const json = JSON.stringify(data);
+    const url = `/admin/quotes/preview?data=${encodeURIComponent(json)}`;
+    window.open(url, '_blank');
+  };
+
   return (
     <header className="flex items-center justify-between h-14 px-5 border-b border-border bg-background shrink-0">
       <div className="flex items-center gap-3">
@@ -68,18 +75,22 @@ export default function EditorHeader() {
 
       <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
         <button
-          onClick={() => setDevice('desktop')}
+          onClick={() => setPreviewMode('desktop')}
           className={`w-8 h-7 flex items-center justify-center rounded-md transition-colors cursor-pointer ${
-            device === 'desktop' ? 'bg-background shadow-sm text-foreground' : 'text-foreground-tertiary hover:text-foreground-secondary'
+            previewMode === 'desktop'
+              ? 'bg-background shadow-sm text-foreground'
+              : 'text-foreground-tertiary hover:text-foreground-secondary'
           }`}
           title="Desktop view"
         >
           <Monitor size={15} />
         </button>
         <button
-          onClick={() => setDevice('mobile')}
+          onClick={() => setPreviewMode('mobile')}
           className={`w-8 h-7 flex items-center justify-center rounded-md transition-colors cursor-pointer ${
-            device === 'mobile' ? 'bg-background shadow-sm text-foreground' : 'text-foreground-tertiary hover:text-foreground-secondary'
+            previewMode === 'mobile'
+              ? 'bg-background shadow-sm text-foreground'
+              : 'text-foreground-tertiary hover:text-foreground-secondary'
           }`}
           title="Mobile view"
         >
@@ -88,7 +99,7 @@ export default function EditorHeader() {
       </div>
 
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="sm" className="h-8 text-xs font-normal cursor-pointer">
+        <Button variant="outline" size="sm" className="h-8 text-xs font-normal cursor-pointer" onClick={handlePreview}>
           <Eye size={14} className="mr-1.5" />
           Preview
         </Button>

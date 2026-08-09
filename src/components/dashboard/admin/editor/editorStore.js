@@ -13,7 +13,7 @@
  * Business logic stays in editorUtils.js — this store only holds state.
  */
 import { create } from 'zustand';
-import { CANVAS_DEFAULTS, MAX_ELEMENTS, EDITOR_VERSION } from './editorConstants';
+import { CANVAS_DEFAULTS, MAX_ELEMENTS, EDITOR_VERSION, PREVIEW_MODES, DEFAULT_ICON_SIZE, DEFAULT_ICON_COLOR } from './editorConstants';
 
 let elementCounter = 0;
 const generateId = () => `el_${Date.now()}_${++elementCounter}`;
@@ -41,6 +41,9 @@ const initialState = {
 
   // Audio
   audio: null,
+
+  // Preview mode (desktop/mobile viewport toggle)
+  previewMode: PREVIEW_MODES.desktop,
 
   // Metadata
   quoteId: null,
@@ -88,7 +91,7 @@ const useEditorStore = create((set, get) => ({
   addElement: (element) => {
     const state = get();
     if (state.elements.length >= MAX_ELEMENTS) return null;
-    const newElement = { ...element, id: element.id || generateId() };
+    const newElement = JSON.parse(JSON.stringify({ ...element, id: element.id || generateId() }));
     state.pushHistory();
     state.incrementVersion();
     set({
@@ -156,6 +159,54 @@ const useEditorStore = create((set, get) => ({
     });
   },
 
+  removeElements: (ids) => {
+    const state = get();
+    const idSet = new Set(ids);
+    state.pushHistory();
+    state.incrementVersion();
+    set({
+      elements: state.elements.filter((el) => !idSet.has(el.id)),
+      selectedElementIds: state.selectedElementIds.filter((sid) => !idSet.has(sid)),
+      isDirty: true,
+    });
+  },
+
+  /** Update x/y for keyboard arrow-key movement (Fabric is updated separately) */
+  moveElement: (id, dx, dy) => {
+    const state = get();
+    state.pushHistory();
+    set({
+      elements: state.elements.map((el) =>
+        el.id === id ? { ...el, x: el.x + dx, y: el.y + dy } : el
+      ),
+      isDirty: true,
+    });
+  },
+
+  moveElements: (ids, dx, dy) => {
+    const state = get();
+    state.pushHistory();
+    const idSet = new Set(ids);
+    set({
+      elements: state.elements.map((el) =>
+        idSet.has(el.id) ? { ...el, x: el.x + dx, y: el.y + dy } : el
+      ),
+      isDirty: true,
+    });
+  },
+
+  /** Batch-update multiple elements in a SINGLE history entry (for multi-selection drag) */
+  updateMultipleElements: (updatesMap) => {
+    const state = get();
+    state.pushHistory();
+    set({
+      elements: state.elements.map((el) =>
+        updatesMap[el.id] ? { ...el, ...updatesMap[el.id] } : el
+      ),
+      isDirty: true,
+    });
+  },
+
   clearElements: () => {
     const state = get();
     state.pushHistory();
@@ -181,13 +232,13 @@ const useEditorStore = create((set, get) => ({
     if (!source || state.elements.length >= MAX_ELEMENTS) return;
     state.pushHistory();
     state.incrementVersion();
-    const clone = {
+    const clone = JSON.parse(JSON.stringify({
       ...source,
       id: generateId(),
       x: source.x + 20,
       y: source.y + 20,
       zIndex: state.elements.length,
-    };
+    }));
     set({
       elements: [...state.elements, clone],
       selectedElementIds: [clone.id],
@@ -215,6 +266,19 @@ const useEditorStore = create((set, get) => ({
 
   clearSelection: () => {
     set({ selectedElementIds: [] });
+  },
+
+  removeFromSelection: (id) => {
+    const state = get();
+    set({ selectedElementIds: state.selectedElementIds.filter((sid) => sid !== id) });
+  },
+
+  // ============================================================
+  // Preview mode
+  // ============================================================
+
+  setPreviewMode: (mode) => {
+    set({ previewMode: mode, isDirty: true });
   },
 
   // ============================================================
