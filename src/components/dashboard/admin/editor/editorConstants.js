@@ -8,7 +8,7 @@ export const EDITOR_VERSION = '1.0';
 export const CANVAS_DEFAULTS = {
   width: 800,
   height: 600,
-  backgroundColor: '#0d0d1a',
+  backgroundColor: '#ffffff',
   safeArea: { x: 40, y: 40, width: 720, height: 520 },
   aspectRatio: { width: 4, height: 3 },
 };

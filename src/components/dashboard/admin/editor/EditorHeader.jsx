@@ -1,134 +1,100 @@
 'use client';
 
-import { ArrowLeft, Undo2, Redo2, Eye, Send } from 'lucide-react';
+import { ArrowLeft, Monitor, Smartphone, Eye } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import useEditorStore from './editorStore';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
-
-const UNDO_LABEL = 'Undo';
-const REDO_LABEL = 'Redo';
-const PREVIEW_LABEL = 'Preview';
-const PUBLISH_LABEL = 'Publish';
+import { Button } from '@/components/ui/button';
 
 export default function EditorHeader() {
   const router = useRouter();
-  const quoteText = useEditorStore((s) => s.quoteText);
+  const [device, setDevice] = useState('desktop');
   const isDirty = useEditorStore((s) => s.isDirty);
   const isSaving = useEditorStore((s) => s.isSaving);
   const setSaving = useEditorStore((s) => s.setSaving);
-  const canUndo = useEditorStore((s) => s.canUndo());
-  const canRedo = useEditorStore((s) => s.canRedo());
-  const undo = useEditorStore((s) => s.undo);
-  const redo = useEditorStore((s) => s.redo);
   const quoteId = useEditorStore((s) => s.quoteId);
+  const quoteText = useEditorStore((s) => s.quoteText);
   const toEditorData = useEditorStore((s) => s.toEditorData);
-
-  const title = quoteText
-    ? quoteText.length > 40
-      ? quoteText.slice(0, 40) + '\u2026'
-      : quoteText
-    : 'Untitled Quote';
 
   const handleBack = () => {
     if (isDirty) {
-      const confirmed = window.confirm(
-        'You have unsaved changes. Leave without saving?'
-      );
+      const confirmed = window.confirm('You have unsaved changes. Leave without saving?');
       if (!confirmed) return;
     }
     router.push('/new-dashboard/admin/quotes');
   };
 
-  const handlePreview = () => {};
-
-  const handlePublish = async () => {
+  const handleSave = async () => {
     const editorData = toEditorData();
     if (!editorData?.elements?.length) {
-      toast.error('Add at least one element to the canvas before publishing.');
+      toast.error('Add at least one element before saving.');
       return;
     }
-
     setSaving(true);
     try {
       if (quoteId) {
         await api.patch(`/quotes/${quoteId}`, { editorData });
-        toast.success('Quote updated successfully');
+        toast.success('Quote updated');
       } else {
         await api.post('/quotes', {
           text: quoteText || 'Untitled Quote',
           category: 'love',
           editorData,
         });
-        toast.success('Quote created successfully');
+        toast.success('Quote created');
       }
       router.push('/new-dashboard/admin/quotes');
     } catch (err) {
-      toast.error(err?.response?.data?.message || 'Failed to save quote');
+      toast.error(err?.response?.data?.message || 'Failed to save');
     } finally {
       setSaving(false);
     }
   };
 
   return (
-    <header className="flex items-center justify-between h-12 px-3 border-b border-border bg-background shrink-0">
-      <div className="flex items-center gap-2 min-w-0">
+    <header className="flex items-center justify-between h-14 px-5 border-b border-border bg-background shrink-0">
+      <div className="flex items-center gap-3">
         <button
           onClick={handleBack}
-          className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-muted text-foreground-secondary hover:text-foreground transition-colors cursor-pointer shrink-0"
-          title="Back to quotes"
+          className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-muted text-foreground-secondary hover:text-foreground transition-colors cursor-pointer"
+          title="Back"
         >
-          <ArrowLeft size={16} />
+          <ArrowLeft size={18} />
         </button>
-        <span className="text-sm font-medium text-foreground truncate max-w-[200px] sm:max-w-[300px]">
-          {title}
-        </span>
-        {isDirty && (
-          <span className="text-[10px] text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
-            Unsaved
-          </span>
-        )}
+        <span className="text-sm font-medium text-foreground">Edit Quote</span>
       </div>
 
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
         <button
-          onClick={undo}
-          disabled={!canUndo}
-          className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-muted text-foreground-secondary hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-          title={UNDO_LABEL}
+          onClick={() => setDevice('desktop')}
+          className={`w-8 h-7 flex items-center justify-center rounded-md transition-colors cursor-pointer ${
+            device === 'desktop' ? 'bg-background shadow-sm text-foreground' : 'text-foreground-tertiary hover:text-foreground-secondary'
+          }`}
+          title="Desktop view"
         >
-          <Undo2 size={15} />
+          <Monitor size={15} />
         </button>
         <button
-          onClick={redo}
-          disabled={!canRedo}
-          className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-muted text-foreground-secondary hover:text-foreground disabled:opacity-30 disabled:cursor-not-allowed transition-colors cursor-pointer"
-          title={REDO_LABEL}
+          onClick={() => setDevice('mobile')}
+          className={`w-8 h-7 flex items-center justify-center rounded-md transition-colors cursor-pointer ${
+            device === 'mobile' ? 'bg-background shadow-sm text-foreground' : 'text-foreground-tertiary hover:text-foreground-secondary'
+          }`}
+          title="Mobile view"
         >
-          <Redo2 size={15} />
+          <Smartphone size={15} />
         </button>
+      </div>
 
-        <div className="w-px h-5 bg-border mx-1" />
-
-        <button
-          onClick={handlePreview}
-          className="h-7 px-2.5 flex items-center gap-1.5 rounded-md border border-border bg-background hover:bg-muted text-foreground-secondary hover:text-foreground transition-colors text-xs cursor-pointer"
-          title={PREVIEW_LABEL}
-        >
-          <Eye size={13} />
-          <span className="hidden sm:inline">{PREVIEW_LABEL}</span>
-        </button>
-        <button
-          onClick={handlePublish}
-          disabled={isSaving}
-          className="h-7 px-3 flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-xs font-medium cursor-pointer"
-          title={PUBLISH_LABEL}
-        >
-          <Send size={13} />
-          <span className="hidden sm:inline">
-            {isSaving ? 'Saving\u2026' : PUBLISH_LABEL}
-          </span>
-        </button>
+      <div className="flex items-center gap-2">
+        <Button variant="outline" size="sm" className="h-8 text-xs font-normal cursor-pointer">
+          <Eye size={14} className="mr-1.5" />
+          Preview
+        </Button>
+        <Button onClick={handleSave} disabled={isSaving} size="sm" className="h-8 text-xs font-medium cursor-pointer">
+          {isSaving ? 'Saving...' : 'Save Changes'}
+        </Button>
       </div>
     </header>
   );
