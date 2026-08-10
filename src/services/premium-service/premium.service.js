@@ -86,7 +86,9 @@ export const premiumService = {
       const response = await api.get('/subscriptions/me');
       const subscriptions = response.data?.data || [];
       const hasActive = subscriptions.some(
-        sub => sub.status === 'active' || sub.status === 'trialing'
+        sub =>
+          sub.subscriptionType === 'subscriber' &&
+          (sub.status === 'active' || sub.status === 'trialing')
       );
       return {
         success: true,
