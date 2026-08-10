@@ -210,6 +210,13 @@ export const SIDEBAR_CONFIG = {
       ],
     },
     {
+      id: "admin-subscriptions",
+      title: "Subscriptions",
+      icon: CreditCard,
+      href: "/new-dashboard/admin/subscriptions",
+      visibility: MENU_VISIBILITY.ADMIN,
+    },
+    {
       id: "admin-tags",
       title: "QR Tags",
       icon: Tag,
