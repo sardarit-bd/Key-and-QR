@@ -70,7 +70,11 @@ export default function SubscriptionPage() {
 
   const subscription = useMemo(() => {
     const subs = Array.isArray(mySubscriptions) ? mySubscriptions : [];
-    return subs.find((s) => ['active', 'trialing', 'past_due'].includes(s.status)) || null;
+    return subs.find(
+      (s) =>
+        s.subscriptionType === 'subscriber' &&
+        ['active', 'trialing', 'past_due'].includes(s.status)
+    ) || null;
   }, [mySubscriptions]);
 
   const isPremium = !!subscription;

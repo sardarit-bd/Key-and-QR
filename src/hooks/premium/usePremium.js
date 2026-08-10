@@ -48,7 +48,9 @@ export const usePremium = () => {
         setSubscriptions(subs);
         
         const hasActive = subs.some(
-          sub => sub.status === 'active' || sub.status === 'trialing'
+          sub =>
+            sub.subscriptionType === 'subscriber' &&
+            (sub.status === 'active' || sub.status === 'trialing')
         );
         setIsPremium(hasActive);
       } else {
@@ -142,7 +144,9 @@ export const usePremium = () => {
    */
   const getActiveSubscription = useCallback(() => {
     return subscriptions.find(
-      sub => sub.status === 'active' || sub.status === 'trialing'
+      sub =>
+        sub.subscriptionType === 'subscriber' &&
+        (sub.status === 'active' || sub.status === 'trialing')
     ) || null;
   }, [subscriptions]);
 

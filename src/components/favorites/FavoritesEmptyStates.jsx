@@ -16,9 +16,9 @@ export function FavoritesEmptyState() {
         </div>
         <div className="absolute inset-0 animate-pulse rounded-full border-2 border-rose-500/10" />
       </div>
-      <h2 className="mt-7 text-2xl font-semibold tracking-tight text-foreground">No Favorites Yet</h2>
+      <h2 className="mt-7 text-2xl font-semibold tracking-tight text-foreground">No Saved Quotes Yet</h2>
       <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-foreground-tertiary">
-        Save quotes you love to build your personal inspiration library.
+        Discover quotes through Inspire and save the ones that matter to you.
       </p>
       <Link href="/new-dashboard/user/my-quotes" className="inline-block">
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
@@ -37,7 +37,7 @@ export function FavoritesFilteredEmpty({ onReset }) {
         <div className="absolute inset-0 rounded-full bg-accent/10 blur-xl" />
         <SearchX className="relative h-9 w-9 text-foreground-tertiary/60" />
       </div>
-      <p className="text-foreground-secondary text-sm font-medium">No matching favorites found</p>
+      <p className="text-foreground-secondary text-sm font-medium">No matching saved quotes found</p>
       <p className="text-foreground-tertiary text-xs mt-1.5 max-w-[240px]">Try a different keyword or clear your filters.</p>
       {onReset && (
         <button onClick={onReset} className="mt-4 inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-white/10 bg-background-secondary/50 px-4 py-1.5 text-[12px] font-medium text-foreground-secondary transition-all duration-300 hover:border-accent/30 hover:text-foreground light:border-[#E8DFCE]/70 light:bg-white/70">

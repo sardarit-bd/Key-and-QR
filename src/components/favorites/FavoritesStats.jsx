@@ -48,7 +48,7 @@ function StatCard({ stat }) {
 
 export default function FavoritesStats({ stats }) {
   const statConfig = [
-    { label: 'Total Favorites', value: stats?.total || 0, sub: 'Saved quotes', icon: Heart, theme: STAT_THEMES.rose },
+    { label: 'Total Saved', value: stats?.total || 0, sub: 'Your collection', icon: Heart, theme: STAT_THEMES.rose },
     { label: 'Categories', value: stats?.categories || 0, sub: 'Different themes', icon: Layers, theme: STAT_THEMES.emerald },
     { label: 'Recently Saved', value: stats?.recently || 0, sub: 'This week', icon: Clock, theme: STAT_THEMES.blue },
     { label: 'Collections', value: stats?.collections || 1, sub: 'Your library', icon: Sparkles, theme: STAT_THEMES.violet },

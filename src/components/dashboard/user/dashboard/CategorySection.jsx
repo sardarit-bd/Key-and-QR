@@ -19,7 +19,7 @@ export default function CategorySection({
   };
 
   const handleViewAll = () => {
-    router.push("/new-dashboard/user/my-quotes");
+    router.push("/new-dashboard/user/favorites");
   };
 
   return (

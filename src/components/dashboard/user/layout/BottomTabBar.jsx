@@ -8,7 +8,8 @@ import { useAuthStore } from '@/store/authStore';
 const USER_TABS = [
   { id: 'home', label: 'Home', icon: Home, href: '/new-dashboard/user', exact: true },
   { id: 'inspire', label: 'Inspire', icon: Sparkles, href: '/new-dashboard/user/my-quotes', exact: false },
-  { id: 'library', label: 'Library', icon: BookOpen, href: '/new-dashboard/user/favorites', exact: false },
+  { id: 'collection', label: 'Collection', icon: BookOpen, href: '/new-dashboard/user/favorites', exact: false },
+  { id: 'shop', label: 'Shop', icon: ShoppingBag, href: '/shop', exact: true },
   { id: 'profile', label: 'Profile', icon: User, href: '/new-dashboard/user/profile', exact: false },
 ];
 

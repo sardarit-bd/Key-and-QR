@@ -100,7 +100,7 @@ export const SIDEBAR_CONFIG = {
     },
     {
       id: "favorites",
-      title: "Favorites",
+      title: "Collection",
       icon: Heart,
       href: "/new-dashboard/user/favorites",
       visibility: MENU_VISIBILITY.ALL,
@@ -208,6 +208,13 @@ export const SIDEBAR_CONFIG = {
           visibility: MENU_VISIBILITY.ADMIN,
         },
       ],
+    },
+    {
+      id: "admin-subscriptions",
+      title: "Subscriptions",
+      icon: CreditCard,
+      href: "/new-dashboard/admin/subscriptions",
+      visibility: MENU_VISIBILITY.ADMIN,
     },
     {
       id: "admin-tags",
