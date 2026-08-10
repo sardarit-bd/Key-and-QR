@@ -6,6 +6,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useFavoriteStore } from '@/store/favoriteStore';
 import { favoriteKeys } from '@/hooks/favorite-service/useFavorites';
 import { myQuoteKeys } from '@/hooks/my-quotes-service/useMyQuotes';
+import premiumService from '@/services/premium-service/premium.service';
 import api from '@/lib/api';
 import { useShallow } from 'zustand/react/shallow';
 
@@ -50,6 +51,7 @@ export const useFavorite = (options = {}) => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setLocalError] = useState(null);
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   // Check if item is favorited
   const isFav = id ? isFavorited(id) : false;
@@ -102,7 +104,15 @@ export const useFavorite = (options = {}) => {
           throw new Error('Failed to remove favorite');
         }
       } else {
-        // Add favorite
+        // Add favorite — subscriber gate for quote favorites (P1.1)
+        if (type === 'quote') {
+          const premium = await premiumService.hasActiveSubscription();
+          if (!premium?.data?.hasActive) {
+            setShowUpgrade(true);
+            return { upgrade: true };
+          }
+        }
+
         const payload = type === 'quote' 
           ? { quoteId: id } 
           : { productId: id };
@@ -184,6 +194,8 @@ export const useFavorite = (options = {}) => {
     toggleFavorite,
     checkFavorite,
     stats,
+    showUpgrade,
+    dismissUpgrade: () => setShowUpgrade(false),
   };
 };
 

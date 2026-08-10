@@ -234,10 +234,11 @@ export function buildDashboardProps(data) {
     }),
     categories: mapCategories(home?.categories),
     user: home?.user || null,
-    subscription: home?.subscription || {
-      plan: home?.dailyUsage?.plan || 'free',
-      status: null,
-      currentPeriodEnd: null,
+    subscription: {
+      plan: home?.subscription?.plan || home?.dailyUsage?.plan || 'free',
+      isPremium: home?.subscription?.isPremium || home?.dailyUsage?.plan === 'subscriber' || false,
+      status: home?.subscription?.status || null,
+      currentPeriodEnd: home?.subscription?.currentPeriodEnd || null,
     },
     dailyUsage: home?.dailyUsage || null,
   };

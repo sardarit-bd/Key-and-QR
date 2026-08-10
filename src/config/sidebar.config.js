@@ -100,7 +100,7 @@ export const SIDEBAR_CONFIG = {
     },
     {
       id: "favorites",
-      title: "Favorites",
+      title: "Collection",
       icon: Heart,
       href: "/new-dashboard/user/favorites",
       visibility: MENU_VISIBILITY.ALL,

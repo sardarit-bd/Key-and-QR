@@ -11,7 +11,7 @@ export default function WelcomeCard({ userName = 'there', onReceive, isReceiving
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="relative w-full overflow-hidden rounded-[20px] sm:rounded-[24px] bg-card border border-border shadow-sm"
+      className="relative w-full overflow-hidden rounded-2xl bg-card border border-border shadow-sm"
     >
       <div className="flex flex-col items-start p-6 sm:p-8 md:p-10 lg:p-12">
         <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-accent/10 mb-5">

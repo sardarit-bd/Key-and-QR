@@ -14,7 +14,7 @@ export default function FavoritesHeader({ total }) {
             <Heart className="relative h-6 w-6 text-rose-400" fill="currentColor" strokeWidth={1.8} />
           </div>
           <div>
-            <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground sm:text-3xl md:text-[34px]">Favorites</h1>
+            <h1 className="text-[26px] leading-tight font-semibold tracking-tight text-foreground sm:text-3xl md:text-[34px]">Collection</h1>
             <p className="mt-1 text-sm text-foreground-tertiary">Your personal collection of saved inspiration</p>
           </div>
         </div>

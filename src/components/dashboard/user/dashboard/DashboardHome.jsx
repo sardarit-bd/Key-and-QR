@@ -8,7 +8,7 @@ import LatestInspirationCard from './LatestInspirationCard';
 import CategorySection from './CategorySection';
 import LibrarySection from './LibrarySection';
 import InspirationStreak from './InspirationStreak';
-import CompactStats from './CompactStats';
+import YourStats from './YourStats';
 import ReceiveOverlay from './ReceiveOverlay';
 import { useReceiveQuoteMutation, useReadAgainMutation } from '@/hooks/received-quote/useReceivedQuote';
 
@@ -133,7 +133,7 @@ export default function DashboardHome({
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10 space-y-8 sm:space-y-10 md:space-y-12"
+      className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10 space-y-6 sm:space-y-8 md:space-y-10"
     >
       {/* 1. Greeting */}
       <GreetingSection greeting={greeting} user={user} subscription={subscription} />
@@ -161,10 +161,10 @@ export default function DashboardHome({
         disabled={receiveQuote.isPending}
       />
 
-      {/* 4. Your Library */}
+      {/* 4. Library */}
       <section className="w-full">
         <h2 className="text-[18px] sm:text-[19px] md:text-[20px] font-semibold tracking-tight text-foreground mb-4 sm:mb-5">
-          Your Library
+          Library
         </h2>
         <LibrarySection
           savedCount={savedCount}
@@ -175,8 +175,8 @@ export default function DashboardHome({
       {/* 5. Inspiration Streak — full-width */}
       <InspirationStreak streak={streak} />
 
-      {/* 6. Compact Statistics */}
-      <CompactStats statistics={statistics} />
+      {/* 6. Your Stats — secondary, collapsible */}
+      <YourStats statistics={statistics} isPremium={subscription?.isPremium} />
 
       {/* Category receive → loading → reveal overlay */}
       <ReceiveOverlay
