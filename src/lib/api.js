@@ -263,7 +263,7 @@ export const startTokenRefreshTimer = () => {
             if (expiresIn < 300000 && expiresIn > 60000) {
                 const refreshToken = getRefreshToken();
                 if (!refreshToken) {
-                    return; // leave the timer running — let the response interceptor handle it
+                    return;
                 }
 
                 const response = await api.post(
@@ -277,8 +277,10 @@ export const startTokenRefreshTimer = () => {
                 );
 
                 const newAccessToken = response.data?.data?.accessToken;
+                const newRefreshToken = response.data?.data?.refreshToken;
                 if (newAccessToken) {
-                    setTokens(newAccessToken, refreshToken);
+                    // Store both the new access token AND the rotated refresh token
+                    setTokens(newAccessToken, newRefreshToken || refreshToken);
                 }
             } else if (expiresIn <= 60000) {
                 // Token is critically close to expiry — rely on response interceptor instead

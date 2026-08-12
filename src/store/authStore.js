@@ -52,10 +52,15 @@ const verifySessionInBackground = async (set, get) => {
             const filteredFreshUser = filterUserData(freshUser);
             set({ user: filteredFreshUser });
             setUserStorage(filteredFreshUser);
+        } else {
+            clearTokens();
+            set({ user: null });
         }
     } catch (error) {
-        // Silent fail - user stays logged in
-        console.debug("Background verification failed, user stays logged in");
+        // Session is invalid — clear stale auth state so the navbar
+        // no longer shows a phantom authenticated user.
+        clearTokens();
+        set({ user: null });
     }
 };
 
@@ -545,8 +550,11 @@ export const useAuthStore = create(
                 },
             },
             partialize: (state) => ({
+                // NOTE: `isInitialized` is intentionally NOT persisted so that
+                // initializeAuth runs on every fresh page load, ensuring the
+                // session (access + refresh token) is re-verified and stale auth
+                // state is cleared after token expiry.
                 user: state.user ? filterUserData(state.user) : null,
-                isInitialized: state.isInitialized,
                 isGuestClaimed: state.isGuestClaimed,
             }),
             onRehydrateStorage: () => {

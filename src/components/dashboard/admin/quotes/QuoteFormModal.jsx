@@ -7,24 +7,26 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAdminQuoteActions } from '@/hooks/dashboard/useAdminQuotes';
+import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
+import { getCategoryLabel } from '@/components/category';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
-const CATEGORIES = [
-  { value: 'love', label: 'Love' },
-  { value: 'strength', label: 'Strength' },
-  { value: 'healing', label: 'Healing' },
-  { value: 'faith', label: 'Faith' },
-  { value: 'gratitude', label: 'Gratitude' },
-];
-
-const INITIAL = { text: '', author: '', category: 'love', description: '', allowReuse: true };
+const INITIAL_PLACEHOLDER = { text: '', author: '', category: '', description: '', allowReuse: true };
 
 export default function QuoteFormModal({ open, onOpenChange, editQuote, onSuccess }) {
   const isEditing = !!editQuote;
-  const [form, setForm] = useState(INITIAL);
+  const [form, setForm] = useState(INITIAL_PLACEHOLDER);
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
+
+  // Backend-driven category options (single source of truth).
+  // New categories created in the Category API appear here automatically.
+  const { data: quoteCategories = [] } = useQuoteCategories();
+  const categoryOptions = quoteCategories.map((cat) => ({
+    value: cat.slug,
+    label: cat.name || getCategoryLabel(cat.slug),
+  }));
 
   useEffect(() => {
     if (open) {
@@ -32,12 +34,12 @@ export default function QuoteFormModal({ open, onOpenChange, editQuote, onSucces
         setForm({
           text: editQuote.text || '',
           author: editQuote.author || '',
-          category: editQuote.category || 'love',
+          category: editQuote.category || (categoryOptions[0]?.value || ''),
           description: editQuote.description || '',
           allowReuse: editQuote.allowReuse !== false,
         });
       } else {
-        setForm(INITIAL);
+        setForm({ ...INITIAL_PLACEHOLDER, category: categoryOptions[0]?.value || '' });
       }
       setErrors({});
     }
@@ -129,7 +131,7 @@ export default function QuoteFormModal({ open, onOpenChange, editQuote, onSucces
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                {CATEGORIES.map((c) => (
+                {categoryOptions.map((c) => (
                   <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
                 ))}
               </SelectContent>

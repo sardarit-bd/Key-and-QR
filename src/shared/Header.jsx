@@ -44,12 +44,14 @@ import { Button } from "@/components/ui/button";
 
 export default function Header() {
   const cart = useCartStore((state) => state.cart);
-  const { user, logout, loading } = useAuthStore();
+  const { user, logout, loading, isAuthenticated } = useAuthStore();
   const cartCount = cart.reduce((sum, i) => sum + i.qty, 0);
   const [sheetOpen, setSheetOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
   const isDashboard = pathname?.startsWith("/dashboard") || false;
+
+  const isAuth = isAuthenticated();
 
   const isScanPage =
     pathname?.startsWith("/TAG-") ||
@@ -185,10 +187,10 @@ export default function Header() {
             </nav>
           )}
 
-          {/* Desktop Right Actions */}
+           {/* Desktop Right Actions */}
           <div className="flex items-center gap-6">
-            {/* User Dropdown - shadcn/ui */}
-            {user ? (
+             {/* User Dropdown - shadcn/ui */}
+             {isAuth && user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="cursor-pointer focus:outline-none">
@@ -387,7 +389,7 @@ export default function Header() {
                     })}
 
                     {/* Auth Section */}
-                    {!user && (
+                     {!isAuth && (
                       <div className="pt-4 space-y-3">
                         <Button
                           asChild
@@ -418,7 +420,7 @@ export default function Header() {
                       </div>
                     )}
 
-                    {user && (
+                    {isAuth && user && (
                       <div className="pt-4 border-t border-gray-100">
                         <div className="flex items-center gap-3 mb-4">
                           <Avatar className="w-10 h-10">

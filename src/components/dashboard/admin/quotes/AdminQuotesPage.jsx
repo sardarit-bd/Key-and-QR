@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Quote, PenSquare, Plus } from 'lucide-react';
 import Link from 'next/link';
@@ -26,13 +26,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
-import { CATEGORY_BADGE_CLASSES, getCategoryBadgeClass, getCategoryLabel } from '@/components/category';
+import { getCategoryBadgeClass, getCategoryLabel } from '@/components/category';
 
 const ITEMS_PER_PAGE = 10;
-
-// Slugs the backend Quote collection actually stores (5-value core enum).
-// Only these categories can match when filtering GET /quotes?category=.
-const CORE_QUOTE_CATEGORY_SLUGS = ['love', 'strength', 'healing', 'faith', 'gratitude'];
 
 const ACTIVE_FILTERS = [
   { value: 'all', label: 'All Status' },
@@ -65,21 +61,36 @@ export default function AdminQuotesPage() {
 
   const { data: quoteCategories = [] } = useQuoteCategories();
 
-  // Category filter options — backend-driven, intersected with the slugs the
-  // backend Quote collection actually stores (so every option matches).
-  const categoryOptions = [
-    { value: 'all', label: 'All Categories' },
-    ...quoteCategories
-      .filter((cat) => CORE_QUOTE_CATEGORY_SLUGS.includes(cat.slug))
-      .map((cat) => ({ value: cat.slug, label: cat.name || cat.slug })),
-  ];
-
   const filters = { search: debouncedSearch, category, isActive, page, limit: ITEMS_PER_PAGE };
   const { data, isLoading, isError, error, refetch } = useAdminQuotes(filters);
   const { toggleQuoteActive, deleteQuote } = useAdminQuoteActions();
 
   const quotes = data?.data || [];
   const meta = data?.meta || { page: 1, totalPage: 0, total: 0 };
+
+  // Category filter options — built from the backend Category collection
+  // (single source of truth) PLUS the distinct categories actually present on
+  // quotes. This ensures every real quote category (e.g. "motivation",
+  // "hope", "success") is selectable even when it's not (yet) in the
+  // Category collection. Derived AFTER `quotes`/`data` are initialized.
+  const categoryOptions = useMemo(() => {
+    const set = new Map(); // slug -> { value, label }
+    set.set('all', { value: 'all', label: 'All Categories' });
+
+    // 1. Backend categories first (authoritative names).
+    quoteCategories.forEach((cat) => {
+      set.set(cat.slug, { value: cat.slug, label: cat.name || getCategoryLabel(cat.slug) });
+    });
+
+    // 2. Distinct categories found on the loaded quotes (fallback names).
+    quotes.forEach((q) => {
+      if (q.category && !set.has(q.category)) {
+        set.set(q.category, { value: q.category, label: getCategoryLabel(q.category) });
+      }
+    });
+
+    return Array.from(set.values());
+  }, [quoteCategories, quotes]);
 
   const handleSearchChange = useCallback((v) => { setSearch(v); setPage(1); }, []);
   const handleCategoryChange = useCallback((v) => { setCategory(v); setPage(1); }, []);
