@@ -280,13 +280,13 @@ export const SIDEBAR_CONFIG = {
         },
       ],
     },
-    // {
-    //   id: "admin-categories",
-    //   title: "Categories",
-    //   icon: Layers,
-    //   href: "/new-dashboard/admin/categories",
-    //   visibility: MENU_VISIBILITY.ADMIN,
-    // },
+    {
+      id: "admin-categories",
+      title: "Categories",
+      icon: Layers,
+      href: "/new-dashboard/admin/categories",
+      visibility: MENU_VISIBILITY.ADMIN,
+    },
     // {
     //   id: "admin-reviews",
     //   title: "Reviews",

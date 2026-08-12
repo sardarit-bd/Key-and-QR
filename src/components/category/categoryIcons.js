@@ -1,62 +1,41 @@
 'use client';
 
 import {
-  Sparkles,
-  Heart,
-  Dumbbell,
-  Bandage,
-  Church,
-  Shield,
-  BookOpen,
-  HandHeart,
-  Quote,
-  Star,
-  Flame,
-  Smile,
-} from 'lucide-react';
+  CATEGORY_ICON_REGISTRY,
+  CATEGORY_ICON_FALLBACK,
+  resolveCategoryIcon,
+  isKnownCategoryIcon,
+} from '@/components/dashboard/admin/categories/categoryIconRegistry';
 
 /**
- * Central slug → Lucide icon map.
+ * Shared category icon map — thin facade over the CENTRAL icon registry
+ * (src/components/dashboard/admin/categories/categoryIconRegistry.js).
  *
- * Single source of truth for category icons across the app. Keys are
- * category slugs (the same slugs stored on quotes / received by the
- * backend). New categories created through the Category API that are not
- * in this map gracefully fall back to `Sparkles` — no per-page icon
- * constants anywhere.
+ * ONE canonical source of truth: the same category always resolves to the
+ * same icon everywhere (admin table, picker, submit quote, dashboard,
+ * collection, filters). Keys are category slugs (the same slugs stored on
+ * quotes / received by the backend). New categories created through the
+ * Category API that have no saved icon gracefully fall back to the shared
+ * fallback — no per-page icon constants anywhere.
  */
-export const CATEGORY_ICONS = {
-  inspire: Sparkles,
-  motivation: Sparkles,
-  love: Heart,
-  strength: Dumbbell,
-  healing: Bandage,
-  faith: Church,
-  gratitude: HandHeart,
-  courage: Shield,
-  wisdom: BookOpen,
-  hope: Star,
-  success: Star,
-  peace: Smile,
-  joy: Smile,
-  happiness: Smile,
-  family: Heart,
-  friendship: Heart,
-  kindness: Heart,
-  leadership: Star,
-  mindfulness: Sparkles,
-  dreams: Star,
-  life: Sparkles,
-  discipline: Flame,
-  purpose: Sparkles,
-  positivity: Smile,
-  'self-growth': Sparkles,
-  general: Quote,
-  personal: Heart,
-};
 
-export const FALLBACK_ICON = Sparkles;
+// Slug → icon lookup. A slug resolves to a Lucide icon only when an icon
+// exists under that exact name (e.g. "love" → Heart, "shield" → Shield).
+// Otherwise the shared fallback is used. This keeps the legacy
+// `CATEGORY_ICONS[slug]` access pattern working while being derived from the
+// single central registry.
+export const CATEGORY_ICONS = Object.fromEntries(
+  Object.keys(CATEGORY_ICON_REGISTRY).map((name) => [
+    name,
+    CATEGORY_ICON_REGISTRY[name],
+  ])
+);
+
+export const FALLBACK_ICON = CATEGORY_ICON_FALLBACK;
 
 export function getCategoryIcon(slug) {
   if (!slug) return FALLBACK_ICON;
-  return CATEGORY_ICONS[String(slug).toLowerCase()] || FALLBACK_ICON;
+  return resolveCategoryIcon(slug) || FALLBACK_ICON;
 }
+
+export { CATEGORY_ICON_REGISTRY, isKnownCategoryIcon };

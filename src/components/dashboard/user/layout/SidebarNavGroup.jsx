@@ -9,7 +9,8 @@ import Link from 'next/link';
  * Sidebar Nav Group — collapsible parent item with children.
  *
  * Behavior (identical to the Orders module):
- * - Parent is a button with a chevron; clicking it expands/collapses.
+ * - Parent is a single button; clicking ANYWHERE on the row
+ *   (icon, label, empty space, chevron) expands/collapses.
  * - Auto-expands when the current route belongs to this module (parent or child).
  * - Only the currently opened page receives the active styling:
  *   the parent highlights when on its own page; a child highlights when
@@ -27,11 +28,33 @@ export default function SidebarNavGroup({
 
   const Icon = item.icon;
 
-  // Determine if any child is active
-  const isChildActive = (child) =>
-    child.exact
-      ? pathname === child.href
-      : pathname?.startsWith(child.href);
+  /**
+   * Exact route matching for the ACTIVE highlight.
+   *
+   * A child is active ONLY when `pathname === child.href`. No substring or
+   * prefix matching is used, so `/users` never matches `/users/active` and
+   * two submenu items can never be highlighted simultaneously.
+   */
+  const isChildActive = (child) => {
+    if (!pathname) return false;
+    return pathname === child.href;
+  };
+
+  /**
+   * Boundary-aware matching for AUTO-EXPAND only.
+   *
+   * The parent expands when the current route lives under this module:
+   *  - the module's own page (`pathname === href`)
+   *  - OR a deeper route under it (`pathname.startsWith(href + "/")`)
+   *
+   * This never affects the active highlight — it only decides whether the
+   * submenu stays open (e.g. a quote detail page keeps "Quotes" open even
+   * though no sidebar child is highlighted).
+   */
+  const isRouteWithinModule = (href) => {
+    if (!href || !pathname) return false;
+    return pathname === href || pathname.startsWith(`${href}/`);
+  };
 
   const isAnyChildActive = item.children?.some(
     (child) => isChildActive(child)
@@ -43,13 +66,19 @@ export default function SidebarNavGroup({
   const isParentActive =
     !!item.href && pathname === item.href;
 
+  // Any child OR the module route itself is currently open → keep expanded.
+  const isModuleOpen =
+    isParentActive ||
+    isAnyChildActive ||
+    item.children?.some((child) => isRouteWithinModule(child.href));
+
   // Auto-expand when the current route belongs to this module
-  // (parent page OR any child page).
+  // (parent page, any child page, or a deeper route under a child).
   useEffect(() => {
-    if (isParentActive || isAnyChildActive) {
+    if (isModuleOpen) {
       setExpanded(true);
     }
-  }, [isParentActive, isAnyChildActive]);
+  }, [isModuleOpen]);
 
   // Measure content height for smooth animation
   useEffect(() => {
@@ -92,9 +121,14 @@ export default function SidebarNavGroup({
 
   return (
     <div className="flex flex-col">
-      {/* Parent row — composite: Link for navigation (when href exists) +
-          chevron button for expand/collapse */}
-      <div
+      {/* Parent row — ONE button handles the ENTIRE row as the
+          expand/collapse trigger. It never navigates; children navigate. */}
+      <button
+        type="button"
+        onClick={() => setExpanded(!expanded)}
+        aria-expanded={expanded}
+        aria-controls={`submenu-${item.id}`}
+        aria-label={`${expanded ? 'Collapse' : 'Expand'} ${item.title}`}
         className={`
           group flex items-center gap-4 px-4 py-3.5 rounded-xl text-[15px]
           transition-all duration-200 w-full text-left cursor-pointer
@@ -104,58 +138,29 @@ export default function SidebarNavGroup({
           }
         `}
       >
-        {/* Navigation target — icon + label navigate to the parent page */}
-        {item.href ? (
-          <Link
-            href={item.href}
-            className="flex items-center gap-4 flex-1 min-w-0"
-            aria-current={isParentActive ? 'page' : undefined}
-          >
-            <Icon
-              size={20}
-              strokeWidth={1.5}
-              className={`flex-shrink-0 transition-colors ${
-                isParentActive ? 'text-sidebar-primary' : 'text-sidebar-foreground group-hover:text-sidebar-primary'
-              }`}
-            />
-            <span className="flex-1 truncate tracking-wide">{item.title}</span>
-          </Link>
-        ) : (
-          <>
-            <Icon
-              size={20}
-              strokeWidth={1.5}
-              className={`flex-shrink-0 transition-colors ${
-                isParentActive ? 'text-sidebar-primary' : 'text-sidebar-foreground group-hover:text-sidebar-primary'
-              }`}
-            />
-            <span className="flex-1 truncate tracking-wide">{item.title}</span>
-          </>
-        )}
+        <Icon
+          size={20}
+          strokeWidth={1.5}
+          className={`flex-shrink-0 transition-colors ${
+            isParentActive ? 'text-sidebar-primary' : 'text-sidebar-foreground group-hover:text-sidebar-primary'
+          }`}
+        />
+        <span className="flex-1 truncate tracking-wide">{item.title}</span>
 
-        {/* Chevron toggle — only expands/collapses, never navigates */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            e.preventDefault();
-            setExpanded(!expanded);
-          }}
-          className="flex-shrink-0 p-1 -mr-1 rounded-md hover:bg-sidebar-foreground/10 transition-colors"
-          aria-expanded={expanded}
-          aria-label={expanded ? `Collapse ${item.title}` : `Expand ${item.title}`}
-        >
-          <ChevronDown
-            size={14}
-            strokeWidth={2}
-            className={`text-sidebar-foreground transition-transform duration-200 ${
-              expanded ? 'rotate-180' : ''
-            }`}
-          />
-        </button>
-      </div>
+        {/* Chevron — visual indicator only, rotates with state */}
+        <ChevronDown
+          size={14}
+          strokeWidth={2}
+          aria-hidden
+          className={`flex-shrink-0 text-sidebar-foreground transition-transform duration-200 ${
+            expanded ? 'rotate-180' : ''
+          }`}
+        />
+      </button>
 
       {/* Children — animated expand/collapse */}
       <div
+        id={`submenu-${item.id}`}
         className="overflow-hidden transition-all duration-200 ease-in-out"
         style={{ maxHeight: expanded ? `${contentHeight}px` : '0' }}
       >
