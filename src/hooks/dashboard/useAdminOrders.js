@@ -103,5 +103,13 @@ export function useAdminOrderActions() {
     onSettled: invalidate,
   });
 
-  return { updateFulfillmentStatus, cancelOrder, deleteOrder };
+  const createManualOrder = useMutation({
+    mutationFn: async (payload) => {
+      const res = await adminOrdersService.createManualOrder(payload);
+      return res.data;
+    },
+    onSettled: invalidate,
+  });
+
+  return { updateFulfillmentStatus, cancelOrder, deleteOrder, createManualOrder };
 }

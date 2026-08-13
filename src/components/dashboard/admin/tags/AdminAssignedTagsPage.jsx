@@ -96,7 +96,7 @@ export default function AdminAssignedTagsPage() {
   }, []);
 
   const handleViewOrder = useCallback(async (tag) => {
-    const orderId = tag.assignedOrderId;
+    const orderId = tag.assignedOrderId?._id || tag.assignedOrderId;
     if (!orderId) {
       setViewOrder({ _id: '—', orderNumber: '—', user: tag.owner });
       setViewOrderOpen(true);
@@ -118,13 +118,14 @@ export default function AdminAssignedTagsPage() {
   }, []);
 
   const handleReplaceConfirm = useCallback(async (newTagId) => {
-    if (!replaceTag?.assignedOrderId) {
+    const orderId = replaceTag?.assignedOrderId?._id || replaceTag?.assignedOrderId;
+    if (!orderId) {
       toast.error('This tag is not linked to an order. Cannot replace.');
       return;
     }
     try {
       await adminOrdersService.replaceOrderTag({
-        orderId: replaceTag.assignedOrderId,
+        orderId,
         oldTagId: replaceTag._id,
         newTagId,
       });
@@ -145,7 +146,7 @@ export default function AdminAssignedTagsPage() {
 
   const handleUnassignConfirm = useCallback(async () => {
     if (!unassignTag) return;
-    const orderId = unassignTag.assignedOrderId;
+    const orderId = unassignTag.assignedOrderId?._id || unassignTag.assignedOrderId;
     const tagId = unassignTag._id;
     try {
       if (orderId) {

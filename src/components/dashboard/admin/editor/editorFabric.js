@@ -310,6 +310,8 @@ export async function renderElements(elements, background) {
   const f = await getFabric();
   if (!canvasInstance) return;
 
+  console.log("[DEBUG CANVAS] renderElements called with", elements.length, "elements");
+
   // Save current viewport transform
   const savedVpt = canvasInstance.viewportTransform
     ? [...canvasInstance.viewportTransform]
@@ -325,9 +327,12 @@ export async function renderElements(elements, background) {
 
   for (const el of sorted) {
     try {
+      console.log("[DEBUG CANVAS] Rendering element:", el.id, "type:", el.type);
       const obj = await elementToFabricObject(el);
+      console.log("[DEBUG CANVAS] elementToFabricObject resolved to:", obj ? obj.type || "unknown" : "null/undefined");
       if (obj) {
         canvasInstance.add(obj);
+        console.log("[DEBUG CANVAS] Object added to canvas. Canvas object count now:", canvasInstance.getObjects().length);
       }
     } catch (err) {
       console.warn('[Editor] Failed to render element:', el.id, err);
@@ -340,6 +345,7 @@ export async function renderElements(elements, background) {
   }
 
   canvasInstance.renderAll();
+  console.log("[DEBUG CANVAS] renderElements finished. Final objects on canvas:", canvasInstance.getObjects().map(o => ({ id: o.data?.elementId, type: o.type })));
   return true;
 }
 
@@ -385,24 +391,24 @@ function applyBackgroundToCanvas(bg) {
   }
 }
 
-export function setBackgroundImageFromUrl(url) {
+export async function setBackgroundImageFromUrl(url) {
   if (!canvasInstance) return;
   const f = getFabricSync();
-  f.Image.fromURL(
-    url,
-    (img) => {
-      if (!canvasInstance) return;
-      canvasInstance.setBackgroundImage(
-        img,
-        canvasInstance.renderAll.bind(canvasInstance),
-        {
-          scaleX: canvasInstance.width / img.width,
-          scaleY: canvasInstance.height / img.height,
-        }
-      );
-    },
-    { crossOrigin: 'anonymous' }
-  );
+  const ImageClass = f?.FabricImage || f?.Image;
+  if (!ImageClass) return;
+
+  try {
+    const img = await ImageClass.fromURL(url, { crossOrigin: 'anonymous' });
+    if (!canvasInstance) return;
+    img.set({
+      scaleX: canvasInstance.width / img.width,
+      scaleY: canvasInstance.height / img.height,
+    });
+    canvasInstance.backgroundImage = img;
+    canvasInstance.requestRenderAll();
+  } catch (err) {
+    console.warn('[Editor] Failed to set background image:', url, err);
+  }
 }
 
 // ── Synchronous access (after import) ──
@@ -517,38 +523,75 @@ export async function elementToFabricObject(el) {
     }
 
     case 'image': {
-      if (!el.imageData?.source?.url) return null;
-      return new Promise((resolve) => {
-        f.Image.fromURL(
-          el.imageData.source.url,
-          (img) => {
-            if (!img) { resolve(null); return; }
-            
-            const fit = el.imageData.fit || 'cover';
-            const { scaleX, scaleY } = calculateObjectFitScales(
-              img.width,
-              img.height,
-              el.width || img.width,
-              el.height || img.height,
-              fit
-            );
-            
-            img.set({
-              ...common,
-              scaleX: (el.scaleX || 1) * scaleX,
-              scaleY: (el.scaleY || 1) * scaleY,
-              objectFit: fit,
-            });
-            img.set('data', {
-              elementId: el.id,
-              locked: !!el.locked,
-              publicId: el.imageData.source.publicId || '',
-              ...img.data,
-            });
-            resolve(img);
-          },
-          { crossOrigin: 'anonymous' }
-        );
+      console.log("[DEBUG IMAGE] Processing element:", el.id, "URL:", el.imageData?.source?.url);
+      if (!el.imageData?.source?.url) {
+        console.warn("[DEBUG IMAGE] No image URL found for element:", el.id);
+        return null;
+      }
+      return new Promise(async (resolve) => {
+        try {
+          const ImageClass = f.FabricImage || f.Image;
+          if (!ImageClass) {
+            console.error('[Editor] FabricImage or Image class not found on fabric module.');
+            resolve(null);
+            return;
+          }
+
+          console.log("[DEBUG IMAGE] Loading image from URL...");
+          const img = await ImageClass.fromURL(el.imageData.source.url, {
+            crossOrigin: 'anonymous',
+          });
+
+          if (!img) {
+            console.warn("[DEBUG IMAGE] Failed to create image object from URL.");
+            resolve(null);
+            return;
+          }
+
+          console.log("[DEBUG IMAGE] Image loaded. Natural size:", img.width, "x", img.height);
+          const fit = el.imageData.fit || 'cover';
+          const { scaleX, scaleY } = calculateObjectFitScales(
+            img.width,
+            img.height,
+            el.width || img.width,
+            el.height || img.height,
+            fit
+          );
+
+          console.log("[DEBUG IMAGE] Fit mode:", fit, "Calculated scales:", scaleX, scaleY);
+          img.set({
+            ...common,
+            width: img.width,
+            height: img.height,
+            scaleX: (el.scaleX || 1) * scaleX,
+            scaleY: (el.scaleY || 1) * scaleY,
+            objectFit: fit,
+          });
+
+          img.set('data', {
+            elementId: el.id,
+            locked: !!el.locked,
+            publicId: el.imageData.source.publicId || '',
+            ...img.data,
+          });
+
+          console.log("[DEBUG IMAGE] Fabric Image object created:", {
+            type: img.type,
+            left: img.left,
+            top: img.top,
+            width: img.width,
+            height: img.height,
+            scaleX: img.scaleX,
+            scaleY: img.scaleY,
+            visible: img.visible,
+            opacity: img.opacity
+          });
+
+          resolve(img);
+        } catch (err) {
+          console.error('[DEBUG IMAGE] Error in image loader:', err);
+          resolve(null);
+        }
       });
     }
 

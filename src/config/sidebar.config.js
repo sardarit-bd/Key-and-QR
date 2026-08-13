@@ -210,13 +210,6 @@ export const SIDEBAR_CONFIG = {
       ],
     },
     {
-      id: "admin-subscriptions",
-      title: "Subscriptions",
-      icon: CreditCard,
-      href: "/new-dashboard/admin/subscriptions",
-      visibility: MENU_VISIBILITY.ADMIN,
-    },
-    {
       id: "admin-tags",
       title: "QR Tags",
       icon: Tag,
@@ -287,41 +280,13 @@ export const SIDEBAR_CONFIG = {
       href: "/new-dashboard/admin/categories",
       visibility: MENU_VISIBILITY.ADMIN,
     },
-    // {
-    //   id: "admin-reviews",
-    //   title: "Reviews",
-    //   icon: MessageSquare,
-    //   href: "/new-dashboard/admin/reviews",
-    //   visibility: MENU_VISIBILITY.ADMIN,
-    // },
-    // {
-    //   id: "admin-subscription-plans",
-    //   title: "Subscription Plans",
-    //   icon: CreditCardIcon,
-    //   href: "/new-dashboard/admin/subscriptions",
-    //   visibility: MENU_VISIBILITY.ADMIN,
-    // },
-    // {
-    //   id: "admin-payments",
-    //   title: "Payments",
-    //   icon: DollarSign,
-    //   href: "/new-dashboard/admin/payments",
-    //   visibility: MENU_VISIBILITY.ADMIN,
-    // },
-    // {
-    //   id: "admin-analytics",
-    //   title: "Analytics",
-    //   icon: BarChart3,
-    //   href: "/new-dashboard/admin/analytics",
-    //   visibility: MENU_VISIBILITY.ADMIN,
-    // },
-    // {
-    //   id: "admin-settings",
-    //   title: "Settings",
-    //   icon: Settings,
-    //   href: "/new-dashboard/admin/settings",
-    //   visibility: MENU_VISIBILITY.ADMIN,
-    // },
+    {
+      id: "admin-subscriptions",
+      title: "Subscriptions",
+      icon: CreditCard,
+      href: "/new-dashboard/admin/subscriptions",
+      visibility: MENU_VISIBILITY.ADMIN,
+    },
   ],
 
   // Upgrade card configuration

@@ -9,7 +9,7 @@ import api from '@/lib/api';
  */
 export const adminTagsService = {
   /** Fetch paginated, filterable tags */
-  getTags: async ({ page = 1, limit = 10, search = '', isActivated, isActive } = {}) => {
+  getTags: async ({ page = 1, limit = 10, search = '', isActivated, isActive, status } = {}) => {
     const params = { page, limit };
 
     if (search) params.search = search;
@@ -18,6 +18,9 @@ export const adminTagsService = {
     }
     if (isActive !== undefined && isActive !== 'all') {
       params.isActive = isActive;
+    }
+    if (status !== undefined && status !== 'all') {
+      params.status = status;
     }
 
     const response = await api.get('/tags', { params });
@@ -33,6 +36,12 @@ export const adminTagsService = {
   /** Create a new tag */
   createTag: async (payload) => {
     const response = await api.post('/tags', payload);
+    return response.data;
+  },
+
+  /** Bulk generate QR tags */
+  bulkGenerateTags: async ({ quantity, prefix = 'TAG' }) => {
+    const response = await api.post('/tags/bulk-generate', { quantity, prefix });
     return response.data;
   },
 

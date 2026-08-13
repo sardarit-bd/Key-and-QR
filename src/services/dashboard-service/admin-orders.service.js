@@ -60,6 +60,12 @@ export const adminOrdersService = {
     const response = await api.patch(`/orders/${orderId}/tags/replace`, { oldTagId, newTagId });
     return response.data;
   },
+
+  /** Create manual/external order */
+  createManualOrder: async (payload) => {
+    const response = await api.post('/orders/admin/manual-order', payload);
+    return response.data;
+  },
 };
 
 export default adminOrdersService;

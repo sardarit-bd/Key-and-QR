@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { QrCode } from 'lucide-react';
+import { QRCodeCanvas } from 'qrcode.react';
 import Card from '@/components/dashboard/user/dashboard/Card';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import {
@@ -12,31 +13,32 @@ import {
   useAdminTagStats,
   useAdminTagActions,
 } from '@/hooks/dashboard/useAdminTags';
+import { adminOrdersService } from '@/services/dashboard-service/admin-orders.service';
 import TagsStatsCards from './TagsStatsCards';
 import TagsFilters from './TagsFilters';
 import TagsTable from './TagsTable';
 import TagMobileCards from './TagMobileCards';
 import TagQRDialog from './TagQRDialog';
 import TagCreateDialog from './TagCreateDialog';
+import TagBatchGenerateDialog from './TagBatchGenerateDialog';
+import AssignOrderModal from './AssignOrderModal';
 import ConfirmDialog from '../shared/ConfirmDialog';
 import Pagination from '@/components/ui/Pagination';
 
 const ITEMS_PER_PAGE = 10;
 
 // Map frontend filter names to backend query params
-function mapFilters({ debouncedSearch, isActivated, isActive, page, limit }) {
+function mapFilters({ debouncedSearch, status, page, limit }) {
   const filters = { page, limit };
   if (debouncedSearch) filters.search = debouncedSearch;
-  if (isActivated && isActivated !== 'all') filters.isActivated = isActivated;
-  if (isActive && isActive !== 'all') filters.isActive = isActive;
+  if (status && status !== 'all') filters.status = status;
   return filters;
 }
 
 export default function AdminTagsPage() {
   // Filters
   const [search, setSearch] = useState('');
-  const [isActivated, setIsActivated] = useState('all');
-  const [isActive, setIsActive] = useState('all');
+  const [status, setStatus] = useState('all');
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
 
@@ -44,6 +46,14 @@ export default function AdminTagsPage() {
   const [qrTag, setQrTag] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
   const [createLoading, setCreateLoading] = useState(false);
+
+  const [batchOpen, setBatchOpen] = useState(false);
+  const [batchLoading, setBatchLoading] = useState(false);
+
+  const [assignTag, setAssignTag] = useState(null);
+  const [assignOpen, setAssignOpen] = useState(false);
+
+  const [downloadTag, setDownloadTag] = useState(null);
 
   // Delete confirmation
   const [deleteTag, setDeleteTag] = useState(null);
@@ -54,21 +64,40 @@ export default function AdminTagsPage() {
   const [toggleOpen, setToggleOpen] = useState(false);
 
   // Data
-  const filters = mapFilters({ debouncedSearch, isActivated, isActive, page, limit: ITEMS_PER_PAGE });
+  const filters = mapFilters({ debouncedSearch, status, page, limit: ITEMS_PER_PAGE });
   const { data, isLoading, isError, error, refetch } = useAdminTags(filters);
   const { data: statsData } = useAdminTagStats();
-  const { createTag, updateTag } = useAdminTagActions();
+  const { createTag, updateTag, bulkGenerateTags } = useAdminTagActions();
 
   const tags = data?.data || [];
   const meta = data?.meta || { page: 1, totalPage: 0, total: 0 };
 
+  // Trigger file download offscreen when downloadTag is set
+  useEffect(() => {
+    if (downloadTag) {
+      const timer = setTimeout(() => {
+        const canvas = document.querySelector('#hidden-qr-download canvas');
+        if (canvas) {
+          const link = document.createElement('a');
+          link.download = `qr-${downloadTag.tagCode}.png`;
+          link.href = canvas.toDataURL();
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+        setDownloadTag(null);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [downloadTag]);
+
   // Filter handlers
   const handleSearchChange = useCallback((v) => { setSearch(v); setPage(1); }, []);
-  const handleActivationChange = useCallback((v) => { setIsActivated(v); setPage(1); }, []);
-  const handleStatusChange = useCallback((v) => { setIsActive(v); setPage(1); }, []);
+  const handleStatusChange = useCallback((v) => { setStatus(v); setPage(1); }, []);
 
-  // QR
+  // QR & Download Actions
   const handleShowQR = useCallback((tag) => setQrTag(tag), []);
+  const handleDownload = useCallback((tag) => setDownloadTag(tag), []);
 
   // Create
   const handleCreateSave = useCallback(async ({ tagCode, subscriptionType }) => {
@@ -83,6 +112,40 @@ export default function AdminTagsPage() {
       setCreateLoading(false);
     }
   }, [createTag]);
+
+  // Batch generate
+  const handleBatchGenerateSave = useCallback(async ({ quantity, prefix }) => {
+    setBatchLoading(true);
+    try {
+      await bulkGenerateTags.mutateAsync({ quantity, prefix });
+      toast.success(`Batch generated ${quantity} QR tags successfully`);
+      setBatchOpen(false);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to generate tags');
+    } finally {
+      setBatchLoading(false);
+    }
+  }, [bulkGenerateTags]);
+
+  // Assignment
+  const handleAssignToOrder = useCallback((tag) => {
+    setAssignTag(tag);
+    setAssignOpen(true);
+  }, []);
+
+  const handleAssignConfirm = useCallback(async (orderId) => {
+    if (!assignTag) return;
+    try {
+      await adminOrdersService.addTagToOrder({ orderId, tagId: assignTag._id });
+      toast.success(`Tag "${assignTag.tagCode}" assigned to order successfully`);
+      setAssignOpen(false);
+      setAssignTag(null);
+      refetch();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to assign tag');
+      throw err;
+    }
+  }, [assignTag, refetch]);
 
   // Toggle status (enable/disable)
   const handleToggleStatus = useCallback((tag) => {
@@ -157,7 +220,7 @@ export default function AdminTagsPage() {
     <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
               <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 border border-primary/20">
@@ -169,9 +232,14 @@ export default function AdminTagsPage() {
               Manage QR tags, track assignments, and generate new codes.
             </p>
           </div>
-          <button onClick={() => setCreateOpen(true)} className="px-4 py-2 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors text-sm cursor-pointer">
-            Create Tag
-          </button>
+          <div className="flex items-center gap-2 ml-[52px] sm:ml-0">
+            <button onClick={() => setBatchOpen(true)} className="px-4 py-2 bg-secondary text-secondary-foreground font-medium rounded-xl hover:bg-secondary/90 transition-colors text-sm cursor-pointer">
+              Batch Generate
+            </button>
+            <button onClick={() => setCreateOpen(true)} className="px-4 py-2 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors text-sm cursor-pointer">
+              Create Tag
+            </button>
+          </div>
         </div>
       </motion.div>
 
@@ -182,9 +250,7 @@ export default function AdminTagsPage() {
       <TagsFilters
         search={search}
         onSearchChange={handleSearchChange}
-        isActivated={isActivated}
-        onActivationChange={handleActivationChange}
-        isActive={isActive}
+        status={status}
         onStatusChange={handleStatusChange}
         totalItems={meta.total}
       />
@@ -203,13 +269,25 @@ export default function AdminTagsPage() {
       {/* Desktop table */}
       {tags.length > 0 && (
         <div className="hidden lg:block">
-          <TagsTable tags={tags} onShowQR={handleShowQR} onToggleStatus={handleToggleStatus} onDelete={handleDelete} />
+          <TagsTable
+            tags={tags}
+            onShowQR={handleShowQR}
+            onDownload={handleDownload}
+            onAssign={handleAssignToOrder}
+            onToggleStatus={handleToggleStatus}
+            onDelete={handleDelete}
+          />
         </div>
       )}
 
       {/* Mobile cards */}
       {tags.length > 0 && (
-        <TagMobileCards tags={tags} onShowQR={handleShowQR} onToggleStatus={handleToggleStatus} onDelete={handleDelete} />
+        <TagMobileCards
+          tags={tags}
+          onShowQR={handleShowQR}
+          onToggleStatus={handleToggleStatus}
+          onDelete={handleDelete}
+        />
       )}
 
       {/* Pagination */}
@@ -217,9 +295,23 @@ export default function AdminTagsPage() {
         <Pagination currentPage={meta.page} totalPages={meta.totalPage} onPageChange={setPage} className="pt-2" />
       )}
 
+      {/* Offscreen Canvas for Direct PNG Downloads */}
+      {downloadTag && (
+        <div id="hidden-qr-download" className="hidden" style={{ display: 'none' }}>
+          <QRCodeCanvas
+            value={typeof window !== 'undefined' ? `${window.location.origin}/t/${downloadTag.tagCode}` : ''}
+            size={220}
+            level="H"
+            includeMargin
+          />
+        </div>
+      )}
+
       {/* Dialogs */}
       <TagQRDialog open={!!qrTag} onOpenChange={(o) => { if (!o) setQrTag(null); }} tag={qrTag} />
       <TagCreateDialog open={createOpen} onOpenChange={setCreateOpen} onSave={handleCreateSave} isLoading={createLoading} />
+      <TagBatchGenerateDialog open={batchOpen} onOpenChange={setBatchOpen} onSave={handleBatchGenerateSave} isLoading={batchLoading} />
+      <AssignOrderModal open={assignOpen} onOpenChange={setAssignOpen} onAssign={handleAssignConfirm} />
 
       <ConfirmDialog open={toggleOpen} onOpenChange={setToggleOpen} variant={toggleTag?.isActive ? 'suspend' : 'activate'} userName={toggleTag?.tagCode || ''} onConfirm={handleToggleConfirm} isLoading={updateTag.isPending} />
       <ConfirmDialog open={deleteOpen} onOpenChange={setDeleteOpen} variant="delete" userName={deleteTag?.tagCode || ''} onConfirm={handleDeleteConfirm} isLoading={updateTag.isPending} />
