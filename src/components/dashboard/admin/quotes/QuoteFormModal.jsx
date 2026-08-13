@@ -28,18 +28,27 @@ export default function QuoteFormModal({ open, onOpenChange, editQuote, onSucces
     label: cat.name || getCategoryLabel(cat.slug),
   }));
 
+  // Only valid (non-empty) options may be rendered as SelectItem.
+  const selectableCategoryOptions = categoryOptions.filter((c) => c.value && c.value.trim() !== '');
+
+  // The category Select can only ever hold a value that has a matching
+  // SelectItem — never an empty string (Radix rejects value="").
+  const initialCategory = selectableCategoryOptions[0]?.value || '';
+
   useEffect(() => {
     if (open) {
       if (editQuote) {
         setForm({
           text: editQuote.text || '',
           author: editQuote.author || '',
-          category: editQuote.category || (categoryOptions[0]?.value || ''),
+          category: selectableCategoryOptions.some((c) => c.value === editQuote.category)
+            ? editQuote.category
+            : initialCategory,
           description: editQuote.description || '',
           allowReuse: editQuote.allowReuse !== false,
         });
       } else {
-        setForm({ ...INITIAL_PLACEHOLDER, category: categoryOptions[0]?.value || '' });
+        setForm({ ...INITIAL_PLACEHOLDER, category: initialCategory });
       }
       setErrors({});
     }
@@ -131,7 +140,7 @@ export default function QuoteFormModal({ open, onOpenChange, editQuote, onSucces
                 <SelectValue placeholder="Select category" />
               </SelectTrigger>
               <SelectContent>
-                {categoryOptions.map((c) => (
+                {selectableCategoryOptions.map((c) => (
                   <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>
                 ))}
               </SelectContent>

@@ -32,7 +32,7 @@ import { getCategoryBadgeClass, getCategoryLabel } from '@/components/category';
 const ITEMS_PER_PAGE = 10;
 
 const STATUS_OPTIONS = [
-  { value: '', label: 'All Statuses' },
+  { value: 'all', label: 'All Statuses' },
   { value: 'pending', label: 'Pending' },
   { value: 'approved', label: 'Approved' },
   { value: 'rejected', label: 'Rejected' },
@@ -56,7 +56,7 @@ function getExcerpt(text, max = 80) {
 
 export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pending Quotes', description = 'Review, approve, or reject user-submitted quotes.' }) {
   const [search, setSearch] = useState('');
-  const [status, setStatus] = useState(defaultStatus);
+  const [status, setStatus] = useState(defaultStatus || 'all');
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
 

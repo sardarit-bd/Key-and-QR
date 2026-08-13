@@ -11,9 +11,9 @@ export const adminQuotesService = {
   },
 
   /** Fetch pending quotes with status filter */
-  getPendingQuotes: async ({ search = '', status = '', page = 1, limit = 10 } = {}) => {
+  getPendingQuotes: async ({ search = '', status = 'all', page = 1, limit = 10 } = {}) => {
     const params = { search, page, limit };
-    if (status) params.status = status;
+    if (status && status !== 'all') params.status = status;
     const response = await api.get('/pending-quotes', { params });
     return response.data;
   },
