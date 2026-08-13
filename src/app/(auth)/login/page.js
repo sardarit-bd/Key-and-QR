@@ -200,11 +200,7 @@ function LoginPageContent() {
                 aria-label="Email address"
               />
 
-              <input
-                type="password"
-                className="w-full border border-gray-300/60 bg-white/80 px-4 py-3 rounded-lg 
-                           focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-transparent
-                           transition-all duration-200 placeholder:text-gray-400"
+              <PasswordInput
                 placeholder="Password"
                 value={password}
                 onChange={handlePasswordChange}

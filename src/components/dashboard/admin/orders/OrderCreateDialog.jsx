@@ -21,6 +21,7 @@ import {
 } from '@/components/ui/select';
 import { ShoppingBag, Loader2 } from 'lucide-react';
 import { adminProductsService } from '@/services/dashboard-service/admin-products.service';
+import QuantityInput from '@/components/ui/QuantityInput';
 
 const MARKETPLACE_OPTIONS = [
   { value: 'etsy', label: 'Etsy' },
@@ -46,11 +47,12 @@ export default function OrderCreateDialog({ open, onOpenChange, onSave, isLoadin
 
   const [error, setError] = useState('');
 
-  // Fetch active products
+  // Fetch active products with 5 minute staleTime to avoid lagging opening state
   const { data: productsData, isLoading: loadingProducts } = useQuery({
     queryKey: ['admin-products', 'manual-order-list'],
     queryFn: () => adminProductsService.getProducts({ limit: 100, status: 'active' }),
     enabled: open,
+    staleTime: 5 * 60 * 1000,
   });
 
   const products = productsData?.data || [];
@@ -104,119 +106,176 @@ export default function OrderCreateDialog({ open, onOpenChange, onSave, isLoadin
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-2">
-            <ShoppingBag size={24} className="text-primary" />
-          </div>
-          <DialogTitle>Create External/Manual Order</DialogTitle>
-          <DialogDescription>Record a sale originating outside the website (e.g. Etsy, TikTok Shop).</DialogDescription>
-        </DialogHeader>
+      <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto font-sans p-6 rounded-2xl border border-border bg-popover text-popover-foreground">
+        {open && (
+          <>
+            <DialogHeader className="mb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+                  <ShoppingBag size={20} className="text-primary" />
+                </div>
+                <div>
+                  <DialogTitle className="text-lg font-bold text-foreground">Create External/Manual Order</DialogTitle>
+                  <DialogDescription className="text-xs text-foreground-tertiary">Record a sale originating outside the website (e.g. Etsy, TikTok Shop).</DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
 
-        <div className="space-y-4 py-2">
-          {/* Customer Info */}
-          <div className="space-y-3">
-            <h4 className="text-[11px] font-semibold uppercase tracking-wider text-foreground-tertiary">Customer Information</h4>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <label className="text-xs text-foreground-secondary">Name</label>
-                <Input value={fullName} onChange={(e) => { setFullName(e.target.value); setError(''); }} placeholder="Jane Doe" className="h-9 text-xs" />
+            <div className="space-y-6 py-2">
+              {/* Customer Info */}
+              <div className="space-y-3">
+                <h4 className="text-[11px] font-semibold uppercase tracking-wider text-foreground-tertiary border-b border-border/40 pb-1">Customer Information</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground-secondary">Customer Name</label>
+                    <Input
+                      value={fullName}
+                      onChange={(e) => { setFullName(e.target.value); setError(''); }}
+                      placeholder="Jane Doe"
+                      className="h-10 text-sm rounded-lg"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground-secondary">Email Address</label>
+                    <Input
+                      type="email"
+                      value={email}
+                      onChange={(e) => { setEmail(e.target.value); setError(''); }}
+                      placeholder="jane@example.com"
+                      className="h-10 text-sm rounded-lg"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground-secondary">Phone Number (Optional)</label>
+                    <Input
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      placeholder="+1 (555) 019-2834"
+                      className="h-10 text-sm rounded-lg"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground-secondary">Order Source / Marketplace</label>
+                    <Select value={orderSource} onValueChange={setOrderSource}>
+                      <SelectTrigger className="h-10 text-sm rounded-lg">
+                        <SelectValue placeholder="Select Source" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {MARKETPLACE_OPTIONS.map((o) => (
+                          <SelectItem key={o.value} value={o.value} className="text-sm">{o.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-xs text-foreground-secondary">Email</label>
-                <Input type="email" value={email} onChange={(e) => { setEmail(e.target.value); setError(''); }} placeholder="jane@example.com" className="h-9 text-xs" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <label className="text-xs text-foreground-secondary">Phone (Optional)</label>
-                <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+1 (555) 019-2834" className="h-9 text-xs" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-foreground-secondary">Order Source</label>
-                <Select value={orderSource} onValueChange={setOrderSource}>
-                  <SelectTrigger className="h-9 text-xs">
-                    <SelectValue placeholder="Select Source" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {MARKETPLACE_OPTIONS.map((o) => (
-                      <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </div>
 
-          {/* Product & Quantity */}
-          <div className="space-y-3">
-            <h4 className="text-[11px] font-semibold uppercase tracking-wider text-foreground-tertiary">Product Selection</h4>
-            <div className="grid grid-cols-[2fr_1fr] gap-2">
-              <div className="space-y-1">
-                <label className="text-xs text-foreground-secondary">Product</label>
-                <Select value={productId} onValueChange={(val) => { setProductId(val); setError(''); }}>
-                  <SelectTrigger className="h-9 text-xs">
-                    <SelectValue placeholder={loadingProducts ? "Loading..." : "Select Product"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {products.map((p) => (
-                      <SelectItem key={p._id} value={p._id} className="text-xs">
-                        {p.name} (${Number(p.price).toFixed(2)})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              {/* Product Selection */}
+              <div className="space-y-3">
+                <h4 className="text-[11px] font-semibold uppercase tracking-wider text-foreground-tertiary border-b border-border/40 pb-1">Product Selection</h4>
+                <div className="grid grid-cols-1 md:grid-cols-[2fr_1fr] gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground-secondary">Product</label>
+                    <Select value={productId} onValueChange={(val) => { setProductId(val); setError(''); }}>
+                      <SelectTrigger className="h-10 text-sm rounded-lg">
+                        <SelectValue placeholder={loadingProducts ? "Loading Products..." : "Select Product"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {products.map((p) => (
+                          <SelectItem key={p._id} value={p._id} className="text-sm">
+                            {p.name} (${Number(p.price).toFixed(2)})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground-secondary">Quantity</label>
+                    <div>
+                      <QuantityInput
+                        value={quantity}
+                        onChange={(val) => { setQuantity(val); setError(''); }}
+                        min={1}
+                      />
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-xs text-foreground-secondary">Quantity</label>
-                <Input type="number" min={1} value={quantity} onChange={(e) => { setQuantity(e.target.value); setError(''); }} className="h-9 text-xs" />
-              </div>
-            </div>
-          </div>
 
-          {/* Shipping Address */}
-          <div className="space-y-3">
-            <h4 className="text-[11px] font-semibold uppercase tracking-wider text-foreground-tertiary">Shipping Address</h4>
-            <div className="space-y-1.5">
-              <label className="text-xs text-foreground-secondary">Address</label>
-              <Input value={address} onChange={(e) => { setAddress(e.target.value); setError(''); }} placeholder="123 Main St, Apt 4B" className="h-9 text-xs" />
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <label className="text-xs text-foreground-secondary">City</label>
-                <Input value={city} onChange={(e) => { setCity(e.target.value); setError(''); }} placeholder="Springfield" className="h-9 text-xs" />
+              {/* Shipping Address */}
+              <div className="space-y-3">
+                <h4 className="text-[11px] font-semibold uppercase tracking-wider text-foreground-tertiary border-b border-border/40 pb-1">Shipping Address</h4>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-foreground-secondary">Address Line</label>
+                  <Input
+                    value={address}
+                    onChange={(e) => { setAddress(e.target.value); setError(''); }}
+                    placeholder="123 Main St, Apt 4B"
+                    className="h-10 text-sm rounded-lg"
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground-secondary">City</label>
+                    <Input
+                      value={city}
+                      onChange={(e) => { setCity(e.target.value); setError(''); }}
+                      placeholder="Springfield"
+                      className="h-10 text-sm rounded-lg"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground-secondary">State / Province</label>
+                    <Input
+                      value={state}
+                      onChange={(e) => { setState(e.target.value); setError(''); }}
+                      placeholder="IL"
+                      className="h-10 text-sm rounded-lg"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground-secondary">ZIP / Postal Code</label>
+                    <Input
+                      value={postalCode}
+                      onChange={(e) => { setPostalCode(e.target.value); setError(''); }}
+                      placeholder="62701"
+                      className="h-10 text-sm rounded-lg"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-foreground-secondary">Country</label>
+                    <Input
+                      value={country}
+                      onChange={(e) => { setCountry(e.target.value); setError(''); }}
+                      placeholder="United States"
+                      className="h-10 text-sm rounded-lg"
+                    />
+                  </div>
+                </div>
               </div>
-              <div className="space-y-1">
-                <label className="text-xs text-foreground-secondary">State</label>
-                <Input value={state} onChange={(e) => { setState(e.target.value); setError(''); }} placeholder="IL" className="h-9 text-xs" />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <label className="text-xs text-foreground-secondary">ZIP / Postal Code</label>
-                <Input value={postalCode} onChange={(e) => { setPostalCode(e.target.value); setError(''); }} placeholder="62701" className="h-9 text-xs" />
-              </div>
-              <div className="space-y-1">
-                <label className="text-xs text-foreground-secondary">Country</label>
-                <Input value={country} onChange={(e) => { setCountry(e.target.value); setError(''); }} placeholder="United States" className="h-9 text-xs" />
-              </div>
-            </div>
-          </div>
 
-          {error && <p className="text-[11px] text-destructive font-medium">{error}</p>}
-        </div>
+              {error && <p className="text-xs text-destructive font-medium">{error}</p>}
+            </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Cancel</Button>
-          <Button onClick={handleSave} disabled={isLoading} className="flex items-center justify-center gap-2">
-            {isLoading ? (
-              <>
-                <Loader2 size={14} className="animate-spin" />
-                Creating...
-              </>
-            ) : 'Create Order'}
-          </Button>
-        </DialogFooter>
+            <DialogFooter className="mt-6 border-t border-border/40 pt-4 flex gap-2 justify-end">
+              <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading} className="h-10 px-4 rounded-lg cursor-pointer">
+                Cancel
+              </Button>
+              <Button onClick={handleSave} disabled={isLoading} className="h-10 px-5 rounded-lg flex items-center justify-center gap-2 cursor-pointer">
+                {isLoading ? (
+                  <>
+                    <Loader2 size={14} className="animate-spin" />
+                    Creating...
+                  </>
+                ) : 'Create Order'}
+              </Button>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

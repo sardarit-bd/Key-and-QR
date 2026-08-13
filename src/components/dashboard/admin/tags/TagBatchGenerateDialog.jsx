@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { QrCode, Loader2 } from 'lucide-react';
+import QuantityInput from '@/components/ui/QuantityInput';
 
 export default function TagBatchGenerateDialog({ open, onOpenChange, onSave, isLoading = false }) {
   const [quantity, setQuantity] = useState(50);
@@ -60,17 +61,15 @@ export default function TagBatchGenerateDialog({ open, onOpenChange, onSave, isL
 
         <div className="space-y-4 py-2">
           <div className="space-y-1.5">
-            <label htmlFor="batch-quantity" className="block text-xs font-medium text-foreground-secondary">Quantity</label>
-            <Input
-              id="batch-quantity"
-              type="number"
-              min={1}
-              max={1000}
-              value={quantity}
-              onChange={(e) => { setQuantity(e.target.value); setError(''); }}
-              placeholder="e.g. 50"
-              className={`text-sm ${error && error.includes('Quantity') ? 'border-destructive' : ''}`}
-            />
+            <label className="block text-xs font-medium text-foreground-secondary">Quantity</label>
+            <div>
+              <QuantityInput
+                value={quantity}
+                onChange={(val) => { setQuantity(val); setError(''); }}
+                min={1}
+                max={1000}
+              />
+            </div>
           </div>
 
           <div className="space-y-1.5">

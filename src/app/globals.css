@@ -117,6 +117,10 @@ body {
   html.light {
     color-scheme: light;
   }
+
+  input, button, select, textarea, option, dialog {
+    font-family: inherit;
+  }
 }
 
 /* Hide Scrollbar (Chrome, Edge, Safari) */

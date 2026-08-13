@@ -16,6 +16,7 @@ export default function AssignedTagsTable({
   onToggleSelect,
   onSelectAll,
   onShowQR,
+  onDownload,
   onUnassign,
   onViewUser,
   onViewOrder,
@@ -97,6 +98,7 @@ export default function AssignedTagsTable({
                   <ActionMenu
                     actions={[
                       { label: 'Show QR Code', onClick: () => onShowQR(tag) },
+                      { label: 'Download PNG', onClick: () => onDownload(tag) },
                       { separator: true },
                       { label: 'View User', onClick: () => onViewUser(tag) },
                       { label: 'View Order', onClick: () => onViewOrder(tag) },
