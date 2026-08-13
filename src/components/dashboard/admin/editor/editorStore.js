@@ -76,8 +76,11 @@ const useEditorStore = create((set, get) => ({
   setCanvasSize: (width, height) => {
     const state = get();
     state.pushHistory();
-    state.incrementVersion();
-    set({ canvas: { ...state.canvas, width, height }, isDirty: true });
+    set({
+      canvas: { ...state.canvas, width, height },
+      renderVersion: state.renderVersion + 1,
+      isDirty: true
+    });
   },
 
   setZoom: (zoom) => {
@@ -93,10 +96,10 @@ const useEditorStore = create((set, get) => ({
     if (state.elements.length >= MAX_ELEMENTS) return null;
     const newElement = JSON.parse(JSON.stringify({ ...element, id: element.id || generateId() }));
     state.pushHistory();
-    state.incrementVersion();
     set({
       elements: [...state.elements, newElement],
       selectedElementIds: [newElement.id],
+      renderVersion: state.renderVersion + 1,
       isDirty: true,
     });
     return newElement;
@@ -151,10 +154,10 @@ const useEditorStore = create((set, get) => ({
   removeElement: (id) => {
     const state = get();
     state.pushHistory();
-    state.incrementVersion();
     set({
       elements: state.elements.filter((el) => el.id !== id),
       selectedElementIds: state.selectedElementIds.filter((sid) => sid !== id),
+      renderVersion: state.renderVersion + 1,
       isDirty: true,
     });
   },
@@ -163,10 +166,10 @@ const useEditorStore = create((set, get) => ({
     const state = get();
     const idSet = new Set(ids);
     state.pushHistory();
-    state.incrementVersion();
     set({
       elements: state.elements.filter((el) => !idSet.has(el.id)),
       selectedElementIds: state.selectedElementIds.filter((sid) => !idSet.has(sid)),
+      renderVersion: state.renderVersion + 1,
       isDirty: true,
     });
   },
@@ -210,20 +213,27 @@ const useEditorStore = create((set, get) => ({
   clearElements: () => {
     const state = get();
     state.pushHistory();
-    state.incrementVersion();
-    set({ elements: [], selectedElementIds: [], isDirty: true });
+    set({
+      elements: [],
+      selectedElementIds: [],
+      renderVersion: state.renderVersion + 1,
+      isDirty: true
+    });
   },
 
   reorderElement: (fromIndex, toIndex) => {
     const state = get();
     if (fromIndex === toIndex) return;
     state.pushHistory();
-    state.incrementVersion();
     const elements = [...state.elements];
     const [moved] = elements.splice(fromIndex, 1);
     elements.splice(toIndex, 0, moved);
     const reindexed = elements.map((el, i) => ({ ...el, zIndex: i }));
-    set({ elements: reindexed, isDirty: true });
+    set({
+      elements: reindexed,
+      renderVersion: state.renderVersion + 1,
+      isDirty: true
+    });
   },
 
   duplicateElement: (id) => {
@@ -231,7 +241,6 @@ const useEditorStore = create((set, get) => ({
     const source = state.elements.find((el) => el.id === id);
     if (!source || state.elements.length >= MAX_ELEMENTS) return;
     state.pushHistory();
-    state.incrementVersion();
     const clone = JSON.parse(JSON.stringify({
       ...source,
       id: generateId(),
@@ -242,6 +251,7 @@ const useEditorStore = create((set, get) => ({
     set({
       elements: [...state.elements, clone],
       selectedElementIds: [clone.id],
+      renderVersion: state.renderVersion + 1,
       isDirty: true,
     });
   },
@@ -288,15 +298,21 @@ const useEditorStore = create((set, get) => ({
   setBackground: (bg) => {
     const state = get();
     state.pushHistory();
-    state.incrementVersion();
-    set({ background: bg, isDirty: true });
+    set({
+      background: bg,
+      renderVersion: state.renderVersion + 1,
+      isDirty: true
+    });
   },
 
   clearBackground: () => {
     const state = get();
     state.pushHistory();
-    state.incrementVersion();
-    set({ background: null, isDirty: true });
+    set({
+      background: null,
+      renderVersion: state.renderVersion + 1,
+      isDirty: true
+    });
   },
 
   incrementVersion: () => {

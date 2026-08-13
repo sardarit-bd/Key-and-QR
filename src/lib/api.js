@@ -59,6 +59,93 @@ api.interceptors.request.use(
 // RESPONSE INTERCEPTOR - Centralized Token Handling
 // ============================================================
 
+// Unified refresh promise to prevent concurrent duplicate calls within the same tab
+let activeRefreshPromise = null;
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Perform a synchronized token refresh.
+ * Leverages in-memory active promise for same-tab coordination, and
+ * localStorage flag ('auth_refresh_in_progress') for cross-tab coordination.
+ */
+const performTokenRefresh = async () => {
+    // 1. Return in-flight promise if current tab is already refreshing
+    if (activeRefreshPromise) {
+        return activeRefreshPromise;
+    }
+
+    // 2. Cross-tab synchronization using localStorage
+    if (typeof window !== "undefined") {
+        const refreshInProgressTime = localStorage.getItem("auth_refresh_in_progress");
+        if (refreshInProgressTime && Date.now() - parseInt(refreshInProgressTime, 10) < 10000) {
+            activeRefreshPromise = (async () => {
+                const startTime = Date.now();
+                while (Date.now() - startTime < 10000) {
+                    await sleep(200);
+                    const stillInProgress = localStorage.getItem("auth_refresh_in_progress");
+                    if (!stillInProgress) {
+                        const newAccessToken = getAccessToken();
+                        if (newAccessToken && !isTokenExpired(newAccessToken)) {
+                            return newAccessToken;
+                        }
+                        break;
+                    }
+                }
+                return doRefreshCall();
+            })();
+            return activeRefreshPromise;
+        }
+    }
+
+    return doRefreshCall();
+};
+
+const doRefreshCall = async () => {
+    const refreshToken = getRefreshToken();
+    if (!refreshToken) {
+        throw new Error("No refresh token available");
+    }
+
+    if (typeof window !== "undefined") {
+        localStorage.setItem("auth_refresh_in_progress", Date.now().toString());
+    }
+    setRefreshState({ isRefreshing: true });
+
+    activeRefreshPromise = (async () => {
+        try {
+            const response = await api.post(
+                "/auth/refresh-token",
+                {},
+                {
+                    headers: {
+                        "x-refresh-token": refreshToken,
+                    },
+                }
+            );
+
+            const newAccessToken = response.data?.data?.accessToken;
+            const newRefreshToken = response.data?.data?.refreshToken ?? refreshToken;
+
+            if (!newAccessToken) {
+                throw new Error("No new access token returned from server");
+            }
+
+            // Single token write (automatically syncs storage and cookies)
+            setTokens(newAccessToken, newRefreshToken);
+            return newAccessToken;
+        } finally {
+            if (typeof window !== "undefined") {
+                localStorage.removeItem("auth_refresh_in_progress");
+            }
+            setRefreshState({ isRefreshing: false });
+            activeRefreshPromise = null;
+        }
+    })();
+
+    return activeRefreshPromise;
+};
+
 api.interceptors.response.use(
     (response) => {
         // Centralized token update from responses
@@ -113,72 +200,18 @@ api.interceptors.response.use(
             return Promise.reject(error);
         }
 
-        // Queue concurrent refresh requests
-        const refreshState = getRefreshState();
-        if (refreshState.isRefreshing) {
-            return new Promise((resolve, reject) => {
-                const queue = getRefreshQueue();
-                queue.push({
-                    resolve: (token) => {
-                        originalRequest.headers.Authorization = `Bearer ${token}`;
-                        originalRequest._retry = true;
-                        resolve(api(originalRequest));
-                    },
-                    reject,
-                });
-                setRefreshQueue(queue);
-            });
-        }
-
         originalRequest._retry = true;
-        setRefreshState({ isRefreshing: true, queue: getRefreshQueue() });
 
         try {
-            const refreshToken = getRefreshToken();
-            if (!refreshToken) {
-                throw new Error("No refresh token");
-            }
-
-            const response = await api.post(
-                "/auth/refresh-token",
-                {},
-                {
-                    headers: {
-                        "x-refresh-token": refreshToken,
-                    },
-                }
-            );
-
-            const newAccessToken = response.data?.data?.accessToken;
-            const newRefreshToken = response.data?.data?.refreshToken ?? refreshToken;
-
-            if (!newAccessToken) {
-                throw new Error("No new access token");
-            }
-
-            // Single token write
-            setTokens(newAccessToken, newRefreshToken);
-
-            // Process queued requests
-            const queue = getRefreshQueue();
-            queue.forEach((prom) => prom.resolve(newAccessToken));
-            setRefreshQueue([]);
-
+            const newAccessToken = await performTokenRefresh();
             originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
             return api(originalRequest);
         } catch (refreshError) {
-            // Process queue with error
-            const queue = getRefreshQueue();
-            queue.forEach((prom) => prom.reject(refreshError));
-            setRefreshQueue([]);
-
             const hasRefreshToken = getRefreshToken();
             if (hasRefreshToken) {
                 forceLogout();
             }
             return Promise.reject(refreshError);
-        } finally {
-            setRefreshState({ isRefreshing: false, queue: [] });
         }
     }
 );
@@ -259,53 +292,20 @@ export const startTokenRefreshTimer = () => {
             const payload = JSON.parse(atob(token.split(".")[1]));
             const expiresIn = payload.exp * 1000 - Date.now();
 
-            // Only attempt refresh when token is close to expiry (under 5 minutes)
-            if (expiresIn < 300000 && expiresIn > 60000) {
+            // Attempt refresh when token is close to expiry (under 5 minutes)
+            if (expiresIn < 300000) {
                 const refreshToken = getRefreshToken();
-                if (!refreshToken) {
-                    return;
-                }
-
-                const response = await api.post(
-                    "/auth/refresh-token",
-                    {},
-                    {
-                        headers: {
-                            "x-refresh-token": refreshToken,
-                        },
-                    }
-                );
-
-                const newAccessToken = response.data?.data?.accessToken;
-                const newRefreshToken = response.data?.data?.refreshToken;
-                if (newAccessToken) {
-                    // Store both the new access token AND the rotated refresh token
-                    setTokens(newAccessToken, newRefreshToken || refreshToken);
-                }
-            } else if (expiresIn <= 60000) {
-                // Token is critically close to expiry — rely on response interceptor instead
-                // The interceptor handles 401s with queued refresh + retry
-                const refreshToken = getRefreshToken();
-                if (!refreshToken) {
-                    // No refresh token at all — schedule a graceful logout
-                    if (expiresIn < 10000) {
-                        refreshTimerActive = false;
-                        clearInterval(refreshInterval);
-                        refreshInterval = null;
-                        // Don't forceLogout — let the next API call's 401 interceptor handle it
-                    }
-                    return;
+                if (refreshToken) {
+                    await performTokenRefresh();
                 }
             }
         } catch (error) {
             // Silent — the response interceptor handles real failures
-            // Only force logout if we're sure the session is gone
             if (error.message?.includes('jwt expired') || error.message?.includes('malformed')) {
-                // Token decoding failed — let the response interceptor handle actual API calls
                 return;
             }
         }
-    }, 60000); // Check every 60 seconds instead of 30
+    }, 60000); // Check every 60 seconds
 };
 
 export const stopTokenRefreshTimer = () => {

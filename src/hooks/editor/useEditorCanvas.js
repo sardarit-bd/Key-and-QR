@@ -24,6 +24,7 @@ import {
 
 export function useEditorCanvas(canvasElRef, containerRef) {
   const initRef = useRef(false);
+  const isRenderingRef = useRef(false);
 
   const canvas = useEditorStore((s) => s.canvas);
   const renderVersion = useEditorStore((s) => s.renderVersion);
@@ -33,6 +34,7 @@ export function useEditorCanvas(canvasElRef, containerRef) {
   const setSelection = useEditorStore((s) => s.setSelection);
   const removeElements = useEditorStore((s) => s.removeElements);
   const moveElements = useEditorStore((s) => s.moveElements);
+  const selectedElementIds = useEditorStore((s) => s.selectedElementIds);
 
   // ── Initialize canvas once ──
   useEffect(() => {
@@ -54,32 +56,45 @@ export function useEditorCanvas(canvasElRef, containerRef) {
 
       // Selection events → sync to store
       c.on('selection:created', () => {
+        if (isRenderingRef.current) return;
         const ids = getSelectedObjectIds();
         setSelection(ids);
       });
       c.on('selection:updated', () => {
+        if (isRenderingRef.current) return;
         const ids = getSelectedObjectIds();
         setSelection(ids);
       });
       c.on('selection:cleared', () => {
+        if (isRenderingRef.current) return;
         setSelection([]);
       });
 
       // ── Keyboard interaction ──
       const handleKeyDown = (e) => {
+        // If focused element is an input, textarea, or contenteditable, ignore shortcuts
+        const activeEl = document.activeElement;
+        if (
+          activeEl &&
+          (activeEl.tagName === 'INPUT' ||
+            activeEl.tagName === 'TEXTAREA' ||
+            activeEl.isContentEditable)
+        ) {
+          return;
+        }
+
         const canvas = getCanvas();
         if (!canvas) return;
 
-        // Don't intercept keys when text is being edited
-        const active = canvas.getActiveObject();
-        if (active && active.isEditing) return;
+        // Don't intercept keys when text is being edited in Fabric
+        const activeObj = canvas.getActiveObject();
+        if (activeObj && activeObj.isEditing) return;
 
         // Delete / Backspace — remove selected elements
         if (e.key === 'Delete' || e.key === 'Backspace') {
           const ids = getSelectedObjectIds();
           if (ids.length > 0) {
             e.preventDefault();
-            e.stopPropagation();
             removeElements(ids);
           }
           return;
@@ -123,14 +138,97 @@ export function useEditorCanvas(canvasElRef, containerRef) {
 
           // Update store (single history entry for all selected elements)
           moveElements(ids, dx, dy);
+          return;
+        }
+
+        // Ctrl/Cmd + D -> Duplicate
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
+          const ids = getSelectedObjectIds();
+          if (ids.length === 1) {
+            e.preventDefault();
+            useEditorStore.getState().duplicateElement(ids[0]);
+          }
+          return;
+        }
+
+        // Ctrl/Cmd + Z -> Undo
+        if ((e.ctrlKey || e.metaKey) && !e.shiftKey && e.key.toLowerCase() === 'z') {
+          e.preventDefault();
+          useEditorStore.getState().undo();
+          return;
+        }
+
+        // Ctrl/Cmd + Shift + Z or Ctrl/Cmd + Y -> Redo
+        if (
+          ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'z') ||
+          ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y')
+        ) {
+          e.preventDefault();
+          useEditorStore.getState().redo();
+          return;
+        }
+
+        // Escape -> Deselect
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          canvas.discardActiveObject();
+          canvas.renderAll();
+          setSelection([]);
+          return;
+        }
+
+        // Ctrl/Cmd + C -> Copy
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'c') {
+          const ids = getSelectedObjectIds();
+          if (ids.length === 1) {
+            e.preventDefault();
+            const el = useEditorStore.getState().elements.find((x) => x.id === ids[0]);
+            if (el) {
+              localStorage.setItem('editor_clipboard', JSON.stringify(el));
+            }
+          }
+          return;
+        }
+
+        // Ctrl/Cmd + V -> Paste
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'v') {
+          e.preventDefault();
+          const clipboardData = localStorage.getItem('editor_clipboard');
+          if (clipboardData) {
+            try {
+              const el = JSON.parse(clipboardData);
+              const addElement = useEditorStore.getState().addElement;
+              const currentElements = useEditorStore.getState().elements;
+              const pasted = {
+                ...el,
+                id: `el_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+                x: el.x + 20,
+                y: el.y + 20,
+                zIndex: currentElements.length,
+              };
+              addElement(pasted);
+            } catch (err) {
+              console.warn('Failed to paste element:', err);
+            }
+          }
+          return;
         }
       };
 
-      // Attach keyboard listener to the canvas element
-      el.addEventListener('keydown', handleKeyDown);
+      // Attach keyboard listener to window
+      window.addEventListener('keydown', handleKeyDown);
+
+      // Cleanup function returned inside then
+      c.handleKeyDownCleanup = () => {
+        window.removeEventListener('keydown', handleKeyDown);
+      };
     });
 
     return () => {
+      const c = getCanvas();
+      if (c && c.handleKeyDownCleanup) {
+        c.handleKeyDownCleanup();
+      }
       disposeCanvas();
       initRef.current = false;
     };
@@ -146,9 +244,46 @@ export function useEditorCanvas(canvasElRef, containerRef) {
   // ── Re-render elements only on structural version change ──
   useEffect(() => {
     if (!isInitialized()) return;
-    renderElements(elements, background);
+    isRenderingRef.current = true;
+    renderElements(elements, background).then(() => {
+      // Restore active selection
+      const ids = useEditorStore.getState().selectedElementIds;
+      if (ids.length > 0) {
+        const c = getCanvas();
+        const obj = c?.getObjects().find((o) => o.data?.elementId === ids[0]);
+        if (obj) {
+          c.setActiveObject(obj);
+          c.renderAll();
+        }
+      }
+      isRenderingRef.current = false;
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [renderVersion]);
+
+  // ── Sync store selection to Fabric canvas active object ──
+  useEffect(() => {
+    if (!isInitialized() || isRenderingRef.current) return;
+    const c = getCanvas();
+    if (!c) return;
+
+    const activeObj = c.getActiveObject();
+    const activeId = activeObj?.data?.elementId;
+    const selectedId = selectedElementIds.length === 1 ? selectedElementIds[0] : null;
+
+    if (activeId !== selectedId) {
+      if (selectedId) {
+        const obj = c.getObjects().find((o) => o.data?.elementId === selectedId);
+        if (obj) {
+          c.setActiveObject(obj);
+          c.renderAll();
+        }
+      } else {
+        c.discardActiveObject();
+        c.renderAll();
+      }
+    }
+  }, [selectedElementIds]);
 
   // ── Handle container resize ──
   useEffect(() => {
