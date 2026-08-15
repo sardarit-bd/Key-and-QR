@@ -4,6 +4,7 @@ import React from 'react';
 import {
   Layers,
   Type,
+  Feather,
   Sparkles,
   Square,
   Image as ImageIcon,
@@ -29,7 +30,10 @@ function getLayerLabel(el, index, allElements) {
     if (content) {
       return content.length > 20 ? `${content.slice(0, 18)}…` : content;
     }
-    const textIndex = allElements.filter((e) => e.type === 'text').findIndex((e) => e.id === el.id) + 1;
+    const textIndex =
+      allElements
+        .filter((e) => e.type === 'text')
+        .findIndex((e) => e.id === el.id) + 1;
     return textIndex > 1 ? `Text ${textIndex}` : 'Text';
   }
 
@@ -41,7 +45,6 @@ function getLayerLabel(el, index, allElements) {
   if (el.type === 'icon') {
     const iconName = el.iconData?.iconName;
     if (iconName) {
-      // capitalize
       const formatted = iconName.charAt(0).toUpperCase() + iconName.slice(1);
       return `${formatted} Icon`;
     }
@@ -61,10 +64,11 @@ function getLayerLabel(el, index, allElements) {
   return 'Layer';
 }
 
-function getLayerIcon(type) {
-  switch (type) {
-    case 'text':
-      return Type;
+function getLayerIcon(el) {
+  if (el.type === 'text') {
+    return Type;
+  }
+  switch (el.type) {
     case 'image':
       return ImageIcon;
     case 'icon':
@@ -248,7 +252,7 @@ export default function LayersPanel() {
             const isSelected = selectedElementIds.includes(el.id);
             const isHidden = el.visible === false;
             const isLocked = !!el.locked;
-            const LayerIcon = getLayerIcon(el.type);
+            const LayerIcon = getLayerIcon(el);
             const label = getLayerLabel(el, idx, elements);
 
             return (

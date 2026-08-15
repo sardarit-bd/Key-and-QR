@@ -79,7 +79,8 @@ const initialState = {
   // Metadata
   quoteId: null,
   quoteText: '',
-  quoteCategory: 'love',
+  quoteAuthor: '',
+  quoteCategory: '',
   isDirty: false,
   isSaving: false,
   isLoading: false,
@@ -563,7 +564,16 @@ const useEditorStore = create((set, get) => ({
   // ============================================================
 
   setQuoteText: (text) => {
-    set({ quoteText: text });
+    set({ quoteText: text, isDirty: true });
+  },
+
+  setQuoteCategory: (category) => {
+    set({ quoteCategory: category, isDirty: true });
+  },
+
+  setQuoteAuthor: (author) => {
+    const cleanAuthor = (author || '').replace(/^—\s*/, '').trim();
+    set({ quoteAuthor: cleanAuthor, isDirty: true });
   },
 
   setQuoteId: (id) => {
@@ -751,6 +761,142 @@ const useEditorStore = create((set, get) => ({
         audio: mobile.audio,
       },
     };
+  },
+
+  // ============================================================
+  // Quote Lifecycle (Create vs Edit initialization)
+  // ============================================================
+
+  initializeNewQuote: () => {
+    const newDesktopDesign = {
+      canvas: { width: CANVAS_SIZES.desktop.width, height: CANVAS_SIZES.desktop.height, zoom: 1 },
+      background: null,
+      elements: [],
+      audio: null,
+      history: [],
+      historyIndex: -1,
+    };
+
+    const newMobileDesign = {
+      canvas: { width: CANVAS_SIZES.mobile.width, height: CANVAS_SIZES.mobile.height, zoom: 1 },
+      background: null,
+      elements: [],
+      audio: null,
+      history: [],
+      historyIndex: -1,
+    };
+
+    set((state) => ({
+      editorVersion: '2.0',
+      activeDesignVersion: 'desktop',
+      previewMode: 'desktop',
+      desktopDesign: newDesktopDesign,
+      mobileDesign: newMobileDesign,
+
+      canvas: { ...newDesktopDesign.canvas },
+      background: null,
+      elements: [],
+      audio: null,
+      selectedElementIds: [],
+      activeToolId: null,
+
+      quoteId: null,
+      quoteText: '',
+      quoteAuthor: '',
+      quoteCategory: '',
+      isDirty: false,
+      isSaving: false,
+      isLoading: false,
+      isUploading: false,
+      uploadProgress: 0,
+
+      history: [],
+      historyIndex: -1,
+      renderVersion: state.renderVersion + 1,
+      activeSidebarTab: 'properties',
+    }));
+  },
+
+  initializeExistingQuote: (quoteData) => {
+    if (!quoteData) return;
+
+    const cleanAuthor = (quoteData.author || '').replace(/^—\s*/, '').trim();
+    const cleanCategory = quoteData.category || '';
+    let editorData = quoteData.editorData;
+
+    if (!editorData) {
+      // If quote doesn't have visual editorData, create standard visual representation for legacy quotes
+      const elements = [];
+      if (quoteData.text) {
+        elements.push({
+          id: `el_init_text`,
+          type: 'text',
+          x: 400,
+          y: 260,
+          width: 600,
+          height: 120,
+          rotation: 0,
+          scaleX: 1,
+          scaleY: 1,
+          opacity: 1,
+          visible: true,
+          locked: false,
+          zIndex: 0,
+          textData: {
+            role: 'quote',
+            content: quoteData.text,
+            fontFamily: 'Playfair Display',
+            fontSize: 40,
+            fontWeight: 'normal',
+            fontStyle: 'normal',
+            underline: false,
+            lineHeight: 1.3,
+            letterSpacing: 0,
+            textAlign: 'center',
+            color: '#1a1a1a',
+            wrap: true,
+          },
+        });
+      }
+
+      editorData = {
+        version: '2.0',
+        desktop: {
+          canvas: { width: 800, height: 600 },
+          elements,
+          background: quoteData.image?.url
+            ? { type: 'image', source: { url: quoteData.image.url } }
+            : null,
+          audio: null,
+        },
+        mobile: {
+          canvas: { width: 375, height: 667 },
+          elements: elements.map((el) => {
+            const copy = JSON.parse(JSON.stringify(el));
+            copy.x = 187;
+            copy.y = 280;
+            copy.width = 300;
+            copy.textData.fontSize = 24;
+            return copy;
+          }),
+          background: quoteData.image?.url
+            ? { type: 'image', source: { url: quoteData.image.url } }
+            : null,
+          audio: null,
+        },
+      };
+    }
+
+    const state = get();
+    state.loadQuote(editorData);
+    set({
+      quoteId: quoteData._id || null,
+      quoteText: quoteData.text || '',
+      quoteAuthor: cleanAuthor,
+      quoteCategory: cleanCategory,
+      isDirty: false,
+      isLoading: false,
+    });
   },
 
   reset: () => {
