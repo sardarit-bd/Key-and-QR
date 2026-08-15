@@ -7,8 +7,10 @@ import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import Loader from "@/shared/Loader";
 import PAYMENT_STATUS from "@/config/paymentStatus";
+import { useQueryClient } from "@tanstack/react-query";
 
 export default function SuccessPage() {
+    const queryClient = useQueryClient();
     const searchParams = useSearchParams();
     const orderId = searchParams.get("orderId");
     const token = searchParams.get("token");
@@ -37,9 +39,11 @@ export default function SuccessPage() {
             setOrder(orderData);
             setPaymentStatus(orderData?.paymentStatus || PAYMENT_STATUS.PENDING);
 
-            // Clear cart only after successful payment
+            // Clear cart and refresh product stock caches after successful payment
             if (orderData?.paymentStatus === PAYMENT_STATUS.SUCCEEDED) {
                 clearCart();
+                queryClient.invalidateQueries({ queryKey: ['products'] });
+                queryClient.invalidateQueries({ queryKey: ['admin-products'] });
             }
         } catch (err) {
             console.error("Error checking order:", err);

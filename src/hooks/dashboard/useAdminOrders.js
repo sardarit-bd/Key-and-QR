@@ -58,6 +58,8 @@ export function useAdminOrderActions() {
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ADMIN_ORDERS_KEYS.all });
+    queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+    queryClient.invalidateQueries({ queryKey: ['products'] });
   };
 
   const updateFulfillmentStatus = useMutation({
