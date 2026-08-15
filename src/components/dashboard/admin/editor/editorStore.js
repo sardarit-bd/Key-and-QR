@@ -13,33 +13,64 @@
  * Business logic stays in editorUtils.js — this store only holds state.
  */
 import { create } from 'zustand';
-import { CANVAS_DEFAULTS, MAX_ELEMENTS, EDITOR_VERSION, PREVIEW_MODES, DEFAULT_ICON_SIZE, DEFAULT_ICON_COLOR } from './editorConstants';
+import {
+  CANVAS_DEFAULTS,
+  CANVAS_SIZES,
+  MAX_ELEMENTS,
+  EDITOR_VERSION,
+  PREVIEW_MODES,
+  DEFAULT_ICON_SIZE,
+  DEFAULT_ICON_COLOR,
+} from './editorConstants';
 
 let elementCounter = 0;
 const generateId = () => `el_${Date.now()}_${++elementCounter}`;
 
+const defaultDesktopDesign = {
+  canvas: { width: CANVAS_SIZES.desktop.width, height: CANVAS_SIZES.desktop.height, zoom: 1 },
+  background: null,
+  elements: [],
+  audio: null,
+  history: [],
+  historyIndex: -1,
+};
+
+const defaultMobileDesign = {
+  canvas: { width: CANVAS_SIZES.mobile.width, height: CANVAS_SIZES.mobile.height, zoom: 1 },
+  background: null,
+  elements: [],
+  audio: null,
+  history: [],
+  historyIndex: -1,
+};
+
 const initialState = {
   // Editor document state
-  editorVersion: EDITOR_VERSION,
+  editorVersion: '2.0',
+  activeDesignVersion: 'desktop', // 'desktop' | 'mobile'
 
-  // Canvas configuration
+  // Independent design storage
+  desktopDesign: JSON.parse(JSON.stringify(defaultDesktopDesign)),
+  mobileDesign: JSON.parse(JSON.stringify(defaultMobileDesign)),
+
+  // Active canvas configuration (mirrors activeDesignVersion)
   canvas: {
-    width: CANVAS_DEFAULTS.width,
-    height: CANVAS_DEFAULTS.height,
+    width: CANVAS_SIZES.desktop.width,
+    height: CANVAS_SIZES.desktop.height,
     zoom: 1,
   },
 
-  // Background config
+  // Active background config
   background: null,
 
-  // All elements
+  // Active elements
   elements: [],
 
   // Selection
   selectedElementIds: [],
   activeToolId: null,
 
-  // Audio
+  // Active audio
   audio: null,
 
   // Preview mode (desktop/mobile viewport toggle)
@@ -55,15 +86,14 @@ const initialState = {
   isUploading: false,
   uploadProgress: 0,
 
-  // Undo/Redo
+  // Undo/Redo (active version)
   history: [],
   historyIndex: -1,
   maxHistory: 50,
 
-  // Structural version — increments ONLY on add/remove/reorder/clear.
-  // The canvas hook watches this to avoid infinite re-render
-  // when Fabric events push property updates back to the store.
+  // Structural version for Fabric sync
   renderVersion: 0,
+  activeSidebarTab: 'properties',
 };
 
 const useEditorStore = create((set, get) => ({
@@ -236,21 +266,121 @@ const useEditorStore = create((set, get) => ({
     });
   },
 
+  // Sidebar tab state (properties or layers)
+  activeSidebarTab: 'properties',
+
+  setActiveSidebarTab: (tab) => {
+    set({ activeSidebarTab: tab });
+  },
+
   duplicateElement: (id) => {
     const state = get();
-    const source = state.elements.find((el) => el.id === id);
-    if (!source || state.elements.length >= MAX_ELEMENTS) return;
+    state.duplicateElements([id]);
+  },
+
+  duplicateElements: (ids) => {
+    const state = get();
+    if (!ids || ids.length === 0) return;
+    const idSet = new Set(ids);
+    const sources = state.elements.filter((el) => idSet.has(el.id));
+    if (sources.length === 0 || state.elements.length + sources.length > MAX_ELEMENTS) return;
     state.pushHistory();
-    const clone = JSON.parse(JSON.stringify({
-      ...source,
-      id: generateId(),
-      x: source.x + 20,
-      y: source.y + 20,
-      zIndex: state.elements.length,
-    }));
+    const clones = sources.map((source, i) =>
+      JSON.parse(
+        JSON.stringify({
+          ...source,
+          id: generateId(),
+          x: source.x + 20,
+          y: source.y + 20,
+          zIndex: state.elements.length + i,
+        })
+      )
+    );
     set({
-      elements: [...state.elements, clone],
-      selectedElementIds: [clone.id],
+      elements: [...state.elements, ...clones],
+      selectedElementIds: clones.map((c) => c.id),
+      renderVersion: state.renderVersion + 1,
+      isDirty: true,
+    });
+  },
+
+  bringForward: (ids) => {
+    const state = get();
+    const targetIds = Array.isArray(ids) ? ids : (ids ? [ids] : state.selectedElementIds);
+    if (!targetIds || targetIds.length === 0) return;
+    const idSet = new Set(targetIds);
+    const arr = [...state.elements];
+
+    // Traverse from right to left (top to bottom) so elements move up without leapfrogging each other
+    for (let i = arr.length - 2; i >= 0; i--) {
+      if (idSet.has(arr[i].id) && !idSet.has(arr[i + 1].id)) {
+        const temp = arr[i];
+        arr[i] = arr[i + 1];
+        arr[i + 1] = temp;
+      }
+    }
+
+    const reindexed = arr.map((el, idx) => ({ ...el, zIndex: idx }));
+    state.pushHistory();
+    set({
+      elements: reindexed,
+      renderVersion: state.renderVersion + 1,
+      isDirty: true,
+    });
+  },
+
+  sendBackward: (ids) => {
+    const state = get();
+    const targetIds = Array.isArray(ids) ? ids : (ids ? [ids] : state.selectedElementIds);
+    if (!targetIds || targetIds.length === 0) return;
+    const idSet = new Set(targetIds);
+    const arr = [...state.elements];
+
+    // Traverse from left to right (bottom to top)
+    for (let i = 1; i < arr.length; i++) {
+      if (idSet.has(arr[i].id) && !idSet.has(arr[i - 1].id)) {
+        const temp = arr[i];
+        arr[i] = arr[i - 1];
+        arr[i - 1] = temp;
+      }
+    }
+
+    const reindexed = arr.map((el, idx) => ({ ...el, zIndex: idx }));
+    state.pushHistory();
+    set({
+      elements: reindexed,
+      renderVersion: state.renderVersion + 1,
+      isDirty: true,
+    });
+  },
+
+  bringToFront: (ids) => {
+    const state = get();
+    const targetIds = Array.isArray(ids) ? ids : (ids ? [ids] : state.selectedElementIds);
+    if (!targetIds || targetIds.length === 0) return;
+    const idSet = new Set(targetIds);
+    const nonSelected = state.elements.filter((el) => !idSet.has(el.id));
+    const selected = state.elements.filter((el) => idSet.has(el.id));
+    const reindexed = [...nonSelected, ...selected].map((el, idx) => ({ ...el, zIndex: idx }));
+    state.pushHistory();
+    set({
+      elements: reindexed,
+      renderVersion: state.renderVersion + 1,
+      isDirty: true,
+    });
+  },
+
+  sendToBack: (ids) => {
+    const state = get();
+    const targetIds = Array.isArray(ids) ? ids : (ids ? [ids] : state.selectedElementIds);
+    if (!targetIds || targetIds.length === 0) return;
+    const idSet = new Set(targetIds);
+    const nonSelected = state.elements.filter((el) => !idSet.has(el.id));
+    const selected = state.elements.filter((el) => idSet.has(el.id));
+    const reindexed = [...selected, ...nonSelected].map((el, idx) => ({ ...el, zIndex: idx }));
+    state.pushHistory();
+    set({
+      elements: reindexed,
       renderVersion: state.renderVersion + 1,
       isDirty: true,
     });
@@ -262,6 +392,27 @@ const useEditorStore = create((set, get) => ({
 
   setSelection: (ids) => {
     set({ selectedElementIds: Array.isArray(ids) ? ids : (ids ? [ids] : []) });
+  },
+
+  setSelectedElementIds: (ids) => {
+    set({ selectedElementIds: Array.isArray(ids) ? ids : (ids ? [ids] : []) });
+  },
+
+  selectElement: (id) => {
+    set({ selectedElementIds: id ? [id] : [] });
+  },
+
+  toggleSelection: (id) => {
+    const state = get();
+    if (state.selectedElementIds.includes(id)) {
+      set({ selectedElementIds: state.selectedElementIds.filter((sid) => sid !== id) });
+    } else {
+      set({ selectedElementIds: [...state.selectedElementIds, id] });
+    }
+  },
+
+  selectAll: () => {
+    set({ selectedElementIds: get().elements.map((el) => el.id) });
   },
 
   setActiveTool: (toolId) => {
@@ -284,11 +435,87 @@ const useEditorStore = create((set, get) => ({
   },
 
   // ============================================================
-  // Preview mode
+  // Design Version & Viewport Switching (Desktop / Mobile)
   // ============================================================
 
+  switchDesignVersion: (targetVersion) => {
+    const state = get();
+    if (state.activeDesignVersion === targetVersion) return;
+
+    // 1. Snapshot the CURRENT active design in memory
+    const currentDesignSnapshot = {
+      canvas: { ...state.canvas },
+      background: state.background ? JSON.parse(JSON.stringify(state.background)) : null,
+      elements: JSON.parse(JSON.stringify(state.elements)),
+      audio: state.audio ? JSON.parse(JSON.stringify(state.audio)) : null,
+      history: JSON.parse(JSON.stringify(state.history)),
+      historyIndex: state.historyIndex,
+    };
+
+    const isCurrentDesktop = state.activeDesignVersion === 'desktop';
+    const updatedDesktop = isCurrentDesktop ? currentDesignSnapshot : state.desktopDesign;
+    const updatedMobile = !isCurrentDesktop ? currentDesignSnapshot : state.mobileDesign;
+
+    // 2. Retrieve the TARGET design
+    const targetDesign = targetVersion === 'desktop' ? updatedDesktop : updatedMobile;
+
+    let targetElements = targetDesign.elements ? JSON.parse(JSON.stringify(targetDesign.elements)) : [];
+    let targetBg = targetDesign.background ? JSON.parse(JSON.stringify(targetDesign.background)) : null;
+    let targetAudio = targetDesign.audio ? JSON.parse(JSON.stringify(targetDesign.audio)) : null;
+    let targetCanvas = targetDesign.canvas || (targetVersion === 'desktop' ? CANVAS_SIZES.desktop : CANVAS_SIZES.mobile);
+
+    // If mobile design is empty and desktop has elements, create a starter mobile layout
+    if (targetVersion === 'mobile' && targetElements.length === 0 && updatedDesktop.elements?.length > 0) {
+      targetBg = updatedDesktop.background ? JSON.parse(JSON.stringify(updatedDesktop.background)) : null;
+      targetAudio = updatedDesktop.audio ? JSON.parse(JSON.stringify(updatedDesktop.audio)) : null;
+      const scaleFactor = CANVAS_SIZES.mobile.width / CANVAS_SIZES.desktop.width;
+
+      targetElements = updatedDesktop.elements.map((el) => {
+        const copy = JSON.parse(JSON.stringify(el));
+        copy.id = `el_mob_${Date.now()}_${Math.floor(Math.random() * 10000)}`;
+        copy.x = Math.round((el.x || 0) * scaleFactor);
+        copy.y = Math.round((el.y || 0) * scaleFactor);
+        copy.width = Math.min(340, Math.round((el.width || 100) * scaleFactor));
+        copy.height = Math.round((el.height || 100) * scaleFactor);
+
+        if (copy.textData) {
+          copy.textData.fontSize = Math.max(16, Math.round((el.textData.fontSize || 36) * 0.7));
+          if (copy.width > 320) copy.width = 320;
+        }
+        return copy;
+      });
+    }
+
+    set({
+      activeDesignVersion: targetVersion,
+      previewMode: targetVersion,
+      desktopDesign: updatedDesktop,
+      mobileDesign:
+        targetVersion === 'mobile' && targetDesign.elements?.length === 0
+          ? {
+              canvas: targetCanvas,
+              background: targetBg,
+              elements: targetElements,
+              audio: targetAudio,
+              history: [],
+              historyIndex: -1,
+            }
+          : updatedMobile,
+
+      canvas: { ...targetCanvas, zoom: 1 },
+      background: targetBg,
+      elements: targetElements,
+      audio: targetAudio,
+      selectedElementIds: [],
+      history: targetDesign.history || [],
+      historyIndex: targetDesign.historyIndex ?? -1,
+      renderVersion: state.renderVersion + 1,
+    });
+  },
+
   setPreviewMode: (mode) => {
-    set({ previewMode: mode, isDirty: true });
+    const state = get();
+    state.switchDesignVersion(mode);
   },
 
   // ============================================================
@@ -301,7 +528,7 @@ const useEditorStore = create((set, get) => ({
     set({
       background: bg,
       renderVersion: state.renderVersion + 1,
-      isDirty: true
+      isDirty: true,
     });
   },
 
@@ -311,13 +538,16 @@ const useEditorStore = create((set, get) => ({
     set({
       background: null,
       renderVersion: state.renderVersion + 1,
-      isDirty: true
+      isDirty: true,
     });
   },
 
   incrementVersion: () => {
     set((state) => ({ renderVersion: state.renderVersion + 1 }));
   },
+
+  // ============================================================
+  // Audio
   // ============================================================
 
   setAudio: (audio) => {
@@ -366,14 +596,12 @@ const useEditorStore = create((set, get) => ({
 
   pushHistory: () => {
     const state = get();
-    // Discard any future states (if we undid and then made a change)
     const history = state.history.slice(0, state.historyIndex + 1);
     const snapshot = {
       elements: JSON.parse(JSON.stringify(state.elements)),
       background: state.background ? JSON.parse(JSON.stringify(state.background)) : null,
     };
     history.push(snapshot);
-    // Cap history
     if (history.length > state.maxHistory) {
       history.shift();
     }
@@ -417,34 +645,111 @@ const useEditorStore = create((set, get) => ({
 
   loadQuote: (editorData) => {
     if (!editorData) return;
-    set({
-      editorVersion: editorData.version || EDITOR_VERSION,
+
+    let desktopData = null;
+    let mobileData = null;
+
+    if (editorData.desktop && editorData.mobile) {
+      desktopData = editorData.desktop;
+      mobileData = editorData.mobile;
+    } else if (editorData.desktop) {
+      desktopData = editorData.desktop;
+      mobileData = {
+        canvas: CANVAS_SIZES.mobile,
+        background: null,
+        elements: [],
+        audio: null,
+      };
+    } else {
+      // Legacy format (elements and canvas at top level)
+      desktopData = {
+        canvas: editorData.canvas || CANVAS_SIZES.desktop,
+        background: editorData.background || null,
+        elements: Array.isArray(editorData.elements) ? editorData.elements : [],
+        audio: editorData.audio || null,
+      };
+      mobileData = {
+        canvas: CANVAS_SIZES.mobile,
+        background: null,
+        elements: [],
+        audio: null,
+      };
+    }
+
+    const desktopSnapshot = {
       canvas: {
-        width: editorData.canvas?.width || CANVAS_DEFAULTS.width,
-        height: editorData.canvas?.height || CANVAS_DEFAULTS.height,
+        width: desktopData.canvas?.width || CANVAS_SIZES.desktop.width,
+        height: desktopData.canvas?.height || CANVAS_SIZES.desktop.height,
         zoom: 1,
       },
-      elements: editorData.elements || [],
-      background: editorData.background || null,
-      audio: editorData.audio || null,
+      background: desktopData.background ? JSON.parse(JSON.stringify(desktopData.background)) : null,
+      elements: Array.isArray(desktopData.elements) ? JSON.parse(JSON.stringify(desktopData.elements)) : [],
+      audio: desktopData.audio ? JSON.parse(JSON.stringify(desktopData.audio)) : null,
+      history: [],
+      historyIndex: -1,
+    };
+
+    const mobileSnapshot = {
+      canvas: {
+        width: mobileData.canvas?.width || CANVAS_SIZES.mobile.width,
+        height: mobileData.canvas?.height || CANVAS_SIZES.mobile.height,
+        zoom: 1,
+      },
+      background: mobileData.background ? JSON.parse(JSON.stringify(mobileData.background)) : null,
+      elements: Array.isArray(mobileData.elements) ? JSON.parse(JSON.stringify(mobileData.elements)) : [],
+      audio: mobileData.audio ? JSON.parse(JSON.stringify(mobileData.audio)) : null,
+      history: [],
+      historyIndex: -1,
+    };
+
+    set((state) => ({
+      editorVersion: '2.0',
+      activeDesignVersion: 'desktop',
+      previewMode: 'desktop',
+      desktopDesign: desktopSnapshot,
+      mobileDesign: mobileSnapshot,
+
+      canvas: { ...desktopSnapshot.canvas },
+      background: desktopSnapshot.background,
+      elements: desktopSnapshot.elements,
+      audio: desktopSnapshot.audio,
+      selectedElementIds: [],
       history: [],
       historyIndex: -1,
       isDirty: false,
       isLoading: false,
-      renderVersion: 0,
-    });
+      renderVersion: state.renderVersion + 1,
+    }));
   },
 
   toEditorData: () => {
     const state = get();
+    // Flush current active design snapshot
+    const currentSnapshot = {
+      canvas: { ...state.canvas },
+      background: state.background ? JSON.parse(JSON.stringify(state.background)) : null,
+      elements: JSON.parse(JSON.stringify(state.elements)),
+      audio: state.audio ? JSON.parse(JSON.stringify(state.audio)) : null,
+    };
+
+    const isCurrentDesktop = state.activeDesignVersion === 'desktop';
+    const desktop = isCurrentDesktop ? currentSnapshot : state.desktopDesign;
+    const mobile = !isCurrentDesktop ? currentSnapshot : state.mobileDesign;
+
     return {
-      version: state.editorVersion,
-      canvas: {
-        width: state.canvas.width,
-        height: state.canvas.height,
+      version: '2.0',
+      desktop: {
+        canvas: { width: desktop.canvas.width, height: desktop.canvas.height },
+        background: desktop.background,
+        elements: desktop.elements,
+        audio: desktop.audio,
       },
-      elements: state.elements,
-      audio: state.audio || undefined,
+      mobile: {
+        canvas: { width: mobile.canvas.width, height: mobile.canvas.height },
+        background: mobile.background,
+        elements: mobile.elements,
+        audio: mobile.audio,
+      },
     };
   },
 

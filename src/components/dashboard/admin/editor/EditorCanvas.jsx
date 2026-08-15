@@ -9,27 +9,29 @@ import { PREVIEW_MODES } from './editorConstants';
 export default function EditorCanvas() {
   const canvasElRef = useRef(null);
   const containerRef = useRef(null);
-  const previewMode = useEditorStore((s) => s.previewMode);
+  const activeDesignVersion = useEditorStore((s) => s.activeDesignVersion);
+  const canvasConfig = useEditorStore((s) => s.canvas);
 
   useEditorCanvas(canvasElRef, containerRef);
   useEditorSync();
 
-  // Desktop = canvas natural aspect (800:600 = 4:3)
-  // Mobile = vertical phone aspect
-  const aspectClass =
-    previewMode === PREVIEW_MODES.mobile
-      ? 'aspect-[9/19.5]'
-      : 'aspect-[4/3]';
+  const isMobile = activeDesignVersion === 'mobile';
+  const width = canvasConfig?.width || (isMobile ? 375 : 800);
+  const height = canvasConfig?.height || (isMobile ? 667 : 600);
 
   return (
     <div
       ref={containerRef}
-      className={`rounded-xl shadow-sm border border-border overflow-hidden bg-muted ${aspectClass}`}
+      style={{
+        width: `${width}px`,
+        height: `${height}px`,
+      }}
+      className="relative rounded-2xl shadow-xl border border-border overflow-hidden bg-white shrink-0 transition-all duration-300"
     >
       <canvas
         ref={canvasElRef}
         id="editor-canvas"
-        className="block w-full h-full"
+        className="block"
         tabIndex={0}
       />
     </div>

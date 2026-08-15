@@ -13,6 +13,11 @@ export const CANVAS_DEFAULTS = {
   aspectRatio: { width: 4, height: 3 },
 };
 
+export const CANVAS_SIZES = {
+  desktop: { width: 800, height: 600 },
+  mobile: { width: 375, height: 667 },
+};
+
 export const ZOOM = {
   min: 0.25,
   max: 2,

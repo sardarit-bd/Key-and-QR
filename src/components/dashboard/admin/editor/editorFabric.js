@@ -119,6 +119,10 @@ export async function initStaticCanvas(canvasEl, width, height) {
     backgroundColor: CANVAS_DEFAULTS.backgroundColor,
   });
 
+  if (canvas.viewportTransform) {
+    canvas.viewportTransform = [1, 0, 0, 1, 0, 0];
+  }
+
   canvasInstance = canvas;
   return canvas;
 }
@@ -133,8 +137,12 @@ export function isInitialized() {
 
 export function setCanvasSize(width, height) {
   if (!canvasInstance) return;
-  canvasInstance.setWidth(width);
-  canvasInstance.setHeight(height);
+  if (typeof canvasInstance.setDimensions === 'function') {
+    canvasInstance.setDimensions({ width, height });
+  } else {
+    canvasInstance.width = width;
+    canvasInstance.height = height;
+  }
   canvasInstance.renderAll();
 }
 
@@ -159,15 +167,13 @@ export function fitCanvasToContainer(containerWidth, containerHeight) {
   if (!canvasInstance) return 1;
   const cw = canvasInstance.width;
   const ch = canvasInstance.height;
-  const scaleX = (containerWidth - 80) / cw;
-  const scaleY = (containerHeight - 80) / ch;
-  const zoom = Math.min(scaleX, scaleY, 1);
-  const center = { x: containerWidth / 2, y: containerHeight / 2 };
-  canvasInstance.zoomToPoint(center, zoom);
-  canvasInstance.viewportTransform[4] = (containerWidth - cw * zoom) / 2;
-  canvasInstance.viewportTransform[5] = (containerHeight - ch * zoom) / 2;
+  if (!cw || !ch) return 1;
+
+  if (canvasInstance.viewportTransform) {
+    canvasInstance.viewportTransform = [1, 0, 0, 1, 0, 0];
+  }
   canvasInstance.renderAll();
-  return zoom;
+  return 1;
 }
 
 // ============================================================
@@ -310,8 +316,6 @@ export async function renderElements(elements, background) {
   const f = await getFabric();
   if (!canvasInstance) return;
 
-  console.log("[DEBUG CANVAS] renderElements called with", elements.length, "elements");
-
   // Save current viewport transform
   const savedVpt = canvasInstance.viewportTransform
     ? [...canvasInstance.viewportTransform]
@@ -327,12 +331,9 @@ export async function renderElements(elements, background) {
 
   for (const el of sorted) {
     try {
-      console.log("[DEBUG CANVAS] Rendering element:", el.id, "type:", el.type);
       const obj = await elementToFabricObject(el);
-      console.log("[DEBUG CANVAS] elementToFabricObject resolved to:", obj ? obj.type || "unknown" : "null/undefined");
       if (obj) {
         canvasInstance.add(obj);
-        console.log("[DEBUG CANVAS] Object added to canvas. Canvas object count now:", canvasInstance.getObjects().length);
       }
     } catch (err) {
       console.warn('[Editor] Failed to render element:', el.id, err);
@@ -345,7 +346,6 @@ export async function renderElements(elements, background) {
   }
 
   canvasInstance.renderAll();
-  console.log("[DEBUG CANVAS] renderElements finished. Final objects on canvas:", canvasInstance.getObjects().map(o => ({ id: o.data?.elementId, type: o.type })));
   return true;
 }
 
@@ -439,7 +439,10 @@ export function getLucideIconSvgString(iconName, color, size = 48) {
   }
 }
 
-function calculateObjectFitScales(imgWidth, imgHeight, containerWidth, containerHeight, fit) {
+function calculateObjectFitScales(imgWidth, imgHeight, containerWidth, containerHeight, fit = 'cover') {
+  if (!imgWidth || !imgHeight || !containerWidth || !containerHeight) {
+    return { scaleX: 1, scaleY: 1 };
+  }
   const containerRatio = containerWidth / containerHeight;
   const imageRatio = imgWidth / imgHeight;
   
@@ -467,7 +470,10 @@ function calculateObjectFitScales(imgWidth, imgHeight, containerWidth, container
     scaleY = containerHeight / imgHeight;
   }
   
-  return { scaleX, scaleY };
+  return {
+    scaleX: Number.isFinite(scaleX) && scaleX > 0 ? scaleX : 1,
+    scaleY: Number.isFinite(scaleY) && scaleY > 0 ? scaleY : 1,
+  };
 }
 
 export async function elementToFabricObject(el) {
@@ -523,32 +529,27 @@ export async function elementToFabricObject(el) {
     }
 
     case 'image': {
-      console.log("[DEBUG IMAGE] Processing element:", el.id, "URL:", el.imageData?.source?.url);
       if (!el.imageData?.source?.url) {
-        console.warn("[DEBUG IMAGE] No image URL found for element:", el.id);
         return null;
       }
       return new Promise(async (resolve) => {
         try {
           const ImageClass = f.FabricImage || f.Image;
           if (!ImageClass) {
-            console.error('[Editor] FabricImage or Image class not found on fabric module.');
+            console.error('[Editor] FabricImage class not found on fabric module.');
             resolve(null);
             return;
           }
 
-          console.log("[DEBUG IMAGE] Loading image from URL...");
           const img = await ImageClass.fromURL(el.imageData.source.url, {
             crossOrigin: 'anonymous',
           });
 
           if (!img) {
-            console.warn("[DEBUG IMAGE] Failed to create image object from URL.");
             resolve(null);
             return;
           }
 
-          console.log("[DEBUG IMAGE] Image loaded. Natural size:", img.width, "x", img.height);
           const fit = el.imageData.fit || 'cover';
           const { scaleX, scaleY } = calculateObjectFitScales(
             img.width,
@@ -558,7 +559,6 @@ export async function elementToFabricObject(el) {
             fit
           );
 
-          console.log("[DEBUG IMAGE] Fit mode:", fit, "Calculated scales:", scaleX, scaleY);
           img.set({
             ...common,
             width: img.width,
@@ -575,21 +575,9 @@ export async function elementToFabricObject(el) {
             ...img.data,
           });
 
-          console.log("[DEBUG IMAGE] Fabric Image object created:", {
-            type: img.type,
-            left: img.left,
-            top: img.top,
-            width: img.width,
-            height: img.height,
-            scaleX: img.scaleX,
-            scaleY: img.scaleY,
-            visible: img.visible,
-            opacity: img.opacity
-          });
-
           resolve(img);
         } catch (err) {
-          console.error('[DEBUG IMAGE] Error in image loader:', err);
+          console.warn('[Editor] Failed to load image element:', el.id, err);
           resolve(null);
         }
       });
@@ -768,34 +756,49 @@ export async function elementToFabricObject(el) {
 
     case 'audio': {
       const audioTitle = el.audioData?.title || 'Audio Track';
+      const truncatedTitle = audioTitle.length > 22 ? audioTitle.slice(0, 20) + '…' : audioTitle;
+      const subtitleText = el.audioData?.source ? '🎵 Ready to play' : 'No audio file uploaded';
+
       const bg = new f.Rect({
         left: 0,
         top: 0,
-        width: 300,
-        height: 70,
-        rx: 10,
-        ry: 10,
-        fill: '#f1f5f9',
+        width: 260,
+        height: 56,
+        rx: 12,
+        ry: 12,
+        fill: '#ffffff',
         stroke: '#cbd5e1',
-        strokeWidth: 1,
+        strokeWidth: 1.5,
         originX: 'center',
         originY: 'center',
       });
 
-      const title = new f.Text(audioTitle, {
-        left: -50,
-        top: -10,
+      const iconBg = new f.Rect({
+        left: -96,
+        top: 0,
+        width: 36,
+        height: 36,
+        rx: 8,
+        ry: 8,
+        fill: '#eef2ff',
+        originX: 'center',
+        originY: 'center',
+      });
+
+      const title = new f.Text(truncatedTitle, {
+        left: -65,
+        top: -8,
         fontFamily: 'Inter',
         fontSize: 12,
-        fontWeight: 'bold',
-        fill: '#334155',
+        fontWeight: '600',
+        fill: '#0f172a',
         originX: 'left',
         originY: 'center',
       });
 
-      const subtitle = new f.Text('Audio Element', {
-        left: -50,
-        top: 12,
+      const subtitle = new f.Text(subtitleText, {
+        left: -65,
+        top: 10,
         fontFamily: 'Inter',
         fontSize: 10,
         fill: '#64748b',
@@ -803,24 +806,24 @@ export async function elementToFabricObject(el) {
         originY: 'center',
       });
 
-      const svgMusic = getLucideIconSvgString('Music', '#6366f1', 24);
+      const svgMusic = getLucideIconSvgString('Music', '#4f46e5', 18);
       return new Promise(async (resolve) => {
         try {
           const { objects, options } = await f.loadSVGFromString(svgMusic);
           const cleanObjects = (objects || []).filter(Boolean);
           const iconGroup = new f.Group(cleanObjects, {
             ...options,
-            left: -110,
+            left: -96,
             top: 0,
             originX: 'center',
             originY: 'center',
           });
 
-          const group = new f.Group([bg, iconGroup, title, subtitle], {
+          const group = new f.Group([bg, iconBg, iconGroup, title, subtitle], {
             left: el.x,
             top: el.y,
-            width: 300,
-            height: 70,
+            width: 260,
+            height: 56,
             originX: 'center',
             originY: 'center',
             angle: el.rotation || 0,
@@ -856,15 +859,40 @@ export async function elementToFabricObject(el) {
 export function fabricObjectToElement(obj) {
   const id = obj.data?.elementId || `el_${Date.now()}`;
 
+  let left = obj.left || 0;
+  let top = obj.top || 0;
+  let angle = obj.angle || 0;
+  let scaleX = obj.scaleX || 1;
+  let scaleY = obj.scaleY || 1;
+
+  // If object is inside an ActiveSelection group, compute absolute canvas transforms from matrix
+  if (obj.group && typeof obj.calcTransformMatrix === 'function') {
+    const matrix = obj.calcTransformMatrix();
+    if (matrix && matrix.length === 6) {
+      const a = matrix[0];
+      const b = matrix[1];
+      const c = matrix[2];
+      const d = matrix[3];
+      const e = matrix[4];
+      const f_val = matrix[5];
+
+      left = e;
+      top = f_val;
+      scaleX = Math.sqrt(a * a + b * b);
+      scaleY = Math.sqrt(c * c + d * d);
+      angle = Math.round(Math.atan2(b, a) * (180 / Math.PI));
+    }
+  }
+
   const base = {
     id,
-    x: obj.left || 0,
-    y: obj.top || 0,
+    x: left,
+    y: top,
     width: obj.width || 0,
     height: obj.height || 0,
-    rotation: obj.angle || 0,
-    scaleX: obj.scaleX || 1,
-    scaleY: obj.scaleY || 1,
+    rotation: angle,
+    scaleX: scaleX,
+    scaleY: scaleY,
     opacity: obj.opacity ?? 1,
     visible: obj.visible !== false,
     locked: !!obj.data?.locked,
@@ -1007,15 +1035,42 @@ export function getSelectedObjectIds() {
 }
 
 export function selectObjectById(id) {
+  selectObjectsByIds(id ? [id] : []);
+}
+
+export async function selectObjectsByIds(ids) {
   if (!canvasInstance) return;
-  canvasInstance.discardActiveObject();
-  const obj = canvasInstance
-    .getObjects()
-    .find((o) => o.data?.elementId === id);
-  if (obj) {
-    canvasInstance.setActiveObject(obj);
+  
+  if (!ids || ids.length === 0) {
+    canvasInstance.discardActiveObject();
     canvasInstance.renderAll();
+    return;
   }
+
+  const validIds = new Set(Array.isArray(ids) ? ids : [ids]);
+  const matchedObjects = canvasInstance
+    .getObjects()
+    .filter((o) => validIds.has(o.data?.elementId) && !o.data?.locked && o.visible !== false);
+
+  if (matchedObjects.length === 0) {
+    canvasInstance.discardActiveObject();
+    canvasInstance.renderAll();
+    return;
+  }
+
+  if (matchedObjects.length === 1) {
+    canvasInstance.setActiveObject(matchedObjects[0]);
+  } else {
+    const f = await getFabric();
+    const ActiveSelectionClass = f?.ActiveSelection;
+    if (ActiveSelectionClass) {
+      const activeSelection = new ActiveSelectionClass(matchedObjects, {
+        canvas: canvasInstance,
+      });
+      canvasInstance.setActiveObject(activeSelection);
+    }
+  }
+  canvasInstance.renderAll();
 }
 
 export function discardSelection() {

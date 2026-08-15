@@ -9,8 +9,8 @@ import { Button } from '@/components/ui/button';
 
 export default function EditorHeader() {
   const router = useRouter();
-  const previewMode = useEditorStore((s) => s.previewMode);
-  const setPreviewMode = useEditorStore((s) => s.setPreviewMode);
+  const activeDesignVersion = useEditorStore((s) => s.activeDesignVersion);
+  const switchDesignVersion = useEditorStore((s) => s.switchDesignVersion);
   const isDirty = useEditorStore((s) => s.isDirty);
   const isSaving = useEditorStore((s) => s.isSaving);
   const setSaving = useEditorStore((s) => s.setSaving);
@@ -28,13 +28,22 @@ export default function EditorHeader() {
 
   const handleSave = async () => {
     const editorData = toEditorData();
-    if (!editorData?.elements?.length) {
+    const hasElements =
+      editorData?.desktop?.elements?.length > 0 ||
+      editorData?.mobile?.elements?.length > 0 ||
+      editorData?.elements?.length > 0;
+
+    if (!hasElements) {
       toast.error('Add at least one element before saving.');
       return;
     }
 
-    // Find the first text element content to use as the main quote text
-    const textEl = editorData.elements.find((el) => el.type === 'text');
+    // Find first text element content to use as the main quote title/text
+    const textEl =
+      editorData?.desktop?.elements?.find((el) => el.type === 'text') ||
+      editorData?.mobile?.elements?.find((el) => el.type === 'text') ||
+      editorData?.elements?.find((el) => el.type === 'text');
+
     const plainText = textEl?.textData?.content || quoteText || 'Untitled Quote';
 
     setSaving(true);
@@ -63,8 +72,16 @@ export default function EditorHeader() {
 
   const handlePreview = () => {
     const data = toEditorData();
-    const json = JSON.stringify(data);
-    const url = `/admin/quotes/preview?data=${encodeURIComponent(json)}`;
+    const previewKey = quoteId ? `quote_preview_${quoteId}` : `quote_preview_temp_${Date.now()}`;
+    const previewParam = quoteId ? `id=${quoteId}` : `previewKey=${encodeURIComponent(previewKey)}`;
+
+    try {
+      sessionStorage.setItem(previewKey, JSON.stringify(data));
+    } catch (err) {
+      console.warn('SessionStorage quota exceeded, continuing with URL identifier:', err);
+    }
+
+    const url = `/admin/quotes/preview?${previewParam}&mode=${activeDesignVersion}`;
     window.open(url, '_blank');
   };
 
@@ -81,28 +98,33 @@ export default function EditorHeader() {
         <span className="text-sm font-medium text-foreground">Edit Quote</span>
       </div>
 
-      <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+      {/* Desktop / Mobile Switcher */}
+      <div className="flex items-center gap-1 bg-muted p-1 rounded-xl border border-border">
         <button
-          onClick={() => setPreviewMode('desktop')}
-          className={`w-8 h-7 flex items-center justify-center rounded-md transition-colors cursor-pointer ${
-            previewMode === 'desktop'
-              ? 'bg-background shadow-sm text-foreground'
-              : 'text-foreground-tertiary hover:text-foreground-secondary'
+          type="button"
+          onClick={() => switchDesignVersion('desktop')}
+          className={`h-7 px-3 flex items-center gap-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+            activeDesignVersion === 'desktop'
+              ? 'bg-background shadow-xs text-foreground font-semibold'
+              : 'text-foreground-tertiary hover:text-foreground'
           }`}
-          title="Desktop view"
+          title="Switch to Desktop Design"
         >
-          <Monitor size={15} />
+          <Monitor size={13} />
+          <span>Desktop</span>
         </button>
         <button
-          onClick={() => setPreviewMode('mobile')}
-          className={`w-8 h-7 flex items-center justify-center rounded-md transition-colors cursor-pointer ${
-            previewMode === 'mobile'
-              ? 'bg-background shadow-sm text-foreground'
-              : 'text-foreground-tertiary hover:text-foreground-secondary'
+          type="button"
+          onClick={() => switchDesignVersion('mobile')}
+          className={`h-7 px-3 flex items-center gap-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+            activeDesignVersion === 'mobile'
+              ? 'bg-background shadow-xs text-foreground font-semibold'
+              : 'text-foreground-tertiary hover:text-foreground'
           }`}
-          title="Mobile view"
+          title="Switch to Mobile Design"
         >
-          <Smartphone size={15} />
+          <Smartphone size={13} />
+          <span>Mobile</span>
         </button>
       </div>
 

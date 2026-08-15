@@ -25,30 +25,42 @@ export default function Toolbar() {
   const history = useEditorStore((s) => s.history);
   const undo = useEditorStore((s) => s.undo);
   const redo = useEditorStore((s) => s.redo);
-  const duplicateElement = useEditorStore((s) => s.duplicateElement);
-  const removeElement = useEditorStore((s) => s.removeElement);
-  const reorderElement = useEditorStore((s) => s.reorderElement);
+  const duplicateElements = useEditorStore((s) => s.duplicateElements);
+  const removeElements = useEditorStore((s) => s.removeElements);
+  const bringForward = useEditorStore((s) => s.bringForward);
+  const sendBackward = useEditorStore((s) => s.sendBackward);
   const updateElement = useEditorStore((s) => s.updateElement);
-  const setSelectedElementIds = useEditorStore((s) => s.setSelectedElementIds);
+  const setSelection = useEditorStore((s) => s.setSelection);
+  const toggleSelection = useEditorStore((s) => s.toggleSelection);
+  const setActiveSidebarTab = useEditorStore((s) => s.setActiveSidebarTab);
   const pushHistory = useEditorStore((s) => s.pushHistory);
 
   const canUndo = historyIndex >= 0;
   const canRedo = historyIndex + 1 < history.length;
   const hasSelection = selectedElementIds.length > 0;
-  const selectedId = selectedElementIds.length === 1 ? selectedElementIds[0] : null;
-  const selectedIndex = selectedId ? elements.findIndex((el) => el.id === selectedId) : -1;
 
   const handleAction = (key) => {
     switch (key) {
-      case 'undo': undo(); break;
-      case 'redo': redo(); break;
-      case 'duplicate': selectedId && duplicateElement(selectedId); break;
-      case 'delete': selectedId && removeElement(selectedId); break;
+      case 'undo':
+        undo();
+        break;
+      case 'redo':
+        redo();
+        break;
+      case 'duplicate':
+        if (hasSelection) duplicateElements(selectedElementIds);
+        break;
+      case 'delete':
+        if (hasSelection) removeElements(selectedElementIds);
+        break;
       case 'bringForward':
-        if (selectedIndex >= 0 && selectedIndex < elements.length - 1) reorderElement(selectedIndex, selectedIndex + 1);
+        if (hasSelection) bringForward(selectedElementIds);
         break;
       case 'sendBackward':
-        if (selectedIndex > 0) reorderElement(selectedIndex, selectedIndex - 1);
+        if (hasSelection) sendBackward(selectedElementIds);
+        break;
+      case 'layers':
+        setActiveSidebarTab('layers');
         break;
     }
   };
@@ -57,13 +69,17 @@ export default function Toolbar() {
     if (key === 'undo') return !canUndo;
     if (key === 'redo') return !canRedo;
     if (key === 'layers') return elements.length === 0;
-    if (key === 'duplicate' || key === 'delete' || key === 'bringForward' || key === 'sendBackward') return !hasSelection;
+    if (key === 'duplicate' || key === 'delete' || key === 'bringForward' || key === 'sendBackward')
+      return !hasSelection;
     return false;
   };
 
-  const handleSelectLayer = (id) => {
-    setSelectedElementIds([id]);
-    selectObjectById(id);
+  const handleSelectLayer = (e, id) => {
+    if (e.shiftKey || e.ctrlKey || e.metaKey) {
+      toggleSelection(id);
+    } else {
+      setSelection([id]);
+    }
   };
 
   const toggleLock = (el) => {
@@ -82,6 +98,9 @@ export default function Toolbar() {
       visible: nextVisible,
     });
     updateElement(el.id, { visible: nextVisible });
+    if (!nextVisible && selectedElementIds.includes(el.id)) {
+      toggleSelection(el.id);
+    }
     pushHistory();
   };
 
@@ -105,8 +124,17 @@ export default function Toolbar() {
                   </button>
                 </PopoverTrigger>
                 <PopoverContent align="center" side="top" sideOffset={12} className="w-56 p-2">
-                  <div className="text-[10px] font-semibold text-foreground-tertiary uppercase tracking-wider mb-2 px-1">
-                    Canvas Layers
+                  <div className="flex items-center justify-between mb-2 px-1">
+                    <span className="text-[10px] font-semibold text-foreground-tertiary uppercase tracking-wider">
+                      Canvas Layers ({elements.length})
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setActiveSidebarTab('layers')}
+                      className="text-[10px] text-primary hover:underline font-medium cursor-pointer"
+                    >
+                      Open Sidebar →
+                    </button>
                   </div>
                   <div className="space-y-1 max-h-48 overflow-y-auto">
                     {[...elements].reverse().map((el) => {
@@ -145,7 +173,7 @@ export default function Toolbar() {
                         >
                           <button
                             type="button"
-                            onClick={() => handleSelectLayer(el.id)}
+                            onClick={(e) => handleSelectLayer(e, el.id)}
                             className="flex items-center gap-2 flex-1 text-left truncate cursor-pointer font-medium"
                           >
                             <LayerIcon size={12} className="shrink-0" />
@@ -171,7 +199,7 @@ export default function Toolbar() {
                             </button>
                             <button
                               type="button"
-                              onClick={() => removeElement(el.id)}
+                              onClick={() => removeElements([el.id])}
                               className="p-1 hover:bg-red-500/10 rounded text-foreground-tertiary hover:text-red-500 cursor-pointer"
                               title="Delete Layer"
                             >

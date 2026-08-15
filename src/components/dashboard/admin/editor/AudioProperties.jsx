@@ -20,6 +20,7 @@ export default function AudioProperties({ selectedEl }) {
   const pushHistory = useEditorStore((s) => s.pushHistory);
 
   const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState(null);
   const [playing, setPlaying] = useState(false);
   const fileInputRef = useRef(null);
   const audioRef = useRef(null);
@@ -42,17 +43,16 @@ export default function AudioProperties({ selectedEl }) {
   // Pause preview player if URL changes or selected item changes
   useEffect(() => {
     setPlaying(false);
+    setUploadError(null);
     if (audioRef.current) {
       audioRef.current.pause();
     }
   }, [audioUrl, id]);
 
-  const applyAudioProp = useCallback(
-    (key, value) => {
+  const applyAudioProps = useCallback(
+    (props) => {
       if (!id) return;
-      patchElementData(id, 'audioData', {
-        [key]: value,
-      });
+      patchElementData(id, 'audioData', props);
       pushHistory();
       incrementVersion();
     },
@@ -60,17 +60,22 @@ export default function AudioProperties({ selectedEl }) {
   );
 
   const handleFileChange = async (e) => {
+    if (uploading) return;
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Reset input value so selecting the same file later triggers onChange
+    e.target.value = '';
+
     if (!file.type.startsWith('audio/')) {
-      toast.error('Please select an audio file (MP3, WAV, etc.)');
+      toast.error('Please select an audio file (MP3, WAV, AAC, etc.)');
       return;
     }
 
+    setUploadError(null);
     setUploading(true);
     const formData = new FormData();
-    formData.append('image', file); // Multer expects field name "image"
+    formData.append('image', file); // Multer uploadSingleImage expects field name "image"
 
     try {
       const response = await api.post('/upload/single', formData, {
@@ -79,17 +84,20 @@ export default function AudioProperties({ selectedEl }) {
 
       if (response.data?.success && response.data?.data?.url) {
         const url = response.data.data.url;
-        applyAudioProp('source', url);
-        if (!title) {
-          applyAudioProp('title', file.name.replace(/\.[^/.]+$/, ""));
-        }
+        const newTitle = title || file.name.replace(/\.[^/.]+$/, '');
+        applyAudioProps({
+          source: url,
+          title: newTitle,
+        });
         toast.success('Audio file uploaded successfully');
       } else {
-        throw new Error('Invalid response from server');
+        throw new Error(response.data?.message || 'Invalid response from server');
       }
     } catch (err) {
-      console.error(err);
-      toast.error(err?.response?.data?.message || err?.message || 'Failed to upload audio');
+      console.error('[AudioUpload]', err);
+      const userMessage = err?.response?.data?.message || 'Audio upload failed. Please try again.';
+      setUploadError(userMessage);
+      toast.error(userMessage);
     } finally {
       setUploading(false);
     }
@@ -175,6 +183,18 @@ export default function AudioProperties({ selectedEl }) {
             </>
           )}
         </button>
+        {uploadError && (
+          <div className="mt-2 p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-[11px] text-red-600 dark:text-red-400 flex items-center justify-between">
+            <span>{uploadError}</span>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="underline font-medium hover:opacity-80 ml-2 shrink-0 cursor-pointer"
+            >
+              Retry
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Title */}
@@ -183,7 +203,7 @@ export default function AudioProperties({ selectedEl }) {
         <input
           type="text"
           value={title}
-          onChange={(e) => applyAudioProp('title', e.target.value)}
+          onChange={(e) => applyAudioProps({ title: e.target.value })}
           placeholder="e.g. Morning Inspiration"
           className="w-full px-2.5 py-1.5 text-xs border border-border rounded-lg bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30"
         />
@@ -199,7 +219,7 @@ export default function AudioProperties({ selectedEl }) {
           <input
             type="checkbox"
             checked={autoplay}
-            onChange={(e) => applyAudioProp('autoplay', e.target.checked)}
+            onChange={(e) => applyAudioProps({ autoplay: e.target.checked })}
             className="w-4 h-4 rounded border-border text-primary focus:ring-primary accent-primary cursor-pointer"
           />
         </div>
@@ -212,7 +232,7 @@ export default function AudioProperties({ selectedEl }) {
           <input
             type="checkbox"
             checked={loop}
-            onChange={(e) => applyAudioProp('loop', e.target.checked)}
+            onChange={(e) => applyAudioProps({ loop: e.target.checked })}
             className="w-4 h-4 rounded border-border text-primary focus:ring-primary accent-primary cursor-pointer"
           />
         </div>
@@ -232,7 +252,7 @@ export default function AudioProperties({ selectedEl }) {
             onChange={(e) => {
               const val = parseInt(e.target.value, 10);
               if (Number.isFinite(val)) {
-                applyAudioProp('volume', val / 100);
+                applyAudioProps({ volume: val / 100 });
               }
             }}
             className="w-full h-1.5 bg-muted rounded cursor-pointer accent-primary"
