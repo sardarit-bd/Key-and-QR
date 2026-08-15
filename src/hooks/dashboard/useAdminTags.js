@@ -73,5 +73,13 @@ export function useAdminTagActions() {
     onSettled: invalidate,
   });
 
-  return { createTag, updateTag };
+  const bulkGenerateTags = useMutation({
+    mutationFn: async ({ quantity, prefix }) => {
+      const res = await adminTagsService.bulkGenerateTags({ quantity, prefix });
+      return res;
+    },
+    onSettled: invalidate,
+  });
+
+  return { createTag, updateTag, bulkGenerateTags };
 }

@@ -10,7 +10,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
+import { AlignLeft, AlignCenter, AlignRight, Italic, Underline } from 'lucide-react';
 
 const FONT_WEIGHTS = [
   { value: 'normal', label: 'Regular' },
@@ -46,6 +46,7 @@ export default function TextProperties({ selectedEl }) {
     const fabricMap = {
       fontFamily: 'fontFamily', fontSize: 'fontSize',
       fontWeight: 'fontWeight', fontStyle: 'fontStyle',
+      underline: 'underline',
       lineHeight: 'lineHeight', textAlign: 'textAlign',
       color: 'fill',
       letterSpacing: (v) => ({ charSpacing: v * 10 }),
@@ -117,6 +118,28 @@ export default function TextProperties({ selectedEl }) {
                   {w.label}
                 </button>
               ))}
+            </div>
+          </div>
+
+          <div>
+            <label className={fieldLabel}>Style & Decoration</label>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => apply('fontStyle', td.fontStyle === 'italic' ? 'normal' : 'italic')}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg border text-xs transition-all cursor-pointer ${td.fontStyle === 'italic' ? activeBtn : normalBtn}`}
+                title="Italic"
+              >
+                <Italic size={14} />
+              </button>
+              <button
+                type="button"
+                onClick={() => apply('underline', !td.underline)}
+                className={`w-8 h-8 flex items-center justify-center rounded-lg border text-xs transition-all cursor-pointer ${td.underline ? activeBtn : normalBtn}`}
+                title="Underline"
+              >
+                <Underline size={14} />
+              </button>
             </div>
           </div>
 

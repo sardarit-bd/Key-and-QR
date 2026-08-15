@@ -36,7 +36,7 @@ function idShort(id) {
   return id?.slice(-8).toUpperCase() || '—';
 }
 
-function OrderRow({ order, onView, onStatus, onCancel, onDelete }) {
+function OrderRow({ order, onView, onStatus, onCancel, onDelete, onAssign }) {
   const fulfillmentStyle = FULFILLMENT_STYLES[order.fulfillmentStatus] || FULFILLMENT_STYLES.pending;
   const paymentStyle = PAYMENT_STYLES[order.paymentStatus] || PAYMENT_STYLES.pending;
   const productNames = order.items?.map((it) => it.product?.name).join(', ') || '—';
@@ -45,18 +45,26 @@ function OrderRow({ order, onView, onStatus, onCancel, onDelete }) {
   const actions = [
     { label: 'View Details', onClick: () => onView(order) },
     { separator: true },
+  ];
+
+  if (order.tagAssignmentStatus !== 'complete' && !isCancelOrReturn) {
+    actions.push({ label: 'Assign QR Tag', onClick: () => onAssign(order) });
+    actions.push({ separator: true });
+  }
+
+  actions.push(
     { label: 'Update Status', onClick: () => onStatus(order), disabled: isCancelOrReturn },
     { separator: true },
     { label: 'Cancel Order', onClick: () => onCancel(order), destructive: true, disabled: isCancelOrReturn },
     { separator: true },
-    { label: 'Delete Order', onClick: () => onDelete(order), destructive: true },
-  ];
+    { label: 'Delete Order', onClick: () => onDelete(order), destructive: true }
+  );
 
   return (
     <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,2.5fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,100px)_minmax(0,36px)] items-center gap-2 py-3 px-2 hover:bg-muted/30 rounded-lg transition-colors">
       <div className="min-w-0">
- <p className="text-xs font-medium text-foreground truncate">#{idShort(order._id)}</p>
- <p className="text-[10px] text-foreground-tertiary truncate">{order.orderNumber || ''}</p>
+        <p className="text-xs font-medium text-foreground truncate">#{idShort(order._id)}</p>
+        <p className="text-[10px] text-foreground-tertiary truncate">{order.orderNumber || ''}</p>
       </div>
 
       <div className="min-w-0">
@@ -83,7 +91,7 @@ function OrderRow({ order, onView, onStatus, onCancel, onDelete }) {
   );
 }
 
-export default function OrdersTable({ orders = [], onView, onStatus, onCancel, onDelete }) {
+export default function OrdersTable({ orders = [], onView, onStatus, onCancel, onDelete, onAssign }) {
   if (orders.length === 0) return null;
 
   return (
@@ -100,7 +108,7 @@ export default function OrdersTable({ orders = [], onView, onStatus, onCancel, o
         <div className="divide-y divide-border/50">
           {orders.map((order, i) => (
             <motion.div key={order._id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
-              <OrderRow order={order} onView={onView} onStatus={onStatus} onCancel={onCancel} onDelete={onDelete} />
+              <OrderRow order={order} onView={onView} onStatus={onStatus} onCancel={onCancel} onDelete={onDelete} onAssign={onAssign} />
             </motion.div>
           ))}
         </div>

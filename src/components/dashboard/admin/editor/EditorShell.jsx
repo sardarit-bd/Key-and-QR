@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect } from 'react';
 import EditorHeader from './EditorHeader';
 import ElementsPanel from './ElementsPanel';
 import EditorCanvas from './EditorCanvas';
@@ -13,6 +14,37 @@ export default function EditorShell() {
   const selectedEl = selectedElementIds.length === 1
     ? elements.find((el) => el.id === selectedElementIds[0])
     : null;
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const origLog = console.log;
+      const origWarn = console.warn;
+      const origError = console.error;
+
+      const sendToBackend = (type, args) => {
+        fetch('/api/v1/debug-log', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            args: [`[${type}]`, ...args.map(a => typeof a === 'object' ? JSON.stringify(a) : String(a))]
+          })
+        }).catch(() => {});
+      };
+
+      console.log = (...args) => {
+        origLog(...args);
+        sendToBackend('LOG', args);
+      };
+      console.warn = (...args) => {
+        origWarn(...args);
+        sendToBackend('WARN', args);
+      };
+      console.error = (...args) => {
+        origError(...args);
+        sendToBackend('ERROR', args);
+      };
+    }
+  }, []);
 
   return (
     <div className="flex flex-col h-screen bg-background">

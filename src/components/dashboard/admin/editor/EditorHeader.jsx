@@ -32,14 +32,22 @@ export default function EditorHeader() {
       toast.error('Add at least one element before saving.');
       return;
     }
+
+    // Find the first text element content to use as the main quote text
+    const textEl = editorData.elements.find((el) => el.type === 'text');
+    const plainText = textEl?.textData?.content || quoteText || 'Untitled Quote';
+
     setSaving(true);
     try {
       if (quoteId) {
-        await api.patch(`/quotes/${quoteId}`, { editorData });
+        await api.patch(`/quotes/${quoteId}`, {
+          text: plainText,
+          editorData,
+        });
         toast.success('Quote updated');
       } else {
         await api.post('/quotes', {
-          text: quoteText || 'Untitled Quote',
+          text: plainText,
           category: 'love',
           editorData,
         });

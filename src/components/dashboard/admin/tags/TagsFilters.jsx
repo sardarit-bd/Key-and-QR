@@ -11,24 +11,18 @@ import {
 } from '@/components/ui/select';
 import { motion } from 'framer-motion';
 
-const ACTIVATION_OPTIONS = [
-  { value: 'all', label: 'All Activations' },
-  { value: 'true', label: 'Activated' },
-  { value: 'false', label: 'Pending' },
-];
-
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All Statuses' },
-  { value: 'true', label: 'Active' },
-  { value: 'false', label: 'Disabled' },
+  { value: 'unused', label: 'Unused / Unassigned' },
+  { value: 'assigned', label: 'Assigned to Order' },
+  { value: 'activated', label: 'Activated / Claimed' },
+  { value: 'disabled', label: 'Disabled' },
 ];
 
 export default function TagsFilters({
   search,
   onSearchChange,
-  isActivated,
-  onActivationChange,
-  isActive,
+  status,
   onStatusChange,
   totalItems = 0,
 }) {
@@ -49,19 +43,8 @@ export default function TagsFilters({
           />
         </div>
 
-        <Select value={isActivated} onValueChange={onActivationChange}>
-          <SelectTrigger className="w-full sm:w-40 h-9">
-            <SelectValue placeholder="All Activations" />
-          </SelectTrigger>
-          <SelectContent>
-            {ACTIVATION_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        <Select value={isActive} onValueChange={onStatusChange}>
-          <SelectTrigger className="w-full sm:w-36 h-9">
+        <Select value={status} onValueChange={onStatusChange}>
+          <SelectTrigger className="w-full sm:w-56 h-9">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>

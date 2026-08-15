@@ -1,10 +1,11 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { CheckCircle, Trash2 } from 'lucide-react';
+import { QRCodeCanvas } from 'qrcode.react';
 import Card from '@/components/dashboard/user/dashboard/Card';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import { adminTagsService } from '@/services/dashboard-service/admin-tags.service';
@@ -54,6 +55,31 @@ export default function AdminAssignedTagsPage() {
   const [viewOrderOpen, setViewOrderOpen] = useState(false);
   const [viewOrder, setViewOrder] = useState(null);
 
+  const [downloadTag, setDownloadTag] = useState(null);
+
+  // Trigger file download offscreen when downloadTag is set
+  useEffect(() => {
+    if (downloadTag) {
+      const timer = setTimeout(() => {
+        const canvas = document.querySelector('#hidden-assigned-qr-download canvas');
+        if (canvas) {
+          const link = document.createElement('a');
+          link.download = `${downloadTag.tagCode}.png`;
+          link.href = canvas.toDataURL();
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+        }
+        setDownloadTag(null);
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [downloadTag]);
+
+  const handleDownload = useCallback((tag) => {
+    setDownloadTag(tag);
+  }, []);
+
   const queryClient = useQueryClient();
   const filters = { search: debouncedSearch, subscriptionType, page, limit: ITEMS_PER_PAGE };
 
@@ -96,7 +122,7 @@ export default function AdminAssignedTagsPage() {
   }, []);
 
   const handleViewOrder = useCallback(async (tag) => {
-    const orderId = tag.assignedOrderId;
+    const orderId = tag.assignedOrderId?._id || tag.assignedOrderId;
     if (!orderId) {
       setViewOrder({ _id: '—', orderNumber: '—', user: tag.owner });
       setViewOrderOpen(true);
@@ -118,13 +144,14 @@ export default function AdminAssignedTagsPage() {
   }, []);
 
   const handleReplaceConfirm = useCallback(async (newTagId) => {
-    if (!replaceTag?.assignedOrderId) {
+    const orderId = replaceTag?.assignedOrderId?._id || replaceTag?.assignedOrderId;
+    if (!orderId) {
       toast.error('This tag is not linked to an order. Cannot replace.');
       return;
     }
     try {
       await adminOrdersService.replaceOrderTag({
-        orderId: replaceTag.assignedOrderId,
+        orderId,
         oldTagId: replaceTag._id,
         newTagId,
       });
@@ -145,7 +172,7 @@ export default function AdminAssignedTagsPage() {
 
   const handleUnassignConfirm = useCallback(async () => {
     if (!unassignTag) return;
-    const orderId = unassignTag.assignedOrderId;
+    const orderId = unassignTag.assignedOrderId?._id || unassignTag.assignedOrderId;
     const tagId = unassignTag._id;
     try {
       if (orderId) {
@@ -286,6 +313,7 @@ export default function AdminAssignedTagsPage() {
           onToggleSelect={handleToggleSelect}
           onSelectAll={handleSelectAll}
           onShowQR={handleShowQR}
+          onDownload={handleDownload}
           onUnassign={handleUnassign}
           onViewUser={handleViewUser}
           onViewOrder={handleViewOrder}
@@ -295,6 +323,18 @@ export default function AdminAssignedTagsPage() {
 
       {meta.totalPage > 1 && (
         <Pagination currentPage={meta.page} totalPages={meta.totalPage} onPageChange={handlePageChange} className="pt-2" />
+      )}
+
+      {/* Offscreen Canvas for Direct PNG Downloads */}
+      {downloadTag && (
+        <div id="hidden-assigned-qr-download" className="hidden" style={{ display: 'none' }}>
+          <QRCodeCanvas
+            value={typeof window !== 'undefined' ? `${window.location.origin}/t/${downloadTag.tagCode}` : ''}
+            size={220}
+            level="H"
+            includeMargin
+          />
+        </div>
       )}
 
       <TagQRDialog open={!!qrTag} onOpenChange={(o) => { if (!o) setQrTag(null); }} tag={qrTag} />
