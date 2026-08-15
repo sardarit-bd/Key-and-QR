@@ -2,16 +2,26 @@
 
 import { useState, useCallback, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Quote, PenSquare, Plus } from 'lucide-react';
+import {
+  Quote,
+  PenSquare,
+  Plus,
+  Search,
+  Eye,
+  Trash2,
+  ToggleLeft,
+  ToggleRight,
+  Copy,
+  MoreVertical,
+  Calendar,
+  Sparkles,
+} from 'lucide-react';
 import Link from 'next/link';
-import Card from '@/components/dashboard/user/dashboard/Card';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import { useAdminQuotes, useAdminQuoteActions } from '@/hooks/dashboard/useAdminQuotes';
 import ConfirmDialog from '../shared/ConfirmDialog';
 import Pagination from '@/components/ui/Pagination';
-import QuoteFormModal from './QuoteFormModal';
 import { Input } from '@/components/ui/input';
-import { Search, Eye, Trash2, ToggleLeft, ToggleRight } from 'lucide-react';
 import {
   Select,
   SelectContent,
@@ -25,10 +35,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
 import { getCategoryBadgeClass, getCategoryLabel } from '@/components/category';
+import { resolveBackgroundImage } from '@/components/category/categoryImages';
+import api from '@/lib/api';
+import toast from 'react-hot-toast';
 
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 12;
 
 const ACTIVE_FILTERS = [
   { value: 'all', label: 'All Status' },
@@ -41,9 +61,53 @@ function formatDate(iso) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function getExcerpt(text, max = 80) {
+function getExcerpt(text, max = 110) {
   if (!text) return '—';
-  return text.length > max ? text.slice(0, max) + '...' : text;
+  return text.length > max ? text.slice(0, max) + '…' : text;
+}
+
+function getQuoteCardData(quote) {
+  const desktopElements =
+    quote.editorData?.desktop?.elements ||
+    quote.editorData?.elements ||
+    [];
+
+  // 1. Find visual image from editor elements, visual background, or legacy image
+  const imageEl = desktopElements.find(
+    (e) => e.type === 'image' && e.imageData?.source?.url
+  );
+  const visualBg = quote.editorData?.desktop?.background;
+  const visualBgImg = visualBg?.type === 'image' && visualBg.source?.url;
+
+  const customImg =
+    imageEl?.imageData?.source?.url || visualBgImg || quote.image?.url;
+  const bgUrl = resolveBackgroundImage(quote.category, customImg);
+
+  let bgStyle = {};
+  if (!customImg && visualBg?.type === 'solid' && visualBg.value) {
+    bgStyle = { backgroundColor: visualBg.value };
+  } else if (!customImg && visualBg?.type === 'gradient' && visualBg.value) {
+    bgStyle = { background: visualBg.value };
+  } else {
+    bgStyle = {
+      backgroundImage: `url(${bgUrl})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    };
+  }
+
+  // 2. Find visual quote text and canonical author
+  const textEl = desktopElements.find((e) => e.type === 'text');
+
+  const quoteText = textEl?.textData?.content?.trim() || quote.text || '';
+  const authorName = (quote.author || '').replace(/^—\s*/, '').trim();
+
+  return {
+    bgStyle,
+    bgUrl,
+    quoteText,
+    authorName,
+  };
 }
 
 export default function AdminQuotesPage() {
@@ -56,8 +120,6 @@ export default function AdminQuotesPage() {
   const [viewQuote, setViewQuote] = useState(null);
   const [deleteId, setDeleteId] = useState(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [formOpen, setFormOpen] = useState(false);
-  const [editQuote, setEditQuote] = useState(null);
 
   const { data: quoteCategories = [] } = useQuoteCategories();
 
@@ -68,21 +130,14 @@ export default function AdminQuotesPage() {
   const quotes = data?.data || [];
   const meta = data?.meta || { page: 1, totalPage: 0, total: 0 };
 
-  // Category filter options — built from the backend Category collection
-  // (single source of truth) PLUS the distinct categories actually present on
-  // quotes. This ensures every real quote category (e.g. "motivation",
-  // "hope", "success") is selectable even when it's not (yet) in the
-  // Category collection. Derived AFTER `quotes`/`data` are initialized.
   const categoryOptions = useMemo(() => {
-    const set = new Map(); // slug -> { value, label }
+    const set = new Map();
     set.set('all', { value: 'all', label: 'All Categories' });
 
-    // 1. Backend categories first (authoritative names).
     quoteCategories.forEach((cat) => {
       set.set(cat.slug, { value: cat.slug, label: cat.name || getCategoryLabel(cat.slug) });
     });
 
-    // 2. Distinct categories found on the loaded quotes (fallback names).
     quotes.forEach((q) => {
       if (q.category && !set.has(q.category)) {
         set.set(q.category, { value: q.category, label: getCategoryLabel(q.category) });
@@ -110,13 +165,38 @@ export default function AdminQuotesPage() {
     setDeleteId(null);
   }, [deleteId, deleteQuote]);
 
+  const handleDuplicate = async (quote) => {
+    const toastId = toast.loading('Duplicating quote...');
+    try {
+      await api.post('/quotes', {
+        text: `${quote.text} (Copy)`,
+        author: quote.author || 'InspireTag',
+        category: quote.category || 'love',
+        editorData: quote.editorData || null,
+      });
+      toast.success('Quote duplicated', { id: toastId });
+      refetch();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to duplicate quote', { id: toastId });
+    }
+  };
+
+  const openPreview = (quoteId) => {
+    window.open(`/admin/quotes/preview?id=${quoteId}&mode=desktop`, '_blank');
+  };
+
   if (isLoading && quotes.length === 0) {
     return (
-      <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 animate-pulse">
-        <div className="h-9 bg-card rounded-lg border border-border w-full" />
-        <div className="bg-card rounded-[22px] border border-border p-6 space-y-4">
-          <div className="h-4 bg-muted rounded w-24" />
-          {[...Array(5)].map((_, i) => <div key={i} className="h-14 bg-muted rounded-lg" />)}
+      <div className="min-h-screen p-4 sm:p-6 lg:p-8 space-y-6">
+        <div className="h-10 bg-card rounded-xl border border-border w-full animate-pulse" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="h-80 bg-card rounded-2xl border border-border animate-pulse p-4 space-y-3">
+              <div className="h-44 bg-muted rounded-xl" />
+              <div className="h-4 bg-muted rounded w-3/4" />
+              <div className="h-3 bg-muted rounded w-1/2" />
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -124,214 +204,268 @@ export default function AdminQuotesPage() {
 
   if (isError && quotes.length === 0) {
     return (
-      <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 flex items-center justify-center">
+      <div className="min-h-screen p-4 sm:p-6 lg:p-8 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-4">
           <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
             <Quote size={28} className="text-destructive" />
           </div>
-          <p className="text-destructive text-sm mb-2 font-medium">Failed to load quotes</p>
+          <p className="text-destructive text-sm mb-2 font-semibold">Failed to load quotes</p>
           <p className="text-foreground-tertiary text-xs mb-6">{error?.message || 'An unexpected error occurred.'}</p>
-          <button onClick={() => refetch()} className="px-6 py-3 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors cursor-pointer">Try Again</button>
+          <button
+            onClick={() => refetch()}
+            className="px-5 py-2.5 bg-primary text-primary-foreground text-xs font-semibold rounded-xl hover:bg-primary/90 transition-colors cursor-pointer"
+          >
+            Try Again
+          </button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6">
+    <div className="min-h-screen p-4 sm:p-6 lg:p-8 space-y-6">
+      {/* Page Header with Single Primary Create Quote Entry Point */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
-              <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20">
-                <Quote size={20} className="text-purple-400" />
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/20 text-purple-400">
+                <Quote size={20} />
               </span>
               All Quotes
             </h1>
-            <p className="text-sm text-foreground-secondary mt-2 ml-[52px]">
-              Browse and manage the curated quote collection.
+            <p className="text-xs sm:text-sm text-foreground-secondary mt-1.5 ml-[52px]">
+              Visual quote catalog and curated inspirations.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => { setEditQuote(null); setFormOpen(true); }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors text-sm cursor-pointer"
-            >
-              <Plus size={16} />
-              Create Quote
-            </button>
+
+          <div className="flex items-center gap-3">
             <Link
               href="/new-dashboard/admin/quotes/create-visual"
-              className="inline-flex items-center gap-2 px-4 py-2 border border-border bg-card text-foreground font-medium rounded-xl hover:bg-muted transition-colors text-sm"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-all text-xs sm:text-sm shadow-sm cursor-pointer"
             >
-              <PenSquare size={16} />
-              Visual Editor
+              <Plus size={16} />
+              <span>Create Quote</span>
             </Link>
           </div>
         </div>
       </motion.div>
 
-      {/* Filters */}
+      {/* Filters Bar */}
       <div className="flex flex-col sm:flex-row gap-3">
         <div className="relative flex-1">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary pointer-events-none" />
-          <Input value={search} onChange={(e) => handleSearchChange(e.target.value)} placeholder="Search quotes by text..." className="pl-9 h-9 text-sm" />
+          <Input
+            value={search}
+            onChange={(e) => handleSearchChange(e.target.value)}
+            placeholder="Search quotes by text or author..."
+            className="pl-9 h-10 text-xs rounded-xl"
+          />
         </div>
         <Select value={category} onValueChange={handleCategoryChange}>
-          <SelectTrigger className="w-full sm:w-40 h-9">
+          <SelectTrigger className="w-full sm:w-44 h-10 text-xs rounded-xl">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
             {categoryOptions.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
         <Select value={isActive} onValueChange={handleActiveChange}>
-          <SelectTrigger className="w-full sm:w-36 h-9">
+          <SelectTrigger className="w-full sm:w-36 h-10 text-xs rounded-xl">
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent>
             {ACTIVE_FILTERS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
       </div>
 
-      <p className="text-xs text-foreground-tertiary">{meta.total} quotes found</p>
+      <div className="flex items-center justify-between text-xs text-foreground-tertiary">
+        <span>{meta.total} quotes available</span>
+      </div>
 
-      {/* No results */}
+      {/* Empty State */}
       {!isLoading && quotes.length === 0 && (
-        <Card className="p-10 sm:p-12">
-          <div className="text-center">
-            <Quote size={40} className="mx-auto mb-3 text-muted-foreground" />
-            <p className="text-sm font-medium text-foreground mb-1">No quotes found</p>
-            <p className="text-xs text-foreground-tertiary">Try adjusting your search or filter criteria.</p>
+        <div className="rounded-2xl border border-border bg-card p-12 text-center">
+          <div className="w-14 h-14 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-3 text-foreground-tertiary">
+            <Quote size={28} />
           </div>
-        </Card>
-      )}
-
-      {/* Desktop table */}
-      {quotes.length > 0 && (
-        <div className="hidden lg:block">
-          <Card className="p-4 sm:p-5 md:p-6">
-            <div className="hidden lg:grid grid-cols-[minmax(0,3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,100px)_minmax(0,80px)] items-center gap-2 px-2 pb-2 text-[10px] text-foreground-tertiary font-medium uppercase tracking-wider border-b border-border/50 mb-1">
-              <span>Quote</span>
-              <span>Author</span>
-              <span>Category</span>
-              <span>Status</span>
-              <span className="text-right">Actions</span>
-            </div>
-            <div className="divide-y divide-border/50">
-              {quotes.map((quote, i) => (
-                <motion.div
-                  key={quote._id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: 0.05 * i }}
-                  className="grid grid-cols-[minmax(0,3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,100px)_minmax(0,80px)] items-center gap-2 py-3 px-2 hover:bg-muted/30 rounded-lg transition-colors"
-                >
-                  <div className="min-w-0">
-                    <p className="text-sm text-foreground truncate">{getExcerpt(quote.text)}</p>
-                  </div>
-                  <div className="text-xs text-foreground-secondary truncate">{quote.author || 'InspireTag'}</div>
-                  <div>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full border capitalize ${getCategoryBadgeClass(quote.category)}`}>
-                      {getCategoryLabel(quote.category)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full border ${quote.isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
-                      {quote.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-end gap-1">
-                  <button
-                    onClick={() => { setEditQuote(quote); setFormOpen(true); }}
-                    className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center hover:bg-primary/20 transition-colors cursor-pointer"
-                    title="Edit Quote"
-                  >
-                    <PenSquare size={12} className="text-primary" />
-                  </button>
-                  {quote.editorData && (
-                    <Link
-                      href={`/new-dashboard/admin/quotes/${quote._id}/edit-visual`}
-                      className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center hover:bg-emerald-500/20 transition-colors cursor-pointer"
-                      title="Edit Visual"
-                    >
-                      <PenSquare size={12} className="text-emerald-400" />
-                    </Link>
-                  )}
-                  <button
-                      onClick={() => setViewQuote(quote)}
-                      className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center hover:bg-primary/20 transition-colors cursor-pointer"
-                      title="View Details"
-                    >
-                      <Eye size={13} className="text-primary" />
-                    </button>
-                    <button
-                      onClick={() => toggleQuoteActive.mutate(quote._id)}
-                      className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center hover:bg-muted/80 transition-colors cursor-pointer"
-                      title={quote.isActive ? 'Deactivate' : 'Activate'}
-                    >
-                      {quote.isActive ? <ToggleRight size={13} className="text-emerald-400" /> : <ToggleLeft size={13} className="text-foreground-tertiary" />}
-                    </button>
-                    <button
-                      onClick={() => handleDelete(quote)}
-                      className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center hover:bg-red-500/20 transition-colors cursor-pointer"
-                      title="Delete"
-                    >
-                      <Trash2 size={13} className="text-red-400" />
-                    </button>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </Card>
+          <p className="text-sm font-semibold text-foreground mb-1">No quotes found</p>
+          <p className="text-xs text-foreground-tertiary mb-5">Try adjusting your search filters or create a new quote.</p>
+          <Link
+            href="/new-dashboard/admin/quotes/create-visual"
+            className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 text-xs"
+          >
+            <Plus size={14} />
+            <span>Create First Quote</span>
+          </Link>
         </div>
       )}
 
-      {/* Mobile cards */}
+      {/* Responsive Visual Quote Card Grid */}
       {quotes.length > 0 && (
-        <div className="lg:hidden space-y-3">
-          {quotes.map((quote) => (
-            <Card key={quote._id} className="p-4">
-              <p className="text-sm text-foreground mb-2">&ldquo;{getExcerpt(quote.text, 100)}&rdquo;</p>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full border capitalize ${getCategoryBadgeClass(quote.category)}`}>{getCategoryLabel(quote.category)}</span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full border ${quote.isActive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'}`}>
-                    {quote.isActive ? 'Active' : 'Inactive'}
-                  </span>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+          {quotes.map((quote, i) => {
+            const { bgStyle, quoteText, authorName } = getQuoteCardData(quote);
+
+            return (
+              <motion.div
+                key={quote._id}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.03 * Math.min(i, 12) }}
+                className="group relative flex flex-col rounded-2xl border border-border bg-card overflow-hidden shadow-xs hover:shadow-md transition-all"
+              >
+                {/* Visual Thumbnail Preview Area */}
+                <div
+                  style={bgStyle}
+                  className="relative aspect-[16/10] w-full flex flex-col justify-between p-4 overflow-hidden select-none"
+                >
+                  {/* Subtle Dark Gradient Overlay for readability */}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30 pointer-events-none" />
+
+                  {/* Top Badges (Category & Status) */}
+                  <div className="relative z-10 flex items-center justify-between gap-2">
+                    <span className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize backdrop-blur-md ${getCategoryBadgeClass(quote.category)}`}>
+                      {getCategoryLabel(quote.category)}
+                    </span>
+                    <span
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border backdrop-blur-md ${
+                        quote.isActive
+                          ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
+                          : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                      }`}
+                    >
+                      {quote.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </div>
+
+                  {/* Centered Quote Artwork Preview Text */}
+                  <div className="relative z-10 my-auto text-center px-2">
+                    <p className="text-xs sm:text-sm font-serif italic font-medium text-white line-clamp-3 leading-snug drop-shadow-sm">
+                      &ldquo;{quoteText}&rdquo;
+                    </p>
+                    {authorName && (
+                      <p className="text-[10px] text-white/80 font-sans tracking-wide mt-1.5 drop-shadow-xs">
+                        — {authorName}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Hover Quick Actions */}
+                  <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 backdrop-blur-xs flex items-center justify-center gap-2 transition-opacity z-20">
+                    <button
+                      type="button"
+                      onClick={() => openPreview(quote._id)}
+                      className="px-3 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-semibold backdrop-blur-md flex items-center gap-1.5 transition-colors cursor-pointer"
+                    >
+                      <Eye size={13} />
+                      <span>Preview</span>
+                    </button>
+                    <Link
+                      href={`/new-dashboard/admin/quotes/${quote._id}/edit-visual`}
+                      className="px-3 py-1.5 rounded-lg bg-primary hover:bg-primary/90 text-primary-foreground text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+                    >
+                      <PenSquare size={13} />
+                      <span>Edit</span>
+                    </Link>
+                  </div>
                 </div>
-                <div className="flex items-center gap-1">
-                  <button
-                    onClick={() => { setEditQuote(quote); setFormOpen(true); }}
-                    className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center hover:bg-primary/20 transition-colors cursor-pointer"
-                    title="Edit Quote"
-                  >
-                    <PenSquare size={12} className="text-primary" />
-                  </button>
-                  <button onClick={() => setViewQuote(quote)} className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center hover:bg-primary/20 transition-colors cursor-pointer">
-                    <Eye size={13} className="text-primary" />
-                  </button>
-                  <button onClick={() => handleDelete(quote)} className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center hover:bg-red-500/20 transition-colors cursor-pointer">
-                    <Trash2 size={13} className="text-red-400" />
-                  </button>
+
+                {/* Card Body & Metadata */}
+                <div className="p-4 flex-1 flex flex-col justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-medium text-foreground line-clamp-2 leading-relaxed">
+                      &ldquo;{getExcerpt(quoteText, 90)}&rdquo;
+                    </p>
+                    <div className="flex items-center justify-between text-[11px] text-foreground-tertiary mt-2">
+                      <span className="font-medium text-foreground-secondary truncate max-w-[130px]">
+                        {authorName ? `— ${authorName}` : '—'}
+                      </span>
+                      <span className="flex items-center gap-1 shrink-0">
+                        <Calendar size={11} />
+                        <span>{formatDate(quote.createdAt)}</span>
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Action Footer */}
+                  <div className="pt-3 border-t border-border/60 flex items-center justify-between gap-2">
+                    <Link
+                      href={`/new-dashboard/admin/quotes/${quote._id}/edit-visual`}
+                      className="flex-1 h-8 rounded-lg bg-primary/10 hover:bg-primary/20 text-primary border border-primary/20 flex items-center justify-center gap-1.5 text-xs font-semibold transition-colors"
+                    >
+                      <PenSquare size={12} />
+                      <span>Edit Visual</span>
+                    </Link>
+
+                    <button
+                      type="button"
+                      onClick={() => openPreview(quote._id)}
+                      className="h-8 px-2.5 rounded-lg border border-border hover:bg-muted text-foreground-secondary hover:text-foreground flex items-center justify-center transition-colors cursor-pointer"
+                      title="Open Full Preview"
+                    >
+                      <Eye size={13} />
+                    </button>
+
+                    {/* More Menu */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <button
+                          type="button"
+                          className="h-8 w-8 rounded-lg border border-border hover:bg-muted text-foreground-tertiary hover:text-foreground flex items-center justify-center transition-colors cursor-pointer"
+                          title="More actions"
+                        >
+                          <MoreVertical size={13} />
+                        </button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-44 text-xs">
+                        <DropdownMenuItem onClick={() => setViewQuote(quote)} className="cursor-pointer">
+                          <Sparkles size={13} className="mr-2 text-primary" />
+                          <span>View Details</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleDuplicate(quote)} className="cursor-pointer">
+                          <Copy size={13} className="mr-2 text-foreground-secondary" />
+                          <span>Duplicate</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => toggleQuoteActive.mutate(quote._id)} className="cursor-pointer">
+                          {quote.isActive ? (
+                            <>
+                              <ToggleLeft size={13} className="mr-2 text-amber-500" />
+                              <span>Deactivate</span>
+                            </>
+                          ) : (
+                            <>
+                              <ToggleRight size={13} className="mr-2 text-emerald-500" />
+                              <span>Activate</span>
+                            </>
+                          )}
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => handleDelete(quote)} className="text-destructive cursor-pointer">
+                          <Trash2 size={13} className="mr-2" />
+                          <span>Delete Quote</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          ))}
+              </motion.div>
+            );
+          })}
         </div>
       )}
 
       {/* Pagination */}
       {meta.totalPage > 1 && (
-        <Pagination currentPage={meta.page} totalPages={meta.totalPage} onPageChange={setPage} className="pt-2" />
+        <Pagination currentPage={meta.page} totalPages={meta.totalPage} onPageChange={setPage} className="pt-4" />
       )}
 
-      {/* View Dialog */}
+      {/* View Details Dialog */}
       <Dialog open={!!viewQuote} onOpenChange={(o) => { if (!o) setViewQuote(null); }}>
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
@@ -339,9 +473,9 @@ export default function AdminQuotesPage() {
           </DialogHeader>
           {viewQuote && (
             <div className="py-2 space-y-4">
-              <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
-                <p className="text-base text-foreground italic leading-relaxed">&ldquo;{viewQuote.text}&rdquo;</p>
-                <p className="text-sm text-foreground-tertiary mt-2">— {viewQuote.author || 'InspireTag'}</p>
+              <div className="bg-muted/40 rounded-xl p-4 border border-border/50">
+                <p className="text-base text-foreground italic font-serif leading-relaxed">&ldquo;{viewQuote.text}&rdquo;</p>
+                <p className="text-xs text-foreground-tertiary mt-2">— {viewQuote.author || 'InspireTag'}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -350,40 +484,48 @@ export default function AdminQuotesPage() {
                 </div>
                 <div>
                   <p className="text-[11px] text-foreground-tertiary font-medium uppercase tracking-wider">Status</p>
-                  <p className={`text-sm font-medium mt-0.5 ${viewQuote.isActive ? 'text-emerald-400' : 'text-amber-400'}`}>
+                  <p className={`text-sm font-semibold mt-0.5 ${viewQuote.isActive ? 'text-emerald-400' : 'text-amber-400'}`}>
                     {viewQuote.isActive ? 'Active' : 'Inactive'}
                   </p>
-                </div>
-                <div>
-                  <p className="text-[11px] text-foreground-tertiary font-medium uppercase tracking-wider">Allow Reuse</p>
-                  <p className="text-sm text-foreground mt-0.5">{viewQuote.allowReuse !== false ? 'Yes' : 'No'}</p>
                 </div>
                 <div>
                   <p className="text-[11px] text-foreground-tertiary font-medium uppercase tracking-wider">Created</p>
                   <p className="text-sm text-foreground mt-0.5">{formatDate(viewQuote.createdAt)}</p>
                 </div>
-              </div>
-              {viewQuote.description && (
                 <div>
-                  <p className="text-[11px] text-foreground-tertiary font-medium uppercase tracking-wider">Description</p>
-                  <p className="text-sm text-foreground mt-0.5">{viewQuote.description}</p>
+                  <p className="text-[11px] text-foreground-tertiary font-medium uppercase tracking-wider">Format</p>
+                  <p className="text-sm text-foreground mt-0.5">{viewQuote.editorData ? 'Visual Design 2.0' : 'Standard'}</p>
                 </div>
-              )}
+              </div>
+              <div className="pt-2 flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => openPreview(viewQuote._id)}
+                  className="px-3 py-1.5 rounded-lg border border-border hover:bg-muted text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  Open Preview
+                </button>
+                <Link
+                  href={`/new-dashboard/admin/quotes/${viewQuote._id}/edit-visual`}
+                  className="px-3 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-semibold transition-colors"
+                >
+                  Edit in Visual Editor
+                </Link>
+              </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* Quote Form Modal */}
-      <QuoteFormModal
-        open={formOpen}
-        onOpenChange={(open) => { setFormOpen(open); if (!open) setEditQuote(null); }}
-        editQuote={editQuote}
-        onSuccess={refetch}
-      />
-
       {/* Delete confirmation */}
-      <ConfirmDialog open={deleteOpen} onOpenChange={setDeleteOpen} variant="delete" onConfirm={handleDeleteConfirm} isLoading={deleteQuote.isPending} userName="" />
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        variant="delete"
+        onConfirm={handleDeleteConfirm}
+        isLoading={deleteQuote.isPending}
+        userName=""
+      />
     </div>
   );
 }

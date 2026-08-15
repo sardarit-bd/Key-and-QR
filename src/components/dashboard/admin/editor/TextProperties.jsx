@@ -62,9 +62,15 @@ export default function TextProperties({ selectedEl }) {
 
   const handleContentChange = useCallback((e) => {
     if (!selectedId) return;
+    const val = e.target.value;
     const obj = getObjectById(selectedId);
-    if (obj) { obj.set('text', e.target.value); obj.setCoords(); obj.canvas?.renderAll(); }
-    patchElementData(selectedId, 'textData', { content: e.target.value });
+    if (obj) {
+      obj.set('text', val);
+      obj.setCoords();
+      obj.canvas?.renderAll();
+    }
+    patchElementData(selectedId, 'textData', { content: val });
+    useEditorStore.setState({ quoteText: val, isDirty: true });
   }, [selectedId, patchElementData]);
 
   const sectionLabel = 'text-[11px] font-semibold text-foreground-tertiary uppercase tracking-wider mb-3';
@@ -78,13 +84,13 @@ export default function TextProperties({ selectedEl }) {
     <div className="space-y-6">
       {/* Content */}
       <div>
-        <p className={sectionLabel}>Content</p>
+        <p className={sectionLabel}>Text Content</p>
         <textarea
           value={td.content || ''}
           onChange={handleContentChange}
-          rows={4}
+          rows={3}
           className={`${inputClass} resize-none`}
-          placeholder="Enter quote text..."
+          placeholder="Enter text..."
         />
       </div>
 

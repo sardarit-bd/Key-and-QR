@@ -19,6 +19,7 @@ import {
   fitCanvasToContainer,
   renderElements,
   getSelectedObjectIds,
+  selectObjectsByIds,
   getObjectById,
 } from '@/components/dashboard/admin/editor/editorFabric';
 
@@ -53,6 +54,22 @@ export function useEditorCanvas(canvasElRef, containerRef) {
         );
         setZoom(zoom);
       }
+
+      // Render initial elements from store upon canvas ready
+      const initialElements = useEditorStore.getState().elements;
+      const initialBackground = useEditorStore.getState().background;
+      isRenderingRef.current = true;
+      renderElements(initialElements, initialBackground).then(() => {
+        const initialSelectedIds = useEditorStore.getState().selectedElementIds;
+        if (initialSelectedIds.length > 0) {
+          const obj = c.getObjects().find((o) => o.data?.elementId === initialSelectedIds[0]);
+          if (obj) {
+            c.setActiveObject(obj);
+            c.renderAll();
+          }
+        }
+        isRenderingRef.current = false;
+      });
 
       // Selection events → sync to store
       c.on('selection:created', () => {
@@ -144,9 +161,9 @@ export function useEditorCanvas(canvasElRef, containerRef) {
         // Ctrl/Cmd + D -> Duplicate
         if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') {
           const ids = getSelectedObjectIds();
-          if (ids.length === 1) {
+          if (ids.length > 0) {
             e.preventDefault();
-            useEditorStore.getState().duplicateElement(ids[0]);
+            useEditorStore.getState().duplicateElements(ids);
           }
           return;
         }
@@ -239,7 +256,14 @@ export function useEditorCanvas(canvasElRef, containerRef) {
   useEffect(() => {
     if (!isInitialized()) return;
     setCanvasSize(canvas.width, canvas.height);
-  }, [canvas.width, canvas.height]);
+    if (containerRef?.current) {
+      const zoom = fitCanvasToContainer(
+        containerRef.current.clientWidth,
+        containerRef.current.clientHeight
+      );
+      setZoom(zoom);
+    }
+  }, [canvas.width, canvas.height, setZoom, containerRef]);
 
   // ── Re-render elements only on structural version change ──
   useEffect(() => {
@@ -249,12 +273,7 @@ export function useEditorCanvas(canvasElRef, containerRef) {
       // Restore active selection
       const ids = useEditorStore.getState().selectedElementIds;
       if (ids.length > 0) {
-        const c = getCanvas();
-        const obj = c?.getObjects().find((o) => o.data?.elementId === ids[0]);
-        if (obj) {
-          c.setActiveObject(obj);
-          c.renderAll();
-        }
+        selectObjectsByIds(ids);
       }
       isRenderingRef.current = false;
     });
@@ -267,21 +286,15 @@ export function useEditorCanvas(canvasElRef, containerRef) {
     const c = getCanvas();
     if (!c) return;
 
-    const activeObj = c.getActiveObject();
-    const activeId = activeObj?.data?.elementId;
-    const selectedId = selectedElementIds.length === 1 ? selectedElementIds[0] : null;
+    const activeIds = getSelectedObjectIds();
+    const storeIds = selectedElementIds || [];
 
-    if (activeId !== selectedId) {
-      if (selectedId) {
-        const obj = c.getObjects().find((o) => o.data?.elementId === selectedId);
-        if (obj) {
-          c.setActiveObject(obj);
-          c.renderAll();
-        }
-      } else {
-        c.discardActiveObject();
-        c.renderAll();
-      }
+    const isSame =
+      activeIds.length === storeIds.length &&
+      activeIds.every((id) => storeIds.includes(id));
+
+    if (!isSame) {
+      selectObjectsByIds(storeIds);
     }
   }, [selectedElementIds]);
 

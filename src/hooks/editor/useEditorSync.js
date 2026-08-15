@@ -55,6 +55,7 @@ export function useEditorSync() {
         ...(el.imageData ? { imageData: el.imageData } : {}),
         ...(el.shapeData ? { shapeData: el.shapeData } : {}),
         ...(el.iconData ? { iconData: el.iconData } : {}),
+        ...(el.audioData ? { audioData: el.audioData } : {}),
       };
     };
 

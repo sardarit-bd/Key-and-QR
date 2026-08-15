@@ -3,6 +3,16 @@
 import { Type, Sparkles, Square, Image, Music } from 'lucide-react';
 import { useCallback, useRef } from 'react';
 import useEditorStore from './editorStore';
+import api from '@/lib/api';
+import toast from 'react-hot-toast';
+import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 const ELEMENTS = [
   { id: 'text', label: 'Text', icon: Type },
@@ -19,6 +29,12 @@ export default function ElementsPanel() {
   const elements = useEditorStore((s) => s.elements);
   const addElement = useEditorStore((s) => s.addElement);
   const setQuoteText = useEditorStore((s) => s.setQuoteText);
+  const quoteCategory = useEditorStore((s) => s.quoteCategory);
+  const setQuoteCategory = useEditorStore((s) => s.setQuoteCategory);
+  const quoteAuthor = useEditorStore((s) => s.quoteAuthor);
+  const setQuoteAuthor = useEditorStore((s) => s.setQuoteAuthor);
+
+  const { data: categories = [], isLoading: isCategoriesLoading } = useQuoteCategories();
   const fileRef = useRef(null);
 
   const handleClick = useCallback(
@@ -62,8 +78,8 @@ export default function ElementsPanel() {
           type: 'audio',
           x: cx + offset,
           y: cy + offset,
-          width: 300,
-          height: 70,
+          width: 260,
+          height: 56,
           rotation: 0,
           scaleX: 1,
           scaleY: 1,
@@ -73,7 +89,7 @@ export default function ElementsPanel() {
           zIndex: elements.length,
           audioData: {
             source: '',
-            title: 'New Track',
+            title: 'Audio Track',
             autoplay: false,
             loop: false,
             volume: 1,
@@ -97,6 +113,7 @@ export default function ElementsPanel() {
           locked: false,
           zIndex: elements.length,
           textData: {
+            role: 'quote',
             content: 'Type your quote here\u2026',
             fontFamily: 'Inter',
             fontSize: 24,
@@ -142,44 +159,75 @@ export default function ElementsPanel() {
   );
 
   const handleImageSelect = useCallback(
-    (e) => {
+    async (e) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      const url = URL.createObjectURL(file);
-      const { canvas } = useEditorStore.getState();
-      const cx = Math.round(canvas.width / 2);
-      const cy = Math.round(canvas.height / 2);
-      const offset = (elements.length % 10) * 20;
 
-      addElement({
-        type: 'image',
-        x: cx + offset,
-        y: cy + offset,
-        width: 300,
-        height: 200,
-        rotation: 0,
-        scaleX: 1,
-        scaleY: 1,
-        opacity: 1,
-        visible: true,
-        locked: false,
-        zIndex: elements.length,
-        imageData: {
-          source: {
-            type: 'cloudinary',
-            publicId: '',
-            url,
-          },
-          fit: 'cover',
-        },
-      });
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+
+      const toastId = toast.loading('Uploading image...');
+      const formData = new FormData();
+      formData.append('image', file);
+
+      try {
+        const response = await api.post('/upload/single', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+
+        if (response.data?.success && response.data?.data?.url) {
+          const url = response.data.data.url;
+          const publicId = response.data.data.public_id || '';
+          const { canvas } = useEditorStore.getState();
+          const cx = Math.round(canvas.width / 2);
+          const cy = Math.round(canvas.height / 2);
+          const offset = (elements.length % 10) * 20;
+
+          addElement({
+            type: 'image',
+            x: cx + offset,
+            y: cy + offset,
+            width: 300,
+            height: 200,
+            rotation: 0,
+            scaleX: 1,
+            scaleY: 1,
+            opacity: 1,
+            visible: true,
+            locked: false,
+            zIndex: elements.length,
+            imageData: {
+              source: {
+                type: 'cloudinary',
+                publicId,
+                url,
+              },
+              fit: 'cover',
+            },
+          });
+          toast.success('Image added', { id: toastId });
+        } else {
+          throw new Error('Invalid response from server');
+        }
+      } catch (err) {
+        console.error('Image upload failed:', err);
+        toast.error(
+          err?.response?.data?.message || err?.message || 'Failed to upload image',
+          { id: toastId }
+        );
+      } finally {
+        if (e.target) e.target.value = '';
+      }
     },
     [elements.length, addElement]
   );
 
   return (
-    <div className="p-4">
-      <div className="rounded-xl border border-border bg-card shadow-sm p-3 w-[152px]">
+    <div className="p-4 space-y-4">
+      {/* Elements Palette */}
+      <div className="rounded-xl border border-border bg-card shadow-xs p-3 w-[168px]">
         <p className="text-[9px] font-semibold text-foreground-tertiary uppercase tracking-widest mb-2 px-1">
           Elements
         </p>
@@ -196,6 +244,55 @@ export default function ElementsPanel() {
           ))}
         </div>
       </div>
+
+      {/* Quote Details (Category & Author) */}
+      <div className="rounded-xl border border-border bg-card shadow-xs p-3 w-[168px] space-y-3">
+        <p className="text-[9px] font-semibold text-foreground-tertiary uppercase tracking-widest px-1">
+          Quote Details
+        </p>
+
+        {/* Dynamic Category Selector */}
+        <div className="space-y-1">
+          <label className="text-[10px] font-medium text-foreground-secondary block px-1">
+            Category *
+          </label>
+          <Select
+            value={quoteCategory || ''}
+            onValueChange={(val) => setQuoteCategory(val)}
+            disabled={isCategoriesLoading}
+          >
+            <SelectTrigger className="w-full h-8 text-xs rounded-lg border-border bg-background px-2">
+              <SelectValue placeholder={isCategoriesLoading ? 'Loading...' : 'Select Category'} />
+            </SelectTrigger>
+            <SelectContent className="max-h-[220px]">
+              {categories.map((cat) => (
+                <SelectItem
+                  key={cat._id || cat.slug}
+                  value={cat.slug}
+                  className="text-xs"
+                >
+                  {cat.name || cat.slug}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Author Input */}
+        <div className="space-y-1">
+          <label className="text-[10px] font-medium text-foreground-secondary block px-1">
+            Author
+          </label>
+          <input
+            type="text"
+            value={quoteAuthor || ''}
+            onChange={(e) => setQuoteAuthor(e.target.value)}
+            placeholder="Author Name"
+            className="w-full h-8 px-2 rounded-lg border border-border bg-background text-xs text-foreground placeholder:text-foreground-tertiary focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+          />
+        </div>
+      </div>
+
       <input
         ref={fileRef}
         type="file"
