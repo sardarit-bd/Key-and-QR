@@ -21,29 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Upload, X, Save, Package } from 'lucide-react';
 import QuantityInput from '@/components/ui/QuantityInput';
-
-// Dynamic categories fetched from backend
 import { useCategories } from '@/hooks/dynamic-categories/useCategories';
-
-const CategorySelect = () => {
-  const { data: categories = [], isLoading } = useCategories();
-  return (
-    <Select value={category} onValueChange={(val) => { setCategory(val); setErrors((prev) => ({ ...prev, category: null })); }}>
-      <SelectTrigger id="prod-category" className={`h-10 rounded-lg ${errors.category ? 'border-destructive' : ''}`}>
-        <SelectValue placeholder="Select Category" />
-      </SelectTrigger>
-      <SelectContent>
-        {isLoading ? (
-          <SelectItem disabled value="loading">Loading...</SelectItem>
-        ) : (
-          categories.map((c) => (
-            <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-          ))
-        )}
-      </SelectContent>
-    </Select>
-  );
-};
 
 const STATUS_OPTIONS = [
   { value: 'true', label: 'Active' },
@@ -66,6 +44,16 @@ export default function ProductEditDialog({
   isLoading = false,
   mode = 'edit',
 }) {
+  const {
+    data: categoriesData,
+    isLoading: isCategoriesLoading,
+    isError: isCategoriesError,
+  } = useCategories();
+
+  const categories = Array.isArray(categoriesData)
+    ? categoriesData
+    : categoriesData?.data || [];
+
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
   const [categoryId, setCategoryId] = useState('');
@@ -86,7 +74,15 @@ export default function ProductEditDialog({
       if (product && mode === 'edit') {
         setName(product.name || '');
         setPrice(String(product.price ?? ''));
-        setCategoryId(product.category?.id || product.category || '');
+        const initialCatId =
+          (typeof product.categoryId === 'object' && product.categoryId !== null
+            ? (product.categoryId._id || product.categoryId.id)
+            : product.categoryId) ||
+          (typeof product.category === 'object' && product.category !== null
+            ? (product.category._id || product.category.id)
+            : product.category) ||
+          '';
+        setCategoryId(initialCatId ? String(initialCatId) : '');
         setBrand(product.brand || '');
         setStock(String(product.stock ?? '0'));
         setDescription(product.description || '');
@@ -226,7 +222,7 @@ export default function ProductEditDialog({
   const handleSave = () => {
     const newErrors = {};
     if (!name.trim()) newErrors.name = 'Product name required';
-    if (!category) newErrors.category = 'Category required';
+    if (!categoryId || !categoryId.trim()) newErrors.categoryId = 'Category required';
     if (!price || isNaN(Number(price)) || Number(price) < 0) newErrors.price = 'Valid price required';
     if (stock === '' || isNaN(Number(stock)) || Number(stock) < 0) newErrors.stock = 'Valid stock quantity required';
     if (mode === 'create' && !imageFile && !product?.image?.url) newErrors.image = 'Product image required';
@@ -239,7 +235,8 @@ export default function ProductEditDialog({
     const formData = new FormData();
     formData.append('name', name.trim());
     formData.append('price', Number(price));
-    formData.append('category', category);
+    formData.append('categoryId', categoryId.trim());
+    formData.append('category', categoryId.trim());
     formData.append('brand', brand.trim());
     formData.append('stock', Number(stock));
     formData.append('description', description.trim());
@@ -335,7 +332,7 @@ export default function ProductEditDialog({
                       <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                         {index > 0 && (
                           <button
-                            type="button;button"
+                            type="button"
                             onClick={() => moveGalleryImage(index, -1)}
                             className="w-5 h-5 rounded bg-background/90 flex items-center justify-center hover:bg-background transition-colors cursor-pointer text-xs font-bold text-foreground shadow-sm"
                             title="Move Left"
@@ -400,18 +397,61 @@ export default function ProductEditDialog({
             {/* Category + Brand row */}
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label htmlFor="prod-category" className="block text-xs font-semibold text-foreground-secondary">Category</label>
-                <Select value={category} onValueChange={(val) => { setCategory(val); setErrors((prev) => ({ ...prev, category: null })); }}>
-                  <SelectTrigger id="prod-category" className={`h-10 rounded-lg ${errors.category ? 'border-destructive' : ''}`}>
-                    <SelectValue placeholder="Select Category" />
+                <label htmlFor="prod-category" className="block text-xs font-semibold text-foreground-secondary">
+                  Category
+                </label>
+                <Select
+                  value={categoryId}
+                  onValueChange={(val) => {
+                    setCategoryId(val);
+                    setErrors((prev) => ({ ...prev, categoryId: null }));
+                  }}
+                  disabled={isCategoriesLoading}
+                >
+                  <SelectTrigger
+                    id="prod-category"
+                    className={`h-10 rounded-lg ${errors.categoryId ? 'border-destructive' : ''}`}
+                  >
+                    <SelectValue placeholder={isCategoriesLoading ? 'Loading categories...' : 'Select Category'} />
                   </SelectTrigger>
                   <SelectContent>
-                    {CATEGORIES.map((c) => (
-                      <SelectItem key={c} value={c}>{c}</SelectItem>
-                    ))}
+                    {isCategoriesLoading ? (
+                      <SelectItem disabled value="_loading">
+                        Loading categories...
+                      </SelectItem>
+                    ) : isCategoriesError ? (
+                      <SelectItem disabled value="_error">
+                        Failed to load categories
+                      </SelectItem>
+                    ) : categories.length === 0 ? (
+                      <SelectItem disabled value="_empty">
+                        No categories found
+                      </SelectItem>
+                    ) : (
+                      <>
+                        {categories.map((c) => {
+                          const id = String(c.id || c._id || '');
+                          const label = c.name || c.label || c.title || id;
+                          return (
+                            <SelectItem key={id} value={id}>
+                              {label}
+                            </SelectItem>
+                          );
+                        })}
+                        {categoryId &&
+                          !categories.some((c) => String(c.id || c._id) === categoryId) && (
+                            <SelectItem key={categoryId} value={categoryId}>
+                              {product?.categoryId?.name ||
+                                product?.category?.name ||
+                                product?.category ||
+                                categoryId}
+                            </SelectItem>
+                          )}
+                      </>
+                    )}
                   </SelectContent>
                 </Select>
-                {errors.category && <p className="text-xs text-destructive font-medium">{errors.category}</p>}
+                {errors.categoryId && <p className="text-xs text-destructive font-medium">{errors.categoryId}</p>}
               </div>
               <div className="space-y-1.5">
                 <label htmlFor="prod-brand" className="block text-xs font-semibold text-foreground-secondary">Brand</label>

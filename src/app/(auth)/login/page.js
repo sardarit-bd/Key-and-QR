@@ -1,5 +1,3 @@
-// app/(auth)/login/page.js
-
 "use client";
 
 import { motion } from "framer-motion";
@@ -12,6 +10,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 import toast, { Toaster } from 'react-hot-toast';
 import { Card, CardContent } from "@/components/ui/card";
+import { PasswordInput } from "@/components/ui/PasswordInput";
+import { Input } from "@/components/ui/input";
 
 export default function LoginPage() {
   return (
@@ -25,7 +25,7 @@ function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectPath = searchParams.get("redirect") || "/new-dashboard/user";
-  
+
   const { user, isInitialized } = useAuthStore();
   const loginMutation = useLoginMutation();
 
@@ -33,6 +33,30 @@ function LoginPageContent() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const inputClassName = `
+  w-full
+  h-12
+  px-4
+  rounded-lg
+  border
+  border-gray-300
+  bg-white/80
+  text-gray-900
+  placeholder:text-gray-400
+
+  focus:outline-none
+  focus:ring-0
+  focus:ring-transparent
+  focus:border-gray-500
+
+  focus-visible:outline-none
+  focus-visible:ring-0
+  focus-visible:ring-transparent
+  focus-visible:border-gray-500
+
+  transition-all duration-200
+`;
 
   // Handle OAuth errors from URL
   useEffect(() => {
@@ -73,18 +97,18 @@ function LoginPageContent() {
   // Handle login submission
   const handleLogin = async (e) => {
     e.preventDefault();
-    
+
     if (isSubmitting || loginMutation.isPending) return;
-    
+
     setError("");
-    
+
     if (!email.trim()) {
       const errorMsg = "Email is required";
       setError(errorMsg);
       toast.error(errorMsg);
       return;
     }
-    
+
     if (!password.trim()) {
       const errorMsg = "Password is required";
       setError(errorMsg);
@@ -123,7 +147,7 @@ function LoginPageContent() {
 
   return (
     // ************* Full-Screen Background Container *************
-    <div 
+    <div
       className="min-h-screen flex items-center justify-center p-4 relative"
       style={{
         backgroundImage: "url('/login/login-bg.png')",
@@ -135,7 +159,7 @@ function LoginPageContent() {
     >
       {/* ************* Dark Overlay ************* */}
       <div className="absolute inset-0 bg-white/40" />
-      
+
       {/* ************* Toaster - Positioned above everything ************* */}
       <Toaster position="top-right" />
 
@@ -143,10 +167,10 @@ function LoginPageContent() {
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ 
-          duration: 0.5, 
+        transition={{
+          duration: 0.5,
           ease: [0.25, 0.1, 0.1, 1],
-          delay: 0.2 
+          delay: 0.2
         }}
         className="absolute top-6 left-10 md:top-8 md:left-8 lg:top-10 lg:left-30 z-20"
       >
@@ -161,15 +185,15 @@ function LoginPageContent() {
           />
         </Link>
       </motion.div>
-      
+
       {/* ************* Login Card - Glass Effect with Animation ************* */}
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 10 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ 
-          duration: 0.5, 
+        transition={{
+          duration: 0.5,
           ease: [0.25, 0.1, 0.1, 1],
-          delay: 0.1 
+          delay: 0.1
         }}
         className="relative z-10 w-[90%] sm:w-[420px] md:w-[440px] lg:w-[460px]"
       >
@@ -187,10 +211,8 @@ function LoginPageContent() {
             )}
 
             <form onSubmit={handleLogin} className="space-y-4">
-              <input
-                className="w-full border border-gray-300/60 bg-white/80 px-4 py-3 rounded-lg 
-                           focus:outline-none focus:ring-2 focus:ring-black/20 focus:border-transparent
-                           transition-all duration-200 placeholder:text-gray-400"
+              <Input
+                className={inputClassName}
                 placeholder="Email address"
                 type="email"
                 value={email}
@@ -201,6 +223,7 @@ function LoginPageContent() {
               />
 
               <PasswordInput
+                className={inputClassName}
                 placeholder="Password"
                 value={password}
                 onChange={handlePasswordChange}
@@ -217,10 +240,10 @@ function LoginPageContent() {
                 className={`w-full bg-black text-white py-3.5 rounded-lg 
                            transition-all duration-300 hover:shadow-lg
                            text-base font-medium
-                           ${(isSubmitting || loginMutation.isPending) 
-                             ? "bg-gray-400 cursor-not-allowed hover:shadow-none" 
-                             : "hover:bg-gray-800 cursor-pointer"
-                           }`}
+                           ${(isSubmitting || loginMutation.isPending)
+                    ? "bg-gray-400 cursor-not-allowed hover:shadow-none"
+                    : "hover:bg-gray-800 cursor-pointer"
+                  }`}
               >
                 {(isSubmitting || loginMutation.isPending) ? (
                   <span className="flex items-center justify-center gap-2">
@@ -254,8 +277,8 @@ function LoginPageContent() {
             {/* ************* Register Link ************* */}
             <p className="text-center pt-5 text-gray-500 text-sm">
               Don't have an account?{" "}
-              <Link 
-                className="text-gray-900 font-medium hover:underline transition-colors duration-200" 
+              <Link
+                className="text-gray-900 font-medium hover:underline transition-colors duration-200"
                 href={`/signup${redirectPath ? `?redirect=${redirectPath}` : ''}`}
               >
                 Sign Up
