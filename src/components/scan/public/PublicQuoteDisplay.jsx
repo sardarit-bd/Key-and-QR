@@ -12,15 +12,25 @@ import {
   resolveBackgroundImage,
 } from "@/components/category";
 
+import VisualQuoteRenderer from "@/components/quote/VisualQuoteRenderer";
+
 export default function PublicQuoteDisplay({ data, tagCode }) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, isInitialized } = useAuthStore();
 
-  const quoteText = data?.quote || "";
+  const quoteText = data?.quote || data?.text || "";
   const quoteAuthor = data?.author;
   const isPersonalMessage = !!data?.isPersonalMessage;
   const category = isPersonalMessage ? "personal" : data?.category || "faith";
+  const hasVisualDesign =
+    !isPersonalMessage &&
+    Boolean(
+      data?.editorData &&
+        ((data.editorData.mobile?.elements && data.editorData.mobile.elements.length > 0) ||
+          (data.editorData.desktop?.elements && data.editorData.desktop.elements.length > 0) ||
+          (data.editorData.elements && data.editorData.elements.length > 0))
+    );
 
   const backgroundImage =
     data?.image || resolveBackgroundImage(category);
@@ -144,38 +154,58 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     <>
       <main className="min-h-screen bg-black flex items-center justify-center">
         <section
-          className="relative w-full min-h-screen max-w-[430px] mx-auto overflow-hidden bg-black"
-          style={{
-            backgroundImage: `url(${backgroundImage})`,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }}
+          className="relative w-full min-h-screen max-w-[430px] mx-auto overflow-hidden bg-black flex flex-col justify-between"
+          style={
+            hasVisualDesign
+              ? undefined
+              : {
+                  backgroundImage: `url(${backgroundImage})`,
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                }
+          }
         >
-          {/* Dark cinematic overlays */}
-          <div className="absolute inset-0 bg-black/45" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/15 to-black/70" />
+          {/* Legacy Dark cinematic overlays (only for legacy non-canvas quotes) */}
+          {!hasVisualDesign && (
+            <>
+              <div className="absolute inset-0 bg-black/45" />
+              <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-black/15 to-black/70" />
+            </>
+          )}
 
-          {/* Category */}
-          <div className="relative z-10 pt-5 text-center">
-            <p className="text-[12px] tracking-wide text-[#f3d6a0] font-light">
+          {/* Top Bar: Category Label */}
+          <div className="relative z-20 pt-5 text-center shrink-0">
+            <p className="text-[12px] tracking-wide text-[#f3d6a0] font-light drop-shadow-md">
               {categoryLabel}
             </p>
           </div>
 
-          {/* Quote */}
-          <div className="relative z-10 px-6 sm:px-8 pt-16 text-center">
-            <h1 className="text-white text-[24px] sm:text-[28px] leading-[1.18] font-medium drop-shadow-xl">
-              {quoteText}
-            </h1>
-            {quoteAuthor && (
-              <p className="mt-5 text-[#e7b96f] text-[13px] ">
-                - {quoteAuthor} -
-              </p>
-            )}
-          </div>
+          {/* Main Visual Quote Area */}
+          {hasVisualDesign ? (
+            <div className="relative z-10 flex-1 w-full flex items-center justify-center p-2 my-auto min-h-[460px]">
+              <VisualQuoteRenderer
+                editorData={data.editorData}
+                mode="auto"
+                showAudioPlayer={true}
+                className="w-full h-full"
+              />
+            </div>
+          ) : (
+            /* Legacy Non-Canvas Quote Text & Author */
+            <div className="relative z-10 px-6 sm:px-8 pt-16 text-center my-auto">
+              <h1 className="text-white text-[24px] sm:text-[28px] leading-[1.18] font-medium drop-shadow-xl">
+                {quoteText}
+              </h1>
+              {quoteAuthor && (
+                <p className="mt-5 text-[#e7b96f] text-[13px] ">
+                  - {quoteAuthor} -
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Bottom Action Bar */}
-          <div className="absolute bottom-0 left-0 right-0 z-10 bg-gradient-to-t from-black/80 to-transparent pt-12 pb-8">
+          <div className="relative z-20 bg-gradient-to-t from-black/85 via-black/50 to-transparent pt-10 pb-8 shrink-0">
             <div className="flex items-center justify-center gap-6">
               {/* Save / Heart */}
               <button

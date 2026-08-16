@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Sparkles, Loader2, X } from 'lucide-react';
 
+import VisualQuoteRenderer from '@/components/quote/VisualQuoteRenderer';
+
 const LOADING_MESSAGES = [
   'Finding today\'s message...',
   'Preparing your inspiration...',
@@ -15,6 +17,13 @@ const LOADING_MESSAGES = [
  * click category → loading screen (~1s) → reveal quote.
  */
 export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose }) {
+  const hasVisualDesign = Boolean(
+    quote?.editorData &&
+      ((quote.editorData.desktop?.elements && quote.editorData.desktop.elements.length > 0) ||
+        (quote.editorData.mobile?.elements && quote.editorData.mobile.elements.length > 0) ||
+        (quote.editorData.elements && quote.editorData.elements.length > 0))
+  );
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -58,23 +67,36 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
                   {categoryName || 'Inspiration'}
                 </div>
 
-                <motion.blockquote
-                  className="text-[22px] sm:text-[26px] md:text-[30px] leading-[1.35] italic text-foreground"
-                  initial={{ opacity: 0, y: 12 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.15, duration: 0.5 }}
-                >
-                  &ldquo;{quote.text}&rdquo;
-                </motion.blockquote>
+                {hasVisualDesign ? (
+                  <div className="w-full flex items-center justify-center min-h-[300px] max-h-[400px]">
+                    <VisualQuoteRenderer
+                      editorData={quote.editorData}
+                      mode="auto"
+                      showAudioPlayer={true}
+                      className="w-full h-full"
+                    />
+                  </div>
+                ) : (
+                  <>
+                    <motion.blockquote
+                      className="text-[22px] sm:text-[26px] md:text-[30px] leading-[1.35] italic text-foreground"
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.15, duration: 0.5 }}
+                    >
+                      &ldquo;{quote.text}&rdquo;
+                    </motion.blockquote>
 
-                <motion.p
-                  className="mt-4 text-[13px] sm:text-[14px] text-foreground-secondary"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4, duration: 0.4 }}
-                >
-                  — {quote.author || 'MyInspireTag'}
-                </motion.p>
+                    <motion.p
+                      className="mt-4 text-[13px] sm:text-[14px] text-foreground-secondary"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.4, duration: 0.4 }}
+                    >
+                      — {quote.author || 'MyInspireTag'}
+                    </motion.p>
+                  </>
+                )}
               </div>
             </motion.div>
           ) : (

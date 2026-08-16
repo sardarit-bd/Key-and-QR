@@ -127,6 +127,77 @@ export async function initStaticCanvas(canvasEl, width, height) {
   return canvas;
 }
 
+/**
+ * Render a complete static design onto a dedicated Fabric StaticCanvas instance.
+ * Self-contained and isolated per component lifecycle (safe for previews & public scan).
+ */
+export async function renderStaticDesign(canvasEl, design) {
+  const f = await getFabric();
+  if (!f || !canvasEl || !design) return null;
+
+  const width = design.canvas?.width || 800;
+  const height = design.canvas?.height || 600;
+
+  const staticCanvas = new f.StaticCanvas(canvasEl, {
+    width,
+    height,
+    backgroundColor: CANVAS_DEFAULTS.backgroundColor,
+  });
+
+  if (staticCanvas.viewportTransform) {
+    staticCanvas.viewportTransform = [1, 0, 0, 1, 0, 0];
+  }
+
+  // Background
+  const bg = design.background;
+  if (bg) {
+    if (bg.type === 'solid' && bg.color) {
+      staticCanvas.backgroundColor = bg.color;
+    } else if (bg.type === 'gradient' && f.Gradient) {
+      const gType = bg.gradient === 'radial' ? 'radial' : 'linear';
+      const coords =
+        gType === 'radial'
+          ? { r1: 0, r2: Math.max(width, height) / 2 }
+          : { x1: 0, y1: 0, x2: width, y2: height };
+      staticCanvas.backgroundColor = new f.Gradient({
+        type: gType,
+        gradientUnits: 'pixels',
+        coords,
+        colorStops: (bg.colors || ['#000', '#fff']).map((color, i) => ({
+          offset: i / (bg.colors.length - 1 || 1),
+          color,
+        })),
+      });
+    }
+  }
+
+  // Visual elements (filter out audio elements from canvas rendering)
+  const visualElements = (design.elements || []).filter((e) => e.type !== 'audio');
+  const sorted = [...visualElements].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+
+  for (const el of sorted) {
+    try {
+      const obj = await elementToFabricObject(el);
+      if (obj) {
+        staticCanvas.add(obj);
+      }
+    } catch (err) {
+      console.warn('[VisualQuote] Failed to render element:', el?.id, err);
+    }
+  }
+
+  staticCanvas.renderAll();
+
+  return {
+    canvas: staticCanvas,
+    dispose: () => {
+      try {
+        staticCanvas.dispose();
+      } catch {}
+    },
+  };
+}
+
 export function isInitialized() {
   return !!canvasInstance;
 }
@@ -483,6 +554,8 @@ export async function elementToFabricObject(el) {
   const common = {
     left: el.x,
     top: el.y,
+    originX: 'center',
+    originY: 'center',
     width: el.width,
     height: el.height,
     angle: el.rotation || 0,
@@ -510,7 +583,7 @@ export async function elementToFabricObject(el) {
         lineHeight: el.textData.lineHeight || 1.3,
         charSpacing: (el.textData.letterSpacing || 0) * 10,
         textAlign: el.textData.textAlign || 'center',
-        fill: el.textData.color || '#000000',
+        fill: el.textData.color || el.textData.fill || '#000000',
         stroke: el.textData.stroke?.color || null,
         strokeWidth: el.textData.stroke?.width || 0,
       });

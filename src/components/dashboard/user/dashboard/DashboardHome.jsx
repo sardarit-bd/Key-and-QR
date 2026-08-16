@@ -54,6 +54,7 @@ export default function DashboardHome({
       description: q.description || null,
       image: q.image || null,
       theme: q.theme || null,
+      editorData: q.editorData || payload?.editorData || null,
       category: payload?.category || null,
       receivedAt: payload?.receivedAt || null,
       favorite: !!payload?.favorite,

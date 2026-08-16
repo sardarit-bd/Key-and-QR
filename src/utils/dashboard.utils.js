@@ -169,6 +169,7 @@ export function mapLatestInspiration(latestInspiration, dailyUsage) {
     author: quote?.author || 'MyInspireTag',
     image: quote?.image?.url || quote?.image || null,
     theme: quote?.theme || null,
+    editorData: quote?.editorData || null,
     category: quote?.category || null,
     receivedAt: quote?.receivedAt || null,
     favorite: !!quote?.favorite,
