@@ -1,34 +1,31 @@
 'use client';
 
 /**
- * Central slug → fallback background image map.
+ * Category background image resolver.
  *
- * When a quote has no custom image, cards look up a themed default by
- * category slug. Single source of truth for these fallback images across
- * My Quotes, Favorites, Scan History, and the public/QR scan flows.
+ * Returns customImage if provided and valid (e.g. Cloudinary HTTPS or valid public path).
+ * Returns null when no custom image is available so UI components render clean CSS
+ * theme gradients instead of requesting non-existent local image paths that cause 404 errors.
  */
 
-export const CATEGORY_BACKGROUND_IMAGES = {
-  love: '/images/quote-bg/love.jpg',
-  strength: '/images/quote-bg/strength.jpg',
-  healing: '/images/quote-bg/healing.jpg',
-  faith: '/images/quote-bg/faith.jpg',
-  gratitude: '/images/quote-bg/gratitude.jpg',
-  motivation: '/images/quote-bg/strength.jpg',
-  personal: '/images/quote-bg/peace.jpg',
-};
+export const CATEGORY_BACKGROUND_IMAGES = {};
 
-export const FALLBACK_BACKGROUND_IMAGE = '/images/quote-bg/faith.jpg';
+export const FALLBACK_BACKGROUND_IMAGE = null;
 
 export function getCategoryBackgroundImage(slug) {
-  if (!slug) return FALLBACK_BACKGROUND_IMAGE;
-  return (
-    CATEGORY_BACKGROUND_IMAGES[String(slug).toLowerCase()] ||
-    FALLBACK_BACKGROUND_IMAGE
-  );
+  return null;
 }
 
 export function resolveBackgroundImage(category, customImage) {
-  if (customImage) return customImage;
-  return getCategoryBackgroundImage(category);
+  if (!customImage) return null;
+  if (typeof customImage !== 'string') return null;
+  const trimmed = customImage.trim();
+  if (
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('http://') ||
+    (trimmed.startsWith('/') && !trimmed.startsWith('/images/quote-bg/'))
+  ) {
+    return trimmed;
+  }
+  return null;
 }

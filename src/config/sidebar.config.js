@@ -223,13 +223,13 @@ export const SIDEBAR_CONFIG = {
         },
         {
           id: "admin-tags-assign",
-          title: "Assign Tags",
+          title: "QR Tag Assign",
           href: "/new-dashboard/admin/assignment",
           visibility: MENU_VISIBILITY.ADMIN,
         },
         {
           id: "admin-tags-assigned",
-          title: "Assigned Tags",
+          title: "QR Tag Assigned",
           href: "/new-dashboard/admin/tags/assigned",
           visibility: MENU_VISIBILITY.ADMIN,
         },

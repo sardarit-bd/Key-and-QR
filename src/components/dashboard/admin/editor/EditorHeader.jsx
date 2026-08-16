@@ -78,7 +78,7 @@ export default function EditorHeader() {
       desktopElements.find((el) => el.type === 'text') ||
       mobileElements.find((el) => el.type === 'text');
 
-    const plainText = textEl?.textData?.content?.trim() || quoteText || 'Untitled Quote';
+    const plainText = textEl?.textData?.content?.trim() || quoteText?.trim() || '';
     const authorName = (quoteAuthor || '').trim();
 
     setSaving(true);
@@ -166,28 +166,28 @@ export default function EditorHeader() {
           <button
             type="button"
             onClick={() => switchDesignVersion('desktop')}
-            className={`h-7 px-3 flex items-center gap-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-              activeDesignVersion === 'desktop'
+            className={`h-7 px-3 flex items-center gap-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${activeDesignVersion === 'desktop'
                 ? 'bg-background shadow-xs text-foreground font-semibold'
                 : 'text-foreground-tertiary hover:text-foreground'
-            }`}
+              }`}
             title="Desktop Design (800 × 600)"
           >
             <Monitor size={13} />
             <span>Desktop</span>
+            <span className="text-[10px] opacity-60 font-mono hidden sm:inline">800×600</span>
           </button>
           <button
             type="button"
             onClick={() => switchDesignVersion('mobile')}
-            className={`h-7 px-3 flex items-center gap-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-              activeDesignVersion === 'mobile'
+            className={`h-7 px-3 flex items-center gap-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${activeDesignVersion === 'mobile'
                 ? 'bg-background shadow-xs text-foreground font-semibold'
                 : 'text-foreground-tertiary hover:text-foreground'
-            }`}
+              }`}
             title="Mobile Design (375 × 667)"
           >
             <Smartphone size={13} />
             <span>Mobile</span>
+            <span className="text-[10px] opacity-60 font-mono hidden sm:inline">375×667</span>
           </button>
         </div>
 

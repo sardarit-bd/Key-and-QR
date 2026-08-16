@@ -55,6 +55,8 @@ export async function initCanvas(canvasEl, width, height) {
     fireRightClick: false,
     selection: true,
     defaultCursor: 'default',
+    enableRetinaScaling: true,
+    imageSmoothingEnabled: true,
   });
 
   // ── Pan via middle-mouse button ──
@@ -117,6 +119,8 @@ export async function initStaticCanvas(canvasEl, width, height) {
     width,
     height,
     backgroundColor: CANVAS_DEFAULTS.backgroundColor,
+    enableRetinaScaling: true,
+    imageSmoothingEnabled: true,
   });
 
   if (canvas.viewportTransform) {
@@ -125,6 +129,79 @@ export async function initStaticCanvas(canvasEl, width, height) {
 
   canvasInstance = canvas;
   return canvas;
+}
+
+/**
+ * Render a complete static design onto a dedicated Fabric StaticCanvas instance.
+ * Self-contained and isolated per component lifecycle (safe for previews & public scan).
+ */
+export async function renderStaticDesign(canvasEl, design) {
+  const f = await getFabric();
+  if (!f || !canvasEl || !design) return null;
+
+  const width = design.canvas?.width || 800;
+  const height = design.canvas?.height || 600;
+
+  const staticCanvas = new f.StaticCanvas(canvasEl, {
+    width,
+    height,
+    backgroundColor: CANVAS_DEFAULTS.backgroundColor,
+    enableRetinaScaling: true,
+    imageSmoothingEnabled: true,
+  });
+
+  if (staticCanvas.viewportTransform) {
+    staticCanvas.viewportTransform = [1, 0, 0, 1, 0, 0];
+  }
+
+  // Background
+  const bg = design.background;
+  if (bg) {
+    if (bg.type === 'solid' && bg.color) {
+      staticCanvas.backgroundColor = bg.color;
+    } else if (bg.type === 'gradient' && f.Gradient) {
+      const gType = bg.gradient === 'radial' ? 'radial' : 'linear';
+      const coords =
+        gType === 'radial'
+          ? { r1: 0, r2: Math.max(width, height) / 2 }
+          : { x1: 0, y1: 0, x2: width, y2: height };
+      staticCanvas.backgroundColor = new f.Gradient({
+        type: gType,
+        gradientUnits: 'pixels',
+        coords,
+        colorStops: (bg.colors || ['#000', '#fff']).map((color, i) => ({
+          offset: i / (bg.colors.length - 1 || 1),
+          color,
+        })),
+      });
+    }
+  }
+
+  // Visual elements (filter out audio elements from canvas rendering)
+  const visualElements = (design.elements || []).filter((e) => e.type !== 'audio');
+  const sorted = [...visualElements].sort((a, b) => (a.zIndex || 0) - (b.zIndex || 0));
+
+  for (const el of sorted) {
+    try {
+      const obj = await elementToFabricObject(el);
+      if (obj) {
+        staticCanvas.add(obj);
+      }
+    } catch (err) {
+      console.warn('[VisualQuote] Failed to render element:', el?.id, err);
+    }
+  }
+
+  staticCanvas.renderAll();
+
+  return {
+    canvas: staticCanvas,
+    dispose: () => {
+      try {
+        staticCanvas.dispose();
+      } catch { }
+    },
+  };
 }
 
 export function isInitialized() {
@@ -445,10 +522,10 @@ function calculateObjectFitScales(imgWidth, imgHeight, containerWidth, container
   }
   const containerRatio = containerWidth / containerHeight;
   const imageRatio = imgWidth / imgHeight;
-  
+
   let scaleX = 1;
   let scaleY = 1;
-  
+
   if (fit === 'cover') {
     if (imageRatio > containerRatio) {
       scaleY = containerHeight / imgHeight;
@@ -469,7 +546,7 @@ function calculateObjectFitScales(imgWidth, imgHeight, containerWidth, container
     scaleX = containerWidth / imgWidth;
     scaleY = containerHeight / imgHeight;
   }
-  
+
   return {
     scaleX: Number.isFinite(scaleX) && scaleX > 0 ? scaleX : 1,
     scaleY: Number.isFinite(scaleY) && scaleY > 0 ? scaleY : 1,
@@ -483,6 +560,8 @@ export async function elementToFabricObject(el) {
   const common = {
     left: el.x,
     top: el.y,
+    originX: 'center',
+    originY: 'center',
     width: el.width,
     height: el.height,
     angle: el.rotation || 0,
@@ -510,7 +589,7 @@ export async function elementToFabricObject(el) {
         lineHeight: el.textData.lineHeight || 1.3,
         charSpacing: (el.textData.letterSpacing || 0) * 10,
         textAlign: el.textData.textAlign || 'center',
-        fill: el.textData.color || '#000000',
+        fill: el.textData.color || el.textData.fill || '#000000',
         stroke: el.textData.stroke?.color || null,
         strokeWidth: el.textData.stroke?.width || 0,
       });
@@ -919,11 +998,11 @@ export function fabricObjectToElement(obj) {
           : undefined,
         shadow: obj.shadow
           ? {
-              color: obj.shadow.color,
-              blur: obj.shadow.blur,
-              offsetX: obj.shadow.offsetX,
-              offsetY: obj.shadow.offsetY,
-            }
+            color: obj.shadow.color,
+            blur: obj.shadow.blur,
+            offsetX: obj.shadow.offsetX,
+            offsetY: obj.shadow.offsetY,
+          }
           : undefined,
         wrap: true,
       },
@@ -1040,7 +1119,7 @@ export function selectObjectById(id) {
 
 export async function selectObjectsByIds(ids) {
   if (!canvasInstance) return;
-  
+
   if (!ids || ids.length === 0) {
     canvasInstance.discardActiveObject();
     canvasInstance.renderAll();
@@ -1080,23 +1159,42 @@ export function discardSelection() {
 }
 
 // ============================================================
-// Export — render canvas to blob
+// Export — render canvas to blob / data URL with HD scaling
 // ============================================================
 
-export function exportCanvasToBlob(mimeType = 'image/png', quality = 0.92) {
+export function exportCanvasToDataURL(options = {}) {
+  if (!canvasInstance) return null;
+  const { format = 'png', quality = 0.95, multiplier = 2 } = options;
+  canvasInstance.renderAll();
+  return canvasInstance.toDataURL({
+    format,
+    quality,
+    multiplier,
+    enableRetinaScaling: true,
+  });
+}
+
+export function exportCanvasToBlob(mimeType = 'image/png', quality = 0.95, multiplier = 2) {
   return new Promise((resolve, reject) => {
     if (!canvasInstance) {
       reject(new Error('Canvas not initialized'));
       return;
     }
     canvasInstance.renderAll();
-    canvasInstance.getElement().toBlob(
-      (blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error('Failed to export canvas'));
-      },
-      mimeType,
-      quality
-    );
+    const format = mimeType === 'image/jpeg' ? 'jpeg' : 'png';
+    const dataUrl = canvasInstance.toDataURL({
+      format,
+      quality,
+      multiplier,
+      enableRetinaScaling: true,
+    });
+    if (!dataUrl) {
+      reject(new Error('Failed to export canvas'));
+      return;
+    }
+    fetch(dataUrl)
+      .then((res) => res.blob())
+      .then((blob) => resolve(blob))
+      .catch((err) => reject(err));
   });
 }

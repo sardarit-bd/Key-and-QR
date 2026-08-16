@@ -83,8 +83,14 @@ export default function AssignedTagsTable({
 
                 {/* Assigned User */}
                 <div className="min-w-0">
-                  <p className="text-sm text-foreground truncate">{tag.owner?.name || tag.owner?.email || 'Unknown'}</p>
-                  {tag.owner?.email && <p className="text-[10px] text-foreground-tertiary truncate">{tag.owner.email}</p>}
+                  <p className="text-sm text-foreground truncate">
+                    {tag.owner?.name || tag.owner?.email || tag.assignedOrderId?.guestCustomer?.fullName || (tag.assignedOrderId ? 'Guest Customer' : 'Unregistered')}
+                  </p>
+                  {(tag.owner?.email || tag.assignedOrderId?.guestCustomer?.email) && (
+                    <p className="text-[10px] text-foreground-tertiary truncate">
+                      {tag.owner?.email || tag.assignedOrderId?.guestCustomer?.email}
+                    </p>
+                  )}
                 </div>
 
                 {/* Plan */}

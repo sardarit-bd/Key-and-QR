@@ -5,9 +5,9 @@ export const quoteAssignmentKeys = {
   all: ['quote-assignments'],
   list: (filters) => [...quoteAssignmentKeys.all, 'list', filters],
   byQuote: (quoteId) => [...quoteAssignmentKeys.all, 'quote', quoteId],
-  quotes: (search) => ['assignable-quotes', search],
-  tags: (search) => ['assignable-tags', search],
-  users: (search) => ['assignable-users', search],
+  quotes: (params) => ['assignable-quotes', params],
+  tags: (params) => ['assignable-tags', params],
+  users: (params) => ['assignable-users', params],
 };
 
 /**
@@ -26,50 +26,98 @@ function normalizeList(responsePayload, namedKey) {
 }
 
 /**
- * Fetch assignable (active) quotes -> Promise<Quote[]>
+ * Fetch assignable (active) quotes with server pagination -> Promise<{ data: Quote[], meta: Meta }>
  */
-export function useAssignableQuotes({ search = '', limit = 30 } = {}) {
+export function useAssignableQuotes({ search = '', page = 1, limit = 6 } = {}) {
   return useQuery({
-    queryKey: quoteAssignmentKeys.quotes(search),
+    queryKey: quoteAssignmentKeys.quotes({ search, page, limit }),
     queryFn: async () => {
-      const params = { limit, isActive: true };
+      const params = { page, limit, isActive: true };
       if (search) params.search = search;
       const res = await api.get('/quotes', { params });
-      return normalizeList(res.data?.data, 'quotes');
+      const raw = res.data?.data;
+      const data = normalizeList(raw, 'quotes');
+      const meta =
+        res.data?.meta ||
+        raw?.meta || {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: data.length,
+          totalPage: Math.ceil(data.length / limit) || 1,
+        };
+      return {
+        data,
+        meta: {
+          page: parseInt(meta.page) || 1,
+          limit: parseInt(meta.limit) || limit,
+          total: parseInt(meta.total) || 0,
+          totalPage: parseInt(meta.totalPage) || 1,
+        },
+      };
     },
-    staleTime: 60 * 1000,
+    staleTime: 30 * 1000,
   });
 }
 
 /**
- * Fetch assignable QR tags -> Promise<Tag[]>
+ * Fetch assignable QR tags with server pagination -> Promise<{ data: Tag[], meta: Meta }>
  */
-export function useAssignableTags({ search = '', limit = 50 } = {}) {
+export function useAssignableTags({ search = '', page = 1, limit = 10 } = {}) {
   return useQuery({
-    queryKey: quoteAssignmentKeys.tags(search),
+    queryKey: quoteAssignmentKeys.tags({ search, page, limit }),
     queryFn: async () => {
-      const params = { limit };
+      const params = { page, limit };
       if (search) params.search = search;
       const res = await api.get('/tags', { params });
-      return normalizeList(res.data?.data, 'tags');
+      const raw = res.data?.data;
+      const data = normalizeList(raw, 'tags');
+      const meta =
+        res.data?.meta ||
+        raw?.meta || {
+          page: parseInt(page),
+          limit: parseInt(limit),
+          total: data.length,
+          totalPage: Math.ceil(data.length / limit) || 1,
+        };
+      return {
+        data,
+        meta: {
+          page: parseInt(meta.page) || 1,
+          limit: parseInt(meta.limit) || limit,
+          total: parseInt(meta.total) || 0,
+          totalPage: parseInt(meta.totalPage) || 1,
+        },
+      };
     },
-    staleTime: 60 * 1000,
+    staleTime: 30 * 1000,
   });
 }
 
 /**
- * Fetch assignable users -> Promise<User[]>
+ * Fetch assignable users with server pagination -> Promise<{ data: User[], meta: Meta }>
  */
-export function useAssignableUsers({ search = '', limit = 50 } = {}) {
+export function useAssignableUsers({ search = '', page = 1, limit = 10 } = {}) {
   return useQuery({
-    queryKey: quoteAssignmentKeys.users(search),
+    queryKey: quoteAssignmentKeys.users({ search, page, limit }),
     queryFn: async () => {
-      const params = { limit };
+      const params = { page, limit };
       if (search) params.search = search;
       const res = await api.get('/admin/users', { params });
-      return normalizeList(res.data?.data, 'users');
+      const raw = res.data?.data;
+      const data = normalizeList(raw, 'users');
+      const pagination = raw?.pagination || res.data?.pagination;
+      const meta = {
+        page: parseInt(pagination?.page || page),
+        limit: parseInt(pagination?.limit || limit),
+        total: parseInt(pagination?.totalItems || data.length),
+        totalPage: parseInt(pagination?.totalPages || Math.ceil((pagination?.totalItems || data.length) / limit) || 1),
+      };
+      return {
+        data,
+        meta,
+      };
     },
-    staleTime: 60 * 1000,
+    staleTime: 30 * 1000,
   });
 }
 
@@ -108,6 +156,8 @@ export function useBulkAssignQuotes() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quoteAssignmentKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['assignable-tags'] });
+      queryClient.invalidateQueries({ queryKey: ['assignable-users'] });
     },
   });
 }
@@ -125,6 +175,8 @@ export function useDeleteAssignment() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quoteAssignmentKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['assignable-tags'] });
+      queryClient.invalidateQueries({ queryKey: ['assignable-users'] });
     },
   });
 }
@@ -142,6 +194,8 @@ export function useBulkDeleteAssignments() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: quoteAssignmentKeys.all });
+      queryClient.invalidateQueries({ queryKey: ['assignable-tags'] });
+      queryClient.invalidateQueries({ queryKey: ['assignable-users'] });
     },
   });
 }

@@ -38,73 +38,25 @@ const clearCookie = (name) => {
 // ============================================================
 // INTERNAL WRITE FUNCTIONS
 // ============================================================
-
-/**
- * Process queued writes (debounced)
- */
-const processWriteQueue = () => {
-    if (_writeQueue.length === 0) return;
-    
-    // Take the last write (most recent)
-    const last = _writeQueue[_writeQueue.length - 1];
-    _writeQueue = [];
-    
-    performWrite(last.accessToken, last.refreshToken);
-};
-
-/**
- * Perform actual write operation
- */
-const performWrite = (accessToken, refreshToken) => {
-    if (typeof window === "undefined" || _isWriting) return;
-    
-    _isWriting = true;
-    
-    try {
-        // Single source of truth: localStorage
-        if (accessToken) {
-            localStorage.setItem(TOKEN_KEY, accessToken);
-        }
-        if (refreshToken) {
-            localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-        }
-        
-        // Sync cookies (for middleware)
-        if (accessToken) {
-            setCookie("accessToken", accessToken, 900, false);
-        }
-        if (refreshToken) {
-            setCookie("refreshToken", refreshToken, 604800, false);
-        }
-    } finally {
-        _isWriting = false;
-    }
-};
-
-// ============================================================
-// TOKEN OPERATIONS - Single Write Path
+// TOKEN OPERATIONS - Synchronous Write Path
 // ============================================================
 
 /**
- * Write tokens - Centralized write operation
+ * Write tokens - Centralized synchronous write operation
  * All token updates go through this function
  */
 export const writeTokens = (accessToken, refreshToken) => {
     if (typeof window === "undefined") return;
     
-    // Deduplicate rapid writes
-    const now = Date.now();
-    if (now - _lastWriteTime < 100) {
-        // Queue the write instead of executing immediately
-        _writeQueue.push({ accessToken, refreshToken });
-        // Process queue after debounce
-        clearTimeout(_writeTimeout);
-        _writeTimeout = setTimeout(processWriteQueue, 150);
-        return;
+    // Single source of truth: localStorage
+    if (accessToken) {
+        localStorage.setItem(TOKEN_KEY, accessToken);
+        setCookie("accessToken", accessToken, 900, false);
     }
-    
-    performWrite(accessToken, refreshToken);
-    _lastWriteTime = now;
+    if (refreshToken) {
+        localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+        setCookie("refreshToken", refreshToken, 604800, false);
+    }
 };
 
 /**

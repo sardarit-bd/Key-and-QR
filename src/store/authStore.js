@@ -14,7 +14,7 @@ import {
     setUser as setUserStorage,
     updateUser as updateUserStorage,
 } from "@/lib/auth-utils";
-import { startTokenRefreshTimer, stopTokenRefreshTimer } from "@/lib/api";
+import { startTokenRefreshTimer, stopTokenRefreshTimer, performTokenRefresh } from "@/lib/api";
 
 // ============================================================
 // INTERNAL HELPERS
@@ -52,15 +52,11 @@ const verifySessionInBackground = async (set, get) => {
             const filteredFreshUser = filterUserData(freshUser);
             set({ user: filteredFreshUser });
             setUserStorage(filteredFreshUser);
-        } else {
-            clearTokens();
-            set({ user: null });
         }
     } catch (error) {
-        // Session is invalid — clear stale auth state so the navbar
-        // no longer shows a phantom authenticated user.
-        clearTokens();
-        set({ user: null });
+        // If the session is truly dead (401 + refresh failed), api interceptor handles forceLogout.
+        // Don't wipe tokens on transient errors.
+        console.warn("Background session verification warning:", error.message);
     }
 };
 
@@ -79,8 +75,6 @@ const fetchUserAndRestore = async (set) => {
         }
     } catch (error) {
         console.warn("Failed to fetch user during init:", error.message);
-        clearTokens();
-        set({ user: null });
     }
     return null;
 };
@@ -174,10 +168,10 @@ export const useAuthStore = create(
 
                 try {
                     const storedUser = getUser();
-                    const storedToken = getAccessToken();
+                    let storedToken = getAccessToken();
                     const storedRefreshToken = getRefreshToken();
 
-                    // ✅ No tokens - fresh session
+                    // ✅ No tokens - fresh guest session
                     if (!storedToken && !storedRefreshToken) {
                         set({
                             user: null,
@@ -190,11 +184,31 @@ export const useAuthStore = create(
                         return;
                     }
 
-                    // ✅ Have stored user + tokens - restore session
-                    if (storedUser && (storedToken || storedRefreshToken)) {
+                    // ✅ If access token is missing or expired, but refresh token exists:
+                    // Proactively refresh before declaring initialization complete
+                    if (storedRefreshToken && (!storedToken || isTokenExpired(storedToken))) {
+                        try {
+                            storedToken = await performTokenRefresh();
+                        } catch (refreshErr) {
+                            console.warn("Proactive token refresh failed during auth init:", refreshErr.message);
+                            clearTokens();
+                            set({
+                                user: null,
+                                isInitialized: true,
+                                loading: false,
+                                isLoading: false,
+                                error: null,
+                                _isInitializing: false,
+                            });
+                            return;
+                        }
+                    }
+
+                    // ✅ Have stored user + valid token - restore session immediately
+                    if (storedUser && storedToken) {
                         const filteredUser = filterUserData(storedUser);
                         
-                        // Start refresh timer
+                        // Start periodic refresh timer
                         startTokenRefreshTimer();
 
                         set({
@@ -206,13 +220,13 @@ export const useAuthStore = create(
                             _isInitializing: false,
                         });
 
-                        // ✅ Background verification (non-blocking) - using internal function
+                        // ✅ Background verification (non-blocking)
                         verifySessionInBackground(set, get);
                         return;
                     }
 
-                    // ✅ Have token but no user - fetch user
-                    if ((storedToken || storedRefreshToken) && !storedUser) {
+                    // ✅ Have valid token but no stored user - fetch profile
+                    if (storedToken && !storedUser) {
                         const user = await fetchUserAndRestore(set);
                         if (user) {
                             startTokenRefreshTimer();

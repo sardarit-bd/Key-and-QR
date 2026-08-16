@@ -152,7 +152,11 @@ export default function ScanHistoryCard({
       {/* Clickable image area — opens detail modal */}
       <div
         className="relative h-52 cursor-pointer bg-cover bg-center sm:h-56"
-        style={{ backgroundImage: `url(${backgroundImage})` }}
+        style={
+          backgroundImage
+            ? { backgroundImage: `url(${backgroundImage})` }
+            : { background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e293b 100%)' }
+        }
         onClick={() => onViewDetail(item)}
       >
         {/* Cinematic gradient stack — dark mode only, for text readability */}

@@ -76,9 +76,11 @@ export default function OrderViewDialog({ open, onOpenChange, order, isLoading =
   const tagStatusStyle = TAG_STATUS_STYLES[order?.tagAssignmentStatus] || TAG_STATUS_STYLES.none;
 
   const isCancelledOrReturned = order?.fulfillmentStatus === 'cancelled' || order?.fulfillmentStatus === 'returned';
-  const assignedTag = order?.assignedTags?.[0]?.tag;
-  const assignedBy = order?.assignedTags?.[0]?.assignedBy;
-  const assignedAt = order?.assignedTags?.[0]?.assignedAt;
+  const assignedTagsList = order?.assignedTags?.length > 0
+    ? order.assignedTags
+    : order?.assignedTag
+      ? [{ tag: order.assignedTag, assignedAt: order.updatedAt, assignedBy: 'admin' }]
+      : [];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -117,11 +119,19 @@ export default function OrderViewDialog({ open, onOpenChange, order, isLoading =
                   </span>
                 </div>
 
-                {assignedTag ? (
-                  <div className="bg-muted/30 rounded-lg p-2.5 mb-2">
-                    <p className="text-sm font-medium text-foreground">{assignedTag.tagCode}</p>
-                    {assignedBy && <p className="text-[10px] text-foreground-tertiary">Assigned by: {assignedBy}</p>}
-                    {assignedAt && <p className="text-[10px] text-foreground-tertiary">{formatDate(assignedAt)}</p>}
+                {assignedTagsList.length > 0 ? (
+                  <div className="space-y-2 mb-2">
+                    {assignedTagsList.map((item, idx) => {
+                      const tagObj = item.tag?._id ? item.tag : item.tag;
+                      const tagCode = tagObj?.tagCode || (typeof tagObj === 'string' ? tagObj : order?.assignedTag?.tagCode || 'Tag');
+                      return (
+                        <div key={idx} className="bg-muted/30 rounded-lg p-2.5">
+                          <p className="text-sm font-medium text-foreground">{tagCode}</p>
+                          {item.assignedBy && <p className="text-[10px] text-foreground-tertiary">Assigned by: {item.assignedBy}</p>}
+                          {item.assignedAt && <p className="text-[10px] text-foreground-tertiary">{formatDate(item.assignedAt)}</p>}
+                        </div>
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-xs text-foreground-tertiary mb-2">No tag assigned</p>

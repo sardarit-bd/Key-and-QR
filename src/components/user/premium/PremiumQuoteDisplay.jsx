@@ -61,7 +61,11 @@ export default function PremiumQuoteDisplay({
  {/* Background Image */}
  <div
  className="relative min-h-[300px] bg-cover bg-center"
- style={{ backgroundImage: `url(${backgroundImage})` }}
+ style={
+  backgroundImage
+    ? { backgroundImage: `url(${backgroundImage})` }
+    : { background: "linear-gradient(to bottom, #0f172a, #020617)" }
+ }
  >
  <div className="absolute inset-0 bg-foreground/60" />
  <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/70" />

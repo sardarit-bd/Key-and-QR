@@ -30,13 +30,7 @@ export const CATEGORY_LABELS = {
   gratitude: 'Gratitude',
 };
 
-export const DEFAULT_IMAGES = {
-  love: '/images/quote-bg/love.jpg',
-  strength: '/images/quote-bg/strength.jpg',
-  healing: '/images/quote-bg/healing.jpg',
-  faith: '/images/quote-bg/faith.jpg',
-  gratitude: '/images/quote-bg/gratitude.jpg',
-};
+export const DEFAULT_IMAGES = {};
 
 export const SORT_OPTIONS = [
   { id: 'newest', label: 'Newest First' },

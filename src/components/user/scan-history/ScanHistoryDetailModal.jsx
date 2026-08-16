@@ -157,7 +157,11 @@ function ScanHistoryDetailModal({ isOpen, onClose, data }) {
             {/* Hero image */}
             <div
               className="relative h-56 w-full bg-cover bg-center"
-              style={{ backgroundImage: `url(${backgroundImage})` }}
+              style={
+                backgroundImage
+                  ? { backgroundImage: `url(${backgroundImage})` }
+                  : { background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e293b 100%)' }
+              }
             >
               {/* Dark-mode cinematic overlay */}
               <div className="absolute inset-0 hidden bg-gradient-to-b from-black/35 via-black/15 to-card dark:block" />
