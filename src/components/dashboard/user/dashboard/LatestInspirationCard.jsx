@@ -98,14 +98,14 @@ export default function LatestInspirationCard({
         </div>
 
         {/* Middle: Visual Quote or Legacy Quote Block */}
-        <div className="flex-1 flex flex-col justify-center my-6 sm:my-8 md:my-10">
+        <div className="flex-1 flex flex-col justify-center my-4 sm:my-6 md:my-8">
           {hasVisualDesign ? (
-            <div className="w-full flex items-center justify-center min-h-[280px] sm:min-h-[320px] max-h-[380px]">
+            <div className="w-full flex items-center justify-center min-h-[280px] sm:min-h-[360px] md:min-h-[420px] max-h-[520px]">
               <VisualQuoteRenderer
                 editorData={inspiration.editorData}
                 mode="auto"
                 showAudioPlayer={true}
-                className="w-full h-full max-w-[720px]"
+                className="w-full h-full"
               />
             </div>
           ) : (

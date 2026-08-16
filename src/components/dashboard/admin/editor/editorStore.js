@@ -494,13 +494,13 @@ const useEditorStore = create((set, get) => ({
       mobileDesign:
         targetVersion === 'mobile' && targetDesign.elements?.length === 0
           ? {
-              canvas: targetCanvas,
-              background: targetBg,
-              elements: targetElements,
-              audio: targetAudio,
-              history: [],
-              historyIndex: -1,
-            }
+            canvas: targetCanvas,
+            background: targetBg,
+            elements: targetElements,
+            audio: targetAudio,
+            history: [],
+            historyIndex: -1,
+          }
           : updatedMobile,
 
       canvas: { ...targetCanvas, zoom: 1 },

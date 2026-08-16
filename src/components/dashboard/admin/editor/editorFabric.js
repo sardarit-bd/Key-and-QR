@@ -55,6 +55,8 @@ export async function initCanvas(canvasEl, width, height) {
     fireRightClick: false,
     selection: true,
     defaultCursor: 'default',
+    enableRetinaScaling: true,
+    imageSmoothingEnabled: true,
   });
 
   // ── Pan via middle-mouse button ──
@@ -117,6 +119,8 @@ export async function initStaticCanvas(canvasEl, width, height) {
     width,
     height,
     backgroundColor: CANVAS_DEFAULTS.backgroundColor,
+    enableRetinaScaling: true,
+    imageSmoothingEnabled: true,
   });
 
   if (canvas.viewportTransform) {
@@ -142,6 +146,8 @@ export async function renderStaticDesign(canvasEl, design) {
     width,
     height,
     backgroundColor: CANVAS_DEFAULTS.backgroundColor,
+    enableRetinaScaling: true,
+    imageSmoothingEnabled: true,
   });
 
   if (staticCanvas.viewportTransform) {
@@ -193,7 +199,7 @@ export async function renderStaticDesign(canvasEl, design) {
     dispose: () => {
       try {
         staticCanvas.dispose();
-      } catch {}
+      } catch { }
     },
   };
 }
@@ -516,10 +522,10 @@ function calculateObjectFitScales(imgWidth, imgHeight, containerWidth, container
   }
   const containerRatio = containerWidth / containerHeight;
   const imageRatio = imgWidth / imgHeight;
-  
+
   let scaleX = 1;
   let scaleY = 1;
-  
+
   if (fit === 'cover') {
     if (imageRatio > containerRatio) {
       scaleY = containerHeight / imgHeight;
@@ -540,7 +546,7 @@ function calculateObjectFitScales(imgWidth, imgHeight, containerWidth, container
     scaleX = containerWidth / imgWidth;
     scaleY = containerHeight / imgHeight;
   }
-  
+
   return {
     scaleX: Number.isFinite(scaleX) && scaleX > 0 ? scaleX : 1,
     scaleY: Number.isFinite(scaleY) && scaleY > 0 ? scaleY : 1,
@@ -992,11 +998,11 @@ export function fabricObjectToElement(obj) {
           : undefined,
         shadow: obj.shadow
           ? {
-              color: obj.shadow.color,
-              blur: obj.shadow.blur,
-              offsetX: obj.shadow.offsetX,
-              offsetY: obj.shadow.offsetY,
-            }
+            color: obj.shadow.color,
+            blur: obj.shadow.blur,
+            offsetX: obj.shadow.offsetX,
+            offsetY: obj.shadow.offsetY,
+          }
           : undefined,
         wrap: true,
       },
@@ -1113,7 +1119,7 @@ export function selectObjectById(id) {
 
 export async function selectObjectsByIds(ids) {
   if (!canvasInstance) return;
-  
+
   if (!ids || ids.length === 0) {
     canvasInstance.discardActiveObject();
     canvasInstance.renderAll();
@@ -1153,23 +1159,42 @@ export function discardSelection() {
 }
 
 // ============================================================
-// Export — render canvas to blob
+// Export — render canvas to blob / data URL with HD scaling
 // ============================================================
 
-export function exportCanvasToBlob(mimeType = 'image/png', quality = 0.92) {
+export function exportCanvasToDataURL(options = {}) {
+  if (!canvasInstance) return null;
+  const { format = 'png', quality = 0.95, multiplier = 2 } = options;
+  canvasInstance.renderAll();
+  return canvasInstance.toDataURL({
+    format,
+    quality,
+    multiplier,
+    enableRetinaScaling: true,
+  });
+}
+
+export function exportCanvasToBlob(mimeType = 'image/png', quality = 0.95, multiplier = 2) {
   return new Promise((resolve, reject) => {
     if (!canvasInstance) {
       reject(new Error('Canvas not initialized'));
       return;
     }
     canvasInstance.renderAll();
-    canvasInstance.getElement().toBlob(
-      (blob) => {
-        if (blob) resolve(blob);
-        else reject(new Error('Failed to export canvas'));
-      },
-      mimeType,
-      quality
-    );
+    const format = mimeType === 'image/jpeg' ? 'jpeg' : 'png';
+    const dataUrl = canvasInstance.toDataURL({
+      format,
+      quality,
+      multiplier,
+      enableRetinaScaling: true,
+    });
+    if (!dataUrl) {
+      reject(new Error('Failed to export canvas'));
+      return;
+    }
+    fetch(dataUrl)
+      .then((res) => res.blob())
+      .then((blob) => resolve(blob))
+      .catch((err) => reject(err));
   });
 }
