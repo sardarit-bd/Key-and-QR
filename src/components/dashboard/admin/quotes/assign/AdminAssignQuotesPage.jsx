@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   Link2,
   Search,
@@ -25,7 +25,7 @@ import {
   useBulkDeleteAssignments,
 } from '@/hooks/dashboard/useAdminQuoteAssignment';
 import { getCategoryBadgeClass, getCategoryLabel } from '@/components/category';
-import { resolveBackgroundImage } from '@/components/category/categoryImages';
+import Pagination from '@/components/ui/Pagination';
 import {
   Dialog,
   DialogContent,
@@ -44,26 +44,70 @@ function formatDate(iso) {
   });
 }
 
-function getQuoteCardBackground(quote) {
-  if (!quote) return {};
+/**
+ * Extract valid image URL from quote editorData or image object
+ */
+export function getQuoteArtworkUrl(quote) {
+  if (!quote) return null;
+
+  // 1. Desktop editorData elements
   const desktopElements = quote.editorData?.desktop?.elements || quote.editorData?.elements || [];
   const imageEl = desktopElements.find((e) => e.type === 'image' && e.imageData?.source?.url);
-  const visualBg = quote.editorData?.desktop?.background;
+
+  // 2. Mobile editorData elements
+  const mobileElements = quote.editorData?.mobile?.elements || [];
+  const mobileImageEl = mobileElements.find((e) => e.type === 'image' && e.imageData?.source?.url);
+
+  // 3. Editor background
+  const visualBg = quote.editorData?.desktop?.background || quote.editorData?.mobile?.background;
   const visualBgImg = visualBg?.type === 'image' && visualBg.source?.url;
 
-  const customImg = imageEl?.imageData?.source?.url || visualBgImg || quote.image?.url;
-  const bgUrl = resolveBackgroundImage(quote.category, customImg);
+  // 4. Legacy image URL
+  const legacyImg = quote.image?.url || (typeof quote.image === 'string' ? quote.image : null);
 
-  if (!customImg && visualBg?.type === 'solid' && visualBg.value) {
+  const customImg =
+    imageEl?.imageData?.source?.url ||
+    mobileImageEl?.imageData?.source?.url ||
+    visualBgImg ||
+    legacyImg;
+
+  if (
+    customImg &&
+    typeof customImg === 'string' &&
+    (customImg.startsWith('http://') ||
+      customImg.startsWith('https://') ||
+      customImg.startsWith('/'))
+  ) {
+    return customImg;
+  }
+  return null;
+}
+
+/**
+ * Generate card background style (custom image or clean neutral visual background)
+ */
+export function getQuoteCardStyle(quote) {
+  if (!quote) return {};
+  const customImg = getQuoteArtworkUrl(quote);
+  if (customImg) {
+    return {
+      backgroundImage: `url(${customImg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    };
+  }
+
+  const visualBg = quote.editorData?.desktop?.background || quote.editorData?.mobile?.background;
+  if (visualBg?.type === 'solid' && visualBg.value) {
     return { backgroundColor: visualBg.value };
   }
-  if (!customImg && visualBg?.type === 'gradient' && visualBg.value) {
+  if (visualBg?.type === 'gradient' && visualBg.value) {
     return { background: visualBg.value };
   }
+
+  // Clean neutral visual background fallback (no random images)
   return {
-    backgroundImage: `url(${bgUrl})`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
+    background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e293b 100%)',
   };
 }
 
@@ -71,45 +115,94 @@ export default function AdminAssignQuotesPage() {
   const [activeTab, setActiveTab] = useState('assign'); // 'assign' | 'manage'
   const [targetType, setTargetType] = useState('tag'); // 'tag' | 'user'
 
-  // Selected Quote
+  // Selected Quote State (preserved across assignment, pagination, and search)
   const [selectedQuote, setSelectedQuote] = useState(null);
+
+  // Quote search & pagination (6 per page)
   const [quoteSearch, setQuoteSearch] = useState('');
-  const [isQuotePickerOpen, setIsQuotePickerOpen] = useState(false);
+  const [quotePage, setQuotePage] = useState(1);
   const debouncedQuoteSearch = useDebounce(quoteSearch, 300);
 
-  // Recipient search & selection
+  // Recipient search & pagination (10 per page)
   const [recipientSearch, setRecipientSearch] = useState('');
+  const [recipientPage, setRecipientPage] = useState(1);
   const debouncedRecipientSearch = useDebounce(recipientSearch, 300);
   const [selectedRecipientIds, setSelectedRecipientIds] = useState([]);
 
+  // Recipient metadata cache to preserve labels across pages
+  const [recipientMetaCache, setRecipientMetaCache] = useState(new Map());
+
   // Unassign dialog state
-  const [unassignTarget, setUnassignTarget] = useState(null); // single id or array
+  const [unassignTarget, setUnassignTarget] = useState(null);
   const [unassignDialogOpen, setUnassignDialogOpen] = useState(false);
 
-  // Queries (Guaranteed Tag[], User[], Quote[] from normalized hooks)
-  const { data: quotes = [], isLoading: isQuotesLoading } = useAssignableQuotes({
+  // Queries with Server-Side Pagination
+  const { data: quotesResult, isLoading: isQuotesLoading } = useAssignableQuotes({
     search: debouncedQuoteSearch,
+    page: quotePage,
+    limit: 6,
   });
 
-  const { data: tags = [], isLoading: isTagsLoading } = useAssignableTags({
+  const quotes = quotesResult?.data || [];
+  const quotesMeta = quotesResult?.meta || { page: 1, limit: 6, total: 0, totalPage: 1 };
+
+  const { data: tagsResult, isLoading: isTagsLoading } = useAssignableTags({
     search: debouncedRecipientSearch,
+    page: recipientPage,
+    limit: 10,
   });
 
-  const { data: users = [], isLoading: isUsersLoading } = useAssignableUsers({
+  const tags = tagsResult?.data || [];
+  const tagsMeta = tagsResult?.meta || { page: 1, limit: 10, total: 0, totalPage: 1 };
+
+  const { data: usersResult, isLoading: isUsersLoading } = useAssignableUsers({
     search: debouncedRecipientSearch,
+    page: recipientPage,
+    limit: 10,
   });
 
-  // Query existing assignments for selected quote (or all for manage tab)
-  const assignmentFilters = useMemo(() => {
-    const f = { limit: 100 };
-    if (activeTab === 'assign' && selectedQuote) {
-      f.quote = selectedQuote._id;
+  const users = usersResult?.data || [];
+  const usersMeta = usersResult?.meta || { page: 1, limit: 10, total: 0, totalPage: 1 };
+
+  // Cache recipient metadata when tags/users load so selected chips render across page switches
+  useEffect(() => {
+    if (tags.length > 0) {
+      setRecipientMetaCache((prev) => {
+        const next = new Map(prev);
+        tags.forEach((t) => {
+          next.set(t._id.toString(), {
+            _id: t._id,
+            label: t.tagCode,
+            type: 'tag',
+          });
+        });
+        return next;
+      });
     }
-    return f;
-  }, [activeTab, selectedQuote]);
+  }, [tags]);
 
-  const { data: assignmentsData, isLoading: isAssignmentsLoading, refetch: refetchAssignments } =
-    useQuoteAssignments(assignmentFilters);
+  useEffect(() => {
+    if (users.length > 0) {
+      setRecipientMetaCache((prev) => {
+        const next = new Map(prev);
+        users.forEach((u) => {
+          next.set(u._id.toString(), {
+            _id: u._id,
+            label: `${u.name || 'User'} (${u.email || ''})`,
+            type: 'user',
+          });
+        });
+        return next;
+      });
+    }
+  }, [users]);
+
+  // Query all active assignments for smart state resolution & manage tab
+  const {
+    data: assignmentsData,
+    isLoading: isAssignmentsLoading,
+    refetch: refetchAssignments,
+  } = useQuoteAssignments({ limit: 500, isActive: true });
 
   const assignments = assignmentsData?.data || [];
 
@@ -118,42 +211,176 @@ export default function AdminAssignQuotesPage() {
   const deleteAssignmentMutation = useDeleteAssignment();
   const bulkDeleteMutation = useBulkDeleteAssignments();
 
-  // Existing assignments for selected quote by target ID
-  const existingAssignedTargetMap = useMemo(() => {
-    if (!selectedQuote) return new Map();
+  // Memoized Lookup Map: Map<recipientId, { quoteIds: Set<string>, assignments: Array }>
+  const recipientAssignmentsMap = useMemo(() => {
     const map = new Map();
     assignments.forEach((a) => {
-      if (a.quote?._id === selectedQuote._id || a.quote === selectedQuote._id) {
-        if (a.assignmentType === 'tag' && a.tag) {
-          map.set(a.tag._id || a.tag, a);
-        } else if (a.assignmentType === 'user' && a.user) {
-          map.set(a.user._id || a.user, a);
-        }
+      if (a.isActive === false) return;
+      const qId = a.quote?._id || (typeof a.quote === 'string' ? a.quote : null);
+      if (!qId) return;
+
+      const recId =
+        a.assignmentType === 'tag'
+          ? a.tag?._id || (typeof a.tag === 'string' ? a.tag : null)
+          : a.user?._id || (typeof a.user === 'string' ? a.user : null);
+
+      if (!recId) return;
+      const key = recId.toString();
+
+      if (!map.has(key)) {
+        map.set(key, {
+          quoteIds: new Set(),
+          assignments: [],
+        });
       }
+      const entry = map.get(key);
+      entry.quoteIds.add(qId.toString());
+      entry.assignments.push(a);
     });
     return map;
-  }, [selectedQuote, assignments]);
+  }, [assignments]);
 
-  // Selected Recipient Objects
-  const selectedRecipients = useMemo(() => {
-    if (targetType === 'tag') {
-      return tags.filter((t) => selectedRecipientIds.includes(t._id));
+  /**
+   * Smart Recipient State Calculator:
+   * Evaluated against CURRENTLY SELECTED QUOTE + RECIPIENT
+   * - STATE 1 — AVAILABLE: Selected quote is NOT assigned to this recipient.
+   * - STATE 2 — ALREADY ASSIGNED: Selected quote is already assigned. Checkbox disabled.
+   * - STATE 3 — HAS OTHER QUOTES: Recipient has 1+ different quotes, but NOT selected quote. Checkbox enabled.
+   */
+  const getRecipientState = (recipientId) => {
+    if (!recipientId) {
+      return {
+        isAlreadyAssigned: false,
+        hasOtherQuotes: false,
+        otherQuotesCount: 0,
+        isSelectable: true,
+        stateType: 'AVAILABLE',
+      };
     }
-    return users.filter((u) => selectedRecipientIds.includes(u._id));
-  }, [targetType, tags, users, selectedRecipientIds]);
 
-  // Toggle single recipient
+    const entry = recipientAssignmentsMap.get(recipientId.toString());
+    if (!entry) {
+      return {
+        isAlreadyAssigned: false,
+        hasOtherQuotes: false,
+        otherQuotesCount: 0,
+        isSelectable: true,
+        stateType: 'AVAILABLE',
+      };
+    }
+
+    if (!selectedQuote) {
+      const totalCount = entry.quoteIds.size;
+      return {
+        isAlreadyAssigned: false,
+        hasOtherQuotes: totalCount > 0,
+        otherQuotesCount: totalCount,
+        isSelectable: true,
+        stateType: totalCount > 0 ? 'HAS_OTHER_QUOTES' : 'AVAILABLE',
+      };
+    }
+
+    const selectedQuoteId = selectedQuote._id.toString();
+    const isAlreadyAssigned = entry.quoteIds.has(selectedQuoteId);
+
+    let otherQuotesCount = 0;
+    entry.quoteIds.forEach((id) => {
+      if (id !== selectedQuoteId) otherQuotesCount++;
+    });
+
+    if (isAlreadyAssigned) {
+      return {
+        isAlreadyAssigned: true,
+        hasOtherQuotes: otherQuotesCount > 0,
+        otherQuotesCount,
+        isSelectable: false, // Checkbox disabled
+        stateType: 'ALREADY_ASSIGNED',
+      };
+    }
+
+    if (otherQuotesCount > 0) {
+      return {
+        isAlreadyAssigned: false,
+        hasOtherQuotes: true,
+        otherQuotesCount,
+        isSelectable: true, // Checkbox enabled
+        stateType: 'HAS_OTHER_QUOTES',
+      };
+    }
+
+    return {
+      isAlreadyAssigned: false,
+      hasOtherQuotes: false,
+      otherQuotesCount: 0,
+      isSelectable: true,
+      stateType: 'AVAILABLE',
+    };
+  };
+
+  // Reset pagination when searches change
+  const handleQuoteSearchChange = (val) => {
+    setQuoteSearch(val);
+    setQuotePage(1);
+  };
+
+  const handleRecipientSearchChange = (val) => {
+    setRecipientSearch(val);
+    setRecipientPage(1);
+  };
+
+  const handleTargetTypeChange = (type) => {
+    setTargetType(type);
+    setSelectedRecipientIds([]); // Reset recipient selection only
+    setRecipientPage(1);
+    setRecipientSearch('');
+    // selectedQuote remains unchanged!
+  };
+
+  // Handle Quote Selection
+  const handleSelectQuote = (quote) => {
+    if (selectedQuote?._id === quote._id) {
+      setSelectedQuote(null);
+      return;
+    }
+
+    setSelectedQuote(quote);
+
+    // Auto-remove any selected recipients that are already assigned to the newly selected quote
+    setSelectedRecipientIds((prev) => {
+      return prev.filter((recId) => {
+        const entry = recipientAssignmentsMap.get(recId.toString());
+        if (!entry) return true;
+        return !entry.quoteIds.has(quote._id.toString());
+      });
+    });
+  };
+
+  // Toggle single recipient (multi-page state preserved)
   const handleToggleRecipient = (id) => {
+    const state = getRecipientState(id);
+    if (!state.isSelectable) return;
+
     setSelectedRecipientIds((prev) =>
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
 
-  // Select all visible recipients
+  // Select all visible available recipients on CURRENT PAGE
   const handleSelectAllVisible = () => {
     const visibleList = targetType === 'tag' ? tags : users;
-    const visibleIds = visibleList.map((item) => item._id);
-    setSelectedRecipientIds((prev) => Array.from(new Set([...prev, ...visibleIds])));
+    const availableOnPage = visibleList
+      .filter((item) => {
+        const state = getRecipientState(item._id);
+        return state.isSelectable;
+      })
+      .map((item) => item._id);
+
+    if (availableOnPage.length === 0) {
+      toast.error('No available recipients to select on this page.');
+      return;
+    }
+
+    setSelectedRecipientIds((prev) => Array.from(new Set([...prev, ...availableOnPage])));
   };
 
   // Clear all selected recipients
@@ -161,7 +388,7 @@ export default function AdminAssignQuotesPage() {
     setSelectedRecipientIds([]);
   };
 
-  // Submit Assignment
+  // Submit Assignment (Post-Assignment UX: Quote retained, recipients reset, state updated)
   const handleAssignQuote = async () => {
     if (!selectedQuote) {
       toast.error('Please select a quote first');
@@ -181,17 +408,35 @@ export default function AdminAssignQuotesPage() {
 
       const summary = res?.data?.summary || res?.summary;
       if (summary) {
-        toast.success(
-          `Assignment complete: ${summary.newlyAssigned} new, ${summary.alreadyAssigned} already assigned.`
-        );
+        const parts = [];
+        if (summary.newlyAssigned > 0) {
+          parts.push(
+            `${summary.newlyAssigned} recipient${summary.newlyAssigned === 1 ? '' : 's'} assigned successfully.`
+          );
+        }
+        if (summary.alreadyAssigned > 0) {
+          parts.push(`${summary.alreadyAssigned} was already assigned.`);
+        }
+        if (summary.failed > 0) {
+          parts.push(`${summary.failed} failed.`);
+        }
+        toast.success(parts.join(' ') || 'Quote assigned successfully');
       } else {
         toast.success('Quote assigned successfully');
       }
 
+      // 1. Clear recipient selection (Quote remains selected!)
       setSelectedRecipientIds([]);
-      refetchAssignments();
+
+      // 2. Refetch assignments and update state
+      try {
+        await refetchAssignments();
+      } catch {
+        toast.error('Assignment completed, but the recipient list could not be refreshed.');
+      }
     } catch (err) {
       console.error('Failed to assign quote:', err);
+      // Keep selected recipients selected so user can retry!
       toast.error(err?.response?.data?.message || err?.message || 'Failed to assign quote');
     }
   };
@@ -264,135 +509,520 @@ export default function AdminAssignQuotesPage() {
 
       {/* Main Tab Content */}
       {activeTab === 'assign' ? (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          {/* Left Column: Quote Selector & Preview (5 cols) */}
-          <div className="lg:col-span-5 space-y-6">
-            {/* Quote Selector Card */}
-            <div className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-xs">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
-                  <QuoteIcon size={14} className="text-primary" />
-                  <span>1. Select Quote</span>
-                </span>
-                {selectedQuote && (
-                  <button
-                    type="button"
-                    onClick={() => setIsQuotePickerOpen(true)}
-                    className="text-xs text-primary font-medium hover:underline cursor-pointer"
-                  >
-                    Change Quote
-                  </button>
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+            {/* Left Column: Visual Quote Picker & Selected Quote Summary (5 cols) */}
+            <div className="lg:col-span-5 space-y-4">
+              {/* 1. SELECT QUOTE Card (Fixed Height Container) */}
+              <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 flex flex-col justify-between shadow-xs max-h-[580px]">
+                <div className="space-y-3.5 flex-1 flex flex-col overflow-hidden">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
+                      <QuoteIcon size={14} className="text-primary" />
+                      <span>1. Select Quote</span>
+                    </span>
+                    {selectedQuote && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedQuote(null)}
+                        className="text-xs text-primary font-medium hover:underline cursor-pointer"
+                      >
+                        Change Quote
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Selected Quote Summary Banner */}
+                  {selectedQuote && (
+                    <div className="rounded-xl border border-primary/40 bg-primary/5 p-3 space-y-2 transition-all shrink-0">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-primary flex items-center gap-1.5">
+                          <CheckCircle2 size={12} className="text-primary" />
+                          <span>Selected for Assignment</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedQuote(null)}
+                          className="text-[10px] font-medium text-foreground-secondary hover:text-destructive transition-colors cursor-pointer"
+                        >
+                          Deselect
+                        </button>
+                      </div>
+
+                      <div className="flex items-start gap-2.5">
+                        <div
+                          style={getQuoteCardStyle(selectedQuote)}
+                          className="w-12 h-12 rounded-lg shrink-0 border border-border/80 relative overflow-hidden flex items-end p-1 shadow-2xs"
+                        >
+                          <div className="absolute inset-0 bg-black/40" />
+                        </div>
+
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-serif italic font-medium text-foreground line-clamp-2 leading-snug">
+                            &ldquo;{selectedQuote.text}&rdquo;
+                          </p>
+                          <div className="flex items-center gap-2 mt-0.5 text-[10px] text-foreground-tertiary">
+                            {selectedQuote.author && (
+                              <span className="text-foreground-secondary font-medium truncate max-w-[120px]">
+                                — {selectedQuote.author}
+                              </span>
+                            )}
+                            <span>·</span>
+                            <span
+                              className={`text-[9px] font-semibold px-1.5 py-0.2 rounded border capitalize ${getCategoryBadgeClass(
+                                selectedQuote.category
+                              )}`}
+                            >
+                              {getCategoryLabel(selectedQuote.category)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Search Bar */}
+                  <div className="relative shrink-0">
+                    <Search
+                      size={13}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary"
+                    />
+                    <input
+                      type="text"
+                      value={quoteSearch}
+                      onChange={(e) => handleQuoteSearchChange(e.target.value)}
+                      placeholder="Search quotes by text, author, or category..."
+                      className="w-full h-8.5 pl-8.5 pr-3 rounded-xl border border-border bg-background text-xs text-foreground placeholder:text-foreground-tertiary focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                    />
+                  </div>
+
+                  {/* Visual Quote Card Grid (6 per page) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 flex-1 overflow-y-auto pr-1 min-h-[220px]">
+                    {isQuotesLoading ? (
+                      <div className="col-span-full p-8 text-center text-xs text-foreground-tertiary animate-pulse flex items-center justify-center">
+                        Loading quotes...
+                      </div>
+                    ) : quotes.length === 0 ? (
+                      <div className="col-span-full p-8 text-center text-xs text-foreground-tertiary border border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-1">
+                        <p className="font-semibold text-foreground-secondary">No quotes found</p>
+                        <p className="text-[11px]">
+                          {quoteSearch ? 'Try a different search term.' : 'No active quotes available.'}
+                        </p>
+                      </div>
+                    ) : (
+                      quotes.map((quote) => {
+                        const isSelected = selectedQuote?._id === quote._id;
+                        const cardStyle = getQuoteCardStyle(quote);
+
+                        return (
+                          <div
+                            key={quote._id}
+                            onClick={() => handleSelectQuote(quote)}
+                            style={cardStyle}
+                            className={`relative min-h-[110px] rounded-xl p-2.5 flex flex-col justify-between overflow-hidden cursor-pointer select-none transition-all duration-150 group border ${
+                              isSelected
+                                ? 'ring-2 ring-primary border-primary shadow-xs'
+                                : 'border-border/60 hover:border-primary/50 hover:shadow-2xs'
+                            }`}
+                          >
+                            {/* Dark Overlay for readability */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/35 pointer-events-none transition-opacity group-hover:from-black/90" />
+
+                            {/* Top Row: Checkmark / Category / Active */}
+                            <div className="relative z-10 flex items-center justify-between gap-1">
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                {isSelected ? (
+                                  <span className="w-4.5 h-4.5 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-xs shrink-0">
+                                    <CheckCircle2 size={12} className="stroke-[2.5]" />
+                                  </span>
+                                ) : (
+                                  <span className="w-4.5 h-4.5 rounded-full border border-white/30 bg-black/30 group-hover:border-white/60 transition-colors shrink-0" />
+                                )}
+                                <span
+                                  className={`text-[8.5px] font-semibold px-1.5 py-0.2 rounded-full border capitalize backdrop-blur-md truncate ${getCategoryBadgeClass(
+                                    quote.category
+                                  )}`}
+                                >
+                                  {getCategoryLabel(quote.category)}
+                                </span>
+                              </div>
+                              <span className="text-[8.5px] font-semibold px-1.5 py-0.2 rounded-full backdrop-blur-md bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 shrink-0">
+                                Active
+                              </span>
+                            </div>
+
+                            {/* Middle/Bottom: Quote Text & Author */}
+                            <div className="relative z-10 my-auto text-left pt-1.5 pb-0.5">
+                              <p className="text-[11px] font-serif italic font-medium text-white line-clamp-3 leading-snug drop-shadow-xs">
+                                &ldquo;{quote.text}&rdquo;
+                              </p>
+                              {quote.author && (
+                                <p className="text-[9.5px] text-white/80 font-sans tracking-wide mt-0.5 drop-shadow-2xs truncate">
+                                  — {quote.author}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+
+                {/* Quote Picker Pagination (Dashboard Standard) */}
+                {quotesMeta.total > 0 && (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-3 mt-2 border-t border-border/80 text-xs shrink-0">
+                    <span className="text-foreground-tertiary text-[11px]">
+                      Showing{' '}
+                      <span className="font-semibold text-foreground">
+                        {(quotePage - 1) * quotesMeta.limit + 1}–
+                        {Math.min(quotePage * quotesMeta.limit, quotesMeta.total)}
+                      </span>{' '}
+                      of <span className="font-semibold text-foreground">{quotesMeta.total}</span>
+                    </span>
+
+                    <Pagination
+                      currentPage={quotePage}
+                      totalPages={quotesMeta.totalPage}
+                      onPageChange={setQuotePage}
+                      className="self-end sm:self-auto"
+                    />
+                  </div>
                 )}
               </div>
+            </div>
 
-              {!selectedQuote ? (
-                <div
-                  onClick={() => setIsQuotePickerOpen(true)}
-                  className="border-2 border-dashed border-border hover:border-primary/50 bg-muted/30 hover:bg-muted/50 rounded-xl p-8 text-center cursor-pointer transition-all group"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-primary/10 text-primary flex items-center justify-center mx-auto mb-3 group-hover:scale-105 transition-transform">
-                    <QuoteIcon size={24} />
-                  </div>
-                  <p className="text-sm font-semibold text-foreground mb-1">Select a Quote</p>
-                  <p className="text-xs text-foreground-tertiary">
-                    Click to search and choose an active quote to assign
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* Visual Artwork Preview of Selected Quote */}
-                  <div
-                    style={getQuoteCardBackground(selectedQuote)}
-                    className="relative aspect-[16/10] w-full rounded-xl flex flex-col justify-between p-4 overflow-hidden select-none border border-border shadow-xs"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-black/30 pointer-events-none" />
+            {/* Right Column: Recipient Selection with Smart States & Pagination (7 cols) */}
+            <div className="lg:col-span-7 space-y-4">
+              <div className="rounded-2xl border border-border bg-card p-4 sm:p-5 flex flex-col justify-between shadow-xs max-h-[580px]">
+                <div className="space-y-3 flex-1 flex flex-col overflow-hidden">
+                  {/* Step 2 Header & Target Switcher */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-border shrink-0">
+                    <span className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
+                      <Users size={14} className="text-primary" />
+                      <span>2. Choose Target Recipients</span>
+                    </span>
 
-                    {/* Category & Status */}
-                    <div className="relative z-10 flex items-center justify-between gap-2">
-                      <span
-                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border capitalize backdrop-blur-md ${getCategoryBadgeClass(
-                          selectedQuote.category
-                        )}`}
+                    {/* Target Type Selector */}
+                    <div className="flex items-center rounded-lg bg-muted/60 p-0.5 border border-border">
+                      <button
+                        type="button"
+                        onClick={() => handleTargetTypeChange('tag')}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                          targetType === 'tag'
+                            ? 'bg-card text-foreground shadow-xs'
+                            : 'text-foreground-secondary hover:text-foreground'
+                        }`}
                       >
-                        {getCategoryLabel(selectedQuote.category)}
-                      </span>
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border backdrop-blur-md bg-emerald-500/20 text-emerald-300 border-emerald-500/30">
-                        Active
-                      </span>
+                        <QrCode size={12} />
+                        <span>QR Tags</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleTargetTypeChange('user')}
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
+                          targetType === 'user'
+                            ? 'bg-card text-foreground shadow-xs'
+                            : 'text-foreground-secondary hover:text-foreground'
+                        }`}
+                      >
+                        <Users size={12} />
+                        <span>Users</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Search & Bulk Select Controls */}
+                  <div className="flex flex-col sm:flex-row items-center gap-2 shrink-0">
+                    <div className="relative flex-1 w-full">
+                      <Search
+                        size={13}
+                        className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary"
+                      />
+                      <input
+                        type="text"
+                        value={recipientSearch}
+                        onChange={(e) => handleRecipientSearchChange(e.target.value)}
+                        placeholder={
+                          targetType === 'tag'
+                            ? 'Search tags by code...'
+                            : 'Search users by name or email...'
+                        }
+                        className="w-full h-8.5 pl-8.5 pr-3 rounded-xl border border-border bg-background text-xs text-foreground placeholder:text-foreground-tertiary focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
+                      />
                     </div>
 
-                    {/* Quote Text & Author */}
-                    <div className="relative z-10 my-auto text-center px-2">
-                      <p className="text-xs sm:text-sm font-serif italic font-medium text-white line-clamp-3 leading-snug drop-shadow-sm">
-                        &ldquo;{selectedQuote.text}&rdquo;
-                      </p>
-                      {selectedQuote.author && (
-                        <p className="text-[10px] text-white/80 font-sans tracking-wide mt-1.5 drop-shadow-xs">
-                          — {selectedQuote.author}
-                        </p>
+                    <div className="flex items-center gap-1.5 w-full sm:w-auto shrink-0">
+                      <button
+                        type="button"
+                        onClick={handleSelectAllVisible}
+                        className="flex-1 sm:flex-initial h-8.5 px-2.5 rounded-xl border border-border hover:bg-muted text-foreground-secondary hover:text-foreground text-xs font-semibold transition-colors cursor-pointer"
+                      >
+                        Select All Available on This Page
+                      </button>
+                      {selectedRecipientIds.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={handleClearSelected}
+                          className="flex-1 sm:flex-initial h-8.5 px-2.5 rounded-xl border border-border hover:bg-muted text-destructive text-xs font-semibold transition-colors cursor-pointer"
+                        >
+                          Clear ({selectedRecipientIds.length})
+                        </button>
                       )}
                     </div>
                   </div>
 
-                  {/* Existing Assignments Status */}
-                  <div className="flex items-center justify-between p-3 rounded-xl bg-muted/40 border border-border text-xs">
-                    <span className="text-foreground-secondary font-medium">
-                      Current Assignments:
-                    </span>
-                    <span className="text-foreground font-semibold">
-                      {existingAssignedTargetMap.size} recipient(s)
-                    </span>
+                  {/* Compact Recipient Selection List (Fixed Scrollable Area) */}
+                  <div className="space-y-1.5 flex-1 overflow-y-auto pr-1 min-h-[220px]">
+                    {targetType === 'tag' ? (
+                      isTagsLoading ? (
+                        <div className="p-8 text-center text-xs text-foreground-tertiary animate-pulse flex items-center justify-center">
+                          Loading QR tags...
+                        </div>
+                      ) : tags.length === 0 ? (
+                        <div className="p-8 text-center text-xs text-foreground-tertiary border border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-1">
+                          <p className="font-semibold text-foreground-secondary">No tags found</p>
+                          <p className="text-[11px]">
+                            {recipientSearch ? 'Try a different search query.' : 'No QR tags available.'}
+                          </p>
+                        </div>
+                      ) : (
+                        tags.map((tag) => {
+                          const isSelected = selectedRecipientIds.includes(tag._id);
+                          const state = getRecipientState(tag._id);
+
+                          return (
+                            <div
+                              key={tag._id}
+                              onClick={() => {
+                                if (state.isSelectable) {
+                                  handleToggleRecipient(tag._id);
+                                }
+                              }}
+                              className={`flex items-center justify-between p-2 sm:p-2.5 rounded-xl border transition-all min-h-[50px] ${
+                                !state.isSelectable
+                                  ? 'opacity-65 bg-muted/20 border-border cursor-not-allowed'
+                                  : isSelected
+                                  ? 'border-primary/50 bg-primary/5 shadow-2xs cursor-pointer'
+                                  : 'border-border bg-background hover:bg-muted/40 cursor-pointer'
+                              }`}
+                            >
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  disabled={!state.isSelectable}
+                                  onChange={() => {}}
+                                  className="rounded border-border text-primary focus:ring-primary h-3.5 w-3.5 pointer-events-none disabled:opacity-40"
+                                />
+                                <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-foreground-secondary shrink-0">
+                                  <QrCode size={14} />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-xs font-semibold text-foreground truncate leading-tight">
+                                    {tag.tagCode}
+                                  </p>
+                                  <p className="text-[10px] text-foreground-tertiary truncate">
+                                    {tag.isActivated ? 'Activated' : 'Unactivated'} ·{' '}
+                                    {tag.subscriptionType || 'Free'}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 shrink-0">
+                                {/* Smart State Badges */}
+                                {state.stateType === 'ALREADY_ASSIGNED' && (
+                                  <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                    Already Assigned
+                                  </span>
+                                )}
+                                {state.stateType === 'HAS_OTHER_QUOTES' && (
+                                  <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                                    Has {state.otherQuotesCount} other{' '}
+                                    {state.otherQuotesCount === 1 ? 'quote' : 'quotes'}
+                                  </span>
+                                )}
+                                {state.stateType === 'AVAILABLE' && (
+                                  <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                                    Available
+                                  </span>
+                                )}
+                                <span
+                                  className={`text-[9.5px] font-semibold px-2 py-0.5 rounded-full border ${
+                                    tag.isActive
+                                      ? 'bg-muted text-foreground-secondary border-border'
+                                      : 'bg-muted text-foreground-tertiary border-border'
+                                  }`}
+                                >
+                                  {tag.isActive ? 'Active' : 'Disabled'}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })
+                      )
+                    ) : isUsersLoading ? (
+                      <div className="p-8 text-center text-xs text-foreground-tertiary animate-pulse flex items-center justify-center">
+                        Loading users...
+                      </div>
+                    ) : users.length === 0 ? (
+                      <div className="p-8 text-center text-xs text-foreground-tertiary border border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-1">
+                        <p className="font-semibold text-foreground-secondary">No users found</p>
+                        <p className="text-[11px]">
+                          {recipientSearch ? 'Try a different search query.' : 'No users available.'}
+                        </p>
+                      </div>
+                    ) : (
+                      users.map((user) => {
+                        const isSelected = selectedRecipientIds.includes(user._id);
+                        const state = getRecipientState(user._id);
+
+                        return (
+                          <div
+                            key={user._id}
+                            onClick={() => {
+                              if (state.isSelectable) {
+                                handleToggleRecipient(user._id);
+                              }
+                            }}
+                            className={`flex items-center justify-between p-2 sm:p-2.5 rounded-xl border transition-all min-h-[50px] ${
+                              !state.isSelectable
+                                ? 'opacity-65 bg-muted/20 border-border cursor-not-allowed'
+                                : isSelected
+                                ? 'border-primary/50 bg-primary/5 shadow-2xs cursor-pointer'
+                                : 'border-border bg-background hover:bg-muted/40 cursor-pointer'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0">
+                              <input
+                                type="checkbox"
+                                checked={isSelected}
+                                disabled={!state.isSelectable}
+                                onChange={() => {}}
+                                className="rounded border-border text-primary focus:ring-primary h-3.5 w-3.5 pointer-events-none disabled:opacity-40"
+                              />
+                              <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
+                                {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                              </div>
+                              <div className="min-w-0">
+                                <p className="text-xs font-semibold text-foreground truncate leading-tight">
+                                  {user.name || 'Anonymous User'}
+                                </p>
+                                <p className="text-[10px] text-foreground-tertiary truncate">
+                                  {user.email}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              {state.stateType === 'ALREADY_ASSIGNED' && (
+                                <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
+                                  Already Assigned
+                                </span>
+                              )}
+                              {state.stateType === 'HAS_OTHER_QUOTES' && (
+                                <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20">
+                                  Has {state.otherQuotesCount} other{' '}
+                                  {state.otherQuotesCount === 1 ? 'quote' : 'quotes'}
+                                </span>
+                              )}
+                              {state.stateType === 'AVAILABLE' && (
+                                <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
+                                  Available
+                                </span>
+                              )}
+                              <span className="text-[9.5px] font-semibold px-2 py-0.5 rounded-full bg-muted text-foreground-secondary border border-border capitalize">
+                                {user.role || 'user'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
                   </div>
                 </div>
-              )}
+
+                {/* Recipient Pagination (Dashboard Standard) */}
+                {(targetType === 'tag' ? tagsMeta.total : usersMeta.total) > 0 && (
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-3 mt-2 border-t border-border/80 text-xs shrink-0">
+                    <span className="text-foreground-tertiary text-[11px]">
+                      Showing{' '}
+                      <span className="font-semibold text-foreground">
+                        {(recipientPage - 1) * (targetType === 'tag' ? tagsMeta.limit : usersMeta.limit) + 1}–
+                        {Math.min(
+                          recipientPage * (targetType === 'tag' ? tagsMeta.limit : usersMeta.limit),
+                          targetType === 'tag' ? tagsMeta.total : usersMeta.total
+                        )}
+                      </span>{' '}
+                      of{' '}
+                      <span className="font-semibold text-foreground">
+                        {targetType === 'tag' ? tagsMeta.total : usersMeta.total}
+                      </span>
+                    </span>
+
+                    <Pagination
+                      currentPage={recipientPage}
+                      totalPages={targetType === 'tag' ? tagsMeta.totalPage : usersMeta.totalPage}
+                      onPageChange={setRecipientPage}
+                      className="self-end sm:self-auto"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
+          </div>
 
-            {/* Selected Recipients Summary Card */}
-            {selectedRecipientIds.length > 0 && (
-              <div className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-xs">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
-                    <CheckCircle2 size={14} className="text-emerald-500" />
-                    <span>Selected ({selectedRecipientIds.length})</span>
+          {/* Selected Recipients Action Bar (Sticky or bottom summary) */}
+          {selectedRecipientIds.length > 0 && (
+            <div className="rounded-2xl border border-primary/30 bg-card p-4 sm:p-5 space-y-3 shadow-xs">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
+                  <CheckCircle2 size={14} className="text-emerald-500" />
+                  <span>
+                    Selected Recipients ({selectedRecipientIds.length}{' '}
+                    {targetType === 'tag' ? 'Tags' : 'Users'})
                   </span>
-                  <button
-                    type="button"
-                    onClick={handleClearSelected}
-                    className="text-xs text-destructive hover:underline cursor-pointer"
-                  >
-                    Clear All
-                  </button>
-                </div>
+                </span>
+                <button
+                  type="button"
+                  onClick={handleClearSelected}
+                  className="text-xs text-destructive hover:underline cursor-pointer font-medium"
+                >
+                  Clear All
+                </button>
+              </div>
 
-                {/* Chips */}
-                <div className="flex flex-wrap gap-1.5 max-h-[160px] overflow-y-auto pr-1">
-                  {selectedRecipients.map((item) => (
+              {/* Chips (cached across pages) */}
+              <div className="flex flex-wrap gap-1.5 max-h-[120px] overflow-y-auto pr-1">
+                {selectedRecipientIds.map((id) => {
+                  const cached = recipientMetaCache.get(id.toString());
+                  const label = cached?.label || id;
+
+                  return (
                     <span
-                      key={item._id}
+                      key={id}
                       className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-primary/10 border border-primary/20 text-primary text-xs font-medium"
                     >
-                      <span>
-                        {targetType === 'tag'
-                          ? item.tagCode
-                          : `${item.name || 'User'} (${item.email || ''})`}
-                      </span>
+                      <span className="truncate max-w-[200px]">{label}</span>
                       <button
                         type="button"
-                        onClick={() => handleToggleRecipient(item._id)}
+                        onClick={() => handleToggleRecipient(id)}
                         className="hover:text-destructive transition-colors cursor-pointer"
                       >
                         <X size={12} />
                       </button>
                     </span>
-                  ))}
-                </div>
+                  );
+                })}
+              </div>
 
-                {/* Assign Action Button */}
+              {/* Assign Action Button */}
+              <div className="pt-1">
                 <button
                   type="button"
                   onClick={handleAssignQuote}
                   disabled={bulkAssignMutation.isPending || !selectedQuote}
-                  className="w-full py-2.5 px-4 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs transition-all shadow-xs flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-xs transition-all shadow-xs flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
                 >
                   {bulkAssignMutation.isPending ? (
                     <>
@@ -410,221 +1040,8 @@ export default function AdminAssignQuotesPage() {
                   )}
                 </button>
               </div>
-            )}
-          </div>
-
-          {/* Right Column: Recipient Type & Multi-Select (7 cols) */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="rounded-2xl border border-border bg-card p-5 space-y-4 shadow-xs">
-              {/* Step 2 Header & Target Switcher */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-border">
-                <span className="text-xs font-semibold text-foreground uppercase tracking-wider flex items-center gap-2">
-                  <Users size={14} className="text-primary" />
-                  <span>2. Choose Target Recipients</span>
-                </span>
-
-                {/* Target Type Selector */}
-                <div className="flex items-center rounded-lg bg-muted/60 p-1 border border-border">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTargetType('tag');
-                      setSelectedRecipientIds([]);
-                    }}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                      targetType === 'tag'
-                        ? 'bg-card text-foreground shadow-xs'
-                        : 'text-foreground-secondary hover:text-foreground'
-                    }`}
-                  >
-                    <QrCode size={13} />
-                    <span>QR Tags</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTargetType('user');
-                      setSelectedRecipientIds([]);
-                    }}
-                    className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                      targetType === 'user'
-                        ? 'bg-card text-foreground shadow-xs'
-                        : 'text-foreground-secondary hover:text-foreground'
-                    }`}
-                  >
-                    <Users size={13} />
-                    <span>Users</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Search & Bulk Select Controls */}
-              <div className="flex flex-col sm:flex-row items-center gap-2.5">
-                <div className="relative flex-1 w-full">
-                  <Search
-                    size={14}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary"
-                  />
-                  <input
-                    type="text"
-                    value={recipientSearch}
-                    onChange={(e) => setRecipientSearch(e.target.value)}
-                    placeholder={
-                      targetType === 'tag'
-                        ? 'Search tags by code...'
-                        : 'Search users by name or email...'
-                    }
-                    className="w-full h-9 pl-9 pr-3 rounded-xl border border-border bg-background text-xs text-foreground placeholder:text-foreground-tertiary focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary"
-                  />
-                </div>
-
-                <div className="flex items-center gap-2 w-full sm:w-auto shrink-0">
-                  <button
-                    type="button"
-                    onClick={handleSelectAllVisible}
-                    className="flex-1 sm:flex-initial h-9 px-3 rounded-xl border border-border hover:bg-muted text-foreground-secondary hover:text-foreground text-xs font-semibold transition-colors cursor-pointer"
-                  >
-                    Select All Visible
-                  </button>
-                  {selectedRecipientIds.length > 0 && (
-                    <button
-                      type="button"
-                      onClick={handleClearSelected}
-                      className="flex-1 sm:flex-initial h-9 px-3 rounded-xl border border-border hover:bg-muted text-destructive text-xs font-semibold transition-colors cursor-pointer"
-                    >
-                      Clear
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Recipient Selection List */}
-              <div className="space-y-2 max-h-[460px] overflow-y-auto pr-1">
-                {targetType === 'tag' ? (
-                  isTagsLoading ? (
-                    <div className="p-8 text-center text-xs text-foreground-tertiary animate-pulse">
-                      Loading QR tags...
-                    </div>
-                  ) : tags.length === 0 ? (
-                    <div className="p-8 text-center text-xs text-foreground-tertiary border border-dashed border-border rounded-xl">
-                      No tags found matching criteria.
-                    </div>
-                  ) : (
-                    tags.map((tag) => {
-                      const isSelected = selectedRecipientIds.includes(tag._id);
-                      const isAlreadyAssigned = existingAssignedTargetMap.has(tag._id);
-
-                      return (
-                        <div
-                          key={tag._id}
-                          onClick={() => handleToggleRecipient(tag._id)}
-                          className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
-                            isSelected
-                              ? 'border-primary/50 bg-primary/5 shadow-xs'
-                              : 'border-border bg-background hover:bg-muted/40'
-                          }`}
-                        >
-                          <div className="flex items-center gap-3 min-w-0">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={() => {}}
-                              className="rounded border-border text-primary focus:ring-primary h-4 w-4 pointer-events-none"
-                            />
-                            <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-foreground-secondary shrink-0">
-                              <QrCode size={16} />
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-xs font-semibold text-foreground truncate">
-                                {tag.tagCode}
-                              </p>
-                              <p className="text-[11px] text-foreground-tertiary truncate">
-                                {tag.isActivated ? 'Activated' : 'Unactivated'} ·{' '}
-                                {tag.subscriptionType || 'Free'}
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2 shrink-0">
-                            {isAlreadyAssigned && (
-                              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                Assigned
-                              </span>
-                            )}
-                            <span
-                              className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                                tag.isActive
-                                  ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
-                                  : 'bg-muted text-foreground-tertiary border-border'
-                              }`}
-                            >
-                              {tag.isActive ? 'Active' : 'Disabled'}
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })
-                  )
-                ) : isUsersLoading ? (
-                  <div className="p-8 text-center text-xs text-foreground-tertiary animate-pulse">
-                    Loading users...
-                  </div>
-                ) : users.length === 0 ? (
-                  <div className="p-8 text-center text-xs text-foreground-tertiary border border-dashed border-border rounded-xl">
-                    No users found matching criteria.
-                  </div>
-                ) : (
-                  users.map((user) => {
-                    const isSelected = selectedRecipientIds.includes(user._id);
-                    const isAlreadyAssigned = existingAssignedTargetMap.has(user._id);
-
-                    return (
-                      <div
-                        key={user._id}
-                        onClick={() => handleToggleRecipient(user._id)}
-                        className={`flex items-center justify-between p-3 rounded-xl border transition-all cursor-pointer ${
-                          isSelected
-                            ? 'border-primary/50 bg-primary/5 shadow-xs'
-                            : 'border-border bg-background hover:bg-muted/40'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3 min-w-0">
-                          <input
-                            type="checkbox"
-                            checked={isSelected}
-                            onChange={() => {}}
-                            className="rounded border-border text-primary focus:ring-primary h-4 w-4 pointer-events-none"
-                          />
-                          <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
-                            {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                          </div>
-                          <div className="min-w-0">
-                            <p className="text-xs font-semibold text-foreground truncate">
-                              {user.name || 'Anonymous User'}
-                            </p>
-                            <p className="text-[11px] text-foreground-tertiary truncate">
-                              {user.email}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center gap-2 shrink-0">
-                          {isAlreadyAssigned && (
-                            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                              Assigned
-                            </span>
-                          )}
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-muted text-foreground-secondary border border-border capitalize">
-                            {user.role || 'user'}
-                          </span>
-                        </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
             </div>
-          </div>
+          )}
         </div>
       ) : (
         /* Manage Active Assignments Tab */
@@ -725,88 +1142,6 @@ export default function AdminAssignQuotesPage() {
           )}
         </div>
       )}
-
-      {/* Quote Picker Dialog */}
-      <Dialog open={isQuotePickerOpen} onOpenChange={setIsQuotePickerOpen}>
-        <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-6 rounded-2xl">
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold text-foreground flex items-center gap-2">
-              <QuoteIcon size={18} className="text-primary" />
-              <span>Select Quote to Assign</span>
-            </DialogTitle>
-            <DialogDescription className="text-xs text-foreground-secondary">
-              Search and pick an active quote from your library.
-            </DialogDescription>
-          </DialogHeader>
-
-          {/* Search Input */}
-          <div className="relative my-2">
-            <Search
-              size={14}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary"
-            />
-            <input
-              type="text"
-              value={quoteSearch}
-              onChange={(e) => setQuoteSearch(e.target.value)}
-              placeholder="Search quotes by text, author, or category..."
-              className="w-full h-9 pl-9 pr-3 rounded-xl border border-border bg-background text-xs text-foreground placeholder:text-foreground-tertiary focus:outline-none focus:ring-1 focus:ring-primary"
-            />
-          </div>
-
-          {/* Quotes List */}
-          <div className="flex-1 overflow-y-auto space-y-2 pr-1 min-h-[300px] max-h-[400px]">
-            {isQuotesLoading ? (
-              <div className="p-8 text-center text-xs text-foreground-tertiary animate-pulse">
-                Loading quotes...
-              </div>
-            ) : quotes.length === 0 ? (
-              <div className="p-8 text-center text-xs text-foreground-tertiary border border-dashed border-border rounded-xl">
-                No active quotes found.
-              </div>
-            ) : (
-              quotes.map((quote) => (
-                <div
-                  key={quote._id}
-                  onClick={() => {
-                    setSelectedQuote(quote);
-                    setIsQuotePickerOpen(false);
-                  }}
-                  className="flex items-center justify-between p-3.5 rounded-xl border border-border bg-background hover:bg-muted/50 hover:border-primary/40 transition-all cursor-pointer group"
-                >
-                  <div className="min-w-0 flex-1 pr-4">
-                    <p className="text-xs font-serif italic font-medium text-foreground line-clamp-2 leading-snug">
-                      &ldquo;{quote.text}&rdquo;
-                    </p>
-                    <div className="flex items-center gap-2 mt-1.5 text-[11px] text-foreground-tertiary">
-                      {quote.author && (
-                        <span className="font-medium text-foreground-secondary">
-                          — {quote.author}
-                        </span>
-                      )}
-                      <span>·</span>
-                      <span
-                        className={`text-[9px] font-semibold px-1.5 py-0.2 rounded border capitalize ${getCategoryBadgeClass(
-                          quote.category
-                        )}`}
-                      >
-                        {getCategoryLabel(quote.category)}
-                      </span>
-                    </div>
-                  </div>
-
-                  <button
-                    type="button"
-                    className="px-3 py-1.5 rounded-lg bg-primary/10 text-primary text-xs font-semibold group-hover:bg-primary group-hover:text-primary-foreground transition-colors shrink-0"
-                  >
-                    Select
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-        </DialogContent>
-      </Dialog>
 
       {/* Unassign Confirmation Dialog */}
       <Dialog open={unassignDialogOpen} onOpenChange={setUnassignDialogOpen}>
