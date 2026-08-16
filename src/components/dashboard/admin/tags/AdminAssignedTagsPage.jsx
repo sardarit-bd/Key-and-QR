@@ -259,7 +259,7 @@ export default function AdminAssignedTagsPage() {
           <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
             <CheckCircle size={20} className="text-emerald-400" />
           </span>
-          Assigned Tags
+          QR Tag Assigned
         </h1>
         <p className="text-sm text-foreground-secondary mt-2 ml-[52px]">
           View and manage QR tags that have been assigned to users and orders.

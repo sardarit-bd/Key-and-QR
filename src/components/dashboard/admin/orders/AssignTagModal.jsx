@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, Tag } from 'lucide-react';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
-import { adminTagsService } from '@/services/dashboard-service/admin-tags.service';
+import { adminAssignmentService } from '@/services/dashboard-service/admin-assignment.service';
 import Pagination from '@/components/ui/Pagination';
 
 const ITEMS_PER_PAGE = 10;
@@ -26,16 +26,16 @@ export default function AssignTagModal({ open, onOpenChange, onAssign }) {
   const [assigning, setAssigning] = useState(false);
   const debouncedSearch = useDebounce(search, 300);
 
-  const filters = { search: debouncedSearch, isActivated: 'false', isActive: 'true', page, limit: ITEMS_PER_PAGE };
+  const filters = { search: debouncedSearch, page, limit: ITEMS_PER_PAGE };
   const { data, isLoading } = useQuery({
-    queryKey: ['admin-tags', 'available', filters],
-    queryFn: () => adminTagsService.getTags(filters),
+    queryKey: ['admin-assignment', 'unassigned-tags', filters],
+    queryFn: () => adminAssignmentService.getUnassignedTags(filters),
     staleTime: 10 * 1000,
     enabled: open,
   });
 
-  const tags = data?.data?.data || [];
-  const meta = data?.data?.meta || { page: 1, totalPage: 0, total: 0 };
+  const tags = data?.data || [];
+  const meta = data?.meta || { page: 1, totalPage: 0, total: 0 };
 
   const handleSearchChange = useCallback((v) => { setSearch(v); setPage(1); setSelectedTagId(null); }, []);
 
@@ -72,10 +72,10 @@ export default function AssignTagModal({ open, onOpenChange, onAssign }) {
         <div className="space-y-4 py-2">
           <div className="relative">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary pointer-events-none" />
-            <Input value={search} onChange={(e) => handleSearchChange(e.target.value)} placeholder="Search available tags..." className="pl-9 h-9 text-sm" />
+            <Input value={search} onChange={(e) => handleSearchChange(e.target.value)} placeholder="Search unassigned tags..." className="pl-9 h-9 text-sm" />
           </div>
 
-          <p className="text-xs text-foreground-tertiary">{meta.total} available tags</p>
+          <p className="text-xs text-foreground-tertiary">{meta.total} unassigned tags</p>
 
           {isLoading ? (
             <div className="space-y-2 animate-pulse">
@@ -84,7 +84,7 @@ export default function AssignTagModal({ open, onOpenChange, onAssign }) {
           ) : tags.length === 0 ? (
             <div className="text-center py-8">
               <Tag size={32} className="mx-auto mb-2 text-muted-foreground" />
-              <p className="text-sm text-foreground-tertiary">No available tags found</p>
+              <p className="text-sm text-foreground-tertiary">No unassigned tags available</p>
             </div>
           ) : (
             <div className="space-y-1 max-h-60 overflow-y-auto">
