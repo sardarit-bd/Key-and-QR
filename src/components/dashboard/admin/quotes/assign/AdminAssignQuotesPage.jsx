@@ -152,7 +152,7 @@ export default function AdminAssignQuotesPage() {
     limit: 10,
   });
 
-  const tags = tagsResult?.data || [];
+  const rawTags = tagsResult?.data || [];
   const tagsMeta = tagsResult?.meta || { page: 1, limit: 10, total: 0, totalPage: 1 };
 
   const { data: usersResult, isLoading: isUsersLoading } = useAssignableUsers({
@@ -161,41 +161,68 @@ export default function AdminAssignQuotesPage() {
     limit: 10,
   });
 
-  const users = usersResult?.data || [];
+  const rawUsers = usersResult?.data || [];
   const usersMeta = usersResult?.meta || { page: 1, limit: 10, total: 0, totalPage: 1 };
+
+  // Deduplicate users and tags by stable ID to guarantee uniqueness in the UI
+  const uniqueUsers = useMemo(() => {
+    const seen = new Set();
+    return rawUsers.filter((u) => {
+      const id = (u._id || u.id)?.toString();
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  }, [rawUsers]);
+
+  const uniqueTags = useMemo(() => {
+    const seen = new Set();
+    return rawTags.filter((t) => {
+      const id = (t._id || t.id)?.toString();
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
+  }, [rawTags]);
 
   // Cache recipient metadata when tags/users load so selected chips render across page switches
   useEffect(() => {
-    if (tags.length > 0) {
+    if (uniqueTags.length > 0) {
       setRecipientMetaCache((prev) => {
         const next = new Map(prev);
-        tags.forEach((t) => {
-          next.set(t._id.toString(), {
-            _id: t._id,
-            label: t.tagCode,
-            type: 'tag',
-          });
+        uniqueTags.forEach((t) => {
+          const id = (t._id || t.id)?.toString();
+          if (id) {
+            next.set(id, {
+              _id: id,
+              label: t.tagCode,
+              type: 'tag',
+            });
+          }
         });
         return next;
       });
     }
-  }, [tags]);
+  }, [uniqueTags]);
 
   useEffect(() => {
-    if (users.length > 0) {
+    if (uniqueUsers.length > 0) {
       setRecipientMetaCache((prev) => {
         const next = new Map(prev);
-        users.forEach((u) => {
-          next.set(u._id.toString(), {
-            _id: u._id,
-            label: `${u.name || 'User'} (${u.email || ''})`,
-            type: 'user',
-          });
+        uniqueUsers.forEach((u) => {
+          const id = (u._id || u.id)?.toString();
+          if (id) {
+            next.set(id, {
+              _id: id,
+              label: `${u.name || 'User'} (${u.email || ''})`,
+              type: 'user',
+            });
+          }
         });
         return next;
       });
     }
-  }, [users]);
+  }, [uniqueUsers]);
 
   // Query all active assignments for smart state resolution & manage tab
   const {
@@ -216,13 +243,16 @@ export default function AdminAssignQuotesPage() {
     const map = new Map();
     assignments.forEach((a) => {
       if (a.isActive === false) return;
-      const qId = a.quote?._id || (typeof a.quote === 'string' ? a.quote : null);
+      
+      const qId = a.quote?._id?.toString() || (typeof a.quote === 'string' ? a.quote : a.quote?.toString?.());
       if (!qId) return;
 
-      const recId =
-        a.assignmentType === 'tag'
-          ? a.tag?._id || (typeof a.tag === 'string' ? a.tag : null)
-          : a.user?._id || (typeof a.user === 'string' ? a.user : null);
+      let recId = null;
+      if (a.assignmentType === 'tag') {
+        recId = a.tag?._id?.toString() || (typeof a.tag === 'string' ? a.tag : a.tag?.toString?.());
+      } else if (a.assignmentType === 'user') {
+        recId = a.user?._id?.toString() || (typeof a.user === 'string' ? a.user : a.user?.toString?.());
+      }
 
       if (!recId) return;
       const key = recId.toString();
@@ -258,8 +288,9 @@ export default function AdminAssignQuotesPage() {
       };
     }
 
-    const entry = recipientAssignmentsMap.get(recipientId.toString());
-    if (!entry) {
+    const key = recipientId.toString();
+    const entry = recipientAssignmentsMap.get(key);
+    if (!entry || entry.quoteIds.size === 0) {
       return {
         isAlreadyAssigned: false,
         hasOtherQuotes: false,
@@ -280,7 +311,7 @@ export default function AdminAssignQuotesPage() {
       };
     }
 
-    const selectedQuoteId = selectedQuote._id.toString();
+    const selectedQuoteId = (selectedQuote._id || selectedQuote.id)?.toString();
     const isAlreadyAssigned = entry.quoteIds.has(selectedQuoteId);
 
     let otherQuotesCount = 0;
@@ -338,7 +369,8 @@ export default function AdminAssignQuotesPage() {
 
   // Handle Quote Selection
   const handleSelectQuote = (quote) => {
-    if (selectedQuote?._id === quote._id) {
+    const qId = quote._id || quote.id;
+    if ((selectedQuote?._id || selectedQuote?.id) === qId) {
       setSelectedQuote(null);
       return;
     }
@@ -350,7 +382,7 @@ export default function AdminAssignQuotesPage() {
       return prev.filter((recId) => {
         const entry = recipientAssignmentsMap.get(recId.toString());
         if (!entry) return true;
-        return !entry.quoteIds.has(quote._id.toString());
+        return !entry.quoteIds.has(qId.toString());
       });
     });
   };
@@ -365,18 +397,19 @@ export default function AdminAssignQuotesPage() {
     );
   };
 
-  // Select all visible available recipients on CURRENT PAGE
+  // Select all visible AVAILABLE recipients on CURRENT PAGE (skips Already Assigned and Has Other Quotes)
   const handleSelectAllVisible = () => {
-    const visibleList = targetType === 'tag' ? tags : users;
+    const visibleList = targetType === 'tag' ? uniqueTags : uniqueUsers;
     const availableOnPage = visibleList
       .filter((item) => {
-        const state = getRecipientState(item._id);
-        return state.isSelectable;
+        const id = (item._id || item.id)?.toString();
+        const state = getRecipientState(id);
+        return state.stateType === 'AVAILABLE';
       })
-      .map((item) => item._id);
+      .map((item) => (item._id || item.id)?.toString());
 
     if (availableOnPage.length === 0) {
-      toast.error('No available recipients to select on this page.');
+      toast.error(`No available ${targetType === 'tag' ? 'tags' : 'users'} to select on this page.`);
       return;
     }
 
@@ -779,7 +812,7 @@ export default function AdminAssignQuotesPage() {
                         <div className="p-8 text-center text-xs text-foreground-tertiary animate-pulse flex items-center justify-center">
                           Loading QR tags...
                         </div>
-                      ) : tags.length === 0 ? (
+                      ) : uniqueTags.length === 0 ? (
                         <div className="p-8 text-center text-xs text-foreground-tertiary border border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-1">
                           <p className="font-semibold text-foreground-secondary">No tags found</p>
                           <p className="text-[11px]">
@@ -787,16 +820,17 @@ export default function AdminAssignQuotesPage() {
                           </p>
                         </div>
                       ) : (
-                        tags.map((tag) => {
-                          const isSelected = selectedRecipientIds.includes(tag._id);
-                          const state = getRecipientState(tag._id);
+                        uniqueTags.map((tag) => {
+                          const tagId = (tag._id || tag.id)?.toString();
+                          const isSelected = selectedRecipientIds.includes(tagId);
+                          const state = getRecipientState(tagId);
 
                           return (
                             <div
-                              key={tag._id}
+                              key={tagId}
                               onClick={() => {
                                 if (state.isSelectable) {
-                                  handleToggleRecipient(tag._id);
+                                  handleToggleRecipient(tagId);
                                 }
                               }}
                               className={`flex items-center justify-between p-2 sm:p-2.5 rounded-xl border transition-all min-h-[50px] ${
@@ -865,7 +899,7 @@ export default function AdminAssignQuotesPage() {
                       <div className="p-8 text-center text-xs text-foreground-tertiary animate-pulse flex items-center justify-center">
                         Loading users...
                       </div>
-                    ) : users.length === 0 ? (
+                    ) : uniqueUsers.length === 0 ? (
                       <div className="p-8 text-center text-xs text-foreground-tertiary border border-dashed border-border rounded-xl flex flex-col items-center justify-center gap-1">
                         <p className="font-semibold text-foreground-secondary">No users found</p>
                         <p className="text-[11px]">
@@ -873,16 +907,17 @@ export default function AdminAssignQuotesPage() {
                         </p>
                       </div>
                     ) : (
-                      users.map((user) => {
-                        const isSelected = selectedRecipientIds.includes(user._id);
-                        const state = getRecipientState(user._id);
+                      uniqueUsers.map((user) => {
+                        const userId = (user._id || user.id)?.toString();
+                        const isSelected = selectedRecipientIds.includes(userId);
+                        const state = getRecipientState(userId);
 
                         return (
                           <div
-                            key={user._id}
+                            key={userId}
                             onClick={() => {
                               if (state.isSelectable) {
-                                handleToggleRecipient(user._id);
+                                handleToggleRecipient(userId);
                               }
                             }}
                             className={`flex items-center justify-between p-2 sm:p-2.5 rounded-xl border transition-all min-h-[50px] ${
