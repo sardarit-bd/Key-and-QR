@@ -31,7 +31,7 @@ const CATEGORY_ICONS = {
 
 export default function MobilePreview({ quote, onClose }) {
  const category = quote?.category || "faith";
- const backgroundImage = quote?.image?.url || DEFAULT_IMAGES[category] || DEFAULT_IMAGES.faith;
+ const backgroundImage = quote?.image?.url || null;
  const categoryLabel = CATEGORY_LABELS[category] || CATEGORY_LABELS.faith;
  const categoryIcon = CATEGORY_ICONS[category] || CATEGORY_ICONS.faith;
  const author = quote?.author || "InspireTag";
@@ -64,7 +64,11 @@ export default function MobilePreview({ quote, onClose }) {
  {/* Quote Display Area */}
  <div
  className="relative w-full h-full bg-cover bg-center bg-no-repeat"
- style={{ backgroundImage: `url(${backgroundImage})` }}
+ style={
+   backgroundImage
+     ? { backgroundImage: `url(${backgroundImage})` }
+     : { background: "linear-gradient(to bottom, #0f172a, #020617)" }
+ }
  >
  {/* Dark Overlays */}
  <div className="absolute inset-0 bg-black/40" />

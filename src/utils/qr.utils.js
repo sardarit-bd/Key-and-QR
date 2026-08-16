@@ -27,14 +27,7 @@ export const CATEGORY_LABELS = {
   personal: 'Personal ♥',
 };
 
-export const DEFAULT_IMAGES = {
-  love: '/images/quote-bg/love.jpg',
-  strength: '/images/quote-bg/strength.jpg',
-  healing: '/images/quote-bg/healing.jpg',
-  faith: '/images/quote-bg/faith.jpg',
-  gratitude: '/images/quote-bg/gratitude.jpg',
-  personal: '/images/quote-bg/peace.jpg',
-};
+export const DEFAULT_IMAGES = {};
 
 export const getCategoryLabel = (category) => {
   return getPrettyCategoryLabel(category);

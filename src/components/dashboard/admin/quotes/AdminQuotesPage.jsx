@@ -66,46 +66,81 @@ function getExcerpt(text, max = 110) {
   return text.length > max ? text.slice(0, max) + '…' : text;
 }
 
+function isValidImageUrl(value) {
+  if (!value || typeof value !== 'string') return false;
+  const trimmed = value.trim();
+  return (
+    trimmed.length > 0 &&
+    !trimmed.includes('res.cloudinary.com/demo/') &&
+    !trimmed.startsWith('/images/quote-bg/')
+  );
+}
+
 function getQuoteCardData(quote) {
   const desktopElements =
     quote.editorData?.desktop?.elements ||
     quote.editorData?.elements ||
     [];
+  const mobileElements = quote.editorData?.mobile?.elements || [];
 
   // 1. Find visual image from editor elements, visual background, or legacy image
-  const imageEl = desktopElements.find(
-    (e) => e.type === 'image' && e.imageData?.source?.url
+  const desktopImageEl = desktopElements.find(
+    (e) => e.type === 'image' && isValidImageUrl(e.imageData?.source?.url)
   );
-  const visualBg = quote.editorData?.desktop?.background;
-  const visualBgImg = visualBg?.type === 'image' && visualBg.source?.url;
+  const mobileImageEl = mobileElements.find(
+    (e) => e.type === 'image' && isValidImageUrl(e.imageData?.source?.url)
+  );
+  const visualBg = quote.editorData?.desktop?.background || quote.editorData?.mobile?.background;
+  const visualBgImg =
+    visualBg?.type === 'image' && isValidImageUrl(visualBg.source?.url)
+      ? visualBg.source.url
+      : null;
+  const legacyImg = isValidImageUrl(quote.image?.url) ? quote.image.url : null;
 
-  const customImg =
-    imageEl?.imageData?.source?.url || visualBgImg || quote.image?.url;
-  const bgUrl = resolveBackgroundImage(quote.category, customImg);
+  const rawCustomImg =
+    desktopImageEl?.imageData?.source?.url ||
+    mobileImageEl?.imageData?.source?.url ||
+    visualBgImg ||
+    legacyImg;
+
+  const customImg = isValidImageUrl(rawCustomImg) ? rawCustomImg : null;
+  const bgUrl = customImg;
 
   let bgStyle = {};
-  if (!customImg && visualBg?.type === 'solid' && visualBg.value) {
+  if (customImg) {
+    bgStyle = {
+      backgroundImage: `url(${customImg})`,
+      backgroundSize: 'cover',
+      backgroundPosition: 'center',
+    };
+  } else if (visualBg?.type === 'solid' && visualBg.value) {
     bgStyle = { backgroundColor: visualBg.value };
-  } else if (!customImg && visualBg?.type === 'gradient' && visualBg.value) {
+  } else if (visualBg?.type === 'gradient' && visualBg.value) {
     bgStyle = { background: visualBg.value };
   } else {
     bgStyle = {
-      backgroundImage: `url(${bgUrl})`,
-      backgroundSize: 'cover',
-      backgroundPosition: 'center',
+      background: 'linear-gradient(135deg, #1e1b4b 0%, #312e81 50%, #1e293b 100%)',
     };
   }
 
   // 2. Find visual quote text and canonical author
-  const textEl = desktopElements.find((e) => e.type === 'text');
+  const textEl =
+    desktopElements.find((e) => e.type === 'text') ||
+    mobileElements.find((e) => e.type === 'text');
 
-  const quoteText = textEl?.textData?.content?.trim() || quote.text || '';
+  const rawText = textEl?.textData?.content?.trim() || quote.text?.trim() || '';
+  const isImageOnly = !rawText || rawText.toLowerCase() === 'untitled quote';
+  const displayTitle = isImageOnly ? 'Image Quote' : rawText;
   const authorName = (quote.author || '').replace(/^—\s*/, '').trim();
+  const hasCustomArtwork = Boolean(customImg);
 
   return {
     bgStyle,
-    bgUrl,
-    quoteText,
+    bgUrl: bgUrl ?? null,
+    quoteText: rawText,
+    displayTitle,
+    isImageOnly,
+    hasCustomArtwork,
     authorName,
   };
 }
@@ -310,7 +345,8 @@ export default function AdminQuotesPage() {
       {quotes.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {quotes.map((quote, i) => {
-            const { bgStyle, quoteText, authorName } = getQuoteCardData(quote);
+            const { bgStyle, quoteText, authorName, hasCustomArtwork, isImageOnly, displayTitle } =
+              getQuoteCardData(quote);
 
             return (
               <motion.div
@@ -346,9 +382,18 @@ export default function AdminQuotesPage() {
 
                   {/* Centered Quote Artwork Preview Text */}
                   <div className="relative z-10 my-auto text-center px-2">
-                    <p className="text-xs sm:text-sm font-serif italic font-medium text-white line-clamp-3 leading-snug drop-shadow-sm">
-                      &ldquo;{quoteText}&rdquo;
-                    </p>
+                    {quoteText && quoteText.toLowerCase() !== 'untitled quote' ? (
+                      <p className="text-xs sm:text-sm font-serif italic font-medium text-white line-clamp-3 leading-snug drop-shadow-sm">
+                        &ldquo;{quoteText}&rdquo;
+                      </p>
+                    ) : hasCustomArtwork ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-[11px] font-medium text-white/90 border border-white/20 shadow-xs">
+                        <Sparkles size={11} className="text-accent" />
+                        <span>Image Quote</span>
+                      </span>
+                    ) : (
+                      <span className="text-xs italic text-white/80">Image Quote</span>
+                    )}
                     {authorName && (
                       <p className="text-[10px] text-white/80 font-sans tracking-wide mt-1.5 drop-shadow-xs">
                         — {authorName}
@@ -380,7 +425,14 @@ export default function AdminQuotesPage() {
                 <div className="p-4 flex-1 flex flex-col justify-between gap-3">
                   <div>
                     <p className="text-xs font-medium text-foreground line-clamp-2 leading-relaxed">
-                      &ldquo;{getExcerpt(quoteText, 90)}&rdquo;
+                      {quoteText && quoteText.toLowerCase() !== 'untitled quote' ? (
+                        `\u201C${getExcerpt(quoteText, 90)}\u201D`
+                      ) : (
+                        <span className="font-semibold text-foreground/90 flex items-center gap-1.5">
+                          <Sparkles size={12} className="text-primary" />
+                          <span>Image Quote</span>
+                        </span>
+                      )}
                     </p>
                     <div className="flex items-center justify-between text-[11px] text-foreground-tertiary mt-2">
                       <span className="font-medium text-foreground-secondary truncate max-w-[130px]">
@@ -474,8 +526,14 @@ export default function AdminQuotesPage() {
           {viewQuote && (
             <div className="py-2 space-y-4">
               <div className="bg-muted/40 rounded-xl p-4 border border-border/50">
-                <p className="text-base text-foreground italic font-serif leading-relaxed">&ldquo;{viewQuote.text}&rdquo;</p>
-                <p className="text-xs text-foreground-tertiary mt-2">— {viewQuote.author || 'InspireTag'}</p>
+                <p className="text-base text-foreground italic font-serif leading-relaxed">
+                  {viewQuote.text && viewQuote.text.toLowerCase() !== 'untitled quote'
+                    ? `\u201C${viewQuote.text}\u201D`
+                    : 'Image Quote'}
+                </p>
+                {viewQuote.author && (
+                  <p className="text-xs text-foreground-tertiary mt-2">— {viewQuote.author}</p>
+                )}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

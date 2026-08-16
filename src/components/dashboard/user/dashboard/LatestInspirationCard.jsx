@@ -65,7 +65,7 @@ export default function LatestInspirationCard({
       )}
 
       {/* ===== Content ===== */}
-      <div className="relative z-10 flex flex-col justify-between h-full p-6 sm:p-8 md:p-10 lg:p-12 border border-red-500">
+      <div className="relative z-10 flex flex-col justify-between h-full p-6 sm:p-8 md:p-10 lg:p-12">
         {/* Top row: badge + usage */}
         <div className="flex items-center justify-between">
           {/* Today's Quote badge */}

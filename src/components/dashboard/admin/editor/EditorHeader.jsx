@@ -78,7 +78,7 @@ export default function EditorHeader() {
       desktopElements.find((el) => el.type === 'text') ||
       mobileElements.find((el) => el.type === 'text');
 
-    const plainText = textEl?.textData?.content?.trim() || quoteText || 'Untitled Quote';
+    const plainText = textEl?.textData?.content?.trim() || quoteText?.trim() || '';
     const authorName = (quoteAuthor || '').trim();
 
     setSaving(true);

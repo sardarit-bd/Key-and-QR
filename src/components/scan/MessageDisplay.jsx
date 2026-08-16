@@ -153,11 +153,17 @@ export default function MessageDisplay({
  <main className="min-h-screen bg-black flex items-center justify-center">
  <section
  className="relative w-full min-h-screen max-w-[430px] mx-auto overflow-hidden bg-black"
- style={{
- backgroundImage: `url(${backgroundImage})`,
- backgroundSize: "cover",
- backgroundPosition: "center",
- }}
+ style={
+    backgroundImage
+      ? {
+          backgroundImage: `url(${backgroundImage})`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }
+      : {
+          background: "linear-gradient(to bottom, #0f172a, #020617)",
+        }
+  }
  >
  {/* Dark cinematic overlays */}
  <div className="absolute inset-0 bg-black/45" />

@@ -592,7 +592,9 @@ export default function AdminAssignQuotesPage() {
 
                         <div className="min-w-0 flex-1">
                           <p className="text-xs font-serif italic font-medium text-foreground line-clamp-2 leading-snug">
-                            &ldquo;{selectedQuote.text}&rdquo;
+                            {selectedQuote.text && selectedQuote.text.toLowerCase() !== 'untitled quote'
+                              ? `\u201C${selectedQuote.text}\u201D`
+                              : 'Image Quote'}
                           </p>
                           <div className="flex items-center gap-2 mt-0.5 text-[10px] text-foreground-tertiary">
                             {selectedQuote.author && (
@@ -686,9 +688,16 @@ export default function AdminAssignQuotesPage() {
 
                             {/* Middle/Bottom: Quote Text & Author */}
                             <div className="relative z-10 my-auto text-left pt-1.5 pb-0.5">
-                              <p className="text-[11px] font-serif italic font-medium text-white line-clamp-3 leading-snug drop-shadow-xs">
-                                &ldquo;{quote.text}&rdquo;
-                              </p>
+                              {quote.text && quote.text.toLowerCase() !== 'untitled quote' ? (
+                                <p className="text-[11px] font-serif italic font-medium text-white line-clamp-3 leading-snug drop-shadow-xs">
+                                  &ldquo;{quote.text}&rdquo;
+                                </p>
+                              ) : (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-[10px] font-medium text-white/90 border border-white/20 shadow-2xs">
+                                  <Sparkles size={10} className="text-accent" />
+                                  <span>Image Quote</span>
+                                </span>
+                              )}
                               {quote.author && (
                                 <p className="text-[9.5px] text-white/80 font-sans tracking-wide mt-0.5 drop-shadow-2xs truncate">
                                   — {quote.author}

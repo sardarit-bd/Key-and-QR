@@ -117,7 +117,11 @@ export default function QRReady({
  {/* Background Image with Overlay */}
  <div
  className="relative min-h-[400px] sm:min-h-[500px] bg-cover bg-center"
- style={{ backgroundImage: `url(${backgroundImage})` }}
+ style={
+    backgroundImage
+      ? { backgroundImage: `url(${backgroundImage})` }
+      : { background: "linear-gradient(to bottom, #0f172a, #020617)" }
+  }
  >
  {/* Dark overlays for readability */}
  <div className="absolute inset-0 bg-black/50" />
