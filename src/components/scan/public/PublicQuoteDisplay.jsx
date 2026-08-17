@@ -188,35 +188,38 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             </>
           )}
 
-          {/* Top Bar: Category Label */}
-          <div className="relative z-20 pt-5 text-center shrink-0">
+          {/* Top Bar: Category Label & Audio Control */}
+          <div className="relative z-20 pt-5 px-6 flex items-center justify-between shrink-0">
+            <div className="w-11" />
             <p className="text-[12px] tracking-wide text-[#f3d6a0] font-light drop-shadow-md">
               {categoryLabel}
             </p>
+            <div className="w-11 flex justify-end">
+              {audioTrack?.source && (
+                <VisualQuoteAudioPlayer track={audioTrack} compact />
+              )}
+            </div>
           </div>
 
           {/* Main Visual Quote Area */}
-          {renderedImageUrl ? (
-            <div className="relative z-10 flex-1 w-full flex items-center justify-center p-2 my-auto min-h-[460px] overflow-hidden">
-              <img
-                src={renderedImageUrl}
-                alt={quoteText || "Visual Quote"}
-                className="w-full h-full max-h-[70vh] object-contain rounded-2xl shadow-2xl transition-all duration-300"
-              />
-              {audioTrack?.source && (
-                <div className="absolute top-4 right-4 z-30">
-                  <VisualQuoteAudioPlayer track={audioTrack} />
-                </div>
-              )}
-            </div>
-          ) : hasVisualDesign ? (
+          {hasVisualDesign ? (
             <div className="relative z-10 flex-1 w-full flex items-center justify-center p-2 my-auto min-h-[460px]">
-              <VisualQuoteRenderer
-                editorData={data.editorData}
-                mode="auto"
-                showAudioPlayer={true}
-                className="w-full h-full"
-              />
+              {data?.editorData ? (
+                <VisualQuoteRenderer
+                  editorData={data.editorData}
+                  mode="auto"
+                  showAudioPlayer={false}
+                  className="w-full h-full"
+                />
+              ) : renderedImageUrl ? (
+                <div className="relative w-full h-full flex items-center justify-center min-h-[460px] overflow-hidden">
+                  <img
+                    src={renderedImageUrl}
+                    alt={quoteText || "Visual Quote"}
+                    className="w-full h-full max-h-[70vh] object-contain rounded-2xl shadow-2xl transition-all duration-300"
+                  />
+                </div>
+              ) : null}
             </div>
           ) : (
             /* Legacy Non-Canvas Quote Text & Author */

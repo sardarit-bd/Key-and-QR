@@ -1,10 +1,14 @@
 "use client";
 import { Clock, Gift, Truck, X } from "lucide-react";
 import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 
 function TopHeader() {
+  const pathname = usePathname();
   const [isVisible, setIsVisible] = useState(true);
   const [messageIndex, setMessageIndex] = useState(0);
+
+  const isTagPage = pathname?.startsWith('/t/') || pathname?.startsWith('/tag/');
 
   const messages = [
     { text: "FREE SHIPPING ON ORDERS OVER $50", icon: Truck },
@@ -19,7 +23,7 @@ function TopHeader() {
     return () => clearInterval(interval);
   }, []);
 
-  if (!isVisible) return null;
+  if (!isVisible || isTagPage) return null;
 
   const CurrentIcon = messages[messageIndex].icon;
 

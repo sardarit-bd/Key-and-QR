@@ -20,6 +20,8 @@ export default function FavoriteButton({
   size = 'default',
   variant = 'ghost',
   showText = false,
+  activeText = 'Saved',
+  inactiveText = 'Save',
   onToggle,
   ...props
 }) {
@@ -98,7 +100,7 @@ export default function FavoriteButton({
           
           {showText && (
             <span className="ml-1.5 text-inherit text-[13px] font-medium">
-              {isFavorite ? 'Saved' : 'Save'}
+              {isFavorite ? activeText : inactiveText}
             </span>
           )}
 

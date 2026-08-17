@@ -76,22 +76,24 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
                   {categoryName || 'Inspiration'}
                 </div>
 
-                {renderedImageUrl ? (
-                  <div className="w-full flex items-center justify-center min-h-[300px] max-h-[420px] overflow-hidden">
-                    <img
-                      src={renderedImageUrl}
-                      alt={quote.text || "Inspiration"}
-                      className="max-w-full max-h-[400px] object-contain rounded-xl shadow-lg"
-                    />
-                  </div>
-                ) : hasVisualDesign ? (
-                  <div className="w-full flex items-center justify-center min-h-[300px] max-h-[400px]">
-                    <VisualQuoteRenderer
-                      editorData={editorData}
-                      mode="auto"
-                      showAudioPlayer={true}
-                      className="w-full h-full"
-                    />
+                {hasVisualDesign ? (
+                  <div className="w-full flex items-center justify-center min-h-[300px] max-h-[420px]">
+                    {editorData ? (
+                      <VisualQuoteRenderer
+                        editorData={editorData}
+                        mode="auto"
+                        showAudioPlayer={true}
+                        className="w-full h-full"
+                      />
+                    ) : renderedImageUrl ? (
+                      <div className="w-full flex items-center justify-center min-h-[300px] max-h-[420px] overflow-hidden">
+                        <img
+                          src={renderedImageUrl}
+                          alt={quote.text || "Inspiration"}
+                          className="max-w-full max-h-[400px] object-contain rounded-xl shadow-lg"
+                        />
+                      </div>
+                    ) : null}
                   </div>
                 ) : (
                   <>

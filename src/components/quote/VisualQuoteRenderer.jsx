@@ -22,6 +22,8 @@ import { Play, Pause, Music, Loader2 } from 'lucide-react';
  * - className: additional wrapper CSS classes
  * - onRenderComplete: callback when canvas finishes rendering
  */
+import VisualQuoteAudioPlayer from '@/components/quote/VisualQuoteAudioPlayer';
+
 export default function VisualQuoteRenderer({
   editorData,
   mode = 'auto',
@@ -32,7 +34,6 @@ export default function VisualQuoteRenderer({
 }) {
   const containerRef = useRef(null);
   const canvasWrapperRef = useRef(null);
-  const audioRef = useRef(null);
   const activeCanvasRef = useRef(null);
 
   const [loading, setLoading] = useState(true);
@@ -42,7 +43,6 @@ export default function VisualQuoteRenderer({
 
   // Audio track state
   const [audioTrack, setAudioTrack] = useState(null);
-  const [isPlaying, setIsPlaying] = useState(false);
 
   // 1. Determine active design based on mode & viewport
   const resolveActiveDesign = useCallback(() => {
@@ -53,7 +53,7 @@ export default function VisualQuoteRenderer({
       const containerWidth = containerRef.current?.clientWidth || 0;
       const isMobile =
         typeof window !== 'undefined' &&
-        (window.innerWidth < 768 || (containerWidth > 0 && containerWidth < 500));
+        (window.innerWidth < 640 || (containerWidth > 0 && containerWidth < 500));
       targetMode = isMobile ? 'mobile' : 'desktop';
     }
 
@@ -95,18 +95,26 @@ export default function VisualQuoteRenderer({
     const resolved = resolveActiveDesign();
     if (!container || !resolved?.design) return;
 
-    const canvasW = resolved.design.canvas?.width || (resolved.resolvedMode === 'mobile' ? 375 : 800);
-    const canvasH = resolved.design.canvas?.height || (resolved.resolvedMode === 'mobile' ? 667 : 450);
+    const isMobileMode = resolved.resolvedMode === 'mobile';
+    const canvasW = resolved.design.canvas?.width || (isMobileMode ? 375 : 800);
+    const canvasH = resolved.design.canvas?.height || (isMobileMode ? 667 : 450);
 
     const containerW = container.clientWidth || canvasW;
     const containerH = container.clientHeight || canvasH;
 
-    if (containerW <= 0 || containerH <= 0) return;
+    if (containerW <= 0) return;
 
-    const scaleX = containerW / canvasW;
-    const scaleY = containerH / canvasH;
+    let uniformScale;
+    if (isMobileMode) {
+      // On mobile: scale based on available content width so it fills 100% of the mobile width
+      uniformScale = containerW / canvasW;
+    } else {
+      // On desktop: uniform fit respecting both width and height to maintain 16:9 ratio
+      const scaleX = containerW / canvasW;
+      const scaleY = containerH > 0 ? containerH / canvasH : scaleX;
+      uniformScale = Math.min(scaleX, scaleY);
+    }
 
-    const uniformScale = Math.min(scaleX, scaleY);
     const computedScale = Math.min(uniformScale, maxScale);
     setScale(Number.isFinite(computedScale) && computedScale > 0 ? computedScale : 1);
   }, [resolveActiveDesign, maxScale]);
@@ -129,9 +137,21 @@ export default function VisualQuoteRenderer({
     const height = design.canvas?.height || (resolvedMode === 'mobile' ? 667 : 450);
     setCanvasDimensions({ width, height });
 
-    // Audio source check
-    const audioEl = design.elements?.find((e) => e.type === 'audio' && e.audioData?.source);
-    const audioSource = audioEl?.audioData || design.audio;
+    // Comprehensive audio track check across active design, desktop, mobile, and root levels
+    const audioEl =
+      design.elements?.find((e) => e.type === 'audio' && e.audioData?.source) ||
+      editorData?.mobile?.elements?.find((e) => e.type === 'audio' && e.audioData?.source) ||
+      editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source) ||
+      editorData?.elements?.find((e) => e.type === 'audio' && e.audioData?.source);
+
+    const audioSource =
+      audioEl?.audioData ||
+      design.audio ||
+      editorData?.mobile?.audio ||
+      editorData?.desktop?.audio ||
+      editorData?.audio ||
+      null;
+
     if (audioSource?.source) {
       setAudioTrack(audioSource);
     } else {
@@ -177,7 +197,7 @@ export default function VisualQuoteRenderer({
         activeCanvasRef.current = null;
       }
     };
-  }, [resolveActiveDesign, onRenderComplete, updateScaling]);
+  }, [resolveActiveDesign, editorData, onRenderComplete, updateScaling]);
 
   // Handle resize
   useEffect(() => {
@@ -196,20 +216,6 @@ export default function VisualQuoteRenderer({
       window.removeEventListener('resize', updateScaling);
     };
   }, [updateScaling]);
-
-  // Audio Controls
-  const togglePlay = () => {
-    if (!audioRef.current) return;
-    if (isPlaying) {
-      audioRef.current.pause();
-      setIsPlaying(false);
-    } else {
-      audioRef.current
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch((err) => console.warn('Audio playback prevented:', err));
-    }
-  };
 
   const resolved = resolveActiveDesign();
   if (!resolved || !resolved.design) {
@@ -235,7 +241,7 @@ export default function VisualQuoteRenderer({
 
       {/* Proportional Scaled Canvas Container (Accurately Sized Layout Box) */}
       <div
-        className="relative flex items-center justify-center transition-all duration-150 ease-out shrink-0"
+        className="relative overflow-hidden shrink-0 transition-all duration-150 ease-out"
         style={{
           width: `${displayWidth}px`,
           height: `${displayHeight}px`,
@@ -243,39 +249,20 @@ export default function VisualQuoteRenderer({
       >
         <div
           ref={canvasWrapperRef}
-          className="relative shadow-2xl rounded-2xl overflow-hidden bg-black/20 shrink-0"
+          className="absolute top-0 left-0 overflow-hidden shrink-0"
           style={{
             width: `${canvasWidth}px`,
             height: `${canvasHeight}px`,
             transform: `scale(${scale})`,
-            transformOrigin: 'top left',
+            transformOrigin: '0 0',
           }}
         />
       </div>
 
-      {/* Optional Ambient Audio Bar / Toggle */}
+      {/* Optional Floating Audio Player */}
       {showAudioPlayer && audioTrack?.source && (
-        <div className="absolute top-4 right-4 z-30 flex items-center gap-2">
-          <audio
-            ref={audioRef}
-            src={audioTrack.source}
-            loop={audioTrack.loop ?? true}
-            onEnded={() => setIsPlaying(false)}
-          />
-          <button
-            type="button"
-            onClick={togglePlay}
-            aria-label={isPlaying ? 'Pause music' : 'Play music'}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/20 text-white text-xs font-medium transition shadow-lg cursor-pointer"
-          >
-            <Music size={13} className={isPlaying ? 'text-accent animate-pulse' : 'text-white/70'} />
-            <span>{isPlaying ? 'Pause Music' : 'Play Music'}</span>
-            {isPlaying ? (
-              <Pause size={12} fill="currentColor" />
-            ) : (
-              <Play size={12} fill="currentColor" />
-            )}
-          </button>
+        <div className="absolute top-14 right-4 sm:top-16 sm:right-6 z-30 pointer-events-auto">
+          <VisualQuoteAudioPlayer track={audioTrack} compact />
         </div>
       )}
     </div>

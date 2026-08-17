@@ -69,7 +69,7 @@ export default function QuoteCard({
   return (
     <Card className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:border-primary/20 flex flex-col justify-between">
       {hasVisualDesign ? (
-        <div className="relative w-full aspect-[16/9] min-h-[220px] bg-black/10 overflow-hidden flex items-center justify-center">
+        <div className="relative w-full aspect-[16/9] min-h-[220px] bg-muted/10 overflow-hidden flex items-center justify-center">
           {renderedImageUrl ? (
             <img
               src={renderedImageUrl}

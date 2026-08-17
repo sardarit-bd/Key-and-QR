@@ -162,6 +162,11 @@ export default function DashboardHome({
         disabled={receiveQuote.isPending}
       />
 
+
+
+      {/* 5. Inspiration Streak — full-width */}
+      <InspirationStreak streak={streak} />
+
       {/* 4. Library */}
       <section className="w-full">
         <h2 className="text-[18px] sm:text-[19px] md:text-[20px] font-semibold tracking-tight text-foreground mb-4 sm:mb-5">
@@ -173,11 +178,8 @@ export default function DashboardHome({
         />
       </section>
 
-      {/* 5. Inspiration Streak — full-width */}
-      <InspirationStreak streak={streak} />
-
       {/* 6. Your Stats — secondary, collapsible */}
-      <YourStats statistics={statistics} isPremium={subscription?.isPremium} />
+      {/* <YourStats statistics={statistics} isPremium={subscription?.isPremium} /> */}
 
       {/* Category receive → loading → reveal overlay */}
       <ReceiveOverlay
