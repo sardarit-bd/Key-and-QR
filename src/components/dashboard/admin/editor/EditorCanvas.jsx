@@ -17,7 +17,7 @@ export default function EditorCanvas() {
 
   const isMobile = activeDesignVersion === 'mobile';
   const width = canvasConfig?.width || (isMobile ? 375 : 800);
-  const height = canvasConfig?.height || (isMobile ? 667 : 600);
+  const height = canvasConfig?.height || (isMobile ? 667 : 450);
 
   return (
     <div

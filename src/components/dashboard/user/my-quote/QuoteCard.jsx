@@ -17,19 +17,37 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+import VisualQuoteRenderer from "@/components/quote/VisualQuoteRenderer";
+
 export default function QuoteCard({
   quote,
   isFavorite = false,
   isSaving = false,
   onToggleFavorite,
 }) {
+  const renderedImageUrl =
+    quote?.renderedImages?.desktop?.url ||
+    quote?.renderedImages?.mobile?.url ||
+    null;
+
+  const editorData = quote?.editorData;
+  const hasVisualDesign = Boolean(
+    renderedImageUrl ||
+    (editorData &&
+      ((editorData.desktop?.elements && editorData.desktop.elements.length > 0) ||
+        (editorData.mobile?.elements && editorData.mobile.elements.length > 0) ||
+        (editorData.elements && editorData.elements.length > 0)))
+  );
+
   const handleCopy = () => {
-    navigator.clipboard.writeText(`"${quote.text}" — ${quote.author}`);
+    const authorSuffix = quote.author ? ` — ${quote.author}` : '';
+    navigator.clipboard.writeText(`"${quote.text || ''}"${authorSuffix}`);
     toast.success("Quote copied!");
   };
 
   const handleShare = async () => {
-    const shareText = `"${quote.text}" — ${quote.author}`;
+    const authorSuffix = quote.author ? ` — ${quote.author}` : '';
+    const shareText = `"${quote.text || ''}"${authorSuffix}`;
 
     if (navigator.share) {
       try {
@@ -49,31 +67,54 @@ export default function QuoteCard({
   };
 
   return (
-    <Card className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:border-primary/20">
-      <div
-        className="relative flex min-h-[260px] flex-col items-center justify-center bg-cover bg-center p-8 text-center"
-        style={{
-          backgroundImage: quote.image?.url
-            ? `url(${quote.image.url})`
-            : "none",
-        }}
-      >
-        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/70 to-card" />
+    <Card className="group relative overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:border-primary/20 flex flex-col justify-between">
+      {hasVisualDesign ? (
+        <div className="relative w-full aspect-[16/9] min-h-[220px] bg-black/10 overflow-hidden flex items-center justify-center">
+          {renderedImageUrl ? (
+            <img
+              src={renderedImageUrl}
+              alt={quote.text || "Visual Quote"}
+              className="w-full h-full object-contain"
+            />
+          ) : (
+            <VisualQuoteRenderer
+              editorData={editorData}
+              mode="desktop"
+              showAudioPlayer={false}
+              className="w-full h-full"
+            />
+          )}
+        </div>
+      ) : (
+        <div
+          className="relative flex min-h-[240px] flex-col items-center justify-center bg-cover bg-center p-8 text-center"
+          style={{
+            backgroundImage: quote.image?.url
+              ? `url(${quote.image.url})`
+              : "none",
+          }}
+        >
+          <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/70 to-card" />
 
-        <p className="relative z-10 text-xl font-medium leading-relaxed text-foreground">
-          "{quote.text}"
-        </p>
+          {quote.text && (
+            <p className="relative z-10 text-xl font-medium leading-relaxed text-foreground">
+              "{quote.text}"
+            </p>
+          )}
 
-        <span className="relative z-10 mt-6 text-sm text-foreground-secondary">
-          — {quote.author || "InspireTag"}
-        </span>
+          {quote.author && (
+            <span className="relative z-10 mt-6 text-sm text-foreground-secondary">
+              — {quote.author}
+            </span>
+          )}
 
-        {quote.category && (
-          <span className="relative z-10 mt-3 rounded-full bg-muted px-3 py-1 text-xs text-foreground-secondary">
-            {quote.category}
-          </span>
-        )}
-      </div>
+          {quote.category && (
+            <span className="relative z-10 mt-3 rounded-full bg-muted px-3 py-1 text-xs text-foreground-secondary">
+              {quote.category}
+            </span>
+          )}
+        </div>
+      )}
 
       <div className="flex items-center justify-between border-t border-border px-5 py-3">
         <Button

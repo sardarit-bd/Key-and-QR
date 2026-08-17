@@ -165,7 +165,7 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
           </SelectTrigger>
           <SelectContent>
             {STATUS_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
+              <SelectItem key={`pending-status-${o.value}`} value={o.value}>{o.label}</SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -200,7 +200,7 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
                   const statusStyle = STATUS_STYLES[quote.status] || STATUS_STYLES.pending;
                   return (
                     <motion.div
-                      key={quote._id}
+                      key={quote._id || `pending-quote-${i}`}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.05 * i }}

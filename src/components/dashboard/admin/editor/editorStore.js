@@ -832,9 +832,9 @@ const useEditorStore = create((set, get) => ({
           id: `el_init_text`,
           type: 'text',
           x: 400,
-          y: 260,
-          width: 600,
-          height: 120,
+          y: cleanAuthor ? 200 : 225,
+          width: 620,
+          height: 100,
           rotation: 0,
           scaleX: 1,
           scaleY: 1,
@@ -846,7 +846,7 @@ const useEditorStore = create((set, get) => ({
             role: 'quote',
             content: quoteData.text,
             fontFamily: 'Playfair Display',
-            fontSize: 40,
+            fontSize: 34,
             fontWeight: 'normal',
             fontStyle: 'normal',
             underline: false,
@@ -859,10 +859,42 @@ const useEditorStore = create((set, get) => ({
         });
       }
 
+      if (cleanAuthor) {
+        elements.push({
+          id: `el_init_author`,
+          type: 'text',
+          x: 400,
+          y: 290,
+          width: 400,
+          height: 40,
+          rotation: 0,
+          scaleX: 1,
+          scaleY: 1,
+          opacity: 1,
+          visible: true,
+          locked: false,
+          zIndex: 1,
+          textData: {
+            role: 'author',
+            content: `— ${cleanAuthor}`,
+            fontFamily: 'Inter',
+            fontSize: 18,
+            fontWeight: 'normal',
+            fontStyle: 'normal',
+            underline: false,
+            lineHeight: 1.3,
+            letterSpacing: 0,
+            textAlign: 'center',
+            color: '#4a4a4a',
+            wrap: true,
+          },
+        });
+      }
+
       editorData = {
         version: '2.0',
         desktop: {
-          canvas: { width: 800, height: 600 },
+          canvas: { width: 800, height: 450 },
           elements,
           background: quoteData.image?.url
             ? { type: 'image', source: { url: quoteData.image.url } }
@@ -874,9 +906,11 @@ const useEditorStore = create((set, get) => ({
           elements: elements.map((el) => {
             const copy = JSON.parse(JSON.stringify(el));
             copy.x = 187;
-            copy.y = 280;
+            copy.y = el.textData?.role === 'author' ? 360 : 280;
             copy.width = 300;
-            copy.textData.fontSize = 24;
+            if (copy.textData) {
+              copy.textData.fontSize = el.textData?.role === 'author' ? 14 : 22;
+            }
             return copy;
           }),
           background: quoteData.image?.url

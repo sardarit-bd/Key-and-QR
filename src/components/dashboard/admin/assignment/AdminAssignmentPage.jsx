@@ -17,6 +17,7 @@ import UnassignedTagsTable from './UnassignedTagsTable';
 import OrderSelectTable from './OrderSelectTable';
 import AssignDialog from './AssignDialog';
 import Pagination from '@/components/ui/Pagination';
+import { formatStatusLabel, getOrderAssignmentStatus } from '@/utils/statusFormatter';
 
 const ITEMS_PER_PAGE = 10;
 
@@ -148,7 +149,7 @@ export default function AdminAssignmentPage() {
             </Card>
           ) : (
             <>
-              <OrderSelectTable orders={orders} selectedOrderId={selectedOrder?._id} onSelect={handleOrderSelect} />
+              <OrderSelectTable orders={orders} selectedOrderId={selectedOrder?._id} selectedTag={selectedTag} onSelect={handleOrderSelect} />
               {ordersMeta.totalPage > 1 && (
                 <Pagination currentPage={ordersMeta.page} totalPages={ordersMeta.totalPage} onPageChange={setOrderPage} />
               )}
@@ -167,12 +168,19 @@ export default function AdminAssignmentPage() {
           <div className="max-w-4xl mx-auto flex items-center justify-between">
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium text-foreground truncate">
- Assign <span className=" text-primary">{selectedTag.tagCode}</span> → Order #
+                Assign <span className="text-primary font-bold">{selectedTag.tagCode}</span> → Order #
                 {selectedOrder._id?.slice(-8).toUpperCase()}
               </p>
-              <p className="text-xs text-foreground-tertiary truncate">
-                {selectedOrder.user?.name || selectedOrder.guestCustomer?.fullName || 'Guest'} · $
-                {Number(selectedOrder.grandTotal).toFixed(2)}
+              <p className="text-xs text-foreground-tertiary truncate flex items-center gap-1.5 mt-0.5">
+                <span>{selectedOrder.user?.name || selectedOrder.guestCustomer?.fullName || 'Guest'}</span>
+                <span>·</span>
+                <span>${Number(selectedOrder.grandTotal).toFixed(2)}</span>
+                <span>·</span>
+                <span>Order: {formatStatusLabel(selectedOrder.fulfillmentStatus || 'pending')}</span>
+                <span>·</span>
+                <span>Payment: {formatStatusLabel(selectedOrder.paymentStatus || 'pending')}</span>
+                <span>·</span>
+                <span>Assignment: {formatStatusLabel(getOrderAssignmentStatus(selectedOrder, selectedTag))}</span>
               </p>
             </div>
             <button

@@ -38,7 +38,7 @@ export default function VisualQuoteRenderer({
   const [loading, setLoading] = useState(true);
   const [activeMode, setActiveMode] = useState('desktop');
   const [scale, setScale] = useState(1);
-  const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 600 });
+  const [canvasDimensions, setCanvasDimensions] = useState({ width: 800, height: 450 });
 
   // Audio track state
   const [audioTrack, setAudioTrack] = useState(null);
@@ -77,7 +77,7 @@ export default function VisualQuoteRenderer({
     if (editorData.elements && editorData.elements.length > 0) {
       return {
         design: {
-          canvas: editorData.canvas || { width: 800, height: 600 },
+          canvas: editorData.canvas || { width: 800, height: 450 },
           background: editorData.background || null,
           elements: editorData.elements,
           audio: editorData.audio || null,
@@ -96,7 +96,7 @@ export default function VisualQuoteRenderer({
     if (!container || !resolved?.design) return;
 
     const canvasW = resolved.design.canvas?.width || (resolved.resolvedMode === 'mobile' ? 375 : 800);
-    const canvasH = resolved.design.canvas?.height || (resolved.resolvedMode === 'mobile' ? 667 : 600);
+    const canvasH = resolved.design.canvas?.height || (resolved.resolvedMode === 'mobile' ? 667 : 450);
 
     const containerW = container.clientWidth || canvasW;
     const containerH = container.clientHeight || canvasH;
@@ -126,7 +126,7 @@ export default function VisualQuoteRenderer({
     setActiveMode(resolvedMode);
 
     const width = design.canvas?.width || (resolvedMode === 'mobile' ? 375 : 800);
-    const height = design.canvas?.height || (resolvedMode === 'mobile' ? 667 : 600);
+    const height = design.canvas?.height || (resolvedMode === 'mobile' ? 667 : 450);
     setCanvasDimensions({ width, height });
 
     // Audio source check

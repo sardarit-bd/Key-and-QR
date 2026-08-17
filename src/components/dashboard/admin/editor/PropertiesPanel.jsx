@@ -187,7 +187,7 @@ export default function PropertiesPanel({ selectedEl }) {
                   </span>
                   <p className="text-[11px] text-foreground-tertiary">
                     {activeDesignVersion === 'desktop'
-                      ? 'Canonical Desktop Layout (800 × 600 px)'
+                      ? 'Canonical Desktop Layout (800 × 450 px)'
                       : 'Canonical Mobile Layout (375 × 667 px)'}
                   </p>
                 </div>
@@ -197,13 +197,13 @@ export default function PropertiesPanel({ selectedEl }) {
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-foreground-secondary">Canvas Size:</span>
                     <span className="font-mono font-medium text-foreground">
-                      {activeDesignVersion === 'desktop' ? '800 × 600 px' : '375 × 667 px'}
+                      {activeDesignVersion === 'desktop' ? '800 × 450 px' : '375 × 667 px'}
                     </span>
                   </div>
                   <div className="flex items-center justify-between text-[11px] text-foreground-tertiary">
                     <span>Layout:</span>
                     <span className="font-medium text-foreground-secondary">
-                      {activeDesignVersion === 'desktop' ? '4:3 Standard' : '9:16 Portrait'}
+                      {activeDesignVersion === 'desktop' ? '16:9 Landscape' : '9:16 Portrait'}
                     </span>
                   </div>
                 </div>

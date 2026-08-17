@@ -7,14 +7,14 @@ export const EDITOR_VERSION = '1.0';
 
 export const CANVAS_DEFAULTS = {
   width: 800,
-  height: 600,
+  height: 450,
   backgroundColor: '#ffffff',
-  safeArea: { x: 40, y: 30, width: 720, height: 540 },
-  aspectRatio: { width: 4, height: 3 },
+  safeArea: { x: 40, y: 30, width: 720, height: 390 },
+  aspectRatio: { width: 16, height: 9 },
 };
 
 export const CANVAS_SIZES = {
-  desktop: { width: 800, height: 600 },
+  desktop: { width: 800, height: 450 },
   mobile: { width: 375, height: 667 },
 };
 

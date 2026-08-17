@@ -104,14 +104,16 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
                       &ldquo;{quote.text}&rdquo;
                     </motion.blockquote>
 
-                    <motion.p
-                      className="mt-4 text-[13px] sm:text-[14px] text-foreground-secondary"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: 0.4, duration: 0.4 }}
-                    >
-                      — {quote.author || 'MyInspireTag'}
-                    </motion.p>
+                    {quote.author && (
+                      <motion.p
+                        className="mt-4 text-[13px] sm:text-[14px] text-foreground-secondary"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ delay: 0.4, duration: 0.4 }}
+                      >
+                        — {quote.author}
+                      </motion.p>
+                    )}
                   </>
                 )}
               </div>

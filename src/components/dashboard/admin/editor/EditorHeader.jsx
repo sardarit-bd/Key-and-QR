@@ -227,11 +227,11 @@ export default function EditorHeader() {
                 ? 'bg-background shadow-xs text-foreground font-semibold'
                 : 'text-foreground-tertiary hover:text-foreground'
             }`}
-            title="Desktop Design (800 × 600)"
+            title="Desktop Design (800 × 450)"
           >
             <Monitor size={13} />
             <span>Desktop</span>
-            <span className="text-[10px] opacity-60 font-mono hidden sm:inline">800×600</span>
+            <span className="text-[10px] opacity-60 font-mono hidden sm:inline">800×450</span>
           </button>
           <button
             type="button"

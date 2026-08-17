@@ -3,22 +3,20 @@
 import { motion } from 'framer-motion';
 import { ShoppingBag } from 'lucide-react';
 import Card from '@/components/dashboard/user/dashboard/Card';
-
-const FULFILLMENT_STYLES = {
-  pending:    'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  assigned:   'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  shipped:    'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-  delivered:  'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  cancelled:  'bg-red-500/10 text-red-400 border-red-500/20',
-  returned:   'bg-purple-500/10 text-purple-400 border-purple-500/20',
-};
+import {
+  formatStatusLabel,
+  getFulfillmentStatusStyle,
+  getPaymentStatusStyle,
+  getAssignmentStatusStyle,
+  getOrderAssignmentStatus,
+} from '@/utils/statusFormatter';
 
 function formatDate(iso) {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-export default function OrderSelectTable({ orders = [], selectedOrderId, onSelect }) {
+export default function OrderSelectTable({ orders = [], selectedOrderId, selectedTag = null, onSelect }) {
   if (orders.length === 0) return null;
 
   return (
@@ -33,32 +31,44 @@ export default function OrderSelectTable({ orders = [], selectedOrderId, onSelec
         <div className="divide-y divide-border/50 max-h-[400px] overflow-y-auto">
           {orders.map((order) => {
             const isSelected = selectedOrderId === order._id;
-            const style = FULFILLMENT_STYLES[order.fulfillmentStatus] || FULFILLMENT_STYLES.pending;
+            const fulfillmentStyle = getFulfillmentStatusStyle(order.fulfillmentStatus);
+            const paymentStyle = getPaymentStatusStyle(order.paymentStatus);
+            const assignmentStatus = getOrderAssignmentStatus(order, selectedTag);
+            const assignmentStyle = getAssignmentStatusStyle(assignmentStatus);
             const customer = order.user?.name || order.guestCustomer?.fullName || 'Guest';
 
             return (
               <button
                 key={order._id}
                 onClick={() => onSelect(order)}
-                className={`w-full flex items-center justify-between py-2.5 px-2 rounded-lg transition-colors text-left cursor-pointer ${
+                className={`w-full flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 py-3 px-3 rounded-xl transition-all text-left cursor-pointer ${
                   isSelected
-                    ? 'bg-primary/10 border border-primary/20'
-                    : 'hover:bg-muted/30 border border-transparent'
+                    ? 'bg-primary/10 border-2 border-primary shadow-xs'
+                    : 'hover:bg-muted/40 border border-border/60 bg-card/40'
                 }`}
               >
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-medium text-foreground truncate">{customer}</p>
- <p className="text-xs text-foreground-tertiary truncate">
+                  <p className="text-xs text-foreground-tertiary truncate mt-0.5">
                     #{order._id?.slice(-8).toUpperCase()} · {formatDate(order.createdAt)}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="text-xs font-semibold text-foreground">
+
+                <div className="flex items-center sm:items-end justify-between sm:justify-center sm:flex-col gap-1.5 flex-shrink-0">
+                  <span className="text-sm font-semibold text-foreground">
                     ${Number(order.grandTotal).toFixed(2)}
                   </span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full border ${style}`}>
-                    {order.fulfillmentStatus}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${fulfillmentStyle}`}>
+                      Order: {formatStatusLabel(order.fulfillmentStatus || 'pending')}
+                    </span>
+                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${paymentStyle}`}>
+                      Payment: {formatStatusLabel(order.paymentStatus || 'pending')}
+                    </span>
+                    <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${assignmentStyle}`}>
+                      Assignment: {formatStatusLabel(assignmentStatus)}
+                    </span>
+                  </div>
                 </div>
               </button>
             );
@@ -68,3 +78,4 @@ export default function OrderSelectTable({ orders = [], selectedOrderId, onSelec
     </motion.div>
   );
 }
+

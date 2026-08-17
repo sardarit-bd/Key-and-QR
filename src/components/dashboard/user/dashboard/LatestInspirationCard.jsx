@@ -62,8 +62,33 @@ export default function LatestInspirationCard({
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
       className="group relative w-full max-w-[800px] h-[450px] aspect-[16/9] mx-auto overflow-hidden rounded-[24px] sm:rounded-[28px] md:rounded-[32px] bg-[#0d1117] border border-white/10 shadow-2xl"
     >
-      {/* ===== Full-bleed background image (legacy quotes only) ===== */}
-      {!hasVisualDesign && (
+      {/* ===== Full Visual Quote Stage (Visual Quotes) ===== */}
+      {hasVisualDesign ? (
+        <div className="absolute inset-0 z-0 flex items-center justify-center">
+          {renderedImageUrl ? (
+            <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
+              <img
+                src={renderedImageUrl}
+                alt={quote || "Daily Inspiration"}
+                className="w-full h-full object-contain"
+              />
+              {audioTrack?.source && (
+                <div className="absolute top-4 right-4 z-30 pointer-events-auto">
+                  <VisualQuoteAudioPlayer track={audioTrack} />
+                </div>
+              )}
+            </div>
+          ) : (
+            <VisualQuoteRenderer
+              editorData={editorData}
+              mode="auto"
+              showAudioPlayer={true}
+              className="w-full h-full"
+            />
+          )}
+        </div>
+      ) : (
+        /* ===== Full-bleed background image (Legacy Quotes only) ===== */
         <>
           {image ? (
             <div className="absolute inset-0">
@@ -86,16 +111,16 @@ export default function LatestInspirationCard({
         </>
       )}
 
-      {/* ===== Content ===== */}
-      <div className="relative z-10 flex flex-col justify-between h-full p-4 sm:p-5 md:p-6">
+      {/* ===== Controls & Legacy Text Overlay ===== */}
+      <div className="relative z-10 flex flex-col justify-between h-full p-4 sm:p-5 md:p-6 pointer-events-none">
         {/* Top row: badge + usage */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between pointer-events-auto">
           {/* Today's Quote badge */}
           <motion.span
             initial={reduceMotion ? false : { opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 backdrop-blur-md px-3.5 py-1.5"
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 backdrop-blur-md px-3.5 py-1.5"
           >
             <Sparkles size={12} className="text-accent" fill="currentColor" />
             <span className="text-[11px] sm:text-[12px] font-semibold uppercase tracking-[0.12em] text-white/90">
@@ -109,7 +134,7 @@ export default function LatestInspirationCard({
               initial={reduceMotion ? false : { opacity: 0, x: 8 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: 0.15 }}
-              className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-white/8 backdrop-blur-md px-3 py-1.5"
+              className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 backdrop-blur-md px-3 py-1.5"
             >
               <span className="text-[16px] leading-none">☀</span>
               <span className="text-[11px] sm:text-[12px] font-medium text-white/80">
@@ -119,31 +144,9 @@ export default function LatestInspirationCard({
           )}
         </div>
 
-        {/* Middle: Visual Quote or Legacy Quote Block */}
-        <div className="flex-1 flex flex-col justify-center items-center my-2 w-full min-h-0 overflow-hidden">
-          {renderedImageUrl ? (
-            <div className="relative w-full h-full flex items-center justify-center min-h-0 overflow-hidden">
-              <img
-                src={renderedImageUrl}
-                alt={quote || "Daily Inspiration"}
-                className="w-full h-full object-contain rounded-2xl shadow-xl transition-all duration-300"
-              />
-              {audioTrack?.source && (
-                <div className="absolute top-2 right-2 z-30">
-                  <VisualQuoteAudioPlayer track={audioTrack} />
-                </div>
-              )}
-            </div>
-          ) : hasVisualDesign ? (
-            <div className="w-full h-full flex items-center justify-center min-h-0">
-              <VisualQuoteRenderer
-                editorData={editorData}
-                mode="auto"
-                showAudioPlayer={true}
-                className="w-full h-full"
-              />
-            </div>
-          ) : (
+        {/* Middle: Legacy Quote Block (only shown if not a visual design) */}
+        {!hasVisualDesign && (
+          <div className="flex-1 flex flex-col justify-center items-center my-2 w-full min-h-0 overflow-hidden pointer-events-auto">
             <AnimatePresence mode="wait">
               <motion.blockquote
                 key={quote}
@@ -174,11 +177,11 @@ export default function LatestInspirationCard({
                 )}
               </motion.blockquote>
             </AnimatePresence>
-          )}
-        </div>
+          </div>
+        )}
 
         {/* Bottom row: actions */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center justify-between flex-wrap gap-3 pointer-events-auto">
           {/* Inspire CTA */}
           <motion.button
             initial={reduceMotion ? false : { opacity: 0, y: 8 }}

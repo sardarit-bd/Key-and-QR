@@ -134,7 +134,7 @@ function QuotePreviewContent() {
       parsedData.desktop ||
       (parsedData.elements
         ? {
-            canvas: parsedData.canvas || { width: 800, height: 600 },
+            canvas: parsedData.canvas || { width: 800, height: 450 },
             background: parsedData.background || null,
             elements: parsedData.elements || [],
             audio: parsedData.audio || null,
@@ -157,7 +157,7 @@ function QuotePreviewContent() {
     setLoading(true);
 
     const width = activeDesign.canvas?.width || (previewMode === 'mobile' ? 375 : 800);
-    const height = activeDesign.canvas?.height || (previewMode === 'mobile' ? 667 : 600);
+    const height = activeDesign.canvas?.height || (previewMode === 'mobile' ? 667 : 450);
 
     // Audio track configuration
     const audioEl = activeDesign.elements?.find(
@@ -205,7 +205,7 @@ function QuotePreviewContent() {
     if (!activeDesign || !container) return;
 
     const width = activeDesign.canvas?.width || (previewMode === 'mobile' ? 375 : 800);
-    const height = activeDesign.canvas?.height || (previewMode === 'mobile' ? 667 : 600);
+    const height = activeDesign.canvas?.height || (previewMode === 'mobile' ? 667 : 450);
 
     const containerW = container.clientWidth;
     const containerH = container.clientHeight;
@@ -264,7 +264,7 @@ function QuotePreviewContent() {
 
   const activeDesign = getActiveDesign();
   const canvasWidth = activeDesign?.canvas?.width || (previewMode === 'mobile' ? 375 : 800);
-  const canvasHeight = activeDesign?.canvas?.height || (previewMode === 'mobile' ? 667 : 600);
+  const canvasHeight = activeDesign?.canvas?.height || (previewMode === 'mobile' ? 667 : 450);
 
   return (
     <div className="w-full h-full flex flex-col items-center justify-between relative select-none">

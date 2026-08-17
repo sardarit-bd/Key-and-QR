@@ -1,10 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
 import categoryService from '@/services/category-service/category.service';
 
-export const categoryKeys = {
-  all: ['categories'],
-  list: () => [...categoryKeys.all, 'list'],
+export const quoteCategoryKeys = {
+  all: ['quote-categories'],
+  list: () => [...quoteCategoryKeys.all, 'list'],
 };
+
+// Backwards compatibility alias
+export const categoryKeys = quoteCategoryKeys;
 
 /**
  * Get all active quote categories
@@ -12,7 +15,7 @@ export const categoryKeys = {
  */
 export function useQuoteCategories() {
   return useQuery({
-    queryKey: categoryKeys.list(),
+    queryKey: quoteCategoryKeys.list(),
     queryFn: () => categoryService.getAllCategories(),
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
@@ -20,3 +23,4 @@ export function useQuoteCategories() {
     select: (result) => result?.data || [],
   });
 }
+

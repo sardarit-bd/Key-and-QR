@@ -140,7 +140,7 @@ export async function renderStaticDesign(canvasEl, design) {
   if (!f || !canvasEl || !design) return null;
 
   const width = design.canvas?.width || 800;
-  const height = design.canvas?.height || 600;
+  const height = design.canvas?.height || 450;
 
   const staticCanvas = new f.StaticCanvas(canvasEl, {
     width,
@@ -1207,7 +1207,7 @@ export async function renderDesignToBlob(design, options = {}) {
   const { multiplier = 2, quality = 0.92 } = options;
 
   const width = design.canvas?.width || 800;
-  const height = design.canvas?.height || 600;
+  const height = design.canvas?.height || 450;
 
   if (typeof document === 'undefined') return null;
 
