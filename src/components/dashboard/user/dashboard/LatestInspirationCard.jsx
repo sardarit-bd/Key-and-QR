@@ -58,11 +58,10 @@ export default function LatestInspirationCard({
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className={`group relative w-full sm:max-w-[800px] mx-auto overflow-hidden rounded-[24px] sm:rounded-[28px] md:rounded-[32px] bg-card border border-white/10 shadow-2xl transition-all duration-300 ${
-        hasVisualDesign
+      className={`group relative w-full sm:max-w-[800px] mx-auto overflow-hidden rounded-[24px] sm:rounded-[28px] md:rounded-[32px] bg-card border border-white/10  transition-all duration-300 ${hasVisualDesign
           ? 'aspect-[375/667] sm:aspect-[16/9]'
           : 'aspect-[16/9] min-h-[380px]'
-      }`}
+        }`}
     >
       {/* ===== Full Visual Quote Stage (Visual Quotes) ===== */}
       {hasVisualDesign ? (

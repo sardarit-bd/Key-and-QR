@@ -89,12 +89,15 @@ export default function CategorySection({
                   min-w-[96px] sm:min-w-[104px] md:min-w-[108px]
                   rounded-2xl border px-4 py-4 sm:py-5
                   transition-all duration-200
-                  cursor-pointer bg-card
-                  ${
-                    isLocked
-                      ? "border-border/80 hover:border-accent/30 hover:bg-accent/[0.02] shadow-xs"
-                      : "border-border shadow-sm hover:border-accent/35 hover:shadow-md hover:bg-accent/[0.03]"
-                  }
+                  cursor-pointer
+                  bg-white/75 dark:bg-slate-900/50 backdrop-blur-md dark:backdrop-blur-lg
+                  border border-white/80 dark:border-white/[0.12]
+                  shadow-[inset_0_1px_0_0_rgba(255,255,255,0.6),0_4px_20px_-4px_rgba(0,0,0,0.05)]
+                  dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),0_8px_30px_rgba(0,0,0,0.22)]
+                  hover:bg-white/90 dark:hover:bg-slate-900/65
+                  hover:border-accent/40 dark:hover:border-white/20
+                  hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),0_8px_28px_-6px_rgba(0,0,0,0.08)]
+                  dark:hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_12px_36px_rgba(0,0,0,0.32)]
                 `}
                 aria-label={
                   isLocked

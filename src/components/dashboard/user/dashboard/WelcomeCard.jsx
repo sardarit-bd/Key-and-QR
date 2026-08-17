@@ -11,7 +11,7 @@ export default function WelcomeCard({ userName = 'there', onReceive, isReceiving
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="relative w-full overflow-hidden rounded-2xl bg-card border border-border shadow-sm"
+      className="relative w-full overflow-hidden rounded-2xl bg-white/75 dark:bg-slate-900/50 backdrop-blur-md dark:backdrop-blur-lg border border-white/80 dark:border-white/[0.12] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.6),0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),0_12px_32px_rgba(0,0,0,0.22)]"
     >
       <div className="flex flex-col items-start p-6 sm:p-8 md:p-10 lg:p-12">
         <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-accent/10 mb-5">

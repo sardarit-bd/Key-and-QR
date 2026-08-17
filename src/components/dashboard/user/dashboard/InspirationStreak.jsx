@@ -60,7 +60,7 @@ export default function InspirationStreak({ streak }) {
       initial={reduceMotion ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      className="relative w-full rounded-2xl bg-card border border-border shadow-xs p-5 sm:p-6 transition-all duration-300"
+      className="relative w-full rounded-2xl bg-white/75 dark:bg-slate-900/50 backdrop-blur-md dark:backdrop-blur-lg border border-white/80 dark:border-white/[0.12] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.6),0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),0_12px_32px_rgba(0,0,0,0.22)] p-5 sm:p-6 transition-all duration-300"
     >
       {/* 1. Header: Flame + Title (left) and Help button (right) */}
       <div className="flex items-center justify-between mb-4 sm:mb-5">
