@@ -240,6 +240,31 @@ export const premiumService = {
       };
     }
   },
+
+  /**
+   * Create Checkout Session for Premium subscription
+   * POST /subscriptions/checkout
+   */
+  createCheckout: async (tagCode = null, preferredCategory = null) => {
+    try {
+      const payload = {};
+      if (tagCode) payload.tagCode = tagCode;
+      if (preferredCategory) payload.preferredCategory = preferredCategory;
+      const response = await api.post('/subscriptions/checkout', payload);
+      return {
+        success: true,
+        data: response.data?.data || null,
+        status: response.status,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to start checkout',
+        status: error.response?.status || 500,
+        data: null,
+      };
+    }
+  },
 };
 
 export default premiumService;

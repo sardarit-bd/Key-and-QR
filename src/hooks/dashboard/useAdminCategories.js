@@ -71,7 +71,8 @@ export function useAdminCategoryActions() {
 
   const invalidate = () => {
     queryClient.invalidateQueries({ queryKey: ADMIN_CATEGORIES_KEYS.all });
-    queryClient.invalidateQueries({ queryKey: ['categories'] }); // public list (useQuoteCategories)
+    queryClient.invalidateQueries({ queryKey: ['quote-categories'] });
+    queryClient.invalidateQueries({ queryKey: ['categories'] });
   };
 
   const createCategory = useMutation({

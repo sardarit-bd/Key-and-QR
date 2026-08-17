@@ -13,6 +13,7 @@ import {
 } from "@/components/category";
 
 import VisualQuoteRenderer from "@/components/quote/VisualQuoteRenderer";
+import VisualQuoteAudioPlayer from "@/components/quote/VisualQuoteAudioPlayer";
 
 export default function PublicQuoteDisplay({ data, tagCode }) {
   const router = useRouter();
@@ -23,13 +24,27 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   const quoteAuthor = data?.author;
   const isPersonalMessage = !!data?.isPersonalMessage;
   const category = isPersonalMessage ? "personal" : data?.category || "faith";
+
+  const renderedImageUrl =
+    data?.renderedImages?.mobile?.url ||
+    data?.renderedImages?.desktop?.url ||
+    null;
+
+  const audioTrack =
+    data?.editorData?.mobile?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+    data?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+    data?.editorData?.mobile?.audio ||
+    data?.editorData?.desktop?.audio ||
+    null;
+
   const hasVisualDesign =
     !isPersonalMessage &&
     Boolean(
-      data?.editorData &&
+      renderedImageUrl ||
+      (data?.editorData &&
         ((data.editorData.mobile?.elements && data.editorData.mobile.elements.length > 0) ||
           (data.editorData.desktop?.elements && data.editorData.desktop.elements.length > 0) ||
-          (data.editorData.elements && data.editorData.elements.length > 0))
+          (data.editorData.elements && data.editorData.elements.length > 0)))
     );
 
   const backgroundImage =
@@ -173,22 +188,38 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             </>
           )}
 
-          {/* Top Bar: Category Label */}
-          <div className="relative z-20 pt-5 text-center shrink-0">
+          {/* Top Bar: Category Label & Audio Control */}
+          <div className="relative z-20 pt-5 px-6 flex items-center justify-between shrink-0">
+            <div className="w-11" />
             <p className="text-[12px] tracking-wide text-[#f3d6a0] font-light drop-shadow-md">
               {categoryLabel}
             </p>
+            <div className="w-11 flex justify-end">
+              {audioTrack?.source && (
+                <VisualQuoteAudioPlayer track={audioTrack} compact />
+              )}
+            </div>
           </div>
 
           {/* Main Visual Quote Area */}
           {hasVisualDesign ? (
             <div className="relative z-10 flex-1 w-full flex items-center justify-center p-2 my-auto min-h-[460px]">
-              <VisualQuoteRenderer
-                editorData={data.editorData}
-                mode="auto"
-                showAudioPlayer={true}
-                className="w-full h-full"
-              />
+              {data?.editorData ? (
+                <VisualQuoteRenderer
+                  editorData={data.editorData}
+                  mode="auto"
+                  showAudioPlayer={false}
+                  className="w-full h-full"
+                />
+              ) : renderedImageUrl ? (
+                <div className="relative w-full h-full flex items-center justify-center min-h-[460px] overflow-hidden">
+                  <img
+                    src={renderedImageUrl}
+                    alt={quoteText || "Visual Quote"}
+                    className="w-full h-full max-h-[70vh] object-contain rounded-2xl shadow-2xl transition-all duration-300"
+                  />
+                </div>
+              ) : null}
             </div>
           ) : (
             /* Legacy Non-Canvas Quote Text & Author */

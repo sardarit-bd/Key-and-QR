@@ -9,7 +9,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { QrCode, ShoppingBag, User, Calendar, CheckCircle } from 'lucide-react';
+import { QrCode, ShoppingBag, User, Calendar, CheckCircle, CreditCard } from 'lucide-react';
+import { formatStatusLabel, getOrderAssignmentStatus } from '@/utils/statusFormatter';
 
 function formatDate(iso) {
   if (!iso) return '—';
@@ -75,6 +76,9 @@ export default function AssignDialog({
               <Row icon={User} label="Email" value={selectedOrder.user?.email || selectedOrder.guestCustomer?.email || '—'} />
               <Row icon={ShoppingBag} label="Total" value={`$${Number(selectedOrder.grandTotal).toFixed(2)}`} />
               <Row icon={Calendar} label="Date" value={formatDate(selectedOrder.createdAt)} />
+              <Row icon={ShoppingBag} label="Order Status" value={formatStatusLabel(selectedOrder.fulfillmentStatus || 'pending')} />
+              <Row icon={CreditCard} label="Payment Status" value={formatStatusLabel(selectedOrder.paymentStatus || 'pending')} />
+              <Row icon={QrCode} label="Assignment Status" value={formatStatusLabel(getOrderAssignmentStatus(selectedOrder, selectedTag))} />
             </div>
           ) : (
             <div className="text-center py-4">

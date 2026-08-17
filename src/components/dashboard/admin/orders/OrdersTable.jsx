@@ -4,23 +4,11 @@ import { motion } from 'framer-motion';
 import { ShoppingBag } from 'lucide-react';
 import Card from '@/components/dashboard/user/dashboard/Card';
 import ActionMenu from '../shared/ActionMenu';
-
-const FULFILLMENT_STYLES = {
-  pending:    'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  assigned:   'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  shipped:    'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-  delivered:  'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  cancelled:  'bg-red-500/10 text-red-400 border-red-500/20',
-  returned:   'bg-purple-500/10 text-purple-400 border-purple-500/20',
-};
-
-const PAYMENT_STYLES = {
-  paid:      'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  pending:   'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  refunded:  'bg-red-500/10 text-red-400 border-red-500/20',
-  failed:    'bg-red-500/10 text-red-400 border-red-500/20',
-  cancelled: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-};
+import {
+  formatStatusLabel,
+  getFulfillmentStatusStyle,
+  getPaymentStatusStyle,
+} from '@/utils/statusFormatter';
 
 function formatDate(iso) {
   if (!iso) return '—';
@@ -37,8 +25,8 @@ function idShort(id) {
 }
 
 function OrderRow({ order, onView, onStatus, onCancel, onDelete, onAssign }) {
-  const fulfillmentStyle = FULFILLMENT_STYLES[order.fulfillmentStatus] || FULFILLMENT_STYLES.pending;
-  const paymentStyle = PAYMENT_STYLES[order.paymentStatus] || PAYMENT_STYLES.pending;
+  const fulfillmentStyle = getFulfillmentStatusStyle(order.fulfillmentStatus);
+  const paymentStyle = getPaymentStatusStyle(order.paymentStatus);
   const productNames = order.items?.map((it) => it.product?.name).join(', ') || '—';
   const isCancelOrReturn = order.fulfillmentStatus === 'cancelled' || order.fulfillmentStatus === 'returned';
 
@@ -48,7 +36,7 @@ function OrderRow({ order, onView, onStatus, onCancel, onDelete, onAssign }) {
   ];
 
   if (order.tagAssignmentStatus !== 'complete' && !isCancelOrReturn) {
-    actions.push({ label: 'Assign QR Tag', onClick: () => onAssign(order) });
+    actions.push({ label: 'QR Tag Assign', onClick: () => onAssign(order) });
     actions.push({ separator: true });
   }
 
@@ -77,11 +65,15 @@ function OrderRow({ order, onView, onStatus, onCancel, onDelete, onAssign }) {
       <div className="text-sm font-semibold text-foreground">{formatPrice(order.grandTotal)}</div>
 
       <div>
-        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${paymentStyle}`}>{order.paymentStatus?.charAt(0).toUpperCase() + order.paymentStatus?.slice(1)}</span>
+        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${paymentStyle}`}>
+          {formatStatusLabel(order.paymentStatus || 'pending')}
+        </span>
       </div>
 
       <div>
-        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${fulfillmentStyle}`}>{order.fulfillmentStatus?.charAt(0).toUpperCase() + order.fulfillmentStatus?.slice(1)}</span>
+        <span className={`text-[10px] px-2 py-0.5 rounded-full border ${fulfillmentStyle}`}>
+          {formatStatusLabel(order.fulfillmentStatus || 'pending')}
+        </span>
       </div>
 
       <div className="flex justify-end">

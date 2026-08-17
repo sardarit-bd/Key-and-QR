@@ -62,6 +62,15 @@ export const productService = {
         });
         return response.data;
     },
+
+    /**
+     * Get stock for a product by ID
+     */
+    getProductStock: async (productId) => {
+        const response = await api.get(`/products/${productId}`);
+        const product = response.data?.data || response.data;
+        return typeof product?.stock === 'number' ? product.stock : 0;
+    },
 };
 
 export default productService;

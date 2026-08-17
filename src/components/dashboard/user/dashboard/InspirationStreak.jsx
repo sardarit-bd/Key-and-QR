@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Check, Flame } from "lucide-react";
+import { Check, Flame, HelpCircle, X } from "lucide-react";
 
 function useCountUp(target, duration = 800) {
   const [value, setValue] = useState(0);
@@ -37,96 +37,148 @@ function useCountUp(target, duration = 800) {
 
 export default function InspirationStreak({ streak }) {
   const reduceMotion = useReducedMotion();
+  const [showInfo, setShowInfo] = useState(false);
+
   const current = streak?.current ?? 0;
-  const longest = streak?.longest ?? 0;
   const weekActivity = streak?.weekActivity ?? [false, false, false, false, false, false, false];
-  const weekDates = streak?.weekDates ?? [];
 
   const animatedCurrent = useCountUp(current);
 
   const DAYS = ['M', 'T', 'W', 'T', 'F', 'S', 'S'];
 
-  const dayLabel = (dateStr, fallbackIndex) => {
-    if (!dateStr) return DAYS[fallbackIndex] || '';
-    const d = new Date(`${dateStr}T00:00:00Z`);
-    if (Number.isNaN(d.getTime())) return DAYS[fallbackIndex] || '';
-    const WEEKDAY_LETTERS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-    return WEEKDAY_LETTERS[d.getUTCDay()];
-  };
+  // Circular progress calculations (relative to 7-day milestone)
+  const radius = 42;
+  const strokeWidth = 6;
+  const center = 52;
+  const circumference = 2 * Math.PI * radius;
+  // Dynamic progress: min 0, max 1 based on current streak
+  const progressRatio = current > 0 ? Math.min(Math.max(current / 7, 0.08), 1) : 0;
+  const strokeDashoffset = circumference * (1 - progressRatio);
 
   return (
     <motion.div
       initial={reduceMotion ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-      className="w-full rounded-2xl bg-card border border-border shadow-sm p-5 sm:p-6"
+      className="relative w-full rounded-2xl bg-white/75 dark:bg-slate-900/50 backdrop-blur-md dark:backdrop-blur-lg border border-white/80 dark:border-white/[0.12] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.6),0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),0_12px_32px_rgba(0,0,0,0.22)] p-5 sm:p-6 transition-all duration-300"
     >
-      {/* Header */}
-      <div className="flex items-center gap-2 mb-4">
-        <Flame size={18} className="text-accent" fill="currentColor" />
-        <h3 className="text-[15px] sm:text-[16px] font-semibold text-foreground">
-          Inspiration Streak
-        </h3>
-        {longest > 0 && (
-          <span className="ml-auto text-[12px] font-medium text-foreground-tertiary">
-            Best: {longest}
-          </span>
-        )}
-      </div>
+      {/* 1. Header: Flame + Title (left) and Help button (right) */}
+      <div className="flex items-center justify-between mb-4 sm:mb-5">
+        <div className="flex items-center gap-2">
+          <Flame size={18} className="text-rose-500 sm:w-5 sm:h-5" fill="currentColor" />
+          <h3 className="text-[15px] sm:text-[16px] font-semibold text-foreground tracking-tight">
+            Inspiration Streak
+          </h3>
+        </div>
 
-      {/* Days count */}
-      <div className="flex items-baseline gap-2 mb-5">
-        <span className="text-[48px] sm:text-[56px] leading-none font-semibold tracking-tight text-foreground tabular-nums">
-          {animatedCurrent}
-        </span>
-        <span className="text-[16px] sm:text-[18px] text-foreground-secondary font-medium">
-          {current === 1 ? 'Day' : 'Days'}
-        </span>
-      </div>
+        {/* Help / Info Button */}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setShowInfo((prev) => !prev)}
+            aria-label="Inspiration streak information"
+            className="w-6 h-6 rounded-full border border-border/80 text-foreground-tertiary hover:text-foreground hover:bg-muted/50 flex items-center justify-center text-xs font-semibold transition-colors cursor-pointer"
+          >
+            ?
+          </button>
 
-      {/* Day dots */}
-      <div className="flex justify-between items-center gap-1">
-        {DAYS.map((day, i) => {
-          const active = weekActivity[i];
-          return (
-            <motion.div
-              key={i}
-              initial={reduceMotion ? false : { opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3, delay: 0.2 + i * 0.05 }}
-              className="flex flex-col items-center gap-1.5 sm:gap-2"
-            >
-              <div
-                className={`
-                  flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full border-2
-                  transition-colors duration-200
-                  ${
-                    active
-                      ? "border-accent bg-accent text-accent-foreground"
-                      : "border-border bg-transparent text-foreground-tertiary"
-                  }
-                `}
-              >
-                {active ? (
-                  <Check size={16} strokeWidth={3} />
-                ) : (
-                  <span className="text-[12px] sm:text-[13px] font-medium">{day}</span>
-                )}
+          {/* Info Tooltip/Popup */}
+          {showInfo && (
+            <div className="absolute right-0 top-8 z-30 w-64 p-3 rounded-xl bg-popover border border-border text-popover-foreground text-xs shadow-lg animate-in fade-in zoom-in-95 duration-150">
+              <div className="flex items-start justify-between gap-2 mb-1">
+                <span className="font-semibold text-foreground">How streaks work</span>
+                <button
+                  onClick={() => setShowInfo(false)}
+                  className="text-foreground-tertiary hover:text-foreground cursor-pointer"
+                >
+                  <X size={13} />
+                </button>
               </div>
-              <span className="text-[11px] sm:text-[12px] text-foreground-tertiary font-medium">
-                {dayLabel(weekDates[i], i)}
-              </span>
-            </motion.div>
-          );
-        })}
+              <p className="text-foreground-secondary leading-relaxed">
+                Scan your Tag or receive your daily inspiration every day to keep your streak alive and unlock badges!
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Encouragement */}
-      <p className="mt-5 text-center text-[13px] text-foreground-tertiary">
-        {current > 0
-          ? 'Keep your streak going!'
-          : 'Start your streak today!'}
-      </p>
+      {/* 2. Main Content Body: Left Circular Progress + Right Weekly Streak */}
+      <div className="flex flex-col sm:flex-row items-center sm:items-center justify-between gap-6 sm:gap-10">
+        {/* Left: Large Circular Streak Indicator */}
+        <div className="relative shrink-0 flex items-center justify-center">
+          <svg
+            width="104"
+            height="104"
+            viewBox="0 0 104 104"
+            className="transform -rotate-90"
+          >
+            {/* Background Track */}
+            <circle
+              cx={center}
+              cy={center}
+              r={radius}
+              stroke="currentColor"
+              strokeWidth={strokeWidth}
+              className="text-muted/30 dark:text-muted/20"
+              fill="none"
+            />
+            {/* Active Progress Stroke */}
+            <circle
+              cx={center}
+              cy={center}
+              r={radius}
+              stroke="currentColor"
+              strokeWidth={strokeWidth}
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              strokeLinecap="round"
+              className="text-rose-500 transition-all duration-1000 ease-out"
+              fill="none"
+            />
+          </svg>
+
+          {/* Centered Days Counter inside the ring */}
+          <div className="absolute inset-0 flex flex-col items-center justify-center select-none">
+            <span className="text-[30px] sm:text-[34px] font-bold text-foreground leading-none tabular-nums tracking-tight">
+              {animatedCurrent}
+            </span>
+            <span className="text-[11px] sm:text-[12px] text-foreground-secondary font-medium mt-0.5">
+              {current === 1 ? 'Day' : 'Days'}
+            </span>
+          </div>
+        </div>
+
+        {/* Right: Weekly Streak Section (Fills remaining horizontal space) */}
+        <div className="flex-1 w-full flex flex-col items-center sm:items-start justify-center">
+          {/* Motivation Text above days */}
+          <p className="text-[13px] sm:text-[14px] font-medium text-foreground-secondary mb-3 text-center sm:text-left">
+            {current > 0 ? 'Keep your streak going!' : 'Start your streak today!'}
+          </p>
+
+          {/* 7-Day Weekday Row: Distributed evenly across the full weekly area */}
+          <div className="grid grid-cols-7 w-full gap-1.5 sm:gap-3 items-center">
+            {DAYS.map((day, i) => {
+              const active = Boolean(weekActivity[i]);
+              return (
+                <div key={i} className="flex flex-col items-center justify-center gap-1.5 sm:gap-2">
+                  <span className="text-[11px] sm:text-[13px] font-semibold text-foreground-tertiary select-none">
+                    {day}
+                  </span>
+                  <div
+                    className={`w-8 h-8 sm:w-9.5 sm:h-9.5 rounded-full flex items-center justify-center border transition-all duration-200 select-none ${
+                      active
+                        ? 'bg-rose-500/15 border-rose-500/40 text-rose-500 dark:bg-rose-500/25 dark:text-rose-400 dark:border-rose-500/50 shadow-2xs'
+                        : 'bg-card border-border/80 text-transparent dark:bg-muted/10'
+                    }`}
+                  >
+                    {active && <Check size={15} strokeWidth={2.5} />}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
     </motion.div>
   );
 }

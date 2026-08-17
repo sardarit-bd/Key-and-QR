@@ -44,7 +44,7 @@ export default function LibrarySection({
               ease: [0.22, 1, 0.36, 1],
             }}
             whileHover={reduceMotion ? undefined : { y: -2 }}
-            className="group flex items-center justify-between p-3 sm:p-4 md:p-5 rounded-2xl bg-card border border-border shadow-sm cursor-pointer transition-all duration-200 hover:border-accent/25 hover:shadow-md"
+            className="group flex items-center justify-between p-3 sm:p-4 md:p-5 rounded-2xl bg-white/75 dark:bg-slate-900/50 backdrop-blur-md dark:backdrop-blur-lg border border-white/80 dark:border-white/[0.12] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.6),0_4px_20px_-4px_rgba(0,0,0,0.05)] dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08),0_8px_30px_rgba(0,0,0,0.22)] cursor-pointer transition-all duration-200 hover:bg-white/90 dark:hover:bg-slate-900/65 hover:border-accent/40 dark:hover:border-white/20 hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),0_8px_28px_-6px_rgba(0,0,0,0.08)] dark:hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_12px_36px_rgba(0,0,0,0.32)]"
           >
             <div className="flex items-center gap-2.5 sm:gap-3 md:gap-4 min-w-0">
               <span className="flex items-center justify-center w-9 h-9 sm:w-11 sm:h-11 md:w-12 md:h-12 rounded-xl bg-background-secondary flex-shrink-0">

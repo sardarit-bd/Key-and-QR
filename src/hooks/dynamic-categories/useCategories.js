@@ -5,10 +5,13 @@ import { useQuery } from "@tanstack/react-query";
 // QUERY KEYS
 // ============================================================
 
-export const categoryKeys = {
-    all: ['categories'],
-    lists: () => [...categoryKeys.all, 'list'],
+export const productCategoryKeys = {
+    all: ['product-categories'],
+    lists: () => [...productCategoryKeys.all, 'list'],
 };
+
+// Backwards compatibility alias
+export const categoryKeys = productCategoryKeys;
 
 /**
  * Get product categories (from GET /products/categories).
@@ -17,10 +20,11 @@ export const categoryKeys = {
  */
 export function useCategories() {
     return useQuery({
-        queryKey: categoryKeys.lists(),
+        queryKey: productCategoryKeys.lists(),
         queryFn: () => productService.getCategories(),
         staleTime: 10 * 60 * 1000, // 10 minutes
         gcTime: 30 * 60 * 1000, // 30 minutes
         retry: 2,
     });
 }
+

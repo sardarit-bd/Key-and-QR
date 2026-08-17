@@ -24,7 +24,18 @@ export const adminTagsService = {
     }
 
     const response = await api.get('/tags', { params });
-    return response.data; // { data: { meta, data } }
+    const raw = response.data?.data;
+    const data = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
+    const meta = raw?.meta || response.data?.meta || {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      total: data.length,
+      totalPage: Math.ceil(data.length / limit) || 1,
+    };
+    return {
+      data,
+      meta,
+    };
   },
 
   /** Get a single tag by code */

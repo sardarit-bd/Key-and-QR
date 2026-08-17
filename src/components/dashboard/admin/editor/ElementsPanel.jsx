@@ -1,11 +1,12 @@
 'use client';
 
 import { Type, Sparkles, Square, Image, Music } from 'lucide-react';
-import { useCallback, useRef } from 'react';
+import { useCallback, useRef, useMemo } from 'react';
 import useEditorStore from './editorStore';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
+import { getCategoryLabel } from '@/components/category';
 import {
   Select,
   SelectContent,
@@ -34,8 +35,37 @@ export default function ElementsPanel() {
   const quoteAuthor = useEditorStore((s) => s.quoteAuthor);
   const setQuoteAuthor = useEditorStore((s) => s.setQuoteAuthor);
 
-  const { data: categories = [], isLoading: isCategoriesLoading } = useQuoteCategories();
+  const { data: categories = [], isLoading: isCategoriesLoading, isError } = useQuoteCategories();
   const fileRef = useRef(null);
+
+  const categoryOptions = useMemo(() => {
+    const map = new Map();
+
+    // 1. Dynamic categories strictly from centralized MongoDB categories collection
+    if (Array.isArray(categories)) {
+      categories
+        .filter((cat) => cat && cat.isActive !== false)
+        .forEach((cat) => {
+          const slug = cat.slug || cat._id || (cat.name ? String(cat.name).toLowerCase().replace(/\s+/g, '-').trim() : null);
+          if (slug) {
+            map.set(slug, {
+              value: slug,
+              label: cat.name || getCategoryLabel(slug),
+            });
+          }
+        });
+    }
+
+    // 2. Ensure loaded quote's category is available in the dropdown if editing an existing quote
+    if (quoteCategory && !map.has(quoteCategory)) {
+      map.set(quoteCategory, {
+        value: quoteCategory,
+        label: getCategoryLabel(quoteCategory),
+      });
+    }
+
+    return Array.from(map.values());
+  }, [categories, quoteCategory]);
 
   const handleClick = useCallback(
     (elementId) => {
@@ -99,6 +129,7 @@ export default function ElementsPanel() {
       }
 
       if (elementId === 'text') {
+        const currentQuoteText = useEditorStore.getState().quoteText;
         addElement({
           type: 'text',
           x: cx + offset,
@@ -114,7 +145,7 @@ export default function ElementsPanel() {
           zIndex: elements.length,
           textData: {
             role: 'quote',
-            content: 'Type your quote here\u2026',
+            content: currentQuoteText || 'Enter quote text...',
             fontFamily: 'Inter',
             fontSize: 24,
             fontWeight: 'normal',
@@ -127,7 +158,6 @@ export default function ElementsPanel() {
             wrap: true,
           },
         });
-        setQuoteText('');
         return;
       }
 
@@ -259,19 +289,29 @@ export default function ElementsPanel() {
           <Select
             value={quoteCategory || ''}
             onValueChange={(val) => setQuoteCategory(val)}
-            disabled={isCategoriesLoading}
+            disabled={isCategoriesLoading || isError || categoryOptions.length === 0}
           >
             <SelectTrigger className="w-full h-8 text-xs rounded-lg border-border bg-background px-2">
-              <SelectValue placeholder={isCategoriesLoading ? 'Loading...' : 'Select Category'} />
+              <SelectValue
+                placeholder={
+                  isCategoriesLoading
+                    ? 'Loading categories...'
+                    : isError
+                    ? 'Unable to load categories'
+                    : categoryOptions.length === 0
+                    ? 'No categories available'
+                    : 'Select Category'
+                }
+              />
             </SelectTrigger>
             <SelectContent className="max-h-[220px]">
-              {categories.map((cat) => (
+              {categoryOptions.map((opt) => (
                 <SelectItem
-                  key={cat._id || cat.slug}
-                  value={cat.slug}
+                  key={`quote-cat-${opt.value}`}
+                  value={opt.value}
                   className="text-xs"
                 >
-                  {cat.name || cat.slug}
+                  {opt.label}
                 </SelectItem>
               ))}
             </SelectContent>

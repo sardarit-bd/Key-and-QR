@@ -4,8 +4,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { Crown } from 'lucide-react';
 
 /**
- * Clean editorial greeting — lightweight, premium, no card wrapper.
- * The quote is the hero; this sets the tone without competing.
+ * Clean editorial greeting — lightweight, premium, with subtle multi-stop gradient heading.
  */
 export default function GreetingSection({ greeting, user, subscription }) {
   const reduceMotion = useReducedMotion();
@@ -20,11 +19,13 @@ export default function GreetingSection({ greeting, user, subscription }) {
       transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
       className="w-full"
     >
-      <motion.h1 className="text-[28px] sm:text-[32px] md:text-[36px] lg:text-[40px] leading-[1.1] tracking-tight text-foreground font-medium">
-        {timeGreeting}, {name}
+      <motion.h1 className="text-[28px] sm:text-[32px] md:text-[36px] lg:text-[40px] leading-[1.15] tracking-tight font-semibold">
+        <span className="bg-gradient-to-r from-zinc-900 via-indigo-800 to-amber-600 dark:from-zinc-100 dark:via-purple-300 dark:to-amber-400 bg-clip-text text-transparent">
+          {timeGreeting}, {name}
+        </span>
         {isPremium && (
-          <span className="inline-flex items-center align-middle ml-3 -mt-1">
-            <Crown size={18} className="text-accent" fill="currentColor" />
+          <span className="inline-flex items-center align-middle ml-2.5 -mt-1">
+            <Crown size={20} className="text-amber-500" fill="currentColor" />
           </span>
         )}
       </motion.h1>

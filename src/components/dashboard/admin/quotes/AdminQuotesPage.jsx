@@ -95,9 +95,15 @@ function getQuoteCardData(quote) {
     visualBg?.type === 'image' && isValidImageUrl(visualBg.source?.url)
       ? visualBg.source.url
       : null;
+  const renderedThumbnail =
+    (isValidImageUrl(quote.renderedImages?.desktop?.url) && quote.renderedImages.desktop.url) ||
+    (isValidImageUrl(quote.renderedImages?.mobile?.url) && quote.renderedImages.mobile.url) ||
+    null;
+
   const legacyImg = isValidImageUrl(quote.image?.url) ? quote.image.url : null;
 
   const rawCustomImg =
+    renderedThumbnail ||
     desktopImageEl?.imageData?.source?.url ||
     mobileImageEl?.imageData?.source?.url ||
     visualBgImg ||
@@ -169,15 +175,22 @@ export default function AdminQuotesPage() {
     const set = new Map();
     set.set('all', { value: 'all', label: 'All Categories' });
 
-    quoteCategories.forEach((cat) => {
-      set.set(cat.slug, { value: cat.slug, label: cat.name || getCategoryLabel(cat.slug) });
-    });
+    if (Array.isArray(quoteCategories)) {
+      quoteCategories.forEach((cat) => {
+        const val = cat.slug || cat._id || (cat.name ? String(cat.name).toLowerCase().replace(/\s+/g, '-').trim() : null);
+        if (val) {
+          set.set(val, { value: val, label: cat.name || getCategoryLabel(val) });
+        }
+      });
+    }
 
-    quotes.forEach((q) => {
-      if (q.category && !set.has(q.category)) {
-        set.set(q.category, { value: q.category, label: getCategoryLabel(q.category) });
-      }
-    });
+    if (Array.isArray(quotes)) {
+      quotes.forEach((q) => {
+        if (q?.category && typeof q.category === 'string' && !set.has(q.category)) {
+          set.set(q.category, { value: q.category, label: getCategoryLabel(q.category) });
+        }
+      });
+    }
 
     return Array.from(set.values());
   }, [quoteCategories, quotes]);
@@ -226,7 +239,7 @@ export default function AdminQuotesPage() {
         <div className="h-10 bg-card rounded-xl border border-border w-full animate-pulse" />
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
           {[...Array(8)].map((_, i) => (
-            <div key={i} className="h-80 bg-card rounded-2xl border border-border animate-pulse p-4 space-y-3">
+            <div key={`quote-skeleton-${i}`} className="h-80 bg-card rounded-2xl border border-border animate-pulse p-4 space-y-3">
               <div className="h-44 bg-muted rounded-xl" />
               <div className="h-4 bg-muted rounded w-3/4" />
               <div className="h-3 bg-muted rounded w-1/2" />
@@ -303,7 +316,9 @@ export default function AdminQuotesPage() {
           </SelectTrigger>
           <SelectContent>
             {categoryOptions.map((o) => (
-              <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+              <SelectItem key={`cat-opt-${o.value}`} value={o.value} className="text-xs">
+                {o.label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -313,7 +328,9 @@ export default function AdminQuotesPage() {
           </SelectTrigger>
           <SelectContent>
             {ACTIVE_FILTERS.map((o) => (
-              <SelectItem key={o.value} value={o.value} className="text-xs">{o.label}</SelectItem>
+              <SelectItem key={`status-opt-${o.value}`} value={o.value} className="text-xs">
+                {o.label}
+              </SelectItem>
             ))}
           </SelectContent>
         </Select>
@@ -347,10 +364,11 @@ export default function AdminQuotesPage() {
           {quotes.map((quote, i) => {
             const { bgStyle, quoteText, authorName, hasCustomArtwork, isImageOnly, displayTitle } =
               getQuoteCardData(quote);
+            const quoteKey = quote._id || `quote-card-${quote.id || i}`;
 
             return (
               <motion.div
-                key={quote._id}
+                key={quoteKey}
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.03 * Math.min(i, 12) }}
@@ -486,15 +504,15 @@ export default function AdminQuotesPage() {
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => toggleQuoteActive.mutate(quote._id)} className="cursor-pointer">
                           {quote.isActive ? (
-                            <>
+                            <span className="flex items-center">
                               <ToggleLeft size={13} className="mr-2 text-amber-500" />
                               <span>Deactivate</span>
-                            </>
+                            </span>
                           ) : (
-                            <>
+                            <span className="flex items-center">
                               <ToggleRight size={13} className="mr-2 text-emerald-500" />
                               <span>Activate</span>
-                            </>
+                            </span>
                           )}
                         </DropdownMenuItem>
                         <DropdownMenuSeparator />

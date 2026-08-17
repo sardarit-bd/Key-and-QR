@@ -12,6 +12,7 @@ import {
   AlertCircle,
   Quote as QuoteIcon,
   RefreshCw,
+  Sparkles,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
@@ -243,7 +244,7 @@ export default function AdminAssignQuotesPage() {
     const map = new Map();
     assignments.forEach((a) => {
       if (a.isActive === false) return;
-      
+
       const qId = a.quote?._id?.toString() || (typeof a.quote === 'string' ? a.quote : a.quote?.toString?.());
       if (!qId) return;
 
@@ -518,22 +519,20 @@ export default function AdminAssignQuotesPage() {
           <button
             type="button"
             onClick={() => setActiveTab('assign')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeTab === 'assign'
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${activeTab === 'assign'
                 ? 'bg-card text-foreground shadow-xs'
                 : 'text-foreground-secondary hover:text-foreground'
-            }`}
+              }`}
           >
             Assign Quote
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('manage')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-              activeTab === 'manage'
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${activeTab === 'manage'
                 ? 'bg-card text-foreground shadow-xs'
                 : 'text-foreground-secondary hover:text-foreground'
-            }`}
+              }`}
           >
             Active Assignments
           </button>
@@ -654,11 +653,10 @@ export default function AdminAssignQuotesPage() {
                             key={quote._id}
                             onClick={() => handleSelectQuote(quote)}
                             style={cardStyle}
-                            className={`relative min-h-[110px] rounded-xl p-2.5 flex flex-col justify-between overflow-hidden cursor-pointer select-none transition-all duration-150 group border ${
-                              isSelected
+                            className={`relative min-h-[110px] rounded-xl p-2.5 flex flex-col justify-between overflow-hidden cursor-pointer select-none transition-all duration-150 group border ${isSelected
                                 ? 'ring-2 ring-primary border-primary shadow-xs'
                                 : 'border-border/60 hover:border-primary/50 hover:shadow-2xs'
-                            }`}
+                              }`}
                           >
                             {/* Dark Overlay for readability */}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/45 to-black/35 pointer-events-none transition-opacity group-hover:from-black/90" />
@@ -750,11 +748,10 @@ export default function AdminAssignQuotesPage() {
                       <button
                         type="button"
                         onClick={() => handleTargetTypeChange('tag')}
-                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                          targetType === 'tag'
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${targetType === 'tag'
                             ? 'bg-card text-foreground shadow-xs'
                             : 'text-foreground-secondary hover:text-foreground'
-                        }`}
+                          }`}
                       >
                         <QrCode size={12} />
                         <span>QR Tags</span>
@@ -762,11 +759,10 @@ export default function AdminAssignQuotesPage() {
                       <button
                         type="button"
                         onClick={() => handleTargetTypeChange('user')}
-                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${
-                          targetType === 'user'
+                        className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all cursor-pointer ${targetType === 'user'
                             ? 'bg-card text-foreground shadow-xs'
                             : 'text-foreground-secondary hover:text-foreground'
-                        }`}
+                          }`}
                       >
                         <Users size={12} />
                         <span>Users</span>
@@ -842,20 +838,19 @@ export default function AdminAssignQuotesPage() {
                                   handleToggleRecipient(tagId);
                                 }
                               }}
-                              className={`flex items-center justify-between p-2 sm:p-2.5 rounded-xl border transition-all min-h-[50px] ${
-                                !state.isSelectable
+                              className={`flex items-center justify-between p-2 sm:p-2.5 rounded-xl border transition-all min-h-[50px] ${!state.isSelectable
                                   ? 'opacity-65 bg-muted/20 border-border cursor-not-allowed'
                                   : isSelected
-                                  ? 'border-primary/50 bg-primary/5 shadow-2xs cursor-pointer'
-                                  : 'border-border bg-background hover:bg-muted/40 cursor-pointer'
-                              }`}
+                                    ? 'border-primary/50 bg-primary/5 shadow-2xs cursor-pointer'
+                                    : 'border-border bg-background hover:bg-muted/40 cursor-pointer'
+                                }`}
                             >
                               <div className="flex items-center gap-2.5 min-w-0">
                                 <input
                                   type="checkbox"
                                   checked={isSelected}
                                   disabled={!state.isSelectable}
-                                  onChange={() => {}}
+                                  onChange={() => { }}
                                   className="rounded border-border text-primary focus:ring-primary h-3.5 w-3.5 pointer-events-none disabled:opacity-40"
                                 />
                                 <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-foreground-secondary shrink-0">
@@ -891,11 +886,10 @@ export default function AdminAssignQuotesPage() {
                                   </span>
                                 )}
                                 <span
-                                  className={`text-[9.5px] font-semibold px-2 py-0.5 rounded-full border ${
-                                    tag.isActive
+                                  className={`text-[9.5px] font-semibold px-2 py-0.5 rounded-full border ${tag.isActive
                                       ? 'bg-muted text-foreground-secondary border-border'
                                       : 'bg-muted text-foreground-tertiary border-border'
-                                  }`}
+                                    }`}
                                 >
                                   {tag.isActive ? 'Active' : 'Disabled'}
                                 </span>
@@ -929,20 +923,19 @@ export default function AdminAssignQuotesPage() {
                                 handleToggleRecipient(userId);
                               }
                             }}
-                            className={`flex items-center justify-between p-2 sm:p-2.5 rounded-xl border transition-all min-h-[50px] ${
-                              !state.isSelectable
+                            className={`flex items-center justify-between p-2 sm:p-2.5 rounded-xl border transition-all min-h-[50px] ${!state.isSelectable
                                 ? 'opacity-65 bg-muted/20 border-border cursor-not-allowed'
                                 : isSelected
-                                ? 'border-primary/50 bg-primary/5 shadow-2xs cursor-pointer'
-                                : 'border-border bg-background hover:bg-muted/40 cursor-pointer'
-                            }`}
+                                  ? 'border-primary/50 bg-primary/5 shadow-2xs cursor-pointer'
+                                  : 'border-border bg-background hover:bg-muted/40 cursor-pointer'
+                              }`}
                           >
                             <div className="flex items-center gap-2.5 min-w-0">
                               <input
                                 type="checkbox"
                                 checked={isSelected}
                                 disabled={!state.isSelectable}
-                                onChange={() => {}}
+                                onChange={() => { }}
                                 className="rounded border-border text-primary focus:ring-primary h-3.5 w-3.5 pointer-events-none disabled:opacity-40"
                               />
                               <div className="w-7 h-7 rounded-lg bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
@@ -1156,11 +1149,10 @@ export default function AdminAssignQuotesPage() {
                       </td>
                       <td className="py-3 px-3">
                         <span
-                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${
-                            assignment.isActive
+                          className={`text-[10px] font-semibold px-2 py-0.5 rounded-full border ${assignment.isActive
                               ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
                               : 'bg-muted text-foreground-tertiary border-border'
-                          }`}
+                            }`}
                         >
                           {assignment.isActive ? 'Active' : 'Inactive'}
                         </span>

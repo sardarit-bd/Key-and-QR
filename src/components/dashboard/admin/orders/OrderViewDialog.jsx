@@ -16,23 +16,11 @@ import {
   QrCode,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-
-const FULFILLMENT_STYLES = {
-  pending:    'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  assigned:   'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  shipped:    'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-  delivered:  'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  cancelled:  'bg-red-500/10 text-red-400 border-red-500/20',
-  returned:   'bg-purple-500/10 text-purple-400 border-purple-500/20',
-};
-
-const PAYMENT_STYLES = {
-  paid:      'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  pending:   'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  refunded:  'bg-red-500/10 text-red-400 border-red-500/20',
-  failed:    'bg-red-500/10 text-red-400 border-red-500/20',
-  cancelled: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-};
+import {
+  formatStatusLabel,
+  getFulfillmentStatusStyle,
+  getPaymentStatusStyle,
+} from '@/utils/statusFormatter';
 
 const TAG_STATUS_STYLES = {
   complete:           'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
@@ -71,8 +59,8 @@ function Row({ label, value, className = '' }) {
 }
 
 export default function OrderViewDialog({ open, onOpenChange, order, isLoading = false }) {
-  const fulfillmentStyle = FULFILLMENT_STYLES[order?.fulfillmentStatus] || '';
-  const paymentStyle = PAYMENT_STYLES[order?.paymentStatus] || '';
+  const fulfillmentStyle = getFulfillmentStatusStyle(order?.fulfillmentStatus);
+  const paymentStyle = getPaymentStatusStyle(order?.paymentStatus);
   const tagStatusStyle = TAG_STATUS_STYLES[order?.tagAssignmentStatus] || TAG_STATUS_STYLES.none;
 
   const isCancelledOrReturned = order?.fulfillmentStatus === 'cancelled' || order?.fulfillmentStatus === 'returned';
@@ -102,7 +90,7 @@ export default function OrderViewDialog({ open, onOpenChange, order, isLoading =
                 <p className="text-sm font-semibold text-foreground">{order.orderNumber || ''}</p>
               </div>
               <span className={`text-[10px] px-2 py-0.5 rounded-full border ${fulfillmentStyle}`}>
-                {order.fulfillmentStatus}
+                {formatStatusLabel(order.fulfillmentStatus || 'pending')}
               </span>
             </div>
 
@@ -191,7 +179,9 @@ export default function OrderViewDialog({ open, onOpenChange, order, isLoading =
               <Row label="Total" value={formatPrice(order.grandTotal)} className="text-base font-bold text-foreground" />
               <div className="flex items-center justify-between pt-1">
                 <span className="text-xs text-foreground-tertiary">Payment Status</span>
-                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${paymentStyle}`}>{order.paymentStatus}</span>
+                <span className={`text-[10px] px-2 py-0.5 rounded-full border ${paymentStyle}`}>
+                  {formatStatusLabel(order.paymentStatus || 'pending')}
+                </span>
               </div>
             </Section>
 

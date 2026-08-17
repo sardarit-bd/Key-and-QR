@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { Monitor, Smartphone, Eye, Quote, X, ChevronRight } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import useEditorStore from './editorStore';
+import { renderDesignToBlob } from './editorFabric';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,15 @@ import {
   DialogDescription,
   DialogFooter,
 } from '@/components/ui/dialog';
+
+async function uploadRenderedBlob(blob, filename) {
+  const formData = new FormData();
+  formData.append('image', blob, filename);
+  const response = await api.post('/upload/single?folder=quotes/visual-rendered', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data?.data; // { url, publicId }
+}
 
 export default function EditorHeader() {
   const router = useRouter();
@@ -83,22 +93,67 @@ export default function EditorHeader() {
 
     setSaving(true);
     try {
+      // 1. Render and upload desktop design to Cloudinary
+      let desktopUpload = null;
+      let desktopRender = null;
+      if (desktopElements.length > 0) {
+        desktopRender = await renderDesignToBlob(editorData.desktop, { multiplier: 2 });
+        if (desktopRender?.blob) {
+          desktopUpload = await uploadRenderedBlob(
+            desktopRender.blob,
+            `quote-${quoteId || 'new'}-desktop.${desktopRender.format}`
+          );
+        }
+      }
+
+      // 2. Render and upload mobile design to Cloudinary if elements exist
+      let mobileUpload = null;
+      let mobileRender = null;
+      if (mobileElements.length > 0) {
+        mobileRender = await renderDesignToBlob(editorData.mobile, { multiplier: 2 });
+        if (mobileRender?.blob) {
+          mobileUpload = await uploadRenderedBlob(
+            mobileRender.blob,
+            `quote-${quoteId || 'new'}-mobile.${mobileRender.format}`
+          );
+        }
+      }
+
+      const renderedImages = {
+        desktop: desktopUpload
+          ? {
+              url: desktopUpload.url,
+              publicId: desktopUpload.publicId,
+              width: desktopRender.width,
+              height: desktopRender.height,
+              format: desktopRender.format,
+            }
+          : null,
+        mobile: mobileUpload
+          ? {
+              url: mobileUpload.url,
+              publicId: mobileUpload.publicId,
+              width: mobileRender.width,
+              height: mobileRender.height,
+              format: mobileRender.format,
+            }
+          : null,
+      };
+
+      const payload = {
+        text: plainText,
+        author: authorName,
+        category: quoteCategory,
+        editorData,
+        renderedImages,
+      };
+
       if (quoteId) {
-        await api.patch(`/quotes/${quoteId}`, {
-          text: plainText,
-          author: authorName,
-          category: quoteCategory,
-          editorData,
-        });
-        toast.success('Quote updated');
+        await api.patch(`/quotes/${quoteId}`, payload);
+        toast.success('Quote updated with rendered assets');
       } else {
-        const response = await api.post('/quotes', {
-          text: plainText,
-          author: authorName,
-          category: quoteCategory,
-          editorData,
-        });
-        toast.success('Quote created');
+        const response = await api.post('/quotes', payload);
+        toast.success('Quote created with rendered assets');
         if (response.data?.data?._id) {
           useEditorStore.setState({ quoteId: response.data.data._id });
         }
@@ -108,6 +163,7 @@ export default function EditorHeader() {
         router.push('/new-dashboard/admin/quotes');
       }
     } catch (err) {
+      console.error('Save quote error:', err);
       toast.error(err?.response?.data?.message || 'Failed to save quote');
     } finally {
       setSaving(false);
@@ -166,23 +222,25 @@ export default function EditorHeader() {
           <button
             type="button"
             onClick={() => switchDesignVersion('desktop')}
-            className={`h-7 px-3 flex items-center gap-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${activeDesignVersion === 'desktop'
+            className={`h-7 px-3 flex items-center gap-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+              activeDesignVersion === 'desktop'
                 ? 'bg-background shadow-xs text-foreground font-semibold'
                 : 'text-foreground-tertiary hover:text-foreground'
-              }`}
-            title="Desktop Design (800 × 600)"
+            }`}
+            title="Desktop Design (800 × 450)"
           >
             <Monitor size={13} />
             <span>Desktop</span>
-            <span className="text-[10px] opacity-60 font-mono hidden sm:inline">800×600</span>
+            <span className="text-[10px] opacity-60 font-mono hidden sm:inline">800×450</span>
           </button>
           <button
             type="button"
             onClick={() => switchDesignVersion('mobile')}
-            className={`h-7 px-3 flex items-center gap-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${activeDesignVersion === 'mobile'
+            className={`h-7 px-3 flex items-center gap-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
+              activeDesignVersion === 'mobile'
                 ? 'bg-background shadow-xs text-foreground font-semibold'
                 : 'text-foreground-tertiary hover:text-foreground'
-              }`}
+            }`}
             title="Mobile Design (375 × 667)"
           >
             <Smartphone size={13} />

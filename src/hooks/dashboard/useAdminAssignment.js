@@ -12,7 +12,7 @@ export function useUnassignedTags(filters = {}) {
     queryKey: ADMIN_ASSIGNMENT_KEYS.unassignedTags(filters),
     queryFn: async () => {
       const res = await adminAssignmentService.getUnassignedTags(filters);
-      return res.data;
+      return res; // { data, meta }
     },
     staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,

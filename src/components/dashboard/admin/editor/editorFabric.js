@@ -140,7 +140,7 @@ export async function renderStaticDesign(canvasEl, design) {
   if (!f || !canvasEl || !design) return null;
 
   const width = design.canvas?.width || 800;
-  const height = design.canvas?.height || 600;
+  const height = design.canvas?.height || 450;
 
   const staticCanvas = new f.StaticCanvas(canvasEl, {
     width,
@@ -1198,3 +1198,73 @@ export function exportCanvasToBlob(mimeType = 'image/png', quality = 0.95, multi
       .catch((err) => reject(err));
   });
 }
+
+/**
+ * Render any design object (desktop or mobile) into a high-quality WebP blob using offscreen Fabric
+ */
+export async function renderDesignToBlob(design, options = {}) {
+  if (!design || !design.elements) return null;
+  const { multiplier = 2, quality = 0.92 } = options;
+
+  const width = design.canvas?.width || 800;
+  const height = design.canvas?.height || 450;
+
+  if (typeof document === 'undefined') return null;
+
+  const offscreenCanvasEl = document.createElement('canvas');
+  offscreenCanvasEl.width = width;
+  offscreenCanvasEl.height = height;
+
+  const renderResult = await renderStaticDesign(offscreenCanvasEl, design, { width, height });
+  if (!renderResult || !renderResult.canvas) {
+    throw new Error('Failed to render static design');
+  }
+
+  const staticCanvas = renderResult.canvas;
+  staticCanvas.renderAll();
+
+  let format = 'webp';
+  let dataUrl = '';
+  try {
+    dataUrl = staticCanvas.toDataURL({
+      format: 'webp',
+      quality,
+      multiplier,
+      enableRetinaScaling: true,
+    });
+    if (!dataUrl.startsWith('data:image/webp')) {
+      format = 'png';
+      dataUrl = staticCanvas.toDataURL({
+        format: 'png',
+        quality,
+        multiplier,
+        enableRetinaScaling: true,
+      });
+    }
+  } catch (err) {
+    format = 'png';
+    dataUrl = staticCanvas.toDataURL({
+      format: 'png',
+      quality,
+      multiplier,
+      enableRetinaScaling: true,
+    });
+  }
+
+  renderResult.dispose();
+
+  if (!dataUrl) {
+    throw new Error('Failed to export rendered design data URL');
+  }
+
+  const res = await fetch(dataUrl);
+  const blob = await res.blob();
+
+  return {
+    blob,
+    width,
+    height,
+    format,
+  };
+}
+

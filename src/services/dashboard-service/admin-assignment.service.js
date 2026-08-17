@@ -13,7 +13,18 @@ export const adminAssignmentService = {
     const params = { page, limit, unused: 'true' };
     if (search) params.search = search;
     const response = await api.get('/tags', { params });
-    return response.data; // { data: { meta, data: [tags] } }
+    const raw = response.data?.data;
+    const data = Array.isArray(raw?.data) ? raw.data : Array.isArray(raw) ? raw : [];
+    const meta = raw?.meta || response.data?.meta || {
+      page: parseInt(page),
+      limit: parseInt(limit),
+      total: data.length,
+      totalPage: Math.ceil(data.length / limit) || 1,
+    };
+    return {
+      data,
+      meta,
+    };
   },
 
   /** Search for orders to assign to */

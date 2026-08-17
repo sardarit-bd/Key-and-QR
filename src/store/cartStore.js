@@ -17,44 +17,44 @@ export const useCartStore = create(
 
             // Add item to cart - Optimized with single stock check
             addToCart: async (product) => {
-                const { cart } = get();
-                
-                // Check stock once
-                let stock;
-                try {
-                    stock = await getProductStockWithCache(product.id);
-                    if (stock < (product.qty || 1)) {
-                        return { 
-                            success: false, 
-                            error: `Only ${stock} items available in stock.` 
-                        };
-                    }
-                } catch (error) {
-                    console.warn('Stock check failed:', error);
+                if (!product || !product.id) {
+                    return { success: false, error: "Invalid product." };
                 }
 
+                const { cart } = get();
                 const existingItem = cart.find((item) => item.id === product.id);
                 const quantityToAdd = product.qty || 1;
-
-                if (existingItem) {
-                    const newQty = existingItem.qty + quantityToAdd;
-                    
-                    // Check stock for new quantity
-                    try {
-                        const currentStock = await getProductStockWithCache(product.id);
-                        if (currentStock < newQty) {
-                            return { 
-                                success: false, 
-                                error: `Only ${currentStock} items available in stock.` 
+                const targetQty = existingItem ? existingItem.qty + quantityToAdd : quantityToAdd;
+                
+                // Check stock
+                try {
+                    const stock = await getProductStockWithCache(product.id);
+                    if (typeof stock === "number") {
+                        if (stock <= 0) {
+                            return {
+                                success: false,
+                                error: "This product is currently out of stock.",
                             };
                         }
-                    } catch (error) {
-                        console.warn('Stock check failed:', error);
+                        if (stock < targetQty) {
+                            return { 
+                                success: false, 
+                                error: `Only ${stock} items available in stock.`,
+                            };
+                        }
                     }
+                } catch (error) {
+                    console.warn("Stock check failed:", error);
+                    return {
+                        success: false,
+                        error: "Unable to verify product availability. Please try again.",
+                    };
+                }
 
+                if (existingItem) {
                     const updatedCart = cart.map((item) =>
                         item.id === product.id
-                            ? { ...item, qty: newQty }
+                            ? { ...item, qty: targetQty }
                             : item
                     );
                     set({ cart: updatedCart });
@@ -91,19 +91,23 @@ export const useCartStore = create(
                 const { cart } = get();
                 const item = cart.find((i) => i.id === id);
                 if (!item) {
-                    return { success: false, error: 'Item not found' };
+                    return { success: false, error: "Item not found" };
                 }
 
                 try {
                     const stock = await getProductStockWithCache(id);
-                    if (stock <= item.qty) {
+                    if (typeof stock === "number" && stock <= item.qty) {
                         return { 
                             success: false, 
                             error: `Only ${stock} items available in stock.` 
                         };
                     }
                 } catch (error) {
-                    console.warn('Stock check failed:', error);
+                    console.warn("Stock check failed:", error);
+                    return {
+                        success: false,
+                        error: "Unable to verify product availability. Please try again.",
+                    };
                 }
 
                 set({
@@ -297,6 +301,7 @@ export const useCartStore = create(
 // ************* Stock Cache Helper *************
 
 async function getProductStockWithCache(productId) {
+    if (!productId) return 0;
     const cacheKey = `stock_${productId}`;
     const cached = stockCache.get(cacheKey);
     
@@ -308,13 +313,15 @@ async function getProductStockWithCache(productId) {
     // Fetch fresh stock
     const stock = await productService.getProductStock(productId);
     
-    // Update cache
-    stockCache.set(cacheKey, {
-        stock,
-        timestamp: Date.now(),
-    });
+    // Update cache only if valid number returned
+    if (typeof stock === "number") {
+        stockCache.set(cacheKey, {
+            stock,
+            timestamp: Date.now(),
+        });
+    }
 
-    return stock;
+    return typeof stock === "number" ? stock : 0;
 }
 
 // Clean up stock cache periodically
