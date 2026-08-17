@@ -13,6 +13,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useSubscriptionStore } from '@/store/subscriptionStore';
 import { useDashboardOverview } from '@/hooks/dashboard/useDashboardOverview';
 import premiumService from '@/services/premium-service/premium.service';
+import { subscriptionService } from '@/services/subscription.service';
 
 const GLASS_CARD =
   'rounded-[22px] border border-white/6 bg-card shadow-[0_12px_32px_-12px_rgb(0_0_0/0.45)] ' +
@@ -65,6 +66,7 @@ export default function SubscriptionPage() {
   const { user } = useAuthStore();
   const { mySubscriptions, fetchMySubscriptions, plans, fetchPlans } = useSubscriptionStore();
   const [portalLoading, setPortalLoading] = useState(false);
+  const [upgradeLoading, setUpgradeLoading] = useState(false);
 
   useEffect(() => { if (user) { fetchMySubscriptions(); fetchPlans(); } }, [user, fetchMySubscriptions, fetchPlans]);
 
@@ -84,9 +86,39 @@ export default function SubscriptionPage() {
   const currentPeriodEnd = subscription?.currentPeriodEnd;
   const price = resolvePrice(subscription, plans);
 
+  const subscriberPrice = useMemo(() => {
+    const plan = Array.isArray(plans) ? plans.find((p) => p.name === 'subscriber') : null;
+    if (!plan || plan.price == null) return null;
+    return {
+      amount: '$' + Number(plan.price).toFixed(2),
+      cycle: plan.interval === 'year' ? '/yr' : '/mo',
+    };
+  }, [plans]);
+
   const totalQuotes = dashboard?.statistics?.totalQuotesReceived || 0;
   const scans = dashboard?.statistics?.scans || 0;
   const streak = dashboard?.streak?.current || 0;
+
+  // Upgrade to Premium via Stripe Checkout
+  const handleUpgrade = useCallback(async () => {
+    if (upgradeLoading || isPremium) return;
+    setUpgradeLoading(true);
+    try {
+      const response = await subscriptionService.createCheckout();
+      const checkoutUrl = response?.data?.checkoutUrl;
+      if (checkoutUrl) {
+        window.location.href = checkoutUrl;
+      } else {
+        toast.error(response?.message || 'Unable to start the upgrade process. Please try again.');
+        setUpgradeLoading(false);
+      }
+    } catch (err) {
+      console.error('Upgrade checkout error:', err);
+      const msg = err?.response?.data?.message || 'Unable to start the upgrade process. Please try again.';
+      toast.error(msg);
+      setUpgradeLoading(false);
+    }
+  }, [upgradeLoading, isPremium]);
 
   // "Download Invoice" opens the Stripe Billing Portal which has
   // full invoice history, payment methods, and downloads.
@@ -154,18 +186,24 @@ export default function SubscriptionPage() {
                   <h1 className="text-[24px] sm:text-[30px] md:text-[36px] leading-[1.12] font-semibold tracking-tight text-foreground">
                     {isPremium ? 'Premium Member' : 'Free Plan'}
                   </h1>
-                  {isPremium && <StatusBadge />}
+                  {isPremium ? (
+                    <StatusBadge />
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[11px] font-medium text-foreground-tertiary">
+                      Current Plan
+                    </span>
+                  )}
                 </div>
                 <p className="mt-1.5 text-[13px] sm:text-[14px] text-foreground-secondary max-w-md">
                   {isPremium
                     ? `Active until ${fmtDate(currentPeriodEnd)}${cancelAtPeriodEnd ? ' — cancels at period end' : ''}`
-                    : 'Unlock unlimited inspiration, all categories, and a premium ad-free experience.'}
+                    : "You're currently using the Free plan. Upgrade to unlock unlimited inspiration, all categories, and a premium ad-free experience."}
                 </p>
               </div>
             </div>
 
             {/* Center: plan details */}
-            {isPremium && (
+            {isPremium ? (
               <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
                 <div>
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground-tertiary">Plan</span>
@@ -179,6 +217,23 @@ export default function SubscriptionPage() {
                   <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground-tertiary">Renewal</span>
                   <p className="font-medium text-foreground">{fmtDate(currentPeriodEnd)}</p>
                 </div>
+              </div>
+            ) : (
+              /* Free Plan Upgrade CTA in Hero */
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleUpgrade}
+                  disabled={upgradeLoading}
+                  className="group relative inline-flex shrink-0 cursor-pointer items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-accent to-accent/85 px-6 py-3 text-[13px] sm:text-[14px] font-semibold text-accent-foreground shadow-[0_8px_24px_-8px_rgba(253,182,92,0.5)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-8px_rgba(253,182,92,0.6)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                  {upgradeLoading ? (
+                    <RefreshCw size={15} className="animate-spin" />
+                  ) : (
+                    <Zap size={15} className="text-accent-foreground fill-current" />
+                  )}
+                  <span>{upgradeLoading ? 'Creating checkout...' : 'Upgrade to Premium'}</span>
+                </button>
               </div>
             )}
 
@@ -199,11 +254,22 @@ export default function SubscriptionPage() {
           <CardGlow />
           <div className="relative z-10 space-y-6">
             {/* Title */}
-            <div className="flex items-center gap-2.5">
-              <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-accent/25 bg-accent/10 shadow-[0_0_16px_rgba(253,182,92,0.12)]">
-                <Star size={13} className="text-accent" />
-              </span>
-              <h2 className="text-[15px] font-semibold tracking-tight text-foreground">Premium Membership</h2>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-accent/25 bg-accent/10 shadow-[0_0_16px_rgba(253,182,92,0.12)]">
+                  <Star size={13} className="text-accent" />
+                </span>
+                <div>
+                  <h2 className="text-[15px] font-semibold tracking-tight text-foreground">Premium Membership</h2>
+                  <p className="text-[12px] text-foreground-tertiary">Unlock the full inspiration experience.</p>
+                </div>
+              </div>
+
+              {!isPremium && subscriberPrice && (
+                <span className="hidden sm:inline-flex items-center gap-1 text-[13px] font-medium text-accent">
+                  Starting at <strong className="font-bold text-foreground">{subscriberPrice.amount}{subscriberPrice.cycle}</strong>
+                </span>
+              )}
             </div>
 
             {/* 4 benefit cards */}
@@ -221,6 +287,45 @@ export default function SubscriptionPage() {
                 );
               })}
             </div>
+
+            {/* Upgrade Banner for Free Users */}
+            {!isPremium && (
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl border border-accent/25 bg-gradient-to-r from-accent/15 via-accent/5 to-transparent backdrop-blur-sm">
+                <div className="flex items-center gap-3 text-left">
+                  <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/20 border border-accent/30 text-accent">
+                    <Crown size={20} />
+                  </span>
+                  <div>
+                    <h4 className="text-[14px] font-semibold text-foreground">
+                      Ready to elevate your daily inspiration?
+                    </h4>
+                    <p className="text-[12px] text-foreground-secondary">
+                      Unlimited quotes, all categories & ad-free starting at{' '}
+                      <span className="font-semibold text-accent">
+                        {subscriberPrice ? `${subscriberPrice.amount}${subscriberPrice.cycle}` : '$4.99/month'}
+                      </span>
+                      . Cancel anytime.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={handleUpgrade}
+                  disabled={upgradeLoading}
+                  className="w-full sm:w-auto inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-full bg-gradient-to-r from-accent to-accent/85 px-6 py-2.5 text-[13px] font-semibold text-accent-foreground shadow-[0_4px_16px_-4px_rgba(253,182,92,0.4)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_8px_24px_-4px_rgba(253,182,92,0.5)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  {upgradeLoading ? (
+                    <RefreshCw size={14} className="animate-spin" />
+                  ) : (
+                    <Sparkles size={14} />
+                  )}
+                  <span>
+                    {upgradeLoading
+                      ? 'Creating checkout...'
+                      : `Upgrade to Premium ${subscriberPrice ? `— ${subscriberPrice.amount}${subscriberPrice.cycle}` : ''}`}
+                  </span>
+                </button>
+              </div>
+            )}
 
             {/* Compact insights row */}
             <div className="flex flex-wrap items-center gap-x-8 gap-y-3 pt-4 border-t border-white/6 light:border-[#E8DFCE]/70">

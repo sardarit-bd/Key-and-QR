@@ -13,6 +13,7 @@ import {
 } from "@/components/category";
 
 import VisualQuoteRenderer from "@/components/quote/VisualQuoteRenderer";
+import VisualQuoteAudioPlayer from "@/components/quote/VisualQuoteAudioPlayer";
 
 export default function PublicQuoteDisplay({ data, tagCode }) {
   const router = useRouter();
@@ -23,13 +24,27 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   const quoteAuthor = data?.author;
   const isPersonalMessage = !!data?.isPersonalMessage;
   const category = isPersonalMessage ? "personal" : data?.category || "faith";
+
+  const renderedImageUrl =
+    data?.renderedImages?.mobile?.url ||
+    data?.renderedImages?.desktop?.url ||
+    null;
+
+  const audioTrack =
+    data?.editorData?.mobile?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+    data?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+    data?.editorData?.mobile?.audio ||
+    data?.editorData?.desktop?.audio ||
+    null;
+
   const hasVisualDesign =
     !isPersonalMessage &&
     Boolean(
-      data?.editorData &&
+      renderedImageUrl ||
+      (data?.editorData &&
         ((data.editorData.mobile?.elements && data.editorData.mobile.elements.length > 0) ||
           (data.editorData.desktop?.elements && data.editorData.desktop.elements.length > 0) ||
-          (data.editorData.elements && data.editorData.elements.length > 0))
+          (data.editorData.elements && data.editorData.elements.length > 0)))
     );
 
   const backgroundImage =
@@ -181,7 +196,20 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
           </div>
 
           {/* Main Visual Quote Area */}
-          {hasVisualDesign ? (
+          {renderedImageUrl ? (
+            <div className="relative z-10 flex-1 w-full flex items-center justify-center p-2 my-auto min-h-[460px] overflow-hidden">
+              <img
+                src={renderedImageUrl}
+                alt={quoteText || "Visual Quote"}
+                className="w-full h-full max-h-[70vh] object-contain rounded-2xl shadow-2xl transition-all duration-300"
+              />
+              {audioTrack?.source && (
+                <div className="absolute top-4 right-4 z-30">
+                  <VisualQuoteAudioPlayer track={audioTrack} />
+                </div>
+              )}
+            </div>
+          ) : hasVisualDesign ? (
             <div className="relative z-10 flex-1 w-full flex items-center justify-center p-2 my-auto min-h-[460px]">
               <VisualQuoteRenderer
                 editorData={data.editorData}

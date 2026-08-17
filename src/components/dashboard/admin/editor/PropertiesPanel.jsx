@@ -14,6 +14,8 @@ import { updateObjectTransform } from './editorFabric';
 export default function PropertiesPanel({ selectedEl }) {
   const selectedElementIds = useEditorStore((s) => s.selectedElementIds);
   const elements = useEditorStore((s) => s.elements);
+  const activeDesignVersion = useEditorStore((s) => s.activeDesignVersion);
+  const canvas = useEditorStore((s) => s.canvas);
   const activeSidebarTab = useEditorStore((s) => s.activeSidebarTab);
   const setActiveSidebarTab = useEditorStore((s) => s.setActiveSidebarTab);
   const duplicateElements = useEditorStore((s) => s.duplicateElements);
@@ -177,20 +179,45 @@ export default function PropertiesPanel({ selectedEl }) {
                 <CommonProperties selectedEl={activeEl} />
               </div>
             ) : (
-              /* Empty state */
-              <div className="flex flex-col items-center justify-center py-16 text-center">
-                <SlidersHorizontal size={22} className="text-foreground-tertiary/30 mb-3" />
-                <p className="text-sm font-medium text-foreground-secondary">Select an Element</p>
-                <p className="text-xs text-foreground-tertiary mt-1">
-                  Click an element on canvas or select from Layers to edit properties.
-                </p>
-                <button
-                  type="button"
-                  onClick={() => setActiveSidebarTab('layers')}
-                  className="mt-4 text-xs text-primary hover:underline font-medium cursor-pointer"
-                >
-                  View Canvas Layers ({elements.length})
-                </button>
+              /* Canvas Info (when no element is selected) */
+              <div className="space-y-6">
+                <div>
+                  <span className="text-[11px] font-bold text-foreground uppercase tracking-wider block mb-1">
+                    Canvas Info
+                  </span>
+                  <p className="text-[11px] text-foreground-tertiary">
+                    {activeDesignVersion === 'desktop'
+                      ? 'Canonical Desktop Layout (800 × 600 px)'
+                      : 'Canonical Mobile Layout (375 × 667 px)'}
+                  </p>
+                </div>
+
+                {/* Current Canvas Dimensions Info */}
+                <div className="p-3 rounded-xl border border-border bg-muted/20 space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-foreground-secondary">Canvas Size:</span>
+                    <span className="font-mono font-medium text-foreground">
+                      {activeDesignVersion === 'desktop' ? '800 × 600 px' : '375 × 667 px'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between text-[11px] text-foreground-tertiary">
+                    <span>Layout:</span>
+                    <span className="font-medium text-foreground-secondary">
+                      {activeDesignVersion === 'desktop' ? '4:3 Standard' : '9:16 Portrait'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="pt-2 border-t border-border">
+                  <button
+                    type="button"
+                    onClick={() => setActiveSidebarTab('layers')}
+                    className="w-full py-2 px-3 rounded-xl bg-muted/60 hover:bg-muted text-xs font-medium text-primary flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                  >
+                    <Layers size={13} />
+                    <span>View Canvas Layers ({elements.length}) →</span>
+                  </button>
+                </div>
               </div>
             )}
           </div>

@@ -14,7 +14,7 @@ export function useAdminTags(filters = {}) {
     queryKey: ADMIN_TAGS_KEYS.list(filters),
     queryFn: async () => {
       const res = await adminTagsService.getTags(filters);
-      return res.data; // { meta, data }
+      return res; // { data, meta }
     },
     staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,

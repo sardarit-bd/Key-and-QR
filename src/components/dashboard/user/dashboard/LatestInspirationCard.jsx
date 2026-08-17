@@ -5,6 +5,7 @@ import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Sparkles, Heart, Share2, Gift } from "lucide-react";
 import FavoriteButton from "@/components/favorite/FavoriteButton";
 import VisualQuoteRenderer from "@/components/quote/VisualQuoteRenderer";
+import VisualQuoteAudioPlayer from "@/components/quote/VisualQuoteAudioPlayer";
 
 export default function LatestInspirationCard({
   inspiration,
@@ -21,11 +22,32 @@ export default function LatestInspirationCard({
   const usedToday = inspiration?.dailyUsage?.usedToday ?? 0;
   const dailyLimit = inspiration?.dailyUsage?.dailyLimit ?? 0;
   const quoteId = inspiration?.quoteId || inspiration?.id || null;
+
+  const renderedImageUrl =
+    inspiration?.renderedImages?.desktop?.url ||
+    inspiration?.quote?.renderedImages?.desktop?.url ||
+    inspiration?.renderedImages?.mobile?.url ||
+    inspiration?.quote?.renderedImages?.mobile?.url ||
+    null;
+
+  const audioTrack =
+    inspiration?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+    inspiration?.editorData?.mobile?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+    inspiration?.editorData?.desktop?.audio ||
+    inspiration?.editorData?.mobile?.audio ||
+    inspiration?.quote?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+    inspiration?.quote?.editorData?.mobile?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+    inspiration?.quote?.editorData?.desktop?.audio ||
+    inspiration?.quote?.editorData?.mobile?.audio ||
+    null;
+
+  const editorData = inspiration?.editorData || inspiration?.quote?.editorData;
   const hasVisualDesign = Boolean(
-    inspiration?.editorData &&
-    ((inspiration.editorData.desktop?.elements && inspiration.editorData.desktop.elements.length > 0) ||
-      (inspiration.editorData.mobile?.elements && inspiration.editorData.mobile.elements.length > 0) ||
-      (inspiration.editorData.elements && inspiration.editorData.elements.length > 0))
+    renderedImageUrl ||
+    (editorData &&
+      ((editorData.desktop?.elements && editorData.desktop.elements.length > 0) ||
+        (editorData.mobile?.elements && editorData.mobile.elements.length > 0) ||
+        (editorData.elements && editorData.elements.length > 0)))
   );
 
   const remaining = dailyLimit > 0 ? Math.max(0, dailyLimit - usedToday) : 0;
@@ -38,7 +60,7 @@ export default function LatestInspirationCard({
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className="group relative w-full overflow-hidden rounded-[24px] sm:rounded-[28px] md:rounded-[32px] min-h-[360px] sm:min-h-[420px] md:min-h-[460px]"
+      className="group relative w-full max-w-[800px] h-[450px] aspect-[16/9] mx-auto overflow-hidden rounded-[24px] sm:rounded-[28px] md:rounded-[32px] bg-[#0d1117] border border-white/10 shadow-2xl"
     >
       {/* ===== Full-bleed background image (legacy quotes only) ===== */}
       {!hasVisualDesign && (
@@ -65,7 +87,7 @@ export default function LatestInspirationCard({
       )}
 
       {/* ===== Content ===== */}
-      <div className="relative z-10 flex flex-col justify-between h-full p-6 sm:p-8 md:p-10 lg:p-12">
+      <div className="relative z-10 flex flex-col justify-between h-full p-4 sm:p-5 md:p-6">
         {/* Top row: badge + usage */}
         <div className="flex items-center justify-between">
           {/* Today's Quote badge */}
@@ -98,11 +120,24 @@ export default function LatestInspirationCard({
         </div>
 
         {/* Middle: Visual Quote or Legacy Quote Block */}
-        <div className="flex-1 flex flex-col justify-center my-4 sm:my-6 md:my-8">
-          {hasVisualDesign ? (
-            <div className="w-full flex items-center justify-center min-h-[280px] sm:min-h-[360px] md:min-h-[420px] max-h-[520px]">
+        <div className="flex-1 flex flex-col justify-center items-center my-2 w-full min-h-0 overflow-hidden">
+          {renderedImageUrl ? (
+            <div className="relative w-full h-full flex items-center justify-center min-h-0 overflow-hidden">
+              <img
+                src={renderedImageUrl}
+                alt={quote || "Daily Inspiration"}
+                className="w-full h-full object-contain rounded-2xl shadow-xl transition-all duration-300"
+              />
+              {audioTrack?.source && (
+                <div className="absolute top-2 right-2 z-30">
+                  <VisualQuoteAudioPlayer track={audioTrack} />
+                </div>
+              )}
+            </div>
+          ) : hasVisualDesign ? (
+            <div className="w-full h-full flex items-center justify-center min-h-0">
               <VisualQuoteRenderer
-                editorData={inspiration.editorData}
+                editorData={editorData}
                 mode="auto"
                 showAudioPlayer={true}
                 className="w-full h-full"

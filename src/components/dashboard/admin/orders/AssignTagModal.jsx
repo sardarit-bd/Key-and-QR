@@ -34,8 +34,13 @@ export default function AssignTagModal({ open, onOpenChange, onAssign }) {
     enabled: open,
   });
 
-  const tags = data?.data || [];
-  const meta = data?.meta || { page: 1, totalPage: 0, total: 0 };
+  const responsePayload = data?.data || data;
+  const tags = Array.isArray(responsePayload?.data)
+    ? responsePayload.data
+    : Array.isArray(responsePayload)
+    ? responsePayload
+    : [];
+  const meta = responsePayload?.meta || data?.meta || { page: 1, totalPage: 0, total: 0 };
 
   const handleSearchChange = useCallback((v) => { setSearch(v); setPage(1); setSelectedTagId(null); }, []);
 

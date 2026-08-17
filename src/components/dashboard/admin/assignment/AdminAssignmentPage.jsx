@@ -47,10 +47,10 @@ export default function AdminAssignmentPage() {
 
   const { assignTag } = useAdminAssignmentActions();
 
-  const tags = tagsData?.data || [];
-  const tagsMeta = tagsData?.meta || { page: 1, totalPage: 0, total: 0 };
-  const orders = ordersData?.data || [];
-  const ordersMeta = ordersData?.meta || { page: 1, totalPage: 0, total: 0 };
+  const tags = Array.isArray(tagsData?.data) ? tagsData.data : Array.isArray(tagsData) ? tagsData : [];
+  const tagsMeta = tagsData?.meta || { page: 1, totalPage: 0, total: tags.length };
+  const orders = Array.isArray(ordersData?.data) ? ordersData.data : Array.isArray(ordersData) ? ordersData : [];
+  const ordersMeta = ordersData?.meta || { page: 1, totalPage: 0, total: orders.length };
 
   // Handlers
   const handleTagSelect = useCallback((tag) => setSelectedTag(tag), []);

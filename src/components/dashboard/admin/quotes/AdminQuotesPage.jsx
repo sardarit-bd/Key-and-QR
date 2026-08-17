@@ -95,9 +95,13 @@ function getQuoteCardData(quote) {
     visualBg?.type === 'image' && isValidImageUrl(visualBg.source?.url)
       ? visualBg.source.url
       : null;
-  const legacyImg = isValidImageUrl(quote.image?.url) ? quote.image.url : null;
+  const renderedThumbnail =
+    (isValidImageUrl(quote.renderedImages?.desktop?.url) && quote.renderedImages.desktop.url) ||
+    (isValidImageUrl(quote.renderedImages?.mobile?.url) && quote.renderedImages.mobile.url) ||
+    null;
 
   const rawCustomImg =
+    renderedThumbnail ||
     desktopImageEl?.imageData?.source?.url ||
     mobileImageEl?.imageData?.source?.url ||
     visualBgImg ||

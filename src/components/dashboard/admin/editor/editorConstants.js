@@ -9,7 +9,7 @@ export const CANVAS_DEFAULTS = {
   width: 800,
   height: 600,
   backgroundColor: '#ffffff',
-  safeArea: { x: 40, y: 40, width: 720, height: 520 },
+  safeArea: { x: 40, y: 30, width: 720, height: 540 },
   aspectRatio: { width: 4, height: 3 },
 };
 

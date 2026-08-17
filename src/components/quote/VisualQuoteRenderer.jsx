@@ -26,7 +26,7 @@ export default function VisualQuoteRenderer({
   editorData,
   mode = 'auto',
   showAudioPlayer = true,
-  maxScale = 1,
+  maxScale = 2,
   className = '',
   onRenderComplete,
 }) {
@@ -89,7 +89,7 @@ export default function VisualQuoteRenderer({
     return null;
   }, [editorData, mode]);
 
-  // 2. Responsive scaling calculation
+  // 2. Responsive scaling calculation (strictly uniform)
   const updateScaling = useCallback(() => {
     const container = containerRef.current;
     const resolved = resolveActiveDesign();
@@ -106,7 +106,8 @@ export default function VisualQuoteRenderer({
     const scaleX = containerW / canvasW;
     const scaleY = containerH / canvasH;
 
-    const computedScale = Math.min(scaleX, scaleY, maxScale);
+    const uniformScale = Math.min(scaleX, scaleY);
+    const computedScale = Math.min(uniformScale, maxScale);
     setScale(Number.isFinite(computedScale) && computedScale > 0 ? computedScale : 1);
   }, [resolveActiveDesign, maxScale]);
 
@@ -217,6 +218,8 @@ export default function VisualQuoteRenderer({
 
   const canvasWidth = canvasDimensions.width;
   const canvasHeight = canvasDimensions.height;
+  const displayWidth = Math.round(canvasWidth * scale);
+  const displayHeight = Math.round(canvasHeight * scale);
 
   return (
     <div
@@ -230,14 +233,12 @@ export default function VisualQuoteRenderer({
         </div>
       )}
 
-      {/* Proportional Scaled Canvas Container */}
+      {/* Proportional Scaled Canvas Container (Accurately Sized Layout Box) */}
       <div
-        className="flex items-center justify-center transition-transform duration-150 ease-out shrink-0"
+        className="relative flex items-center justify-center transition-all duration-150 ease-out shrink-0"
         style={{
-          transform: `scale(${scale})`,
-          transformOrigin: 'center center',
-          width: `${canvasWidth}px`,
-          height: `${canvasHeight}px`,
+          width: `${displayWidth}px`,
+          height: `${displayHeight}px`,
         }}
       >
         <div
@@ -246,6 +247,8 @@ export default function VisualQuoteRenderer({
           style={{
             width: `${canvasWidth}px`,
             height: `${canvasHeight}px`,
+            transform: `scale(${scale})`,
+            transformOrigin: 'top left',
           }}
         />
       </div>

@@ -17,11 +17,20 @@ const LOADING_MESSAGES = [
  * click category → loading screen (~1s) → reveal quote.
  */
 export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose }) {
+  const renderedImageUrl =
+    quote?.renderedImages?.desktop?.url ||
+    quote?.renderedImages?.mobile?.url ||
+    quote?.quote?.renderedImages?.desktop?.url ||
+    quote?.quote?.renderedImages?.mobile?.url ||
+    null;
+
+  const editorData = quote?.editorData || quote?.quote?.editorData;
   const hasVisualDesign = Boolean(
-    quote?.editorData &&
-      ((quote.editorData.desktop?.elements && quote.editorData.desktop.elements.length > 0) ||
-        (quote.editorData.mobile?.elements && quote.editorData.mobile.elements.length > 0) ||
-        (quote.editorData.elements && quote.editorData.elements.length > 0))
+    renderedImageUrl ||
+    (editorData &&
+      ((editorData.desktop?.elements && editorData.desktop.elements.length > 0) ||
+        (editorData.mobile?.elements && editorData.mobile.elements.length > 0) ||
+        (editorData.elements && editorData.elements.length > 0)))
   );
 
   return (
@@ -67,10 +76,18 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
                   {categoryName || 'Inspiration'}
                 </div>
 
-                {hasVisualDesign ? (
+                {renderedImageUrl ? (
+                  <div className="w-full flex items-center justify-center min-h-[300px] max-h-[420px] overflow-hidden">
+                    <img
+                      src={renderedImageUrl}
+                      alt={quote.text || "Inspiration"}
+                      className="max-w-full max-h-[400px] object-contain rounded-xl shadow-lg"
+                    />
+                  </div>
+                ) : hasVisualDesign ? (
                   <div className="w-full flex items-center justify-center min-h-[300px] max-h-[400px]">
                     <VisualQuoteRenderer
-                      editorData={quote.editorData}
+                      editorData={editorData}
                       mode="auto"
                       showAudioPlayer={true}
                       className="w-full h-full"

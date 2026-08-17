@@ -10,7 +10,8 @@ function formatDate(iso) {
 }
 
 export default function UnassignedTagsTable({ tags = [], selectedTagId, onSelect }) {
-  if (tags.length === 0) return null;
+  const safeTags = Array.isArray(tags) ? tags : Array.isArray(tags?.data) ? tags.data : [];
+  if (safeTags.length === 0) return null;
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
@@ -18,11 +19,11 @@ export default function UnassignedTagsTable({ tags = [], selectedTagId, onSelect
         <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
           <QrCode size={16} className="text-indigo-400" />
           Unassigned Tags
-          <span className="text-[10px] text-foreground-tertiary font-normal">({tags.length})</span>
+          <span className="text-[10px] text-foreground-tertiary font-normal">({safeTags.length})</span>
         </h3>
 
         <div className="divide-y divide-border/50 max-h-[400px] overflow-y-auto">
-          {tags.map((tag) => {
+          {safeTags.map((tag) => {
             const isSelected = selectedTagId === tag._id;
             return (
               <button
