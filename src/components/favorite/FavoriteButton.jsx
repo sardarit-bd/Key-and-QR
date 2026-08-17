@@ -18,7 +18,7 @@ export default function FavoriteButton({
   type = 'quote',
   className = '',
   size = 'default',
-  variant = 'ghost',
+  variant = null,
   showText = false,
   activeText = 'Saved',
   inactiveText = 'Save',
@@ -43,17 +43,11 @@ export default function FavoriteButton({
 
   const heartVariants = {
     initial: { scale: 1 },
-    animate: { 
+    animate: {
       scale: [1, 1.3, 1],
       transition: { duration: 0.3 }
     },
     exit: { scale: 0 },
-  };
-
-  const sizeClasses = {
-    sm: 'h-8 w-8',
-    default: 'h-9 w-9',
-    lg: 'h-10 w-10',
   };
 
   const iconSizes = {
@@ -62,60 +56,77 @@ export default function FavoriteButton({
     lg: 'w-6 h-6',
   };
 
+  const buttonContent = (
+    <motion.div
+      key={isFavorite ? 'filled' : 'outline'}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      variants={heartVariants}
+      className="relative flex items-center justify-center"
+    >
+      <Heart
+        className={cn(
+          iconSizes[size] || 'w-4 h-4',
+          isFavorite && 'fill-current text-rose-400'
+        )}
+        strokeWidth={isFavorite ? 2 : 1.5}
+      />
+
+      {showText && (
+        <span className="ml-1.5 text-inherit text-[12px] sm:text-[13px] font-medium">
+          {isFavorite ? activeText : inactiveText}
+        </span>
+      )}
+
+      {/* Loading spinner overlay */}
+      {isLoading && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          className="absolute inset-0 flex items-center justify-center"
+        >
+          <div className="w-4 h-4 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
+        </motion.div>
+      )}
+    </motion.div>
+  );
+
   return (
     <>
-      <Button
-        variant={variant}
-        size={size}
-        onClick={handleClick}
-        disabled={isLoading}
-        className={cn(
-          'relative cursor-pointer',
-          isFavorite
-            ? '!text-rose-400 hover:!text-rose-300'
-            : '',
-          !showText && (isFavorite
-            ? 'hover:bg-rose-500/10'
-            : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'),
-          className
-        )}
-        aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-        {...props}
-      >
-        <motion.div
-          key={isFavorite ? 'filled' : 'outline'}
-          initial="initial"
-          animate="animate"
-          exit="exit"
-          variants={heartVariants}
-          className="relative flex items-center justify-center"
+      {variant ? (
+        <Button
+          variant={variant}
+          size={size}
+          onClick={handleClick}
+          disabled={isLoading}
+          className={cn(
+            'relative cursor-pointer',
+            isFavorite ? '!text-rose-400 hover:!text-rose-300' : '',
+            !showText && (isFavorite ? 'hover:bg-rose-500/10' : 'text-muted-foreground hover:text-foreground'),
+            className
+          )}
+          aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          {...props}
         >
-          <Heart
-            className={cn(
-              iconSizes[size],
-              isFavorite && 'fill-current'
-            )}
-            strokeWidth={isFavorite ? 2 : 1.5}
-          />
-          
-          {showText && (
-            <span className="ml-1.5 text-inherit text-[13px] font-medium">
-              {isFavorite ? activeText : inactiveText}
-            </span>
+          {buttonContent}
+        </Button>
+      ) : (
+        <button
+          type="button"
+          onClick={handleClick}
+          disabled={isLoading}
+          className={cn(
+            'relative cursor-pointer select-none transition-all duration-150',
+            isFavorite ? '!text-rose-400 hover:!text-rose-300' : '',
+            className
           )}
-
-          {/* Loading spinner overlay */}
-          {isLoading && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="absolute inset-0 flex items-center justify-center"
-            >
-              <div className="w-4 h-4 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
-            </motion.div>
-          )}
-        </motion.div>
-      </Button>
+          aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
+          {...props}
+        >
+          {buttonContent}
+        </button>
+      )}
 
       {/* Upgrade prompt (P1.1) — free user clicked Save on a quote */}
       {showUpgrade && (
