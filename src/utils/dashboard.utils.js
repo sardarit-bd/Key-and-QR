@@ -162,12 +162,13 @@ export function mapLatestInspiration(latestInspiration, dailyUsage) {
 
   return {
     hasReceivedQuote: !!latestInspiration?.hasReceivedQuote,
-    id: quote?.id || quote?.quoteId || null,
-    quoteId: quote?.quoteId || quote?.id || null,
-    text: quote?.fullText || quote?.previewText || '',
-    previewText: quote?.previewText || '',
+    id: quote?.id || quote?.quoteId || quote?._id || null,
+    quoteId: quote?.quoteId || quote?._id || quote?.id || null,
+    text: quote?.fullText || quote?.previewText || quote?.text || '',
+    previewText: quote?.previewText || quote?.text || '',
     author: quote?.author || 'MyInspireTag',
-    image: quote?.image?.url || quote?.image || null,
+    image: quote?.image?.url || (typeof quote?.image === 'string' ? quote.image : null),
+    renderedImages: quote?.renderedImages || null,
     theme: quote?.theme || null,
     editorData: quote?.editorData || null,
     category: quote?.category || null,

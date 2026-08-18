@@ -4,38 +4,78 @@
  */
 
 /**
- * Resolves the best available high-resolution artwork URL for a quote.
+ * Helper to safely extract a valid HTTPS/HTTP image URL from various data structures
+ */
+function extractValidImageUrl(source) {
+  if (!source) return null;
+  if (typeof source === "string") {
+    const trimmed = source.trim();
+    if (
+      (trimmed.startsWith("https://") ||
+        trimmed.startsWith("http://") ||
+        trimmed.startsWith("data:")) &&
+      !trimmed.includes("undefined") &&
+      !trimmed.includes("null")
+    ) {
+      return trimmed;
+    }
+    return null;
+  }
+  if (typeof source === "object") {
+    if (source.url && typeof source.url === "string") {
+      return extractValidImageUrl(source.url);
+    }
+    if (source.source) {
+      return extractValidImageUrl(source.source);
+    }
+  }
+  return null;
+}
+
+/**
+ * Resolves the best available valid artwork URL for a quote.
  * Order of preference:
- * 1. renderedImages.desktop.url
- * 2. renderedImages.mobile.url
- * 3. image (string or object.url)
- * 4. Fallback null
+ * 1. Existing valid rendered desktop artwork URL
+ * 2. Existing valid rendered mobile artwork URL
+ * 3. Visual Quote Editor image elements (used by Dashboard & Visual Quote Renderer)
+ * 4. Direct quote image URL (Cloudinary or public HTTPS)
+ * 5. Visual Quote Editor background
+ * 6. Null if no valid remote/uploaded artwork exists
  */
 export function getBestShareArtwork(quote) {
   if (!quote) return null;
 
-  if (quote.renderedImages?.desktop?.url) {
-    return quote.renderedImages.desktop.url;
-  }
-  if (quote.quote?.renderedImages?.desktop?.url) {
-    return quote.quote.renderedImages.desktop.url;
-  }
+  const editorData = quote.editorData || quote.quote?.editorData;
 
-  if (quote.renderedImages?.mobile?.url) {
-    return quote.renderedImages.mobile.url;
-  }
-  if (quote.quote?.renderedImages?.mobile?.url) {
-    return quote.quote.renderedImages.mobile.url;
-  }
+  const candidates = [
+    // 1. Rendered Cloudinary artwork
+    quote.renderedImages?.desktop?.url,
+    quote.quote?.renderedImages?.desktop?.url,
+    quote.renderedImages?.mobile?.url,
+    quote.quote?.renderedImages?.mobile?.url,
 
-  if (typeof quote.image === "string" && quote.image.trim() !== "") {
-    return quote.image;
-  }
-  if (quote.image?.url) {
-    return quote.image.url;
-  }
-  if (quote.quote?.image?.url) {
-    return quote.quote.image.url;
+    // 2. Visual Quote Editor image elements (matches Dashboard & VisualQuoteRenderer)
+    editorData?.desktop?.elements?.find((e) => e.type === "image")?.imageData?.source,
+    editorData?.mobile?.elements?.find((e) => e.type === "image")?.imageData?.source,
+    editorData?.elements?.find((e) => e.type === "image")?.imageData?.source,
+
+    // 3. Direct quote image
+    quote.image,
+    quote.quote?.image,
+    quote.imageUrl,
+    quote.backgroundImage,
+
+    // 4. Visual Quote Editor background
+    editorData?.desktop?.background,
+    editorData?.mobile?.background,
+    editorData?.background,
+  ];
+
+  for (const item of candidates) {
+    const validUrl = extractValidImageUrl(item);
+    if (validUrl) {
+      return validUrl;
+    }
   }
 
   return null;
@@ -45,12 +85,28 @@ export function getBestShareArtwork(quote) {
  * Builds the public canonical share URL.
  */
 export function getPublicShareUrl(data) {
-  if (!data) return typeof window !== "undefined" ? window.location.origin : "";
+  if (!data) {
+    if (typeof window !== "undefined" && window.location.origin) {
+      return window.location.origin;
+    }
+    return "https://myinspiretag.com";
+  }
 
-  const origin =
-    typeof window !== "undefined" && window.location.origin
-      ? window.location.origin
-      : process.env.NEXT_PUBLIC_APP_URL || "https://myinspiretag.com";
+  let origin = "";
+  if (typeof window !== "undefined" && window.location.origin) {
+    origin = window.location.origin;
+  } else {
+    origin =
+      process.env.NEXT_PUBLIC_FRONTEND_URL ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      process.env.NEXT_PUBLIC_SITE_URL ||
+      "https://myinspiretag.com";
+  }
+
+  // In production builds, avoid localhost fallbacks
+  if (process.env.NODE_ENV === "production" && origin.includes("localhost")) {
+    origin = "https://myinspiretag.com";
+  }
 
   if (data.type === "tag" && data.tagCode) {
     return `${origin}/t/${data.tagCode}`;
@@ -108,6 +164,5 @@ export async function downloadQuoteArtwork(imageUrl, filename = "myinspiretag-in
   link.click();
   document.body.removeChild(link);
 
-  // Clean up blob URL after a short delay
   setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
 }

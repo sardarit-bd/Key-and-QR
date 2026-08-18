@@ -1,16 +1,25 @@
 "use client";
 
 import { useState, useCallback } from "react";
-import { toast } from "react-hot-toast";
 import {
   getBestShareArtwork,
   getPublicShareUrl,
   formatShareText,
 } from "@/utils/share.utils";
 
+function isMobileDevice() {
+  if (typeof window === "undefined" || typeof navigator === "undefined") return false;
+  return (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent
+    ) || (Boolean(navigator.maxTouchPoints) && navigator.maxTouchPoints > 2)
+  );
+}
+
 /**
  * Centralized Quote Share Hook
- * Provides seamless native file sharing on mobile and fallback Share Modal on desktop.
+ * - On Mobile: Uses native OS share with artwork File attachment (when supported).
+ * - On Desktop: Seamlessly opens the Share Quote Modal (WhatsApp, Facebook, X, Download, Copy).
  */
 export function useShareQuote() {
   const [isOpen, setIsOpen] = useState(false);
@@ -26,62 +35,67 @@ export function useShareQuote() {
     setQuoteData(null);
   }, []);
 
-  const shareQuote = useCallback(async (data) => {
-    if (!data) return;
+  const shareQuote = useCallback(
+    async (data) => {
+      if (!data) return;
 
-    const publicUrl = getPublicShareUrl(data);
-    const shareText = formatShareText(data);
-    const artworkUrl = data.imageUrl || getBestShareArtwork(data);
+      const publicUrl = getPublicShareUrl(data);
+      const shareText = formatShareText(data);
+      const artworkUrl = data.imageUrl || getBestShareArtwork(data);
 
-    // 1. Try Native Mobile Share
-    if (typeof navigator !== "undefined" && typeof navigator.share === "function") {
-      try {
-        let fileToShare = null;
+      // 1. Mobile Native Share
+      if (
+        isMobileDevice() &&
+        typeof navigator !== "undefined" &&
+        typeof navigator.share === "function"
+      ) {
+        try {
+          let fileToShare = null;
 
-        // Try preparing artwork file if supported
-        if (artworkUrl && typeof navigator.canShare === "function") {
-          try {
-            const res = await fetch(artworkUrl);
-            if (res.ok) {
-              const blob = await res.blob();
-              const ext = blob.type.split("/")[1] || "webp";
-              const file = new File([blob], `myinspiretag-quote.${ext}`, {
-                type: blob.type,
-              });
+          if (artworkUrl && typeof navigator.canShare === "function") {
+            try {
+              const res = await fetch(artworkUrl);
+              if (res.ok) {
+                const blob = await res.blob();
+                const ext = blob.type.split("/")[1] || "webp";
+                const file = new File([blob], `myinspiretag-quote.${ext}`, {
+                  type: blob.type,
+                });
 
-              if (navigator.canShare({ files: [file] })) {
-                fileToShare = file;
+                if (navigator.canShare({ files: [file] })) {
+                  fileToShare = file;
+                }
               }
+            } catch (fileErr) {
+              console.warn("Could not fetch image for native share:", fileErr);
             }
-          } catch (fileErr) {
-            console.warn("Could not fetch image for native share:", fileErr);
           }
-        }
 
-        const sharePayload = {
-          title: "MyInspireTag",
-          text: shareText,
-          url: publicUrl,
-        };
+          const sharePayload = {
+            title: "MyInspireTag Daily Inspiration",
+            text: `${shareText}\n\n${publicUrl}`,
+            url: publicUrl,
+          };
 
-        if (fileToShare) {
-          sharePayload.files = [fileToShare];
-        }
+          if (fileToShare) {
+            sharePayload.files = [fileToShare];
+          }
 
-        await navigator.share(sharePayload);
-        return; // Native share completed or handed off to OS
-      } catch (err) {
-        if (err.name === "AbortError") {
-          // User intentionally closed the native share sheet — do not show error or modal
-          return;
+          await navigator.share(sharePayload);
+          return; // Handled by mobile OS share sheet
+        } catch (err) {
+          if (err.name === "AbortError") {
+            return; // User cancelled share sheet
+          }
+          console.warn("Native share error, falling back to modal:", err);
         }
-        console.warn("Native share failed, falling back to Share Modal:", err);
       }
-    }
 
-    // 2. Fallback to Share Modal (Desktop or unsupported native share)
-    openShareModal(data);
-  }, [openShareModal]);
+      // 2. Desktop or Fallback: Open Share Quote Modal
+      openShareModal(data);
+    },
+    [openShareModal]
+  );
 
   return {
     isShareOpen: isOpen,
