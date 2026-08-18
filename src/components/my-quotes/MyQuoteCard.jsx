@@ -22,6 +22,8 @@ import {
   getCategoryLabel,
   resolveBackgroundImage,
 } from '@/components/category';
+import useShareQuote from '@/hooks/useShareQuote';
+import ShareQuoteModal from '@/components/quote/ShareQuoteModal';
 
 /**
  * My Quote Card
@@ -57,24 +59,16 @@ export default function MyQuoteCard({
     ? format(new Date(receivedQuote.receivedAt), 'MMM d, yyyy')
     : '';
 
-  const handleShare = async () => {
-    const shareText = `"${quote.text}" — ${quote.author || 'InspireTag'}`;
+  const { isShareOpen, shareData, closeShare, shareQuote } = useShareQuote();
 
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'InspireTag Quote',
-          text: shareText,
-          url: window.location.href,
-        });
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          handleCopy();
-        }
-      }
-    } else {
-      handleCopy();
-    }
+  const handleShare = () => {
+    shareQuote({
+      quoteId: quote._id,
+      text: quote.text,
+      author: quote.author,
+      category: quote.category,
+      imageUrl: quote.renderedImages?.desktop?.url || (typeof quote.image === 'string' ? quote.image : quote.image?.url) || null,
+    });
   };
 
   const handleCopy = () => {
@@ -505,6 +499,13 @@ export default function MyQuoteCard({
           </div>
         </div>
       )}
+
+      {/* Unified Share Quote Modal */}
+      <ShareQuoteModal
+        isOpen={isShareOpen}
+        onClose={closeShare}
+        quoteData={shareData}
+      />
     </motion.div>
   );
 }

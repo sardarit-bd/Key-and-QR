@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Sparkles, Heart, Share2, Gift, BookOpen } from "lucide-react";
+import { Sparkles, Heart, Share2, BookOpen } from "lucide-react";
 import FavoriteButton from "@/components/favorite/FavoriteButton";
 import VisualQuoteRenderer from "@/components/quote/VisualQuoteRenderer";
 import VisualQuoteAudioPlayer from "@/components/quote/VisualQuoteAudioPlayer";
@@ -10,7 +10,6 @@ import VisualQuoteAudioPlayer from "@/components/quote/VisualQuoteAudioPlayer";
 export default function LatestInspirationCard({
   inspiration,
   onShare,
-  onGift,
   onReadAgain,
   onFavoriteChange,
 }) {
@@ -240,7 +239,7 @@ export default function LatestInspirationCard({
             transition={{ duration: 0.4, delay: 0.25 }}
             className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 backdrop-blur-md px-3 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-[12px] font-medium text-white/85 select-none"
           >
-            <Gift size={13} className="text-accent shrink-0" />
+            <Sparkles size={13} className="text-accent shrink-0" />
             <span>
               {dailyLimit === 0
                 ? "Unlimited"

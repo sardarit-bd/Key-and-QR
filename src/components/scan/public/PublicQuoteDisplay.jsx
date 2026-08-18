@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Heart, Share2, Sparkles, BookOpen, X } from "lucide-react";
+import { Heart, Share2, Sparkles, BookOpen, X, Gift, Check } from "lucide-react";
 import { toast } from "react-hot-toast";
 import favoriteService from "@/services/favorite-service/favorite.service";
 import premiumService from "@/services/premium-service/premium.service";
+import orderService from "@/services/order.service";
 import { useAuthStore } from "@/store/authStore";
 import {
   getPrettyCategoryLabel,
@@ -14,6 +15,8 @@ import {
 
 import VisualQuoteRenderer from "@/components/quote/VisualQuoteRenderer";
 import VisualQuoteAudioPlayer from "@/components/quote/VisualQuoteAudioPlayer";
+import useShareQuote from "@/hooks/useShareQuote";
+import ShareQuoteModal from "@/components/quote/ShareQuoteModal";
 
 export default function PublicQuoteDisplay({ data, tagCode }) {
   const router = useRouter();
@@ -59,7 +62,39 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   const [favoriteLoading, setFavoriteLoading] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [showShareMenu, setShowShareMenu] = useState(false);
+  const [isClaiming, setIsClaiming] = useState(false);
+  const [isClaimed, setIsClaimed] = useState(false);
+
+  const isGiftClaimable = (data?.isClaimable || data?.gift?.isClaimable) && !isClaimed;
+  const giftOrderId = data?.giftOrderId || data?.gift?.orderId;
+
+  const handleClaimGift = async () => {
+    if (!user) {
+      goToAuth("login");
+      return;
+    }
+
+    if (!giftOrderId) {
+      toast.error("Unable to identify gift order");
+      return;
+    }
+
+    setIsClaiming(true);
+    try {
+      const res = await orderService.claimGift(giftOrderId);
+      if (res?.success) {
+        toast.success("🎉 Gift claimed successfully! This MyInspireTag is now yours.");
+        setIsClaimed(true);
+      } else {
+        toast.error(res?.message || "Failed to claim gift");
+      }
+    } catch (error) {
+      const errorMsg = error.response?.data?.message || "Failed to claim gift";
+      toast.error(errorMsg);
+    } finally {
+      setIsClaiming(false);
+    }
+  };
 
   const checkFavoriteStatus = async () => {
     const id = data?._id;
@@ -140,21 +175,18 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     }
   };
 
-  const handleShare = async () => {
-    const shareUrl = window.location.href;
-    const shareText = `"${quoteText}"${quoteAuthor ? ` — ${quoteAuthor}` : ''}`;
+  const { isShareOpen, shareData, closeShare, shareQuote } = useShareQuote();
 
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: "InspireTag Quote", text: shareText, url: shareUrl });
-      } catch (err) {
-        // User cancelled share
-      }
-    } else if (navigator.clipboard) {
-      await navigator.clipboard.writeText(`${shareText}\n\n${shareUrl}`);
-      toast.success("Quote copied to clipboard");
-    }
-    setShowShareMenu(false);
+  const handleShare = () => {
+    shareQuote({
+      type: "tag",
+      tagCode,
+      quoteId: data?._id,
+      text: quoteText,
+      author: quoteAuthor,
+      category,
+      imageUrl: renderedImageUrl || (typeof backgroundImage === "string" ? backgroundImage : null),
+    });
   };
 
   const handleReflect = () => {
@@ -232,6 +264,42 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                   - {quoteAuthor} -
                 </p>
               )}
+            </div>
+          )}
+
+          {/* Gift Claim Banner */}
+          {isGiftClaimable && (
+            <div className="relative z-30 mx-4 mb-2 rounded-2xl border border-amber-400/40 bg-black/80 backdrop-blur-xl p-3.5 shadow-2xl animate-in fade-in duration-300">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                  <Gift className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="text-[13px] font-semibold text-white tracking-tight leading-snug">
+                    Gifted MyInspireTag
+                  </h4>
+                  <p className="text-[11px] text-white/70 truncate">
+                    {user ? "Add this tag to your account" : "Sign in to claim this tag"}
+                  </p>
+                </div>
+                <button
+                  onClick={handleClaimGift}
+                  disabled={isClaiming}
+                  className="shrink-0 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black px-3.5 py-2 text-xs font-bold shadow-lg transition-all duration-200 cursor-pointer disabled:opacity-50"
+                >
+                  {isClaiming ? "Claiming..." : user ? "Claim Gift" : "Sign In"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Gift Claimed / Registered Status */}
+          {isGift && (isClaimed || data?.gift?.giftStatus === "claimed") && !isGiftClaimable && (
+            <div className="relative z-30 mx-4 mb-2 rounded-2xl border border-emerald-400/30 bg-emerald-950/70 backdrop-blur-xl px-3.5 py-2.5 shadow-xl flex items-center justify-center gap-2 animate-in fade-in duration-300">
+              <Check className="h-4 w-4 text-emerald-400 shrink-0" />
+              <p className="text-xs font-medium text-emerald-200">
+                {isClaimed ? "This MyInspireTag is now registered to your account!" : "Gift Claimed · MyInspireTag"}
+              </p>
             </div>
           )}
 
@@ -372,6 +440,13 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
           </div>
         </div>
       )}
+
+      {/* Unified Share Quote Modal */}
+      <ShareQuoteModal
+        isOpen={isShareOpen}
+        onClose={closeShare}
+        quoteData={shareData}
+      />
     </>
   );
 }

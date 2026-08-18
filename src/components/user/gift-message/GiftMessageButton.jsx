@@ -42,11 +42,11 @@ export default function GiftMessageButton({
           ${sizeClasses[size]}
           ${className}
         `}
-        aria-label="View gift message"
+        aria-label="View personal message"
       >
         <Gift className="w-4 h-4" />
         <span>
-          {hasPersonalMessage ? 'View Gift Message' : 'Send a Gift Message'}
+          {hasPersonalMessage ? 'View Personal Message' : 'Add Personal Message'}
         </span>
       </motion.button>
 

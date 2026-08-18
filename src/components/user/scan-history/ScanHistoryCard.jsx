@@ -11,6 +11,8 @@ import {
   getCategoryLabel,
   resolveBackgroundImage,
 } from '@/components/category';
+import useShareQuote from '@/hooks/useShareQuote';
+import ShareQuoteModal from '@/components/quote/ShareQuoteModal';
 
 // Overview card DNA: EXACT match to the Summary Statistics card surface —
 // same radius, bg-card + border-white/6, warm ivory glass in light mode,
@@ -42,32 +44,18 @@ export default function ScanHistoryCard({
     ? format(new Date(item.createdAt), 'h:mm a')
     : '';
 
-  const handleShare = async (e) => {
+  const { isShareOpen, shareData, closeShare, shareQuote } = useShareQuote();
+
+  const handleShare = (e) => {
     e.stopPropagation();
     e.preventDefault();
-    const shareText = `"${quote?.text || ''}" — ${quote?.author || 'InspireTag'}`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: 'InspireTag Quote',
-          text: shareText,
-          url: window.location.href,
-        });
-      } catch (err) {
-        if (err.name !== 'AbortError') {
-          handleCopy();
-        }
-      }
-    } else {
-      handleCopy();
-    }
-  };
-
-  const handleCopy = () => {
-    const text = `"${quote?.text || ''}" — ${quote?.author || 'InspireTag'}`;
-    navigator.clipboard?.writeText(text);
-    toast.success('Quote copied!');
+    shareQuote({
+      quoteId: quote?._id,
+      text: quote?.text,
+      author: quote?.author,
+      category,
+      imageUrl: quote?.renderedImages?.desktop?.url || (typeof quote?.image === 'string' ? quote?.image : quote?.image?.url) || null,
+    });
   };
 
   const handleView = (e) => {
@@ -244,6 +232,13 @@ export default function ScanHistoryCard({
           </div>
         </div>
       </div>
+
+      {/* Unified Share Quote Modal */}
+      <ShareQuoteModal
+        isOpen={isShareOpen}
+        onClose={closeShare}
+        quoteData={shareData}
+      />
     </motion.div>
   );
 }

@@ -180,6 +180,35 @@ export default function ProfilePage() {
     };
   }, [activeSubscription]);
 
+  // ---------- 30-Day Name Change Cooldown Calculation ----------
+  const nameCooldownInfo = useMemo(() => {
+    if (!user?.nameChangedAt) {
+      return { isLocked: false, remainingDays: 0, nextAllowedDate: null };
+    }
+    // Admin and Support/Moderator roles override the restriction
+    if (user?.role === 'admin' || user?.role === 'ADMIN' || user?.role === 'moderator') {
+      return { isLocked: false, remainingDays: 0, nextAllowedDate: null };
+    }
+
+    const lastChangedTime = new Date(user.nameChangedAt).getTime();
+    const cooldownMs = 30 * 24 * 60 * 60 * 1000;
+    const nextAllowedTime = lastChangedTime + cooldownMs;
+    const now = Date.now();
+
+    if (now < nextAllowedTime) {
+      const remainingMs = nextAllowedTime - now;
+      const remainingDays = Math.max(1, Math.ceil(remainingMs / (24 * 60 * 60 * 1000)));
+      const nextAllowedDate = new Date(nextAllowedTime).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      });
+      return { isLocked: true, remainingDays, nextAllowedDate };
+    }
+
+    return { isLocked: false, remainingDays: 0, nextAllowedDate: null };
+  }, [user?.nameChangedAt, user?.role]);
+
   // ---------- Sync local state when user loads / changes ----------
   useEffect(() => {
     if (user) {
@@ -257,7 +286,8 @@ export default function ProfilePage() {
   }, [user]);
 
   const handleSave = useCallback(async () => {
-    if (name.trim().length < 2) {
+    const trimmedName = name.trim();
+    if (trimmedName.length < 2) {
       toast.error('Name must be at least 2 characters');
       return;
     }
@@ -280,17 +310,21 @@ export default function ProfilePage() {
         await avatarUploaderRef.current.remove();
       }
 
-      // 2) Persist name — existing PATCH /auth/update-profile.
-      const res = await api.patch('/auth/update-profile', { name: name.trim() });
-      const updated = res.data?.data;
-      if (updated) {
-        updateUser(updated);
-        setOriginalName(updated.name || name.trim());
-        setAvatarPending(false);
-        setAvatarRemoved(false);
-        setIsEditing(false);
-        toast.success('Profile updated!');
+      // 2) Persist name if modified — existing PATCH /auth/update-profile.
+      const isNameModified = trimmedName !== (originalName || '').trim();
+      if (isNameModified) {
+        const res = await api.patch('/auth/update-profile', { name: trimmedName });
+        const updated = res.data?.data;
+        if (updated) {
+          updateUser(updated);
+          setOriginalName(updated.name || trimmedName);
+        }
       }
+
+      setAvatarPending(false);
+      setAvatarRemoved(false);
+      setIsEditing(false);
+      toast.success('Profile updated!');
     } catch (err) {
       const message = err.response?.data?.message || 'Failed to update profile';
       setSaveError(message);
@@ -298,7 +332,7 @@ export default function ProfilePage() {
     } finally {
       setSaving(false);
     }
-  }, [name, updateUser]);
+  }, [name, originalName, updateUser]);
 
   const handleAvatarPendingChange = useCallback((pending) => {
     setAvatarPending(pending);
@@ -492,17 +526,28 @@ export default function ProfilePage() {
 
             {/* Name */}
             {isEditing ? (
-              <div className="relative mt-5 w-full max-w-[280px]">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary" size={16} />
+              <div className="relative mt-5 w-full max-w-[320px]">
+                <User className="absolute left-3 top-3 text-foreground-tertiary" size={16} />
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  disabled={nameCooldownInfo.isLocked}
                   maxLength={50}
                   placeholder="Your name"
                   aria-label="Full name"
-                  className="w-full rounded-xl border border-white/10 bg-background-secondary/50 py-2.5 pl-9 pr-4 text-center text-lg font-semibold text-foreground placeholder:text-foreground-tertiary transition-all duration-300 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20 light:border-[#E8DFCE]/80 light:bg-white/70"
+                  className={`w-full rounded-xl border border-white/10 py-2.5 pl-9 pr-4 text-center text-lg font-semibold text-foreground placeholder:text-foreground-tertiary transition-all duration-300 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20 light:border-[#E8DFCE]/80 ${
+                    nameCooldownInfo.isLocked
+                      ? 'bg-muted/40 cursor-not-allowed opacity-80 select-none'
+                      : 'bg-background-secondary/50 light:bg-white/70'
+                  }`}
                 />
+                {nameCooldownInfo.isLocked && (
+                  <p className="text-[11px] text-amber-500/90 dark:text-amber-400/90 font-medium mt-2 flex items-center justify-center gap-1.5 px-2">
+                    <Lock className="w-3.5 h-3.5 shrink-0" />
+                    <span>Name changes available in {nameCooldownInfo.remainingDays} {nameCooldownInfo.remainingDays === 1 ? 'day' : 'days'} ({nameCooldownInfo.nextAllowedDate})</span>
+                  </p>
+                )}
               </div>
             ) : (
               <h2 className="mt-5 text-xl sm:text-2xl font-bold tracking-tight text-foreground">
@@ -548,14 +593,27 @@ export default function ProfilePage() {
             <div className="divide-y divide-white/6 light:divide-[#E8DFCE]/70">
               <Row label="Full Name" icon={User}>
                 {isEditing ? (
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    maxLength={50}
-                    aria-label="Full name"
-                    className="w-full max-w-[220px] rounded-lg border border-white/10 bg-background-secondary/50 px-3 py-1.5 text-right text-[13px] text-foreground focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20"
-                  />
+                  <div className="text-right">
+                    <input
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      disabled={nameCooldownInfo.isLocked}
+                      maxLength={50}
+                      aria-label="Full name"
+                      className={`w-full max-w-[220px] rounded-lg border border-white/10 px-3 py-1.5 text-right text-[13px] text-foreground focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20 ${
+                        nameCooldownInfo.isLocked
+                          ? 'bg-muted/40 cursor-not-allowed opacity-80 select-none'
+                          : 'bg-background-secondary/50'
+                      }`}
+                    />
+                    {nameCooldownInfo.isLocked && (
+                      <p className="text-[11px] text-amber-500/90 dark:text-amber-400/90 mt-1 flex items-center justify-end gap-1 font-medium">
+                        <Lock className="w-3 h-3 shrink-0" />
+                        <span>Available {nameCooldownInfo.nextAllowedDate}</span>
+                      </p>
+                    )}
+                  </div>
                 ) : (
                   <span className="capitalize">{user.name}</span>
                 )}

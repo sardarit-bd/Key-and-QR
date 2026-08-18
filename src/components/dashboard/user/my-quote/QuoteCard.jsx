@@ -18,6 +18,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import VisualQuoteRenderer from "@/components/quote/VisualQuoteRenderer";
+import useShareQuote from "@/hooks/useShareQuote";
+import ShareQuoteModal from "@/components/quote/ShareQuoteModal";
 
 export default function QuoteCard({
   quote,
@@ -39,31 +41,22 @@ export default function QuoteCard({
         (editorData.elements && editorData.elements.length > 0)))
   );
 
+  const { isShareOpen, shareData, closeShare, shareQuote } = useShareQuote();
+
   const handleCopy = () => {
     const authorSuffix = quote.author ? ` — ${quote.author}` : '';
     navigator.clipboard.writeText(`"${quote.text || ''}"${authorSuffix}`);
     toast.success("Quote copied!");
   };
 
-  const handleShare = async () => {
-    const authorSuffix = quote.author ? ` — ${quote.author}` : '';
-    const shareText = `"${quote.text || ''}"${authorSuffix}`;
-
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: "InspireTag Quote",
-          text: shareText,
-          url: window.location.href,
-        });
-      } catch (err) {
-        if (err.name !== "AbortError") {
-          handleCopy();
-        }
-      }
-    } else {
-      handleCopy();
-    }
+  const handleShare = () => {
+    shareQuote({
+      quoteId: quote._id,
+      text: quote.text,
+      author: quote.author,
+      category: quote.category,
+      imageUrl: renderedImageUrl || (typeof quote.image === 'string' ? quote.image : quote.image?.url) || null,
+    });
   };
 
   return (
@@ -177,6 +170,13 @@ export default function QuoteCard({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      {/* Unified Share Quote Modal */}
+      <ShareQuoteModal
+        isOpen={isShareOpen}
+        onClose={closeShare}
+        quoteData={shareData}
+      />
     </Card>
   );
 }
