@@ -33,6 +33,7 @@ const filterUserData = (user) => {
         updatedAt: user.updatedAt || null,
         isEmailVerified: user.isEmailVerified || false,
         stripeCustomerId: user.stripeCustomerId || null,
+        nameChangedAt: user.nameChangedAt || null,
     };
 };
 
