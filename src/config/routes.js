@@ -22,8 +22,10 @@ export const publicRoutePatterns = [
     "/reset-password",
     "/callback",
 
-    // QR scan
+    // QR scan and public quote share
     "/t/:path*",
+    "/q/:path*",
+    "/quotes",
 
     // CHECKOUT FLOW - Guest accessible
     "/cart",

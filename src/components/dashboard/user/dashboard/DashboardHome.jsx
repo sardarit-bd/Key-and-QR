@@ -11,6 +11,8 @@ import InspirationStreak from './InspirationStreak';
 import YourStats from './YourStats';
 import ReceiveOverlay from './ReceiveOverlay';
 import { useReceiveQuoteMutation, useReadAgainMutation } from '@/hooks/received-quote/useReceivedQuote';
+import useShareQuote from "@/hooks/useShareQuote";
+import ShareQuoteModal from "@/components/quote/ShareQuoteModal";
 
 /**
  * User Dashboard — redesigned hierarchy:
@@ -36,6 +38,7 @@ export default function DashboardHome({
   const reduceMotion = useReducedMotion();
   const receiveQuote = useReceiveQuoteMutation();
   const readAgain = useReadAgainMutation();
+  const { isShareOpen, shareData, closeShare, shareQuote } = useShareQuote();
 
   const overlayCategoryRef = useRef(null);
 
@@ -96,33 +99,9 @@ export default function DashboardHome({
     setTimeout(() => setRevealState(null), 200);
   };
 
-  const handleShare = async () => {
-    const text = latestInspiration?.text
-      ? `"${latestInspiration.text}" — ${latestInspiration.author}`
-      : 'MyInspireTag — daily inspiration';
-    try {
-      if (navigator.share) {
-        await navigator.share({ text });
-      } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(text);
-      }
-    } catch {
-      // user cancelled or unsupported — ignore
-    }
-  };
-
-  const handleGift = async () => {
-    const text = latestInspiration?.text
-      ? `A gift of inspiration for you:\n\n"${latestInspiration.text}"\n— ${latestInspiration.author}\n\nSent via MyInspireTag ❤️`
-      : 'A gift of inspiration from MyInspireTag!';
-    try {
-      if (navigator.share) {
-        await navigator.share({ title: 'A gift of inspiration', text });
-      } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(text);
-      }
-    } catch {
-      // user cancelled or unsupported — ignore
+  const handleShare = () => {
+    if (latestInspiration) {
+      shareQuote(latestInspiration);
     }
   };
 
@@ -144,7 +123,6 @@ export default function DashboardHome({
         <LatestInspirationCard
           inspiration={latestInspiration}
           onShare={handleShare}
-          onGift={handleGift}
           onReadAgain={() => latestInspiration?.id && handleReadAgain(latestInspiration.id)}
         />
       ) : (
@@ -187,6 +165,13 @@ export default function DashboardHome({
         quote={revealState?.quote || null}
         categoryName={overlayCategoryRef.current}
         onClose={handleCloseOverlay}
+      />
+
+      {/* Unified Share Quote Modal */}
+      <ShareQuoteModal
+        isOpen={isShareOpen}
+        onClose={closeShare}
+        quoteData={shareData}
       />
     </motion.div>
   );

@@ -12,6 +12,8 @@ import FavoriteDetailModal from '@/components/favorites/FavoriteDetailModal';
 import { FavoritesEmptyState, FavoritesFilteredEmpty } from '@/components/favorites/FavoritesEmptyStates';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
+import useShareQuote from '@/hooks/useShareQuote';
+import ShareQuoteModal from '@/components/quote/ShareQuoteModal';
 
 const FAVORITES_PER_PAGE = 12;
 
@@ -23,6 +25,7 @@ const itemVariants = {
 export default function FavoritesPage() {
   const [page, setPage] = useState(1);
   const [view, setView] = useState('grid');
+  const { isShareOpen, shareData, closeShare, shareQuote } = useShareQuote();
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [sort, setSort] = useState('newest');
@@ -128,7 +131,7 @@ export default function FavoritesPage() {
                   className={`grid ${view === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5' : 'grid-cols-1 gap-4'}`}>
                   {favorites.map((fav, i) => (
                     <motion.div key={fav._id} custom={i} initial="hidden" animate="show" variants={itemVariants}>
-                      <FavoriteCard favorite={fav} view={view} onRemove={handleRemove} onViewDetail={setDetailItem} />
+                      <FavoriteCard favorite={fav} view={view} onRemove={handleRemove} onViewDetail={setDetailItem} onShare={shareQuote} />
                     </motion.div>
                   ))}
                 </motion.div>
@@ -141,7 +144,14 @@ export default function FavoritesPage() {
         </div>
       </div>
 
-      <FavoriteDetailModal favorite={detailItem} onClose={() => setDetailItem(null)} onRemove={handleRemove} />
+      <FavoriteDetailModal favorite={detailItem} onClose={() => setDetailItem(null)} onRemove={handleRemove} onShare={shareQuote} />
+
+      {/* Unified Share Quote Modal */}
+      <ShareQuoteModal
+        isOpen={isShareOpen}
+        onClose={closeShare}
+        quoteData={shareData}
+      />
     </motion.div>
   );
 }

@@ -12,23 +12,28 @@ import {
   resolveBackgroundImage,
 } from '@/components/category';
 
-export default function FavoriteDetailModal({ favorite, onClose, onRemove }) {
+export default function FavoriteDetailModal({ favorite, onClose, onRemove, onShare }) {
   const [isRemoving, setIsRemoving] = useState(false);
-  if (!favorite) return null;
+  const quote = favorite?.quote;
 
-  const quote = favorite.quote;
+  if (!favorite || !quote) return null;
+
   const category = quote.category || 'motivation';
   const categoryLabel = getCategoryLabel(category);
   const chip = getCategoryChipTheme(category);
   const hasImage = Boolean(quote.image?.url);
   const formattedDate = favorite.createdAt ? format(new Date(favorite.createdAt), 'MMM d, yyyy') : '';
 
-  const handleShare = async () => {
-    const text = `"${quote.text}" — ${quote.author || 'InspireTag'}`;
-    if (navigator.share) {
-      try { await navigator.share({ title: 'InspireTag Quote', text, url: window.location.href }); }
-      catch (err) { if (err.name !== 'AbortError') { navigator.clipboard?.writeText(text); toast.success('Quote copied!'); } }
-    } else { navigator.clipboard?.writeText(text); toast.success('Quote copied!'); }
+  const handleShare = () => {
+    if (onShare) {
+      onShare({
+        quoteId: quote._id,
+        text: quote.text,
+        author: quote.author,
+        category: quote.category,
+        imageUrl: quote.renderedImages?.desktop?.url || quote.image?.url || (typeof quote.image === 'string' ? quote.image : null),
+      });
+    }
   };
 
   return (

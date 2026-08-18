@@ -12,6 +12,8 @@ import {
   getPrettyCategoryLabel,
   resolveBackgroundImage,
 } from '@/components/category';
+import useShareQuote from '@/hooks/useShareQuote';
+import ShareQuoteModal from '@/components/quote/ShareQuoteModal';
 
 /**
  * QR Ready Component
@@ -48,28 +50,22 @@ export default function QRReady({
  },
  });
 
- /**
- * Handle share
- */
- const handleShare = async () => {
- const shareText = `"${quote?.text || ''}" — ${quote?.author || 'InspireTag'}`;
- 
- if (navigator.share) {
- try {
- await navigator.share({
- title: 'InspireTag Quote',
- text: shareText,
- url: window.location.href,
- });
- } catch (err) {
- if (err.name !== 'AbortError') {
- handleCopy();
- }
- }
- } else {
- handleCopy();
- }
- };
+  const { isShareOpen, shareData, closeShare, shareQuote } = useShareQuote();
+
+  /**
+   * Handle share
+   */
+  const handleShare = () => {
+    shareQuote({
+      type: 'tag',
+      tagCode,
+      quoteId: quote?._id,
+      text: quote?.text,
+      author: quote?.author,
+      category: quote?.category,
+      imageUrl: quote?.renderedImages?.desktop?.url || (typeof quote?.image === 'string' ? quote.image : quote?.image?.url) || null,
+    });
+  };
 
  /**
  * Handle copy
@@ -221,6 +217,13 @@ export default function QRReady({
  </button>
  </motion.div>
  </motion.div>
- </div>
+
+  {/* Unified Share Quote Modal */}
+  <ShareQuoteModal
+    isOpen={isShareOpen}
+    onClose={closeShare}
+    quoteData={shareData}
+  />
+  </div>
  );
 }
