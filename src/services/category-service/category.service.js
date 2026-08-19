@@ -31,6 +31,30 @@ export const categoryService = {
   },
 
   /**
+   * Get explore quotes for public inspiration browsing
+   * GET /quotes/explore
+   */
+  getExploreQuotes: async (params = {}) => {
+    try {
+      const response = await api.get('/quotes/explore', { params });
+      return {
+        success: true,
+        data: response.data?.data || [],
+        meta: response.data?.meta || {},
+        status: response.status,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to load quotes',
+        status: error.response?.status || 500,
+        data: [],
+        meta: {},
+      };
+    }
+  },
+
+  /**
    * Fetch categories including inactive ones (admin)
    * GET /categories?includeInactive=true
    */

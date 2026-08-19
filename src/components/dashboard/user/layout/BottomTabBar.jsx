@@ -7,7 +7,7 @@ import { useAuthStore } from '@/store/authStore';
 
 const USER_TABS = [
   { id: 'home', label: 'Home', icon: Home, href: '/new-dashboard/user', exact: true },
-  { id: 'inspire', label: 'Inspire', icon: Sparkles, href: '/new-dashboard/user/my-quotes', exact: false },
+  { id: 'inspire', label: 'Inspire', icon: Sparkles, href: '/inspiration', exact: false },
   { id: 'collection', label: 'Collection', icon: BookOpen, href: '/new-dashboard/user/favorites', exact: false },
   { id: 'shop', label: 'Shop', icon: ShoppingBag, href: '/shop', exact: false },
   { id: 'profile', label: 'Profile', icon: User, href: '/new-dashboard/user/profile', exact: false },
@@ -37,7 +37,7 @@ export default function BottomTabBar() {
       return pathname === '/shop' || pathname?.startsWith('/shop/') || pathname?.startsWith('/products/');
     }
     if (tab.id === 'inspire') {
-      return pathname === '/new-dashboard/user/my-quotes' || pathname?.startsWith('/new-dashboard/user/my-quotes/');
+      return pathname === '/inspiration' || pathname?.startsWith('/inspiration/') || pathname?.startsWith('/new-dashboard/user/my-quotes');
     }
     if (tab.id === 'collection') {
       return pathname === '/new-dashboard/user/favorites' || pathname?.startsWith('/new-dashboard/user/favorites/');

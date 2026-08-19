@@ -34,11 +34,18 @@ export default function CategorySection({
       setSelectedLockedCategory(category);
       return;
     }
-    onSelectCategory(category);
+    if (onSelectCategory) {
+      onSelectCategory(category);
+    } else {
+      const slug = category?.slug || category?.name?.toLowerCase() || '';
+      if (slug) {
+        router.push(`/inspiration/${slug}`);
+      }
+    }
   };
 
   const handleViewAll = () => {
-    router.push("/new-dashboard/user/favorites");
+    router.push("/inspiration");
   };
 
   return (
