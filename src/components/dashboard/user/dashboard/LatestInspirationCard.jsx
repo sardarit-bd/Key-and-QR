@@ -167,23 +167,18 @@ export default function LatestInspirationCard({
           </div>
         )}
 
-        {/* Bottom row: Action Buttons (left) & Usage Status Pill (right) */}
-        <div className="flex items-center justify-between flex-wrap gap-2.5 sm:gap-3 pointer-events-auto">
+        {/* Bottom row: Action Buttons (left) & Usage Status Pill (right) — Hover reveal on desktop */}
+        <div className="flex items-center justify-between flex-wrap gap-2.5 sm:gap-3 transition-all duration-300 ease-out opacity-100 translate-y-0 pointer-events-auto md:opacity-0 md:translate-y-2 md:pointer-events-none md:group-hover:opacity-100 md:group-hover:translate-y-0 md:group-hover:pointer-events-auto">
           {/* Left Actions: Inspire + Favorite + Share + Read Again */}
           <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
             {/* Primary Action: Inspire */}
-            <motion.button
-              initial={reduceMotion ? false : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.2 }}
-              whileHover={reduceMotion ? undefined : { scale: 1.02 }}
-              whileTap={reduceMotion ? undefined : { scale: 0.97 }}
+            <button
               onClick={onReadAgain}
               className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-accent px-4 sm:px-4.5 py-2 text-[12px] sm:text-[13px] font-semibold text-accent-foreground shadow-md shadow-accent/20 transition-all duration-150 hover:brightness-105 active:scale-[0.97]"
             >
               <Sparkles size={14} fill="currentColor" />
               <span>Inspire</span>
-            </motion.button>
+            </button>
 
             {/* Favorite */}
             {quoteId ? (
@@ -205,23 +200,17 @@ export default function LatestInspirationCard({
             )}
 
             {/* Share */}
-            <motion.button
-              initial={reduceMotion ? false : { opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.3 }}
+            <button
               onClick={onShare}
               aria-label="Share quote"
               className={actionButtonClass}
             >
               <Share2 size={14} />
               <span>Share</span>
-            </motion.button>
+            </button>
 
             {/* Read Again */}
-            <motion.button
-              initial={reduceMotion ? false : { opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.35 }}
+            <button
               onClick={onReadAgain}
               aria-label="Read quote again"
               className={actionButtonClass}
@@ -229,23 +218,18 @@ export default function LatestInspirationCard({
               <BookOpen size={14} />
               <span className="hidden sm:inline">Read Again</span>
               <span className="sm:hidden">Read</span>
-            </motion.button>
+            </button>
           </div>
 
           {/* Right: Consolidated Usage Status Pill */}
-          <motion.div
-            initial={reduceMotion ? false : { opacity: 0, x: 8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: 0.25 }}
-            className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 backdrop-blur-md px-3 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-[12px] font-medium text-white/85 select-none"
-          >
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 backdrop-blur-md px-3 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-[12px] font-medium text-white/85 select-none">
             <Sparkles size={13} className="text-accent shrink-0" />
             <span>
               {dailyLimit === 0
                 ? "Unlimited"
                 : `${usedToday} of ${dailyLimit} used today`}
             </span>
-          </motion.div>
+          </div>
         </div>
       </div>
     </motion.section>

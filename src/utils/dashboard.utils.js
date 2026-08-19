@@ -136,12 +136,17 @@ export function mapCategories(categories) {
     const slug = category?.slug || category?.id || category?.name || '';
     const style = getCategoryStyle(slug);
     return {
+      ...category,
       id: category.id || category._id,
       name: category.name || category.slug || 'Inspire',
       slug,
       icon: category.icon,
+      iconType: category.iconType,
+      iconUrl: category.iconUrl,
       color: category.color,
-      count: category.count,
+      count: category.count ?? category.quoteCount,
+      quoteCount: category.quoteCount ?? category.count,
+      description: category.description,
       isPremium: !!category.isPremium,
       isLocked: !!category.isLocked,
       isAvailableToday: category.isAvailableToday !== false,

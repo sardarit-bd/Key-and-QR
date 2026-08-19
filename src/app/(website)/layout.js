@@ -5,17 +5,17 @@ import BottomTabBar from "@/components/dashboard/user/layout/BottomTabBar";
 
 export default function WebsiteLayout({ children }) {
   return (
-    <>
+    <div className="flex min-h-screen flex-col">
       <TopHeader />
       <Header />
 
-      <main className="min-h-screen pb-20 lg:pb-0">
+      <main className="flex-1 pb-16 lg:pb-0">
         {children}
       </main>
 
       <BottomTabBar />
 
       <ConditionalFooter />
-    </>
+    </div>
   );
 }

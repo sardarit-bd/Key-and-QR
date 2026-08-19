@@ -14,6 +14,7 @@ export const publicRoutePatterns = [
     "/shop/:path*",
     "/how-it-works",
     "/inspiration",
+    "/inspiration/:path*",
 
     // Auth pages
     "/login",
