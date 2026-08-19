@@ -2,8 +2,10 @@
 
 import { useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
-import { Sparkles, Lock, ArrowRight, X, Crown } from "lucide-react";
+import { Sparkles, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { resolveCategory } from "@/components/dashboard/admin/categories/categoryIconRegistry";
+import { getCategoryIcon } from "@/components/category";
 
 function hexToRgba(hex, alpha = 0.1) {
   if (!hex || typeof hex !== 'string') return `rgba(239, 68, 68, ${alpha})`;
@@ -18,6 +20,41 @@ function hexToRgba(hex, alpha = 0.1) {
   return `rgba(${r}, ${g}, ${b}, ${alpha})`;
 }
 
+/**
+ * Category Card Icon Component
+ * Securely renders custom category SVG/image assets with automatic fallback to Lucide icons.
+ */
+function CategoryCardIcon({ category, categoryColor }) {
+  const [imageError, setImageError] = useState(false);
+  const slug = category?.slug || category?.name?.toLowerCase() || '';
+  const iconUrl = category?.iconUrl;
+
+  // Resolve the canonical icon from the registry (respects icon name, slug aliases, and global fallback)
+  const resolved = resolveCategory(category);
+  const IconComponent = resolved?.Icon || getCategoryIcon(category?.icon || slug) || Sparkles;
+
+  if (iconUrl && !imageError) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={iconUrl}
+        alt={category?.name || 'Category icon'}
+        className="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] object-contain transition-transform duration-200 group-hover:scale-110"
+        onError={() => setImageError(true)}
+      />
+    );
+  }
+
+  return (
+    <IconComponent
+      size={20}
+      strokeWidth={2.2}
+      className="w-[18px] h-[18px] sm:w-[20px] sm:h-[20px] transition-transform duration-200 group-hover:scale-110"
+      style={{ color: categoryColor }}
+    />
+  );
+}
+
 export default function CategorySection({
   categories,
   onSelectCategory,
@@ -25,15 +62,9 @@ export default function CategorySection({
 }) {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
-  const [selectedLockedCategory, setSelectedLockedCategory] = useState(null);
   const categoryList = Array.isArray(categories) ? categories : [];
 
   const handleClick = (category) => {
-    const isLocked = !!category?.isLocked || category?.isAvailableToday === false;
-    if (isLocked) {
-      setSelectedLockedCategory(category);
-      return;
-    }
     if (onSelectCategory) {
       onSelectCategory(category);
     } else {
@@ -67,15 +98,16 @@ export default function CategorySection({
         {categoryList.length > 0 ? (
           categoryList.map((category, index) => {
             const slug = category?.slug || category?.name || "";
-            const Icon = category?.iconComponent || Sparkles;
-            const isLocked =
-              !!category?.isLocked || category?.isAvailableToday === false;
-            const isPremium = !!category?.isPremium;
             const categoryColor = category?.color || (slug === 'love' ? '#ef4444' : '#f59e0b');
+            const quoteCount = typeof category?.quoteCount === 'number'
+              ? category.quoteCount
+              : typeof category?.count === 'number'
+                ? category.count
+                : null;
 
             return (
               <motion.button
-                key={category?.id || slug}
+                key={category?.id || category?._id || slug || index}
                 onClick={() => handleClick(category)}
                 disabled={disabled}
                 initial={reduceMotion ? false : { opacity: 0, y: 8 }}
@@ -106,20 +138,9 @@ export default function CategorySection({
                   hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),0_8px_28px_-6px_rgba(0,0,0,0.08)]
                   dark:hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.12),0_12px_36px_rgba(0,0,0,0.32)]
                 `}
-                aria-label={
-                  isLocked
-                    ? `${category?.name || slug} category, Premium only`
-                    : `${category?.name || slug} category`
-                }
+                aria-label={`${category?.name || slug} category`}
               >
-                {/* Premium indicator on unlocked cards */}
-                {isPremium && !isLocked && (
-                  <span className="absolute -top-1.5 -right-1.5 flex h-5 w-5 items-center justify-center rounded-full border border-accent/40 bg-accent/10">
-                    <Sparkles size={9} className="text-accent" />
-                  </span>
-                )}
-
-                {/* Primary Category Icon with dynamic database color and subtle tint container */}
+                {/* Primary Category Icon with dynamic color container */}
                 <span
                   className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl transition-all duration-200"
                   style={{
@@ -128,20 +149,7 @@ export default function CategorySection({
                     borderColor: hexToRgba(categoryColor, 0.22),
                   }}
                 >
-                  {/* Category icon ALWAYS rendered in its database color */}
-                  <Icon
-                    size={20}
-                    strokeWidth={2.2}
-                    className="w-[18px] h-[18px] sm:w-[20px] sm:h-[20px] transition-transform duration-200 group-hover:scale-110"
-                    style={{ color: categoryColor }}
-                  />
-
-                  {/* Secondary Small Lock Badge */}
-                  {isLocked && (
-                    <span className="absolute -top-1 -right-1 flex h-4.5 w-4.5 items-center justify-center rounded-full bg-card border border-border shadow-xs text-foreground-tertiary">
-                      <Lock size={10} strokeWidth={2.2} />
-                    </span>
-                  )}
+                  <CategoryCardIcon category={category} categoryColor={categoryColor} />
                 </span>
 
                 {/* Category Name */}
@@ -149,9 +157,9 @@ export default function CategorySection({
                   {category?.name || "Inspire"}
                 </span>
 
-                {/* Status label */}
+                {/* Status / Quote count label */}
                 <span className="text-[10px] font-medium text-foreground-tertiary/75">
-                  {isLocked ? (isPremium ? "Premium Only" : "Locked") : "Available"}
+                  {quoteCount !== null ? `${quoteCount} ${quoteCount === 1 ? 'quote' : 'quotes'}` : 'Explore'}
                 </span>
               </motion.button>
             );
@@ -162,46 +170,7 @@ export default function CategorySection({
           </p>
         )}
       </div>
-
-      {/* Premium Upgrade Modal for Locked Categories */}
-      {selectedLockedCategory && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4 backdrop-blur-xs">
-          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-900 p-6 shadow-2xl relative animate-in fade-in zoom-in-95 duration-150 border border-border">
-            <button
-              onClick={() => setSelectedLockedCategory(null)}
-              className="absolute right-4 top-4 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 cursor-pointer"
-              aria-label="Close"
-            >
-              <X size={20} />
-            </button>
-            <div className="flex items-center gap-3 mb-3">
-              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-accent/25 bg-accent/10">
-                <Crown size={18} className="text-accent" />
-              </span>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {selectedLockedCategory?.name || "Category"} is available with Premium
-              </h3>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-5 leading-relaxed">
-              Upgrade to Premium for unlimited quote receives and instant access to all categories including {selectedLockedCategory?.name || "this category"}.
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => router.push('/new-dashboard/user/premium')}
-                className="h-11 rounded-xl bg-gray-900 dark:bg-white dark:text-gray-900 text-white font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition cursor-pointer"
-              >
-                Upgrade Now
-              </button>
-              <button
-                onClick={() => setSelectedLockedCategory(null)}
-                className="h-11 rounded-xl border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition cursor-pointer"
-              >
-                Maybe Later
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </section>
   );
 }
+

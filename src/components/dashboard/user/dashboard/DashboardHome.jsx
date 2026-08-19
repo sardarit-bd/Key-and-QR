@@ -136,7 +136,6 @@ export default function DashboardHome({
       {/* 3. Explore Categories */}
       <CategorySection
         categories={categories}
-        onSelectCategory={handleSelectCategory}
         disabled={receiveQuote.isPending}
       />
 

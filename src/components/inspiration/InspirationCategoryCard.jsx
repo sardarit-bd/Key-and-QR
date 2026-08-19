@@ -7,76 +7,84 @@ import { getCategoryIcon, getCategoryLabel } from '@/components/category';
 
 function getCategoryTheme(slug, customColor) {
   const s = (slug || '').toLowerCase();
-  
+
   if (customColor && customColor.startsWith('#')) {
     return {
       accentColor: customColor,
-      bgTint: 'bg-card/75 dark:bg-slate-900/50',
-      iconBg: `${customColor}18`,
-      borderHover: 'hover:border-accent/40',
-      pillBg: 'bg-muted/80 text-foreground-secondary',
+      bgTint: 'bg-white/80 dark:bg-slate-900/60',
+      borderColor: 'border-border/80',
+      iconBg: `${customColor}15`,
+      borderHover: 'hover:border-primary/50',
+      pillBg: 'bg-muted text-foreground-secondary',
+      arrowBg: 'group-hover:bg-primary group-hover:text-white',
     };
   }
 
   switch (s) {
     case 'love':
       return {
-        accentColor: '#f43f5e',
-        bgTint: 'bg-rose-500/[0.03] dark:bg-rose-950/[0.12]',
-        iconBg: 'rgba(244, 63, 94, 0.12)',
-        borderHover: 'hover:border-rose-500/40',
-        pillBg: 'bg-rose-500/10 text-rose-600 dark:text-rose-300',
+        accentColor: '#e11d48',
+        bgTint: 'bg-gradient-to-b from-rose-50/70 to-white/90 dark:from-rose-950/20 dark:to-slate-900/60',
+        borderColor: 'border-rose-100/90 dark:border-rose-900/30',
+        iconBg: 'rgba(225, 29, 72, 0.12)',
+        borderHover: 'hover:border-rose-300 dark:hover:border-rose-700',
+        pillBg: 'bg-rose-100/70 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300',
+        arrowBg: 'group-hover:bg-rose-500 group-hover:text-white',
       };
     case 'motivation':
     case 'strength':
       return {
-        accentColor: '#f97316',
-        bgTint: 'bg-orange-500/[0.03] dark:bg-orange-950/[0.12]',
-        iconBg: 'rgba(249, 115, 22, 0.12)',
-        borderHover: 'hover:border-orange-500/40',
-        pillBg: 'bg-orange-500/10 text-orange-600 dark:text-orange-300',
+        accentColor: '#ea580c',
+        bgTint: 'bg-gradient-to-b from-orange-50/70 to-white/90 dark:from-orange-950/20 dark:to-slate-900/60',
+        borderColor: 'border-orange-100/90 dark:border-orange-900/30',
+        iconBg: 'rgba(234, 88, 12, 0.12)',
+        borderHover: 'hover:border-orange-300 dark:hover:border-orange-700',
+        pillBg: 'bg-orange-100/70 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300',
+        arrowBg: 'group-hover:bg-orange-500 group-hover:text-white',
       };
+    case 'inspire':
+    case 'inspiration':
     case 'wisdom':
     case 'mindfulness':
       return {
-        accentColor: '#a855f7',
-        bgTint: 'bg-purple-500/[0.03] dark:bg-purple-950/[0.12]',
-        iconBg: 'rgba(168, 85, 247, 0.12)',
-        borderHover: 'hover:border-purple-500/40',
-        pillBg: 'bg-purple-500/10 text-purple-600 dark:text-purple-300',
+        accentColor: '#9333ea',
+        bgTint: 'bg-gradient-to-b from-purple-50/70 to-white/90 dark:from-purple-950/20 dark:to-slate-900/60',
+        borderColor: 'border-purple-100/90 dark:border-purple-900/30',
+        iconBg: 'rgba(147, 51, 234, 0.12)',
+        borderHover: 'hover:border-purple-300 dark:hover:border-purple-700',
+        pillBg: 'bg-purple-100/70 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300',
+        arrowBg: 'group-hover:bg-purple-600 group-hover:text-white',
+      };
+    case 'test':
+      return {
+        accentColor: '#d97706',
+        bgTint: 'bg-gradient-to-b from-amber-50/70 to-white/90 dark:from-amber-950/20 dark:to-slate-900/60',
+        borderColor: 'border-amber-100/90 dark:border-amber-900/30',
+        iconBg: 'rgba(217, 119, 6, 0.12)',
+        borderHover: 'hover:border-amber-300 dark:hover:border-amber-700',
+        pillBg: 'bg-amber-100/70 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300',
+        arrowBg: 'group-hover:bg-amber-600 group-hover:text-white',
       };
     case 'hope':
     case 'healing':
       return {
-        accentColor: '#14b8a6',
-        bgTint: 'bg-teal-500/[0.03] dark:bg-teal-950/[0.12]',
-        iconBg: 'rgba(20, 184, 166, 0.12)',
-        borderHover: 'hover:border-teal-500/40',
-        pillBg: 'bg-teal-500/10 text-teal-600 dark:text-teal-300',
-      };
-    case 'success':
-      return {
-        accentColor: '#eab308',
-        bgTint: 'bg-amber-500/[0.03] dark:bg-amber-950/[0.12]',
-        iconBg: 'rgba(234, 179, 8, 0.12)',
-        borderHover: 'hover:border-amber-500/40',
-        pillBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-300',
-      };
-    case 'faith':
-      return {
-        accentColor: '#f59e0b',
-        bgTint: 'bg-amber-500/[0.03] dark:bg-amber-950/[0.12]',
-        iconBg: 'rgba(245, 158, 11, 0.12)',
-        borderHover: 'hover:border-amber-500/40',
-        pillBg: 'bg-amber-500/10 text-amber-600 dark:text-amber-300',
+        accentColor: '#0d9488',
+        bgTint: 'bg-gradient-to-b from-teal-50/70 to-white/90 dark:from-teal-950/20 dark:to-slate-900/60',
+        borderColor: 'border-teal-100/90 dark:border-teal-900/30',
+        iconBg: 'rgba(13, 148, 136, 0.12)',
+        borderHover: 'hover:border-teal-300 dark:hover:border-teal-700',
+        pillBg: 'bg-teal-100/70 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300',
+        arrowBg: 'group-hover:bg-teal-600 group-hover:text-white',
       };
     default:
       return {
         accentColor: '#6366f1',
-        bgTint: 'bg-indigo-500/[0.03] dark:bg-indigo-950/[0.12]',
+        bgTint: 'bg-gradient-to-b from-indigo-50/50 to-white/90 dark:from-indigo-950/20 dark:to-slate-900/60',
+        borderColor: 'border-indigo-100/80 dark:border-indigo-900/30',
         iconBg: 'rgba(99, 102, 241, 0.12)',
-        borderHover: 'hover:border-indigo-500/40',
-        pillBg: 'bg-muted/80 text-foreground-secondary',
+        borderHover: 'hover:border-indigo-300 dark:hover:border-indigo-700',
+        pillBg: 'bg-indigo-100/70 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300',
+        arrowBg: 'group-hover:bg-indigo-600 group-hover:text-white',
       };
   }
 }
@@ -99,7 +107,7 @@ export default function InspirationCategoryCard({ category, index = 0 }) {
         ease: [0.22, 1, 0.36, 1],
       }}
       whileHover={!reduceMotion ? { y: -4, transition: { duration: 0.2 } } : undefined}
-      className={`group relative flex flex-col justify-between rounded-2xl border border-border/80 ${theme.bgTint} ${theme.borderHover} backdrop-blur-md p-4 sm:p-5 md:p-6 transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-black/5 dark:hover:shadow-black/40 overflow-hidden cursor-pointer`}
+      className={`group relative flex flex-col justify-between min-h-[100px] sm:min-h-[100px] rounded-3xl border ${theme.borderColor} ${theme.bgTint} ${theme.borderHover} backdrop-blur-md p-5 sm:p-6 transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-black/5 dark:hover:shadow-black/30 overflow-hidden cursor-pointer`}
     >
       {/* Background glow accent */}
       <div
@@ -107,48 +115,50 @@ export default function InspirationCategoryCard({ category, index = 0 }) {
         style={{ backgroundColor: theme.accentColor }}
       />
 
-      <div className="space-y-3 sm:space-y-4">
+      <div className="space-y-4">
         {/* Top Area: Large category icon & small quote-count pill */}
         <div className="flex items-center justify-between gap-2">
-          <div
-            className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-xl transition-transform duration-300 group-hover:scale-105"
-            style={{
-              backgroundColor: theme.iconBg,
-              color: theme.accentColor,
-            }}
-          >
-            {category?.iconUrl ? (
-              <img src={category.iconUrl} alt={label} className="h-5 w-5 sm:h-6 sm:w-6 object-contain" />
-            ) : (
-              <IconComponent className="h-5 w-5 sm:h-6 sm:w-6" strokeWidth={2.2} />
-            )}
-          </div>
+
 
           {quoteCount !== null && (
-            <span className={`rounded-full px-2 sm:px-2.5 py-0.5 sm:py-1 text-[10px] sm:text-[11px] font-medium tracking-tight whitespace-nowrap ${theme.pillBg}`}>
+            <span className={`rounded-full px-3 py-1 text-xs font-semibold tracking-tight whitespace-nowrap shadow-2xs ${theme.pillBg}`}>
               {quoteCount} {quoteCount === 1 ? 'Quote' : 'Quotes'}
             </span>
           )}
         </div>
 
         {/* Main Area: Category Name & Short Description */}
-        <div>
-          <h3 className="text-base sm:text-lg font-bold text-foreground tracking-tight group-hover:text-primary transition-colors">
+        <div className="flex justify-center items-center gap-10">
+
+          <div
+            className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-105"
+            style={{
+              // backgroundColor: theme.iconBg,
+              color: theme.accentColor,
+            }}
+          >
+            {category?.iconUrl ? (
+              <img src={category.iconUrl} alt={label} className="h-10 w-10 sm:h-10 sm:w-10 object-contain" />
+            ) : (
+              <IconComponent className="h-10 w-10 sm:h-10 sm:w-10" strokeWidth={2.2} />
+            )}
+          </div>
+          <h3 className="font-serif text-xl sm:text-2xl font-bold text-foreground tracking-tight group-hover:text-primary transition-colors">
             {label}
           </h3>
-          <p className="mt-1 line-clamp-2 text-[11px] sm:text-xs md:text-sm text-foreground-tertiary leading-relaxed">
+          {/* <p className="mt-2 line-clamp-2 text-xs sm:text-sm text-foreground-secondary leading-relaxed">
             {category?.description || `Explore meaningful ${label.toLowerCase()} inspiration and empowering daily wisdom.`}
-          </p>
+          </p> */}
         </div>
       </div>
 
       {/* Bottom Area: Divider + Explore Quotes + Right Arrow */}
-      <div className="mt-4 sm:mt-6 pt-3 sm:pt-3.5 border-t border-border/60 flex items-center justify-between">
-        <span className="text-[11px] sm:text-xs font-semibold text-foreground-secondary group-hover:text-foreground transition-colors">
+      <div className="mt-6 pt-3.5 border-t border-border/60 flex items-center justify-between">
+        <span className="text-xs sm:text-sm font-semibold text-foreground-secondary group-hover:text-foreground transition-colors">
           Explore Quotes
         </span>
-        <div className="flex h-6 w-6 sm:h-7 sm:w-7 items-center justify-center rounded-full bg-muted/60 text-foreground-secondary group-hover:bg-accent group-hover:text-white transition-all duration-200">
-          <ArrowRight size={13} className="transition-transform duration-200 group-hover:translate-x-0.5" />
+        <div className={`flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-muted/80 text-foreground-secondary ${theme.arrowBg} transition-all duration-200 shadow-2xs`}>
+          <ArrowRight size={14} className="transition-transform duration-200 group-hover:translate-x-0.5" />
         </div>
       </div>
 
@@ -161,3 +171,4 @@ export default function InspirationCategoryCard({ category, index = 0 }) {
     </motion.div>
   );
 }
+
