@@ -39,7 +39,7 @@ function CategoryCardIcon({ category, categoryColor }) {
       <img
         src={iconUrl}
         alt={category?.name || 'Category icon'}
-        className="w-[20px] h-[20px] sm:w-[22px] sm:h-[22px] object-contain transition-transform duration-200 group-hover:scale-110"
+        className="h-12 w-12 object-contain transition-transform duration-200 group-hover:scale-110"
         onError={() => setImageError(true)}
       />
     );
@@ -47,9 +47,9 @@ function CategoryCardIcon({ category, categoryColor }) {
 
   return (
     <IconComponent
-      size={20}
+      size={32}
       strokeWidth={2.2}
-      className="w-[18px] h-[18px] sm:w-[20px] sm:h-[20px] transition-transform duration-200 group-hover:scale-110"
+      className="h-12 w-12 transition-transform duration-200 group-hover:scale-110"
       style={{ color: categoryColor }}
     />
   );
@@ -94,7 +94,7 @@ export default function CategorySection({
         </button>
       </div>
 
-      <div className="flex items-stretch gap-3 sm:gap-4 overflow-x-auto hide-scrollbar pb-1 py-3">
+      <div className="flex items-stretch gap-3 sm:gap-4 overflow-x-auto hide-scrollbar rounded-2xl border border-gray-200/70 bg-gray-50/70 px-4 py-4 shadow-sm backdrop-blur-sm dark:border-white/[0.08] dark:bg-white/[0.025] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
         {categoryList.length > 0 ? (
           categoryList.map((category, index) => {
             const slug = category?.slug || category?.name || "";
@@ -142,12 +142,7 @@ export default function CategorySection({
               >
                 {/* Primary Category Icon with dynamic color container */}
                 <span
-                  className="relative flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-xl transition-all duration-200"
-                  style={{
-                    backgroundColor: hexToRgba(categoryColor, 0.1),
-                    borderWidth: 1,
-                    borderColor: hexToRgba(categoryColor, 0.22),
-                  }}
+                  className="relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200"
                 >
                   <CategoryCardIcon category={category} categoryColor={categoryColor} />
                 </span>
