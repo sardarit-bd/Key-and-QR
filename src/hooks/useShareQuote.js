@@ -9,11 +9,11 @@ import {
 
 function isMobileDevice() {
   if (typeof window === "undefined" || typeof navigator === "undefined") return false;
-  return (
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
-    ) || (Boolean(navigator.maxTouchPoints) && navigator.maxTouchPoints > 2)
+  const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+    navigator.userAgent
   );
+  const isSmallScreen = window.innerWidth <= 768;
+  return isMobileUA || (isSmallScreen && Boolean(navigator.maxTouchPoints) && navigator.maxTouchPoints > 1);
 }
 
 /**

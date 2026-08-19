@@ -3,14 +3,11 @@
 import { useState, useMemo } from 'react';
 import { Search, AlertCircle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useQuoteCategories, useExploreQuotes } from '@/hooks/category/useQuoteCategories';
+import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
 import InspirationCategoryCard from '@/components/inspiration/InspirationCategoryCard';
-import InspirationQuoteGrid from '@/components/inspiration/InspirationQuoteGrid';
 
 export default function InspirationPage() {
   const [categorySearch, setCategorySearch] = useState('');
-  const [quoteSearch, setQuoteSearch] = useState('');
-  const [sort, setSort] = useState('newest');
 
   const {
     data: categories = [],
@@ -18,19 +15,6 @@ export default function InspirationPage() {
     isError: isCategoriesError,
     refetch: refetchCategories,
   } = useQuoteCategories();
-
-  const {
-    data: quotesData,
-    isLoading: isQuotesLoading,
-    isError: isQuotesError,
-    refetch: refetchQuotes,
-  } = useExploreQuotes({
-    search: quoteSearch,
-    sort,
-    limit: 12,
-  });
-
-  const quotes = quotesData?.data || [];
 
   // Filter categories instantly by search input
   const filteredCategories = useMemo(() => {
@@ -45,10 +29,10 @@ export default function InspirationPage() {
   }, [categories, categorySearch]);
 
   return (
-    <div className="min-h-screen bg-background pt-5 sm:pt-8">
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 space-y-8 sm:space-y-12">
-        {/* 1. Compact Page Header */}
-        <section className="space-y-1.5 pt-1">
+    <div className="bg-background pt-4 sm:pt-6 pb-8 sm:pb-12">
+      <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 space-y-6 sm:space-y-8">
+        {/* 1. Page Header */}
+        <section className="space-y-1">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">
             Inspiration
           </h1>
@@ -57,8 +41,17 @@ export default function InspirationPage() {
           </p>
         </section>
 
-        {/* 2. Category Section: Search Categories -> All Categories -> Category Grid */}
-        <section className="space-y-5">
+        {/* 2. Browse Categories Section */}
+        <section className="space-y-4 sm:space-y-5">
+          <div className="space-y-1">
+            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
+              Browse Categories
+            </h2>
+            <p className="text-xs sm:text-sm text-foreground-tertiary">
+              Choose a category to explore dedicated quotes and daily messages.
+            </p>
+          </div>
+
           {/* Search categories input */}
           <div className="relative max-w-sm sm:max-w-md">
             <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground-tertiary" />
@@ -71,11 +64,11 @@ export default function InspirationPage() {
             />
           </div>
 
-          {/* Section title */}
-          <div className="flex items-center justify-between pt-1">
-            <h2 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
+          {/* All Categories heading */}
+          <div className="flex items-center justify-between pt-0.5">
+            <h3 className="text-base sm:text-lg font-semibold tracking-tight text-foreground">
               All Categories
-            </h2>
+            </h3>
             {categories.length > 0 && (
               <span className="text-xs font-medium text-foreground-tertiary">
                 {categories.length} {categories.length === 1 ? 'category' : 'categories'}
@@ -118,7 +111,7 @@ export default function InspirationPage() {
               ))}
             </div>
           ) : filteredCategories.length === 0 ? (
-            <div className="py-10 text-center rounded-2xl border border-border/50 bg-card/30 p-6">
+            <div className="py-8 text-center rounded-2xl border border-border/50 bg-card/30 p-6">
               <p className="text-xs sm:text-sm text-foreground-tertiary">
                 {categorySearch ? `No categories matching "${categorySearch}".` : 'No categories available yet.'}
               </p>

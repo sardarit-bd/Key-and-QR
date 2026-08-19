@@ -1,8 +1,16 @@
 'use client';
 
 import { useState } from 'react';
-import { Search, LayoutGrid, List, SlidersHorizontal, Sparkles } from 'lucide-react';
+import { Search, LayoutGrid, List, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import Pagination from '@/components/ui/Pagination';
 import InspirationQuoteCard from './InspirationQuoteCard';
 
 export default function InspirationQuoteGrid({
@@ -13,12 +21,20 @@ export default function InspirationQuoteGrid({
   sort = 'newest',
   onSortChange,
   emptyMessage = 'No inspiration found in this category yet.',
+  page = 1,
+  limit = 12,
+  total = 0,
+  onPageChange,
 }) {
   const [view, setView] = useState('grid');
 
+  const totalPages = Math.ceil(total / limit) || 1;
+  const startItem = total > 0 ? (page - 1) * limit + 1 : 0;
+  const endItem = Math.min(page * limit, total);
+
   return (
     <div className="space-y-6">
-      {/* Search and Filters bar */}
+      {/* Search and Custom Filters bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-card/60 dark:bg-card/40 backdrop-blur-md p-3 sm:p-4 rounded-2xl border border-border/80 shadow-sm">
         {/* Search input */}
         <div className="relative flex-1 min-w-[200px]">
@@ -28,25 +44,23 @@ export default function InspirationQuoteGrid({
             value={search}
             onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
             placeholder="Search quotes, authors, keywords..."
-            className="w-full h-10 pl-10 pr-4 rounded-xl border border-border bg-background/80 text-sm text-foreground placeholder:text-foreground-tertiary focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
+            className="w-full h-10 pl-10 pr-4 rounded-xl border border-border bg-background/80 text-sm text-foreground placeholder:text-foreground-tertiary focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all shadow-sm"
           />
         </div>
 
         {/* Controls row */}
         <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
-          {/* Sort dropdown */}
-          <div className="relative">
-            <select
-              value={sort}
-              onChange={(e) => onSortChange && onSortChange(e.target.value)}
-              className="h-10 px-3.5 pr-8 rounded-xl border border-border bg-background/80 text-xs sm:text-sm font-medium text-foreground-secondary hover:text-foreground focus:outline-none focus:ring-2 focus:ring-accent/40 cursor-pointer appearance-none"
-            >
-              <option value="newest">Newest First</option>
-              <option value="oldest">Oldest First</option>
-              <option value="alphabetical">Alphabetical (A-Z)</option>
-            </select>
-            <SlidersHorizontal size={13} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-foreground-tertiary" />
-          </div>
+          {/* Custom Select Sort Dropdown */}
+          <Select value={sort} onValueChange={(val) => onSortChange && onSortChange(val)}>
+            <SelectTrigger className="w-[145px] sm:w-[165px] h-10 rounded-xl bg-background/80 border-border text-xs sm:text-sm font-medium text-foreground cursor-pointer shadow-sm">
+              <SelectValue placeholder="Sort by" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl border border-border bg-popover text-foreground shadow-xl">
+              <SelectItem value="newest">Newest First</SelectItem>
+              <SelectItem value="oldest">Oldest First</SelectItem>
+              <SelectItem value="alphabetical">Alphabetical (A-Z)</SelectItem>
+            </SelectContent>
+          </Select>
 
           {/* View toggle */}
           <div className="flex items-center rounded-xl border border-border p-0.5 bg-background/60">
@@ -74,11 +88,11 @@ export default function InspirationQuoteGrid({
 
       {/* Loading state */}
       {isLoading ? (
-        <div className={view === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5' : 'space-y-3'}>
+        <div className={view === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5' : 'space-y-4'}>
           {[1, 2, 3, 4, 5, 6].map((i) => (
             <div
               key={i}
-              className="h-56 rounded-2xl border border-border/50 bg-card/40 animate-pulse p-6 flex flex-col justify-between"
+              className="aspect-[4/3] rounded-2xl border border-border/50 bg-card/40 animate-pulse p-6 flex flex-col justify-between"
             >
               <div className="flex items-center justify-between">
                 <div className="h-5 w-24 rounded-full bg-muted/60" />
@@ -116,12 +130,31 @@ export default function InspirationQuoteGrid({
           )}
         </div>
       ) : (
-        /* Quote Cards */
-        <div className={view === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5' : 'space-y-3'}>
-          {quotes.map((quote) => (
-            <InspirationQuoteCard key={quote._id} quote={quote} view={view} />
-          ))}
-        </div>
+        <>
+          {/* Quote Cards Grid / List */}
+          <div className={view === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-5' : 'space-y-4'}>
+            {quotes.map((quote) => (
+              <InspirationQuoteCard key={quote._id} quote={quote} view={view} />
+            ))}
+          </div>
+
+          {/* Pagination Controls & Summary */}
+          {total > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t border-border/50">
+              <span className="text-xs sm:text-sm text-foreground-tertiary">
+                Showing {startItem}–{endItem} of {total} {total === 1 ? 'quote' : 'quotes'}
+              </span>
+
+              {totalPages > 1 && onPageChange && (
+                <Pagination
+                  currentPage={page}
+                  totalPages={totalPages}
+                  onPageChange={onPageChange}
+                />
+              )}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

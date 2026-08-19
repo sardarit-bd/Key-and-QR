@@ -1,8 +1,7 @@
 'use client';
 
 import { use, useState } from 'react';
-import { motion } from 'framer-motion';
-import { ArrowLeft, Sparkles, AlertCircle, RefreshCw } from 'lucide-react';
+import { ArrowLeft, AlertCircle, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useQuoteCategories, useExploreQuotes } from '@/hooks/category/useQuoteCategories';
@@ -84,8 +83,11 @@ export default function CategoryInspirationPage({ params }) {
 
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('latest'); // 'latest' | 'popular' | 'trending'
+  const [sort, setSort] = useState('newest');
+  const [page, setPage] = useState(1);
+  const limit = 12;
 
-  const { data: categories = [], isLoading: isCategoriesLoading } = useQuoteCategories();
+  const { data: categories = [] } = useQuoteCategories();
 
   // Match the category from backend active categories
   const matchedCategory = categories.find(
@@ -96,7 +98,8 @@ export default function CategoryInspirationPage({ params }) {
   const theme = getCategoryTheme(categorySlug, matchedCategory?.color);
   const IconComponent = getCategoryIcon(categorySlug);
 
-  const sortValue = activeTab === 'latest' ? 'newest' : activeTab === 'popular' ? 'alphabetical' : 'oldest';
+  // Tab sort resolution
+  const computedSort = activeTab === 'popular' ? 'alphabetical' : activeTab === 'trending' ? 'oldest' : sort;
 
   const {
     data: quotesData,
@@ -106,15 +109,38 @@ export default function CategoryInspirationPage({ params }) {
   } = useExploreQuotes({
     category: categorySlug,
     search,
-    sort: sortValue,
-    limit: 24,
+    sort: computedSort,
+    page,
+    limit,
   });
 
   const quotes = quotesData?.data || [];
-  const totalQuotes = quotesData?.meta?.total ?? quotes.length;
+  const total = quotesData?.meta?.total ?? quotes.length;
+
+  const handleTabChange = (tabId) => {
+    setActiveTab(tabId);
+    setPage(1);
+  };
+
+  const handleSearchChange = (val) => {
+    setSearch(val);
+    setPage(1);
+  };
+
+  const handleSortChange = (val) => {
+    setSort(val);
+    setPage(1);
+  };
+
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-background pt-5 sm:pt-8">
+    <div className="bg-background pt-4 sm:pt-6 pb-8 sm:pb-12">
       <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 space-y-6 sm:space-y-8">
         {/* Back navigation */}
         <div>
@@ -128,7 +154,7 @@ export default function CategoryInspirationPage({ params }) {
         </div>
 
         {/* Category Hero Banner */}
-        <section className={`relative overflow-hidden rounded-3xl border border-border/80 ${theme.bgTint} backdrop-blur-xl p-6 sm:p-10 shadow-sm`}>
+        <section className={`relative overflow-hidden rounded-3xl border border-border/80 ${theme.bgTint} backdrop-blur-xl p-6 sm:p-8 shadow-sm`}>
           {/* Ambient Glow */}
           <div
             className="pointer-events-none absolute -right-16 -top-16 h-64 w-64 rounded-full blur-3xl opacity-20"
@@ -139,30 +165,30 @@ export default function CategoryInspirationPage({ params }) {
             <div className="flex items-start sm:items-center gap-4 sm:gap-6">
               {/* Category Icon */}
               <div
-                className="flex h-16 w-16 sm:h-20 sm:w-20 shrink-0 items-center justify-center rounded-2xl shadow-md transition-transform duration-300"
+                className="flex h-14 w-14 sm:h-16 sm:w-16 shrink-0 items-center justify-center rounded-2xl shadow-md transition-transform duration-300"
                 style={{
                   backgroundColor: theme.iconBg,
                   color: theme.accentColor,
                 }}
               >
                 {matchedCategory?.iconUrl ? (
-                  <img src={matchedCategory.iconUrl} alt={categoryName} className="h-8 w-8 sm:h-10 sm:w-10 object-contain" />
+                  <img src={matchedCategory.iconUrl} alt={categoryName} className="h-7 w-7 sm:h-8 sm:w-8 object-contain" />
                 ) : (
-                  <IconComponent className="h-8 w-8 sm:h-10 sm:w-10" strokeWidth={2.2} />
+                  <IconComponent className="h-7 w-7 sm:h-8 sm:w-8" strokeWidth={2.2} />
                 )}
               </div>
 
               {/* Category Details */}
-              <div className="space-y-1.5">
+              <div className="space-y-1">
                 <div className="flex flex-wrap items-center gap-2.5">
-                  <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold tracking-tight text-foreground">
+                  <h1 className="text-xl sm:text-2xl md:text-3xl font-extrabold tracking-tight text-foreground">
                     {categoryName}
                   </h1>
-                  <span className={`rounded-full px-3 py-1 text-xs font-semibold tracking-tight ${theme.pillBg}`}>
-                    {totalQuotes} {totalQuotes === 1 ? 'Quote' : 'Quotes'}
+                  <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-tight ${theme.pillBg}`}>
+                    {total} {total === 1 ? 'Quote' : 'Quotes'}
                   </span>
                 </div>
-                <p className="text-xs sm:text-sm md:text-base text-foreground-secondary max-w-2xl leading-relaxed">
+                <p className="text-xs sm:text-sm text-foreground-secondary max-w-2xl leading-relaxed">
                   {matchedCategory?.description || `Explore meaningful ${categoryName.toLowerCase()} inspiration and empowering daily reflections.`}
                 </p>
               </div>
@@ -181,11 +207,12 @@ export default function CategoryInspirationPage({ params }) {
             return (
               <button
                 key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer ${active
-                  ? 'bg-foreground text-background font-semibold shadow-sm'
-                  : 'text-foreground-secondary hover:text-foreground hover:bg-muted/60'
-                  }`}
+                onClick={() => handleTabChange(tab.id)}
+                className={`rounded-full px-4 py-1.5 text-xs sm:text-sm font-medium transition-all duration-200 cursor-pointer ${
+                  active
+                    ? 'bg-foreground text-background font-semibold shadow-sm'
+                    : 'text-foreground-secondary hover:text-foreground hover:bg-muted/60'
+                }`}
               >
                 {tab.label}
               </button>
@@ -193,7 +220,7 @@ export default function CategoryInspirationPage({ params }) {
           })}
         </div>
 
-        {/* Category Quotes Exploration Grid */}
+        {/* Category Quotes Exploration Grid & Pagination */}
         <section className="space-y-6">
           {isQuotesError ? (
             <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-6 text-center space-y-3">
@@ -214,8 +241,18 @@ export default function CategoryInspirationPage({ params }) {
               quotes={quotes}
               isLoading={isQuotesLoading}
               search={search}
-              onSearchChange={setSearch}
-              emptyMessage="No inspiration found in this category yet."
+              onSearchChange={handleSearchChange}
+              sort={sort}
+              onSortChange={handleSortChange}
+              page={page}
+              limit={limit}
+              total={total}
+              onPageChange={handlePageChange}
+              emptyMessage={
+                search
+                  ? `No quotes found matching "${search}".`
+                  : 'No quotes available in this category yet.'
+              }
             />
           )}
         </section>

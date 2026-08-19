@@ -12,18 +12,20 @@ import {
   downloadQuoteArtwork,
 } from "@/utils/share.utils";
 
-export default function ShareQuoteModal({ isOpen, onClose, quoteData }) {
+export default function ShareQuoteModal({ isOpen, onClose, quoteData, quote }) {
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [imageError, setImageError] = useState(false);
 
-  if (!isOpen || !quoteData) return null;
+  const activeQuoteData = quoteData || quote;
 
-  const publicUrl = getPublicShareUrl(quoteData);
-  const shareText = formatShareText(quoteData);
-  const resolvedArtwork = quoteData.imageUrl || getBestShareArtwork(quoteData);
+  if (!isOpen || !activeQuoteData) return null;
+
+  const publicUrl = getPublicShareUrl(activeQuoteData);
+  const shareText = formatShareText(activeQuoteData);
+  const resolvedArtwork = activeQuoteData.imageUrl || getBestShareArtwork(activeQuoteData);
   const artworkUrl = !imageError && resolvedArtwork ? resolvedArtwork : null;
-  const quoteId = quoteData.quoteId || quoteData._id || quoteData.id || "quote";
+  const quoteId = activeQuoteData.quoteId || activeQuoteData._id || activeQuoteData.id || "quote";
 
   const handleCopyLink = async () => {
     let success = false;

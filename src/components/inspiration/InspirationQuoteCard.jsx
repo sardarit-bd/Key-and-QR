@@ -1,33 +1,44 @@
 'use client';
 
 import { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Share2, Copy, Heart, Quote as QuoteIcon, ExternalLink } from 'lucide-react';
-import { toast } from 'react-hot-toast';
-import { Button } from '@/components/ui/button';
+import { motion, useReducedMotion } from 'framer-motion';
+import { Share2, ExternalLink, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/store/authStore';
+import { Button } from '@/components/ui/button';
 import {
   FAVORITE_CARD_SURFACE,
   FAVORITE_HOVER,
-  ACTION_ICON_CLASS,
 } from '@/components/favorites/favorites.constants';
 import {
   getCategoryChipTheme,
   getCategoryLabel,
-  resolveBackgroundImage,
 } from '@/components/category';
 import useShareQuote from '@/hooks/useShareQuote';
 import ShareQuoteModal from '@/components/quote/ShareQuoteModal';
-import { useAuthStore } from '@/store/authStore';
-import { favoriteService } from '@/services/favorite-service/favorite.service';
+import FavoriteButton from '@/components/favorite/FavoriteButton';
+import VisualQuoteRenderer from '@/components/quote/VisualQuoteRenderer';
+
+function resolveQuoteArtwork(quote) {
+  if (!quote) return null;
+  return (
+    quote.renderedImages?.desktop?.url ||
+    quote.renderedImages?.mobile?.url ||
+    quote.image?.url ||
+    (typeof quote.image === 'string' && quote.image.startsWith('http') ? quote.image : null) ||
+    (typeof quote.image === 'string' && quote.image.startsWith('/') ? quote.image : null) ||
+    null
+  );
+}
 
 export default function InspirationQuoteCard({ quote, view = 'grid' }) {
-  const { user } = useAuthStore();
-  const [isFavorited, setIsFavorited] = useState(false);
-  const [favoriteId, setFavoriteId] = useState(null);
-  const [isFavoriting, setIsFavoriting] = useState(false);
+  const reduceMotion = useReducedMotion();
+  const [imageError, setImageError] = useState(false);
 
   const { isShareOpen, shareData, closeShare, shareQuote } = useShareQuote();
+  const router = useRouter();
+  const { user } = useAuthStore();
 
   if (!quote) return null;
 
@@ -35,63 +46,67 @@ export default function InspirationQuoteCard({ quote, view = 'grid' }) {
   const categoryLabel = getCategoryLabel(category);
   const chip = getCategoryChipTheme(category);
 
-  // Artwork resolution
-  const hasImage = Boolean(quote.renderedImages?.desktop?.url || quote.image?.url || (typeof quote.image === 'string' ? quote.image : null));
-  const backgroundImage = quote.renderedImages?.desktop?.url || quote.image?.url || (typeof quote.image === 'string' ? quote.image : null) || resolveBackgroundImage(category);
+  const rawArtworkUrl = resolveQuoteArtwork(quote);
+  const artworkUrl = imageError ? null : rawArtworkUrl;
+
+  const editorData = quote.editorData || quote.quote?.editorData;
+  const hasCanvasElements = Boolean(
+    editorData &&
+      ((editorData.desktop?.elements && editorData.desktop.elements.length > 0) ||
+        (editorData.mobile?.elements && editorData.mobile.elements.length > 0) ||
+        (editorData.elements && editorData.elements.length > 0))
+  );
 
   const handleShare = (e) => {
+    e?.preventDefault();
     e?.stopPropagation();
+    if (!user) {
+      const currentPath = window.location.pathname;
+      router.push(`/login?redirect=${encodeURIComponent(currentPath)}`);
+      return;
+    }
     shareQuote({
       quoteId: quote._id,
       text: quote.text,
       author: quote.author,
       category: quote.category,
-      imageUrl: hasImage ? backgroundImage : null,
+      imageUrl: artworkUrl,
     });
   };
 
-  const handleCopy = (e) => {
-    e?.stopPropagation();
-    navigator.clipboard?.writeText(`"${quote.text}" — ${quote.author || 'InspireTag'}`);
-    toast.success('Quote copied to clipboard!');
-  };
-
-  const handleToggleFavorite = async (e) => {
-    e?.stopPropagation();
-    if (!user) {
-      toast('Sign in to save quotes to your collection', { icon: '✨' });
-      return;
-    }
-    setIsFavoriting(true);
-    try {
-      if (isFavorited && favoriteId) {
-        await favoriteService.removeFavorite(favoriteId);
-        setIsFavorited(false);
-        setFavoriteId(null);
-        toast.success('Removed from collection');
-      } else {
-        const res = await favoriteService.addFavorite({ quote: quote._id });
-        if (res.success) {
-          setIsFavorited(true);
-          setFavoriteId(res.data?._id || res.data?.id);
-          toast.success('Saved to collection!');
-        }
-      }
-    } catch {
-      toast.error('Failed to update collection');
-    } finally {
-      setIsFavoriting(false);
-    }
-  };
-
+  /* ================= LIST VIEW ================= */
   if (view === 'list') {
     return (
       <>
         <motion.div
-          initial={{ opacity: 0, y: 12 }}
+          initial={reduceMotion ? false : { opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`group flex flex-col gap-4 border ${FAVORITE_CARD_SURFACE} p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-lg sm:flex-row sm:items-center`}
+          className={`group flex flex-col sm:flex-row sm:items-center gap-4 border ${FAVORITE_CARD_SURFACE} p-3.5 sm:p-4 rounded-2xl transition-all duration-300 hover:border-accent/30 hover:shadow-md`}
         >
+          {/* Thumbnail / Artwork */}
+          <div className="relative h-28 w-full sm:h-20 sm:w-32 rounded-xl overflow-hidden shrink-0 bg-muted/40 border border-border/50 flex items-center justify-center">
+            {artworkUrl ? (
+              <img
+                src={artworkUrl}
+                alt={quote.text || 'Inspirational quote'}
+                onError={() => setImageError(true)}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            ) : hasCanvasElements ? (
+              <VisualQuoteRenderer
+                editorData={editorData}
+                mode="auto"
+                showAudioPlayer={false}
+                className="w-full h-full pointer-events-none scale-75"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-accent/10 p-2 text-center">
+                <Sparkles className="h-6 w-6 text-accent/60" />
+              </div>
+            )}
+          </div>
+
+          {/* Details */}
           <div className="min-w-0 flex-1">
             <p className="line-clamp-2 text-sm font-medium text-foreground">&ldquo;{quote.text}&rdquo;</p>
             <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -101,157 +116,125 @@ export default function InspirationQuoteCard({ quote, view = 'grid' }) {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-1 shrink-0">
-            <Button variant="ghost" size="icon" onClick={handleCopy} aria-label="Copy" className="h-8 w-8 cursor-pointer text-foreground-tertiary hover:text-foreground hover:bg-muted/50">
-              <Copy className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" onClick={handleShare} aria-label="Share" className="h-8 w-8 cursor-pointer text-foreground-tertiary hover:text-foreground hover:bg-muted/50">
-              <Share2 className="h-4 w-4" />
-            </Button>
+
+          {/* Actions */}
+          <div className="flex items-center gap-1.5 shrink-0 self-end sm:self-center">
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleToggleFavorite}
-              disabled={isFavoriting}
-              aria-label="Save to favorites"
-              className={`h-8 w-8 cursor-pointer ${isFavorited ? 'text-rose-500 hover:text-rose-600' : 'text-foreground-tertiary hover:text-rose-500'}`}
+              onClick={handleShare}
+              aria-label="Share Quote"
+              className="h-8 w-8 cursor-pointer rounded-full text-foreground-secondary hover:text-foreground hover:bg-muted/80"
             >
-              <Heart className={`h-4 w-4 ${isFavorited ? 'fill-current' : ''}`} />
+              <Share2 className="h-4 w-4" />
             </Button>
-            <Link href={`/q/${quote._id}`} className="inline-flex h-8 w-8 items-center justify-center rounded-md text-foreground-tertiary hover:text-foreground hover:bg-muted/50">
+            <FavoriteButton
+              id={quote._id}
+              type="quote"
+              className="h-8 w-8 cursor-pointer rounded-full border border-border/60 text-foreground-secondary hover:bg-muted/80 flex items-center justify-center"
+              size="sm"
+            />
+            <Link
+              href={`/q/${quote._id}`}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full text-foreground-secondary hover:text-foreground hover:bg-muted/80 transition-colors"
+              aria-label="View Quote Details"
+            >
               <ExternalLink className="h-4 w-4" />
             </Link>
           </div>
         </motion.div>
-        <ShareQuoteModal isOpen={isShareOpen} onClose={closeShare} quote={shareData} />
+        <ShareQuoteModal isOpen={isShareOpen} onClose={closeShare} quoteData={shareData} quote={shareData} />
       </>
     );
   }
 
+  /* ================= GRID VIEW (IMAGE / ARTWORK CARD) ================= */
   return (
     <>
       <motion.div
-        initial={{ opacity: 0, scale: 0.97 }}
+        initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
-        whileHover={{ scale: 1.015, y: -4 }}
-        transition={{ duration: 0.25, ease: 'easeOut' }}
-        className={`group relative overflow-hidden ${FAVORITE_CARD_SURFACE} ${FAVORITE_HOVER} transition-all duration-300 flex flex-col justify-between`}
+        whileHover={!reduceMotion ? { y: -4, transition: { duration: 0.2 } } : undefined}
+        className={`group relative overflow-hidden rounded-2xl border ${FAVORITE_CARD_SURFACE} ${FAVORITE_HOVER} transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/50 aspect-[4/3] flex flex-col justify-between`}
       >
-        {hasImage ? (
-          <div className="relative h-56 bg-cover bg-center" style={{ backgroundImage: `url(${backgroundImage})` }}>
-            <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/20 to-black/70" />
-            <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-2 z-10">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/95 backdrop-blur-md">
-                {quote.author || 'InspireTag'}
-              </span>
-              <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize backdrop-blur-md ${chip.border} ${chip.bg} ${chip.text} ${chip.lightText} ${chip.glow}`}>
-                {categoryLabel}
-              </span>
-            </div>
-
-            <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 py-10 pt-12">
-              <div className="text-center">
-                <QuoteIcon className="mx-auto mb-2 h-4 w-4 text-white/70" strokeWidth={2} />
-                <p className="line-clamp-4 text-[15px] font-medium leading-[1.6] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.65)]">
-                  &ldquo;{quote.text}&rdquo;
-                </p>
-              </div>
-            </div>
-
-            <div className="relative z-20 mt-auto border-t border-white/10 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3.5 pb-3 pt-6">
-              <div className="flex items-center justify-between gap-2">
-                <Link
-                  href={`/q/${quote._id}`}
-                  className="text-[11px] font-medium text-white/80 hover:text-white inline-flex items-center gap-1 transition-colors"
-                >
-                  <span>View Details</span>
-                  <ExternalLink className="h-3 w-3" />
-                </Link>
-                <div className="flex items-center justify-end gap-1">
-                  <Button variant="ghost" size="icon" onClick={handleCopy} aria-label="Copy" className={ACTION_ICON_CLASS}>
-                    <Copy className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={handleShare} aria-label="Share" className={ACTION_ICON_CLASS}>
-                    <Share2 className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleToggleFavorite}
-                    disabled={isFavoriting}
-                    aria-label="Save to collection"
-                    className={`${ACTION_ICON_CLASS} ${isFavorited ? '!text-rose-400' : ''}`}
-                  >
-                    <Heart className={`h-3.5 w-3.5 ${isFavorited ? 'fill-current' : ''}`} />
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="relative h-56 flex flex-col justify-between">
-            <div className="absolute inset-0 bg-gradient-to-br from-background-tertiary/90 via-background-secondary to-background" />
-            <div className="absolute inset-0 bg-gradient-to-t from-primary/[0.07] via-transparent to-accent/[0.05]" />
-            <div
-              className="pointer-events-none absolute inset-0 opacity-[0.05] dark:opacity-[0.07]"
-              style={{
-                backgroundImage: 'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)',
-                backgroundSize: '18px 18px',
-                color: '#E8C985',
-              }}
+        {/* Full-bleed Quote Artwork */}
+        <div className="absolute inset-0 z-0 bg-muted/30 overflow-hidden flex items-center justify-center">
+          {artworkUrl ? (
+            <img
+              src={artworkUrl}
+              alt={quote.text || 'Inspirational quote'}
+              onError={() => setImageError(true)}
+              className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
             />
-
-            <div className="absolute inset-x-3 top-3 flex items-start justify-between gap-2 z-10">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card/70 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-foreground-secondary backdrop-blur-md">
-                {quote.author || 'InspireTag'}
-              </span>
-              <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize backdrop-blur-md ${chip.border} ${chip.bg} ${chip.text} ${chip.lightText} ${chip.glow}`}>
-                {categoryLabel}
-              </span>
+          ) : hasCanvasElements ? (
+            <div className="w-full h-full flex items-center justify-center overflow-hidden pointer-events-none">
+              <VisualQuoteRenderer
+                editorData={editorData}
+                mode="auto"
+                showAudioPlayer={false}
+                className="w-full h-full"
+              />
             </div>
-
-            <div className="relative z-10 flex-1 flex items-center justify-center px-6 py-8 pt-12">
-              <div className="relative text-center">
-                <QuoteIcon className="absolute -top-6 left-1/2 h-10 w-10 -translate-x-1/2 text-accent/15" strokeWidth={1} fill="currentColor" stroke="none" />
-                <p className="relative line-clamp-4 text-[15px] font-medium leading-[1.6] text-foreground">
-                  &ldquo;{quote.text}&rdquo;
-                </p>
+          ) : (
+            /* Fallback clean gradient card when no artwork is available */
+            <div className="w-full h-full flex flex-col justify-between p-6 bg-gradient-to-br from-background-secondary via-background to-background-tertiary">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold uppercase tracking-wider text-foreground-tertiary">
+                  {quote.author || 'InspireTag'}
+                </span>
+                <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold capitalize ${chip.border} ${chip.bg} ${chip.text} ${chip.lightText}`}>
+                  {categoryLabel}
+                </span>
               </div>
+              <p className="line-clamp-3 text-sm sm:text-base font-medium text-foreground text-center">
+                &ldquo;{quote.text}&rdquo;
+              </p>
+              <div />
             </div>
+          )}
+        </div>
 
-            <div className="relative z-20 mt-auto border-t border-border/40 bg-gradient-to-t from-background via-background/60 to-transparent px-3.5 pb-3 pt-6">
-              <div className="flex items-center justify-between gap-2">
-                <Link
-                  href={`/q/${quote._id}`}
-                  className="text-[11px] font-medium text-foreground-secondary hover:text-foreground inline-flex items-center gap-1 transition-colors"
-                >
-                  <span>View Details</span>
-                  <ExternalLink className="h-3 w-3" />
-                </Link>
-                <div className="flex items-center justify-end gap-1">
-                  <Button variant="ghost" size="icon" onClick={handleCopy} aria-label="Copy" className="h-8 w-8 cursor-pointer rounded-full bg-muted/60 text-foreground-secondary hover:text-foreground hover:bg-muted">
-                    <Copy className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={handleShare} aria-label="Share" className="h-8 w-8 cursor-pointer rounded-full bg-muted/60 text-foreground-secondary hover:text-foreground hover:bg-muted">
-                    <Share2 className="h-3.5 w-3.5" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={handleToggleFavorite}
-                    disabled={isFavoriting}
-                    aria-label="Save to collection"
-                    className={`h-8 w-8 cursor-pointer rounded-full bg-muted/60 ${isFavorited ? 'text-rose-500 hover:text-rose-600' : 'text-foreground-secondary hover:text-rose-500'}`}
-                  >
-                    <Heart className={`h-3.5 w-3.5 ${isFavorited ? 'fill-current' : ''}`} />
-                  </Button>
-                </div>
-              </div>
-            </div>
+        {/* Category Pill (Top-Right Badge) */}
+        <div className="relative z-10 p-3 flex items-start justify-end pointer-events-none">
+          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] sm:text-[11px] font-semibold capitalize backdrop-blur-md shadow-sm ${chip.border} ${chip.bg} ${chip.text} ${chip.lightText}`}>
+            {categoryLabel}
+          </span>
+        </div>
+
+        {/* Hover / Mobile Action Overlay */}
+        <div className="relative z-20 mt-auto p-3 sm:p-3.5 bg-gradient-to-t from-black/80 via-black/40 to-transparent transition-all duration-200 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 flex items-center justify-between gap-2 pointer-events-auto">
+          {/* View Details Link */}
+          <Link
+            href={`/q/${quote._id}`}
+            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/90 hover:text-white transition-colors"
+          >
+            <span>View Details</span>
+            <ExternalLink size={13} />
+          </Link>
+
+          {/* Action Buttons: Share & Favorite */}
+          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleShare}
+              aria-label="Share quote"
+              className="h-8 w-8 cursor-pointer rounded-full bg-black/40 border border-white/20 text-white backdrop-blur-md hover:bg-white/20 hover:text-white transition-all active:scale-95"
+            >
+              <Share2 size={14} />
+            </Button>
+
+            <FavoriteButton
+              id={quote._id}
+              type="quote"
+              className="h-8 w-8 rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md hover:bg-white/20 transition-all active:scale-95 flex items-center justify-center"
+              size="sm"
+            />
           </div>
-        )}
+        </div>
       </motion.div>
-      <ShareQuoteModal isOpen={isShareOpen} onClose={closeShare} quote={shareData} />
+
+      <ShareQuoteModal isOpen={isShareOpen} onClose={closeShare} quoteData={shareData} quote={shareData} />
     </>
   );
 }
