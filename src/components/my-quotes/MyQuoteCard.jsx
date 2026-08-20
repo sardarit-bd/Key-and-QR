@@ -20,492 +20,373 @@ import {
 import {
   getCategoryChipTheme,
   getCategoryLabel,
-  resolveBackgroundImage,
 } from '@/components/category';
 import useShareQuote from '@/hooks/useShareQuote';
 import ShareQuoteModal from '@/components/quote/ShareQuoteModal';
+import FavoriteButton from '@/components/favorite/FavoriteButton';
+import VisualQuoteRenderer from '@/components/quote/VisualQuoteRenderer';
 
 /**
- * My Quote Card
- * Displays a single received quote with favorite, share, and menu actions.
- * Renders the ReceivedQuote shape:
- * { _id, quote, category, receivedAt, favorite, favoriteId }.
- *
- * The quote ALWAYS stays in the library — the heart only toggles the
- * Favorite bookmark. It never removes the card from My Quotes.
+ * Normalizes any incoming received quote document into a safe, consistent representation.
+ * Prevents [Object Object] rendering, filters corrupt/empty cards, and resolves artwork.
  */
+function normalizeQuoteData(receivedQuote) {
+  if (!receivedQuote) return null;
+  const quote = receivedQuote.quote || receivedQuote;
+  if (!quote) return null;
+
+  const quoteId = quote._id || quote.id || receivedQuote._id;
+  const text = typeof quote.text === 'string' ? quote.text.trim() : '';
+  const author = typeof quote.author === 'string' && quote.author.trim() ? quote.author.trim() : 'MyInspireTag';
+
+  // Category normalization (prevent [Object Object])
+  const rawCat = receivedQuote.category || quote.category;
+  let categorySlug = 'inspire';
+  let categoryName = 'Inspire';
+
+  if (typeof rawCat === 'string' && rawCat.trim() && rawCat.toLowerCase() !== '[object object]') {
+    categorySlug = rawCat.toLowerCase().trim();
+    categoryName = getCategoryLabel(categorySlug);
+  } else if (rawCat && typeof rawCat === 'object') {
+    categoryName = rawCat.name || getCategoryLabel(rawCat.slug || rawCat.id);
+    categorySlug = (rawCat.slug || rawCat.id || categoryName).toLowerCase();
+  }
+
+  // Artwork resolution
+  const artworkUrl =
+    quote.renderedImages?.desktop?.url ||
+    quote.renderedImages?.mobile?.url ||
+    quote.quote?.renderedImages?.desktop?.url ||
+    quote.quote?.renderedImages?.mobile?.url ||
+    quote.imageUrl ||
+    quote.image?.url ||
+    (typeof quote.image === 'string' && (quote.image.startsWith('http') || quote.image.startsWith('/')) ? quote.image : null) ||
+    null;
+
+  const editorData = quote.editorData || quote.quote?.editorData || null;
+  const hasCanvasElements = Boolean(
+    editorData &&
+      ((editorData.desktop?.elements && editorData.desktop.elements.length > 0) ||
+        (editorData.mobile?.elements && editorData.mobile.elements.length > 0) ||
+        (editorData.elements && editorData.elements.length > 0))
+  );
+
+  // Must have at least valid text or valid artwork
+  if (!text && !artworkUrl && !hasCanvasElements) {
+    return null;
+  }
+
+  return {
+    quoteId,
+    text,
+    author,
+    categorySlug,
+    categoryName,
+    artworkUrl,
+    editorData,
+    hasCanvasElements,
+    hasArtwork: Boolean(artworkUrl || hasCanvasElements),
+    receivedAt: receivedQuote.receivedAt || receivedQuote.createdAt || null,
+  };
+}
+
 export default function MyQuoteCard({
   receivedQuote,
   view = 'grid',
-  onToggleFavorite,
 }) {
-  const [isToggling, setIsToggling] = useState(false);
-  const quote = receivedQuote?.quote;
+  const [imageError, setImageError] = useState(false);
+  const data = normalizeQuoteData(receivedQuote);
 
-  if (!quote) return null;
+  // If quote data is invalid or empty, do not render a broken card
+  if (!data) return null;
 
-  const category = quote.category || 'motivation';
-  const categoryLabel = getCategoryLabel(category);
-  const chip = getCategoryChipTheme(category);
-  const hasImage = Boolean(quote.image?.url);
-  const backgroundImage = hasImage
-    ? quote.image.url
-    : resolveBackgroundImage(category);
+  const {
+    quoteId,
+    text,
+    author,
+    categorySlug,
+    categoryName,
+    artworkUrl: rawArtworkUrl,
+    editorData,
+    hasCanvasElements,
+    receivedAt,
+  } = data;
 
-  const isFavorite = !!receivedQuote?.favorite;
-  const favoriteId = receivedQuote?.favoriteId || null;
+  const artworkUrl = imageError ? null : rawArtworkUrl;
+  const hasVisualArtwork = Boolean(artworkUrl || (hasCanvasElements && !imageError));
+  const chip = getCategoryChipTheme(categorySlug);
 
-  const formattedDate = receivedQuote.receivedAt
-    ? format(new Date(receivedQuote.receivedAt), 'MMM d, yyyy')
+  const formattedDate = receivedAt
+    ? format(new Date(receivedAt), 'MMM d, yyyy')
     : '';
 
   const { isShareOpen, shareData, closeShare, shareQuote } = useShareQuote();
 
-  const handleShare = () => {
+  const handleShare = (e) => {
+    e?.stopPropagation();
     shareQuote({
-      quoteId: quote._id,
-      text: quote.text,
-      author: quote.author,
-      category: quote.category,
-      imageUrl: quote.renderedImages?.desktop?.url || (typeof quote.image === 'string' ? quote.image : quote.image?.url) || null,
+      quoteId,
+      text,
+      author,
+      category: categorySlug,
+      imageUrl: artworkUrl,
     });
   };
 
-  const handleCopy = () => {
-    const text = `"${quote.text}" — ${quote.author || 'InspireTag'}`;
-    navigator.clipboard?.writeText(text);
+  const handleCopy = (e) => {
+    e?.stopPropagation();
+    const copyText = `"${text}" — ${author}`;
+    navigator.clipboard?.writeText(copyText);
     toast.success('Quote copied!');
   };
 
-  const handleToggleFavorite = async () => {
-    if (!onToggleFavorite) return;
-    setIsToggling(true);
-    try {
-      await onToggleFavorite({
-        quoteId: quote._id,
-        isFavorite,
-        favoriteId,
-      });
-    } catch (error) {
-      toast.error('Failed to update favorite');
-    } finally {
-      setIsToggling(false);
-    }
-  };
-
-  // List view — premium quote row.
+  /* ===================== LIST VIEW ===================== */
   if (view === 'list') {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className={`group flex flex-col gap-4 border ${CARD_SURFACE} p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-[0_20px_40px_-16px_rgb(0_0_0/0.5)] sm:flex-row sm:items-center`}
-      >
-        <div className="min-w-0 flex-1">
-          <p className="line-clamp-2 text-sm font-medium text-foreground">
-            &ldquo;{quote.text}&rdquo;
-          </p>
-          <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className="text-xs text-foreground-tertiary">
-              {quote.author || 'InspireTag'}
-            </span>
-            <span
-              className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold capitalize ${chip.border} ${chip.bg} ${chip.text} ${chip.lightText}`}
-            >
-              {categoryLabel}
-            </span>
-            {formattedDate && (
-              <span className="flex items-center gap-1 text-[10px] text-foreground-tertiary">
-                <Calendar className="h-3 w-3" />
-                {formattedDate}
-              </span>
+      <>
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`group flex flex-col sm:flex-row sm:items-center gap-4 border ${CARD_SURFACE} p-3.5 sm:p-4 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-lg`}
+        >
+          {/* 16:9 Thumbnail on left */}
+          <div className="relative h-24 w-full sm:h-20 sm:w-32 aspect-[16/9] sm:aspect-auto rounded-xl overflow-hidden shrink-0 bg-muted/40 border border-border/50 flex items-center justify-center">
+            {artworkUrl ? (
+              <img
+                src={artworkUrl}
+                alt={text || 'Quote artwork'}
+                onError={() => setImageError(true)}
+                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+              />
+            ) : hasCanvasElements ? (
+              <div className="w-full h-full pointer-events-none scale-75 flex items-center justify-center overflow-hidden">
+                <VisualQuoteRenderer
+                  editorData={editorData}
+                  mode="desktop"
+                  showAudioPlayer={false}
+                  className="w-full h-full"
+                />
+              </div>
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-accent/10 text-accent">
+                <QuoteIcon className="h-6 w-6 opacity-70" />
+              </div>
             )}
           </div>
-        </div>
 
-        <div className="flex items-center gap-1">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleToggleFavorite}
-            disabled={isToggling}
-            aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-            aria-pressed={isFavorite}
-            className={`h-8 w-8 cursor-pointer transition-all duration-300 hover:bg-muted/50 ${
-              isFavorite
-                ? 'text-rose-500 hover:text-rose-500'
-                : 'text-foreground-tertiary hover:text-foreground'
-            }`}
-          >
-            {isToggling ? (
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-rose-500/30 border-t-rose-500" />
-            ) : (
-              <svg
-                className={`h-4 w-4 ${isFavorite ? 'fill-rose-500 text-rose-500' : ''}`}
-                viewBox="0 0 24 24"
-                fill={isFavorite ? 'currentColor' : 'none'}
-                stroke="currentColor"
-                strokeWidth={2}
-                xmlns="http://www.w3.org/2000/svg"
+          {/* Text & Meta info */}
+          <div className="min-w-0 flex-1">
+            <p className="line-clamp-2 text-sm font-medium text-foreground">
+              &ldquo;{text}&rdquo;
+            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="text-xs text-foreground-tertiary font-medium">
+                {author}
+              </span>
+              <span
+                className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold capitalize ${chip.border} ${chip.bg} ${chip.text} ${chip.lightText}`}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-                />
-              </svg>
-            )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleShare}
-            aria-label="Share quote"
-            className="h-8 w-8 cursor-pointer text-foreground-tertiary hover:text-foreground hover:bg-muted/50"
-          >
-            <Share2 className="h-4 w-4" />
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="More options"
-                className="h-8 w-8 cursor-pointer text-foreground-tertiary hover:text-foreground hover:bg-muted/50"
-              >
-                <svg
-                  className="h-4 w-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                  />
-                </svg>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="border border-white/6 bg-popover text-foreground shadow-xl backdrop-blur-xl light:border-[#E8DFCE]/80"
+                {categoryName}
+              </span>
+              {formattedDate && (
+                <span className="flex items-center gap-1 text-[10px] text-foreground-tertiary">
+                  <Calendar className="h-3 w-3" />
+                  {formattedDate}
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Action buttons */}
+          <div className="flex items-center gap-1 shrink-0 self-end sm:self-center">
+            <FavoriteButton
+              id={quoteId}
+              type="quote"
+              className="h-8 w-8 cursor-pointer rounded-full border border-border/60 text-foreground-secondary hover:bg-muted/80 flex items-center justify-center"
+              size="sm"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleShare}
+              aria-label="Share quote"
+              className="h-8 w-8 cursor-pointer text-foreground-tertiary hover:text-foreground hover:bg-muted/50"
             >
-              <DropdownMenuItem
-                onClick={handleCopy}
-                className="cursor-pointer hover:bg-muted/50"
+              <Share2 className="h-4 w-4" />
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="More options"
+                  className="h-8 w-8 cursor-pointer text-foreground-tertiary hover:text-foreground hover:bg-muted/50"
+                >
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                    />
+                  </svg>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="border border-border bg-popover text-foreground shadow-xl backdrop-blur-xl"
               >
-                <Copy className="mr-2 h-4 w-4" />
-                Copy Quote
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </motion.div>
+                <DropdownMenuItem
+                  onClick={handleCopy}
+                  className="cursor-pointer hover:bg-muted/50 text-xs font-medium"
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy Quote
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </motion.div>
+
+        <ShareQuoteModal
+          isOpen={isShareOpen}
+          onClose={closeShare}
+          quoteData={shareData}
+          quote={shareData}
+        />
+      </>
     );
   }
 
-  // Grid view — collectible card (image or text variant).
+  /* ===================== GRID VIEW ===================== */
   return (
-    <motion.div
-      initial={{ opacity: 0, scale: 0.96 }}
-      animate={{ opacity: 1, scale: 1 }}
-      whileHover={{ scale: 1.015, y: -5 }}
-      transition={{ duration: 0.25, ease: 'easeOut' }}
-      className={`group relative overflow-hidden ${CARD_SURFACE} ${HOVER_ELEVATION} transition-all duration-300`}
-    >
-      {hasImage ? (
-        /* ===================== IMAGE VARIANT ===================== */
-        <div
-          className="relative h-52 bg-cover bg-center sm:h-56"
-          style={{ backgroundImage: `url(${backgroundImage})` }}
-        >
-          {/* Cinematic gradient stack — dark mode only */}
-          <div className="absolute inset-0 hidden bg-gradient-to-b from-black/25 via-black/10 to-black/45 dark:block" />
-          <div
-            className="pointer-events-none absolute inset-0 hidden dark:block"
-            style={{
-              background:
-                'radial-gradient(ellipse 90% 80% at 50% 0%, rgba(0,0,0,0.2) 0%, transparent 60%)',
-            }}
-          />
-
-          {/* Light-mode warm ivory wash — blends photo into the card surface */}
-          <div className="pointer-events-none absolute inset-0 light:bg-gradient-to-b light:from-[#FDFBF6]/40 light:via-[#F8F2E7]/35 light:to-[#FBF7EF]/85" />
-
-          {/* Top chips */}
-          <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-2">
-            {/* Brand */}
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/30 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/95 backdrop-blur-md light:border-[#E8DFCE]/80 light:bg-white/70 light:text-[#4A3C2D]">
-              {quote.author || 'MyInspireTag'}
-            </span>
-
-            {/* Category chip — readable in both themes */}
-            <span
-              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize backdrop-blur-md ${chip.border} ${chip.bg} ${chip.text} ${chip.lightText} ${chip.glow}`}
-            >
-              {categoryLabel}
-            </span>
-          </div>
-
-          {/* Quote area */}
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 py-10 pt-14">
-            <div className="text-center">
-              <QuoteIcon
-                className="mx-auto mb-2 h-4 w-4 text-white/60 light:text-[#8A7558]"
-                strokeWidth={2}
+    <>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98 }}
+        animate={{ opacity: 1, scale: 1 }}
+        whileHover={{ y: -4 }}
+        transition={{ duration: 0.2, ease: 'easeOut' }}
+        className={`group relative flex flex-col w-full overflow-hidden rounded-2xl border ${CARD_SURFACE} ${HOVER_ELEVATION} transition-all duration-300 shadow-sm`}
+      >
+        {/* 1. Preview Area (Strict 16:9 aspect ratio) */}
+        <div className="relative w-full aspect-[16/9] overflow-hidden bg-black/40 flex items-center justify-center shrink-0">
+          {hasVisualArtwork ? (
+            artworkUrl ? (
+              <img
+                src={artworkUrl}
+                alt={text || 'Inspirational quote'}
+                onError={() => setImageError(true)}
+                className="w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02]"
               />
-              <p className="line-clamp-4 text-[15px] font-medium leading-[1.6] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.55)] dark:text-white dark:drop-shadow-[0_2px_10px_rgba(0,0,0,0.55)] light:text-[#201A15] light:drop-shadow-none">
-                &ldquo;{quote.text}&rdquo;
+            ) : (
+              <div className="w-full h-full flex items-center justify-center overflow-hidden pointer-events-none">
+                <VisualQuoteRenderer
+                  editorData={editorData}
+                  mode="desktop"
+                  showAudioPlayer={false}
+                  className="w-full h-full"
+                />
+              </div>
+            )
+          ) : (
+            /* Text-only quote preview (no image) */
+            <div className="relative w-full h-full p-5 sm:p-6 flex flex-col justify-center items-center text-center bg-gradient-to-br from-background-secondary via-background to-background-tertiary">
+              <QuoteIcon className="h-6 w-6 text-accent/20 mb-1" />
+              <p className="line-clamp-3 text-sm sm:text-[14px] font-medium leading-relaxed text-foreground">
+                &ldquo;{text}&rdquo;
               </p>
             </div>
-          </div>
+          )}
 
-          {/* Glass footer — actions + date */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 border-t border-white/10 bg-gradient-to-t from-black/75 via-black/35 to-transparent px-3.5 pb-2.5 pt-8 dark:border-white/10 light:border-[#E8DFCE]/80 light:from-[#FBF7EF]/95 light:via-[#FBF7EF]/60 light:to-transparent">
-            <div className="flex items-center justify-between gap-2">
-              <span className="truncate text-[11px] font-medium text-white/80 light:text-[#6F5D46]">
-                {formattedDate}
-              </span>
-
-              <div className="pointer-events-auto flex items-center justify-end gap-1">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleShare}
-                  aria-label="Share quote"
-                  className={ACTION_ICON_CLASS}
-                >
-                  <Share2 className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleToggleFavorite}
-                  disabled={isToggling}
-                  aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                  aria-pressed={isFavorite}
-                  className={`${ACTION_ICON_CLASS} ${
-                    isFavorite ? '!text-rose-400' : ''
-                  }`}
-                >
-                  {isToggling ? (
-                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-rose-500/30 border-t-rose-500" />
-                  ) : (
-                    <svg
-                      className={`h-3.5 w-3.5 ${isFavorite ? 'fill-rose-400 text-rose-400' : ''}`}
-                      viewBox="0 0 24 24"
-                      fill={isFavorite ? 'currentColor' : 'none'}
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-                      />
-                    </svg>
-                  )}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="More options"
-                      className={ACTION_ICON_CLASS}
-                    >
-                      <svg
-                        className="h-3.5 w-3.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                        />
-                      </svg>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="border border-white/6 bg-popover text-foreground shadow-xl backdrop-blur-xl light:border-[#E8DFCE]/80"
-                  >
-                    <DropdownMenuItem
-                      onClick={handleCopy}
-                      className="cursor-pointer hover:bg-muted/50"
-                    >
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copy Quote
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
-          </div>
-        </div>
-      ) : (
-        /* ===================== TEXT VARIANT — intentionally designed, not "missing image" ===================== */
-        <div className="relative h-52 sm:h-56">
-          {/* Layered premium gradient surface */}
-          <div className="absolute inset-0 bg-gradient-to-br from-background-tertiary/90 via-background-secondary to-background" />
-          <div className="absolute inset-0 bg-gradient-to-t from-primary/[0.07] via-transparent to-accent/[0.05]" />
-
-          {/* Ambient glows */}
-          <div className="pointer-events-none absolute -left-16 -top-16 h-48 w-48 rounded-full bg-accent/10 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-20 -right-16 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
-          <div className="pointer-events-none absolute left-1/2 top-0 h-40 w-64 -translate-x-1/2 rounded-full bg-accent/[0.06] blur-[80px]" />
-
-          {/* Soft decorative pattern — repeating radial dots, masked to edges */}
-          <div
-            className="pointer-events-none absolute inset-0 opacity-[0.05] dark:opacity-[0.07] light:opacity-[0.06]"
-            style={{
-              backgroundImage:
-                'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)',
-              backgroundSize: '18px 18px',
-              color: '#E8C985',
-              maskImage:
-                'radial-gradient(ellipse 90% 90% at 50% 40%, black 40%, transparent 100%)',
-              WebkitMaskImage:
-                'radial-gradient(ellipse 90% 90% at 50% 40%, black 40%, transparent 100%)',
-            }}
-          />
-
-          {/* Hairline top highlight */}
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent light:via-[#E8DFCE]/70" />
-
-          {/* Top chips — same placement as image variant */}
-          <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/30 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/95 backdrop-blur-md light:border-[#E8DFCE]/80 light:bg-white/70 light:text-[#4A3C2D]">
-              {quote.author || 'MyInspireTag'}
+          {/* Top Badges (Inside preview area) */}
+          <div className="pointer-events-none absolute inset-x-3 top-3 flex items-start justify-between gap-2 z-10">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/95 backdrop-blur-md light:border-border light:bg-card/80 light:text-foreground">
+              {author}
             </span>
 
             <span
-              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize backdrop-blur-md ${chip.border} ${chip.bg} ${chip.text} ${chip.lightText} ${chip.glow}`}
+              className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize backdrop-blur-md shadow-sm ${chip.border} ${chip.bg} ${chip.text} ${chip.lightText}`}
             >
-              {categoryLabel}
+              {categoryName}
             </span>
           </div>
+        </div>
 
-          {/* Quote area with decorative quote mark */}
-          <div className="pointer-events-none absolute inset-0 flex items-center justify-center px-6 py-10 pt-14">
-            <div className="relative text-center">
-              {/* Oversized ghost quote mark */}
-              <QuoteIcon
-                className="absolute -top-7 left-1/2 h-12 w-12 -translate-x-1/2 text-accent/15 light:text-[#C6922D]/15"
-                strokeWidth={1}
-                fill="currentColor"
-                stroke="none"
-              />
-              <p className="relative line-clamp-4 text-[15px] font-medium leading-[1.6] text-foreground">
-                &ldquo;{quote.text}&rdquo;
-              </p>
-            </div>
-          </div>
+        {/* 2. Card Footer (clean, theme-aware border-t, no dark horizontal line cutting through) */}
+        <div className="flex items-center justify-between px-3.5 py-2.5 bg-card border-t border-border/50 text-foreground-secondary">
+          <span className="truncate text-[11px] font-medium text-foreground-tertiary">
+            {formattedDate}
+          </span>
 
-          {/* Glass footer — identical treatment to the image variant */}
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 border-t border-white/10 bg-gradient-to-t from-black/75 via-black/35 to-transparent px-3.5 pb-2.5 pt-8 dark:border-white/10 light:border-[#E8DFCE]/80 light:from-[#FBF7EF]/95 light:via-[#FBF7EF]/60 light:to-transparent">
-            <div className="flex items-center justify-between gap-2">
-              <span className="truncate text-[11px] font-medium text-white/80 light:text-[#6F5D46]">
-                {formattedDate}
-              </span>
-
-              <div className="pointer-events-auto flex items-center justify-end gap-1">
+          <div className="flex items-center gap-1">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleShare}
+              aria-label="Share quote"
+              className={ACTION_ICON_CLASS}
+            >
+              <Share2 className="h-3.5 w-3.5" />
+            </Button>
+            <FavoriteButton
+              id={quoteId}
+              type="quote"
+              className={ACTION_ICON_CLASS}
+              size="sm"
+            />
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  onClick={handleShare}
-                  aria-label="Share quote"
+                  aria-label="More options"
                   className={ACTION_ICON_CLASS}
                 >
-                  <Share2 className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleToggleFavorite}
-                  disabled={isToggling}
-                  aria-label={isFavorite ? 'Remove from favorites' : 'Add to favorites'}
-                  aria-pressed={isFavorite}
-                  className={`${ACTION_ICON_CLASS} ${
-                    isFavorite ? '!text-rose-400' : ''
-                  }`}
-                >
-                  {isToggling ? (
-                    <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-rose-500/30 border-t-rose-500" />
-                  ) : (
-                    <svg
-                      className={`h-3.5 w-3.5 ${isFavorite ? 'fill-rose-400 text-rose-400' : ''}`}
-                      viewBox="0 0 24 24"
-                      fill={isFavorite ? 'currentColor' : 'none'}
-                      stroke="currentColor"
-                      strokeWidth={2}
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-                      />
-                    </svg>
-                  )}
-                </Button>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="More options"
-                      className={ACTION_ICON_CLASS}
-                    >
-                      <svg
-                        className="h-3.5 w-3.5"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
-                        />
-                      </svg>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent
-                    align="end"
-                    className="border border-white/6 bg-popover text-foreground shadow-xl backdrop-blur-xl light:border-[#E8DFCE]/80"
+                  <svg
+                    className="h-3.5 w-3.5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
                   >
-                    <DropdownMenuItem
-                      onClick={handleCopy}
-                      className="cursor-pointer hover:bg-muted/50"
-                    >
-                      <Copy className="mr-2 h-4 w-4" />
-                      Copy Quote
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            </div>
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"
+                    />
+                  </svg>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="border border-border bg-popover text-foreground shadow-xl backdrop-blur-xl"
+              >
+                <DropdownMenuItem
+                  onClick={handleCopy}
+                  className="cursor-pointer hover:bg-muted/50 text-xs font-medium"
+                >
+                  <Copy className="mr-2 h-4 w-4" />
+                  Copy Quote
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
-      )}
+      </motion.div>
 
-      {/* Unified Share Quote Modal */}
       <ShareQuoteModal
         isOpen={isShareOpen}
         onClose={closeShare}
         quoteData={shareData}
+        quote={shareData}
       />
-    </motion.div>
+    </>
   );
 }

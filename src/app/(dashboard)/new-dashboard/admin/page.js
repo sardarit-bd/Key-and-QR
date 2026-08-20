@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { useAdminDashboardOverview } from '@/hooks/dashboard/useAdminDashboardOverview';
 import AdminDashboardHome from '@/components/dashboard/admin/overview/AdminDashboardHome';
 
@@ -7,39 +8,37 @@ import AdminDashboardHome from '@/components/dashboard/admin/overview/AdminDashb
  * Admin Dashboard Overview Page
  * Route: /new-dashboard/admin
  *
- * Displays the admin overview with key platform metrics.
- * Uses mock data by default — set useMock=false when backend endpoint is ready.
+ * Displays real-time business intelligence, interactive charts, and operational KPIs.
  */
 export default function AdminDashboardPage() {
-  const { data, isLoading, error, refetch } = useAdminDashboardOverview();
+  const [selectedRange, setSelectedRange] = useState('30d');
+  const { data, isLoading, error, refetch } = useAdminDashboardOverview({ range: selectedRange });
 
   // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6 animate-pulse">
         {/* Welcome skeleton */}
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="h-10 bg-muted rounded-xl w-64" />
-          <div className="h-5 bg-muted rounded w-40" />
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="space-y-2">
+            <div className="h-9 bg-muted rounded-xl w-64" />
+            <div className="h-4 bg-muted rounded w-48" />
+          </div>
+          <div className="h-10 bg-muted rounded-xl w-40" />
         </div>
         {/* Stats grid skeleton */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 md:gap-5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 sm:gap-4">
           {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-card rounded-[22px] border border-border h-24" />
+            <div key={i} className="bg-card rounded-2xl border border-border h-28" />
           ))}
         </div>
-        {/* Two-column skeleton */}
+        {/* Large chart skeleton */}
+        <div className="bg-card rounded-2xl border border-border h-[400px]" />
+        {/* Medium charts skeleton */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
-          <div className="bg-card rounded-[22px] border border-border h-64" />
-          <div className="bg-card rounded-[22px] border border-border h-64" />
+          <div className="bg-card rounded-2xl border border-border h-72" />
+          <div className="bg-card rounded-2xl border border-border h-72" />
         </div>
-        {/* Activity + System Status skeleton */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
-          <div className="bg-card rounded-[22px] border border-border h-80" />
-          <div className="bg-card rounded-[22px] border border-border h-80" />
-        </div>
-        {/* Quick actions skeleton */}
-        <div className="bg-card rounded-[22px] border border-border h-36" />
       </div>
     );
   }
@@ -47,20 +46,18 @@ export default function AdminDashboardPage() {
   // Error state
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
-            <span className="text-2xl">!</span>
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <div className="text-center max-w-md mx-auto p-6 rounded-3xl bg-card border border-border shadow-xl">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
+            <span className="text-2xl text-destructive font-bold">!</span>
           </div>
-          <p className="text-destructive text-sm mb-2 font-medium">
-            Failed to load dashboard
-          </p>
-          <p className="text-foreground-tertiary text-xs mb-6">
-            {error?.message || 'An unexpected error occurred. Please try again.'}
+          <h2 className="text-base font-bold text-foreground mb-1">Failed to load analytics</h2>
+          <p className="text-xs text-foreground-secondary mb-6">
+            {error?.message || 'An error occurred while aggregating dashboard data.'}
           </p>
           <button
             onClick={() => refetch()}
-            className="px-6 py-3 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors"
+            className="px-5 py-2.5 bg-primary text-primary-foreground font-semibold rounded-xl hover:bg-primary/90 transition-colors text-xs cursor-pointer"
           >
             Try Again
           </button>
@@ -69,24 +66,11 @@ export default function AdminDashboardPage() {
     );
   }
 
-  // Empty state (unlikely but handled)
-  if (!data) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center max-w-md mx-auto px-4">
-          <p className="text-foreground-tertiary text-sm mb-4">
-            No dashboard data available.
-          </p>
-          <button
-            onClick={() => refetch()}
-            className="px-6 py-3 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors"
-          >
-            Refresh
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  return <AdminDashboardHome data={data} />;
+  return (
+    <AdminDashboardHome
+      data={data}
+      selectedRange={selectedRange}
+      onRangeChange={setSelectedRange}
+    />
+  );
 }

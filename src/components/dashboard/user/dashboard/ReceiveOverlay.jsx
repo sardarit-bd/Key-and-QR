@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Sparkles, Loader2, X } from 'lucide-react';
-
 import VisualQuoteRenderer from '@/components/quote/VisualQuoteRenderer';
 
 const LOADING_MESSAGES = [
@@ -13,8 +12,9 @@ const LOADING_MESSAGES = [
 ];
 
 /**
- * Category receive flow — client image:
- * click category → loading screen (~1s) → reveal quote.
+ * Category receive & Read Again flow:
+ * Click category/Read Again → loading screen (~1s) → reveal quote artwork.
+ * Strictly preserves the 800×450 (16:9) quote artwork aspect ratio on both desktop and mobile.
  */
 export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose }) {
   const renderedImageUrl =
@@ -37,7 +37,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm px-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-3 sm:p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -45,83 +45,81 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
           onClick={quote && onClose ? onClose : undefined}
         >
           {quote ? (
-            /* ---------- Reveal ---------- */
+            /* ---------- Reveal Modal Card ---------- */
             <motion.div
               key="reveal"
-              className="relative max-w-xl w-full overflow-hidden rounded-[24px] border border-accent/20 bg-card shadow-2xl"
-              initial={{ scale: 0.9, opacity: 0, y: 16 }}
+              className="relative w-full max-w-[860px] max-h-[calc(100dvh-24px)] sm:max-h-[calc(100dvh-48px)] overflow-y-auto rounded-[24px] sm:rounded-[32px] border border-white/10 bg-card p-4 sm:p-6 shadow-2xl"
+              initial={{ scale: 0.94, opacity: 0, y: 14 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              transition={{ type: 'spring', stiffness: 120, damping: 18 }}
+              exit={{ scale: 0.96, opacity: 0, y: 10 }}
+              transition={{ type: 'spring', stiffness: 140, damping: 20 }}
               onClick={(e) => e.stopPropagation()}
             >
-              {/* Close */}
-              {onClose && (
-                <button
-                  onClick={onClose}
-                  aria-label="Close"
-                  className="absolute right-3 top-3 z-20 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-background-secondary/80 text-foreground-secondary backdrop-blur-sm transition-colors hover:text-foreground"
-                >
-                  <X size={16} className="w-4 h-4" />
-                </button>
-              )}
-
-              <div className="pointer-events-none absolute inset-0">
-                <div className="absolute -left-20 -top-20 h-64 w-64 rounded-full bg-accent/10 blur-3xl" />
-                <div className="absolute -bottom-20 -right-16 h-64 w-64 rounded-full bg-primary/10 blur-3xl" />
-              </div>
-
-              <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-12 text-center">
-                <div className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-accent/25 bg-accent/10 px-3 py-1 text-[11px] font-medium uppercase tracking-wider text-accent">
-                  <Sparkles size={12} className="w-3 h-3" />
-                  {categoryName || 'Inspiration'}
+              {/* Top Header Bar: Category Badge (left) & Close Button (right) */}
+              <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-border/60">
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-accent/25 bg-accent/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-accent">
+                  <Sparkles size={12} className="text-accent" />
+                  <span>{categoryName || 'Inspiration'}</span>
                 </div>
 
+                {onClose && (
+                  <button
+                    onClick={onClose}
+                    aria-label="Close modal"
+                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-background-secondary/80 text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </div>
+
+              {/* 16:9 Artwork Canvas / Preview Stage */}
+              <div className="mt-3.5 sm:mt-4 w-full">
                 {hasVisualDesign ? (
-                  <div className="w-full flex items-center justify-center min-h-[300px] max-h-[420px]">
+                  <div className="w-full aspect-[16/9] relative rounded-2xl overflow-hidden bg-black/60 border border-white/10 shadow-xl flex items-center justify-center">
                     {editorData ? (
                       <VisualQuoteRenderer
                         editorData={editorData}
-                        mode="auto"
+                        mode="desktop"
                         showAudioPlayer={true}
                         className="w-full h-full"
                       />
                     ) : renderedImageUrl ? (
-                      <div className="w-full flex items-center justify-center min-h-[300px] max-h-[420px] overflow-hidden">
-                        <img
-                          src={renderedImageUrl}
-                          alt={quote.text || "Inspiration"}
-                          className="max-w-full max-h-[400px] object-contain rounded-xl shadow-lg"
-                        />
-                      </div>
+                      <img
+                        src={renderedImageUrl}
+                        alt={quote?.text || 'Inspiration'}
+                        className="w-full h-full object-contain rounded-2xl"
+                      />
                     ) : null}
                   </div>
                 ) : (
-                  <>
+                  /* Legacy non-canvas Quote text styled in 16:9 canvas stage */
+                  <div className="w-full aspect-[16/9] flex flex-col justify-center items-center p-6 sm:p-10 relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] text-center border border-white/10 shadow-xl">
                     <motion.blockquote
-                      className="text-[22px] sm:text-[26px] md:text-[30px] leading-[1.35] italic text-foreground"
-                      initial={{ opacity: 0, y: 12 }}
+                      className="text-[20px] sm:text-[28px] md:text-[34px] leading-[1.25] italic text-white font-light max-w-[680px]"
+                      initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.15, duration: 0.5 }}
+                      transition={{ delay: 0.15, duration: 0.4 }}
                     >
-                      &ldquo;{quote.text}&rdquo;
+                      &ldquo;{quote?.text}&rdquo;
                     </motion.blockquote>
 
-                    {quote.author && (
+                    {quote?.author && (
                       <motion.p
-                        className="mt-4 text-[13px] sm:text-[14px] text-foreground-secondary"
+                        className="mt-4 sm:mt-6 text-xs sm:text-sm font-medium text-amber-300 tracking-wide"
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
-                        transition={{ delay: 0.4, duration: 0.4 }}
+                        transition={{ delay: 0.3, duration: 0.4 }}
                       >
                         — {quote.author}
                       </motion.p>
                     )}
-                  </>
+                  </div>
                 )}
               </div>
             </motion.div>
           ) : (
-            /* ---------- Loading ---------- */
+            /* ---------- Loading State ---------- */
             <motion.div
               key="loading"
               className="flex flex-col items-center text-center"
@@ -160,7 +158,7 @@ function LoadingMessages() {
     <AnimatePresence mode="wait">
       <motion.p
         key={index}
-        className="text-[15px] sm:text-[16px] font-medium text-foreground"
+        className="text-[15px] sm:text-[16px] font-medium text-white"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -8 }}

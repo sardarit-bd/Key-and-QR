@@ -9,9 +9,11 @@ import VisualQuoteAudioPlayer from "@/components/quote/VisualQuoteAudioPlayer";
 
 export default function LatestInspirationCard({
   inspiration,
+  onInspire,
   onShare,
   onReadAgain,
   onFavoriteChange,
+  isReceiving,
 }) {
   const reduceMotion = useReducedMotion();
   const quote = inspiration?.text || "";
@@ -56,8 +58,9 @@ export default function LatestInspirationCard({
     <motion.section
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className={`group relative w-full sm:max-w-[800px] mx-auto overflow-hidden rounded-[24px] sm:rounded-[28px] md:rounded-[32px] bg-card border border-white/10  transition-all duration-300 ${hasVisualDesign
+      whileHover={reduceMotion ? undefined : { scale: 1.008 }}
+      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+      className={`group relative w-full sm:max-w-[800px] mx-auto overflow-hidden rounded-[24px] sm:rounded-[28px] md:rounded-[32px] bg-card border border-white/10 shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-black/35 ${hasVisualDesign
           ? 'aspect-[375/667] sm:aspect-[16/9]'
           : 'aspect-[16/9] min-h-[380px]'
         }`}
@@ -93,7 +96,7 @@ export default function LatestInspirationCard({
                 fill
                 priority
                 sizes="(max-width: 768px) 100vw, (max-width: 1280px) 90vw, 80vw"
-                className="object-cover"
+                className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.015]"
               />
             </div>
           ) : (
@@ -106,24 +109,30 @@ export default function LatestInspirationCard({
         </>
       )}
 
+      {/* Subtle bottom gradient scrim revealed on desktop hover/focus for readability */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-100 md:opacity-0 transition-opacity duration-300 ease-out md:group-hover:opacity-100 md:group-focus-within:opacity-100 z-[5]"
+      />
+
       {/* ===== Controls & Legacy Text Overlay ===== */}
       <div className="relative z-10 flex flex-col justify-between h-full p-4 sm:p-5 md:p-6 pointer-events-none">
-        {/* Top row: Today's Quote badge (left) & Floating Audio Button (right) */}
+        {/* Top row: Quote badge (left) & Floating Audio Button (right) — Always visible at all times */}
         <div className="flex items-center justify-between pointer-events-auto">
-          {/* Today's Quote badge */}
+          {/* Quote badge */}
           <motion.span
             initial={reduceMotion ? false : { opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 backdrop-blur-md px-3.5 py-1.5"
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 backdrop-blur-md px-3.5 py-1.5 shadow-sm"
           >
             <Sparkles size={12} className="text-accent" fill="currentColor" />
             <span className="text-[11px] sm:text-[12px] font-semibold uppercase tracking-[0.12em] text-white/90">
-              Today&apos;s Quote
+              {usedToday > 0 ? "Today's Quote" : "Daily Inspiration Available"}
             </span>
           </motion.span>
 
-          {/* Floating Audio Control */}
+          {/* Floating Audio Control — Always visible */}
           {audioTrack?.source && (
             <div className="pointer-events-auto">
               <VisualQuoteAudioPlayer track={audioTrack} compact />
@@ -167,17 +176,26 @@ export default function LatestInspirationCard({
           </div>
         )}
 
-        {/* Bottom row: Action Buttons (left) & Usage Status Pill (right) — Hover reveal on desktop */}
-        <div className="flex items-center justify-between flex-wrap gap-2.5 sm:gap-3 transition-all duration-300 ease-out opacity-100 translate-y-0 pointer-events-auto md:opacity-0 md:translate-y-2 md:pointer-events-none md:group-hover:opacity-100 md:group-hover:translate-y-0 md:group-hover:pointer-events-auto">
+        {/* Bottom row: Action Buttons (left) & Usage Status Pill (right) — Smooth Hover / Focus Reveal on Desktop, Accessible on Mobile */}
+        <div className="flex items-center justify-between flex-wrap gap-2.5 sm:gap-3 opacity-100 translate-y-0 pointer-events-auto md:opacity-0 md:translate-y-2 md:pointer-events-none md:group-hover:opacity-100 md:group-hover:translate-y-0 md:group-hover:pointer-events-auto md:group-focus-within:opacity-100 md:group-focus-within:translate-y-0 md:group-focus-within:pointer-events-auto transition-all duration-300 ease-out">
           {/* Left Actions: Inspire + Favorite + Share + Read Again */}
           <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
-            {/* Primary Action: Inspire */}
+            {/* Primary Action: Inspire (Receive Today's / Random Inspiration) */}
             <button
-              onClick={onReadAgain}
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-accent px-4 sm:px-4.5 py-2 text-[12px] sm:text-[13px] font-semibold text-accent-foreground shadow-md shadow-accent/20 transition-all duration-150 hover:brightness-105 active:scale-[0.97]"
+              onClick={onInspire}
+              disabled={isReceiving}
+              className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-accent px-4 sm:px-4.5 py-2 text-[12px] sm:text-[13px] font-semibold text-accent-foreground shadow-md shadow-accent/20 transition-all duration-150 hover:brightness-105 active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed ${
+                usedToday === 0 ? "ring-2 ring-accent/60 shadow-lg shadow-accent/30" : ""
+              }`}
             >
               <Sparkles size={14} fill="currentColor" />
-              <span>Inspire</span>
+              <span>
+                {isReceiving
+                  ? "Inspiring..."
+                  : usedToday === 0
+                    ? "Receive Today's Inspiration"
+                    : "Inspire"}
+              </span>
             </button>
 
             {/* Favorite */}

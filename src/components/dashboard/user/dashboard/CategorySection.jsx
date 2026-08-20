@@ -65,13 +65,9 @@ export default function CategorySection({
   const categoryList = Array.isArray(categories) ? categories : [];
 
   const handleClick = (category) => {
+    if (disabled) return;
     if (onSelectCategory) {
       onSelectCategory(category);
-    } else {
-      const slug = category?.slug || category?.name?.toLowerCase() || '';
-      if (slug) {
-        router.push(`/inspiration/${slug}`);
-      }
     }
   };
 
@@ -108,7 +104,8 @@ export default function CategorySection({
             return (
               <motion.button
                 key={category?.id || category?._id || slug || index}
-                onClick={() => handleClick(category)}
+                type="button"
+                onClick={(e) => { e.preventDefault(); handleClick(category); }}
                 disabled={disabled}
                 initial={reduceMotion ? false : { opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}

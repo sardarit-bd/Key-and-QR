@@ -4,6 +4,7 @@ export { default as AuthorInput } from './AuthorInput';
 export { default as CategoryPills } from './CategoryPills';
 export { default as SubmitButton } from './SubmitButton';
 export { default as SubmitSuccessState } from './SubmitSuccessState';
+export { default as CooldownNotice } from './CooldownNotice';
 export { default as StatusChip } from './StatusChip';
 export { default as SubmissionCard } from './SubmissionCard';
 export { default as SubmissionFilters } from './SubmissionFilters';

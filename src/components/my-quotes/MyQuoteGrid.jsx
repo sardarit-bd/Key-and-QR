@@ -76,22 +76,22 @@ export default function MyQuoteGrid({
           transition={{ duration: 0.2 }}
           className={`grid ${
             view === 'grid'
-              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5'
+              ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6'
               : 'grid-cols-1 gap-4'
           }`}
         >
           {quotes.map((item, index) => (
             <motion.div
-              key={item._id}
+              key={item._id || index}
               custom={index}
               initial="hidden"
               animate="show"
               variants={itemVariants}
+              className="w-full flex flex-col"
             >
               <MyQuoteCard
                 receivedQuote={item}
                 view={view}
-                onToggleFavorite={onToggleFavorite}
               />
             </motion.div>
           ))}

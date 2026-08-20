@@ -56,20 +56,26 @@ const AVAILABILITY_OPTIONS = [
   { id: "out-of-stock", label: "Out of Stock", test: (s) => s <= 0 },
 ];
 
-/* ---------- Promotional Banner (dynamic image campaign from GET /hero) ---------- */
+/* ---------- Promotional Banner (dynamic image campaign from GET /hero/shop-hero) ---------- */
 function PromoBanner() {
   const reduceMotion = useReducedMotion();
-  const [hero, setHero] = useState(null);
+  const [shopHero, setShopHero] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       try {
-        const res = await api.get("/hero");
-        if (!cancelled) setHero(res.data?.data || null);
+        const res = await api.get("/hero/shop-hero");
+        if (!cancelled) setShopHero(res.data?.data || null);
       } catch {
-        if (!cancelled) setHero(null);
+        // Fallback to /hero if /hero/shop-hero is not reachable
+        try {
+          const fallbackRes = await api.get("/hero");
+          if (!cancelled) setShopHero(fallbackRes.data?.data || null);
+        } catch {
+          if (!cancelled) setShopHero(null);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -87,7 +93,7 @@ function PromoBanner() {
 
   // Image-only campaign banner. If the backend provides no image, render a
   // clean branded placeholder surface (no text, no CTA).
-  const imageUrl = hero?.imageUrl || null;
+  const imageUrl = shopHero?.imageUrl || shopHero?.shopHero?.imageUrl || null;
 
   return (
     <motion.div

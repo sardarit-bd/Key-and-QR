@@ -1,8 +1,10 @@
 'use client';
 
+import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { motion } from 'framer-motion';
-import { Heart, X, Crown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, X, Crown, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import useFavorite from '@/hooks/use-favorite/useFavorite';
@@ -10,8 +12,8 @@ import useFavorite from '@/hooks/use-favorite/useFavorite';
 /**
  * Reusable Favorite Button
  * Animated heart with loading and error states.
- * When a free user clicks Save on a quote, an upgrade prompt is shown
- * instead of sending a doomed POST /favorites request.
+ * When a free user clicks Save on a quote, a viewport-level portal upgrade prompt
+ * is shown instead of sending a doomed POST /favorites request.
  */
 export default function FavoriteButton({
   id,
@@ -26,6 +28,12 @@ export default function FavoriteButton({
   ...props
 }) {
   const router = useRouter();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const { isFavorite, isLoading, toggleFavorite, showUpgrade, dismissUpgrade } = useFavorite({
     id,
     type,
@@ -92,6 +100,78 @@ export default function FavoriteButton({
     </motion.div>
   );
 
+  const upgradeModal = showUpgrade && mounted ? (
+    createPortal(
+      <AnimatePresence>
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          onClick={dismissUpgrade}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95, y: 12 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: 12 }}
+            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+            className="relative w-full max-w-md max-h-[calc(100dvh-32px)] overflow-y-auto rounded-3xl border border-white/10 bg-card p-6 sm:p-7 shadow-2xl text-card-foreground"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={dismissUpgrade}
+              className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-foreground/5 text-foreground/60 hover:bg-foreground/10 hover:text-foreground transition cursor-pointer"
+              aria-label="Close"
+            >
+              <X size={16} />
+            </button>
+
+            {/* Header Icon + Title */}
+            <div className="flex items-center gap-3.5 mb-3.5">
+              <span className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-accent/30 bg-accent/10 shadow-[0_0_20px_-4px_rgba(253,182,92,0.3)]">
+                <Crown size={20} className="text-accent" />
+              </span>
+              <div>
+                <span className="text-[11px] font-semibold uppercase tracking-wider text-accent">
+                  MyInspire+
+                </span>
+                <h3 className="text-lg font-bold text-foreground leading-snug">
+                  Premium Required to Save
+                </h3>
+              </div>
+            </div>
+
+            {/* Description */}
+            <p className="text-xs sm:text-sm text-foreground-secondary leading-relaxed mb-6">
+              Free accounts can&apos;t save quotes to favorites. Upgrade to MyInspire+ for unlimited saves, category selection, and daily unlimited quotes.
+            </p>
+
+            {/* CTA Action Buttons */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  dismissUpgrade();
+                  router.push('/new-dashboard/user/premium');
+                }}
+                className="h-11 cursor-pointer rounded-xl bg-accent text-accent-foreground font-semibold hover:bg-accent/90 shadow-md shadow-accent/20 transition active:scale-[0.98] text-xs sm:text-sm flex items-center justify-center gap-1.5"
+              >
+                <Sparkles size={14} fill="currentColor" />
+                Upgrade Now
+              </button>
+              <button
+                type="button"
+                onClick={dismissUpgrade}
+                className="h-11 cursor-pointer rounded-xl border border-border bg-background hover:bg-muted font-medium text-foreground-secondary hover:text-foreground transition active:scale-[0.98] text-xs sm:text-sm"
+              >
+                Maybe Later
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      </AnimatePresence>,
+      document.body
+    )
+  ) : null;
+
   return (
     <>
       {variant ? (
@@ -128,45 +208,7 @@ export default function FavoriteButton({
         </button>
       )}
 
-      {/* Upgrade prompt (P1.1) — free user clicked Save on a quote */}
-      {showUpgrade && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4">
-          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-zinc-900 p-6 shadow-2xl relative">
-            <button
-              onClick={dismissUpgrade}
-              className="absolute right-4 top-4 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-              aria-label="Close"
-            >
-              <X size={20} />
-            </button>
-            <div className="flex items-center gap-3 mb-3">
-              <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-accent/25 bg-accent/10">
-                <Crown size={18} className="text-accent" />
-              </span>
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-                Premium required to save quotes
-              </h3>
-            </div>
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-5">
-              Free accounts can&apos;t save quotes to favorites. Upgrade to Premium for unlimited saves.
-            </p>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => router.push('/new-dashboard/user/premium')}
-                className="h-11 rounded-xl bg-gray-900 dark:bg-white dark:text-gray-900 text-white font-medium hover:bg-gray-800 dark:hover:bg-gray-100 transition"
-              >
-                Upgrade Now
-              </button>
-              <button
-                onClick={dismissUpgrade}
-                className="h-11 rounded-xl border border-gray-300 dark:border-white/20 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-white/5 transition"
-              >
-                Maybe Later
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      {upgradeModal}
     </>
   );
 }

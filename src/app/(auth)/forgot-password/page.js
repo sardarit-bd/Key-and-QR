@@ -40,7 +40,7 @@ export default function ForgotPasswordPage() {
             } else {
                 const errorMsg = result.error === "User not found with this email" 
                     ? "No account found with this email address." 
-                    : "Failed to send reset email. Please try again.";
+                    : (result.error || "Failed to send reset email. Please try again.");
                 setError(errorMsg);
                 toast.error(errorMsg);
             }

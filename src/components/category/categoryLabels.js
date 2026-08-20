@@ -52,20 +52,46 @@ export const PRETTY_CATEGORY_LABELS = {
   personal: 'Personal ♥',
 };
 
-export function getCategoryLabel(slug) {
-  if (!slug) return 'Inspiration';
-  const key = String(slug).toLowerCase();
-  return CATEGORY_LABELS[key] || prettifySlug(slug);
+export function getCategoryLabel(slugOrCategory) {
+  if (!slugOrCategory) return 'Inspiration';
+  if (typeof slugOrCategory === 'object') {
+    if (slugOrCategory.name && typeof slugOrCategory.name === 'string') {
+      return slugOrCategory.name;
+    }
+    const extracted = slugOrCategory.slug || slugOrCategory.id || slugOrCategory._id;
+    if (extracted && typeof extracted === 'string') {
+      return getCategoryLabel(extracted);
+    }
+    return 'Inspiration';
+  }
+  const str = String(slugOrCategory).trim();
+  if (!str || str.toLowerCase() === '[object object]') return 'Inspiration';
+  const key = str.toLowerCase();
+  return CATEGORY_LABELS[key] || prettifySlug(str);
 }
 
-export function getPrettyCategoryLabel(slug) {
-  if (!slug) return 'Inspiration';
-  const key = String(slug).toLowerCase();
-  return PRETTY_CATEGORY_LABELS[key] || prettifySlug(slug);
+export function getPrettyCategoryLabel(slugOrCategory) {
+  if (!slugOrCategory) return 'Inspiration';
+  if (typeof slugOrCategory === 'object') {
+    if (slugOrCategory.name && typeof slugOrCategory.name === 'string') {
+      return slugOrCategory.name;
+    }
+    const extracted = slugOrCategory.slug || slugOrCategory.id || slugOrCategory._id;
+    if (extracted && typeof extracted === 'string') {
+      return getPrettyCategoryLabel(extracted);
+    }
+    return 'Inspiration';
+  }
+  const str = String(slugOrCategory).trim();
+  if (!str || str.toLowerCase() === '[object object]') return 'Inspiration';
+  const key = str.toLowerCase();
+  return PRETTY_CATEGORY_LABELS[key] || prettifySlug(str);
 }
 
 function prettifySlug(slug) {
-  return String(slug)
+  const str = String(slug).trim();
+  if (!str || str.toLowerCase() === '[object object]') return 'Inspiration';
+  return str
     .split(/[-_]/)
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');

@@ -28,6 +28,29 @@ export const pendingQuoteService = {
   },
 
   /**
+   * Get the user's current quote submission eligibility (cooldown state).
+   * GET /pending-quotes/status
+   * Returns { canSubmit, plan, cooldownDays, cooldownEndsAt, lastSubmittedAt, remainingMs }.
+   */
+  getSubmissionStatus: async () => {
+    try {
+      const response = await api.get('/pending-quotes/status');
+      return {
+        success: true,
+        data: response.data?.data || null,
+        status: response.status,
+      };
+    } catch (error) {
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Failed to load submission status',
+        status: error.response?.status || 500,
+        data: null,
+      };
+    }
+  },
+
+  /**
    * Get the user's submission history (paginated + filterable).
    * GET /pending-quotes/my-quotes?page&limit&search&category&status&sortBy
    */
