@@ -1,7 +1,14 @@
 'use client';
 
-import AdminHeroPage from '@/components/dashboard/admin/hero/AdminHeroPage';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
-export default function AdminHeroRoute() {
-  return <AdminHeroPage />;
+export default function DeprecatedAdminHeroRoute() {
+  const router = useRouter();
+
+  useEffect(() => {
+    router.replace('/new-dashboard/admin/content/homepage-hero');
+  }, [router]);
+
+  return null;
 }

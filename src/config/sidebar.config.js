@@ -282,18 +282,31 @@ export const SIDEBAR_CONFIG = {
       visibility: MENU_VISIBILITY.ADMIN,
     },
     {
-      id: "admin-hero",
-      title: "Hero Section",
-      icon: ImageIcon,
-      href: "/new-dashboard/admin/hero",
-      visibility: MENU_VISIBILITY.ADMIN,
-    },
-    {
       id: "admin-subscriptions",
       title: "Subscriptions",
       icon: CreditCard,
       href: "/new-dashboard/admin/subscriptions",
       visibility: MENU_VISIBILITY.ADMIN,
+    },
+    {
+      id: "admin-content",
+      title: "Content Management",
+      icon: ImageIcon,
+      visibility: MENU_VISIBILITY.ADMIN,
+      children: [
+        {
+          id: "admin-content-homepage-hero",
+          title: "Homepage Hero",
+          href: "/new-dashboard/admin/content/homepage-hero",
+          visibility: MENU_VISIBILITY.ADMIN,
+        },
+        {
+          id: "admin-content-shop-hero",
+          title: "Shop Hero",
+          href: "/new-dashboard/admin/content/shop-hero",
+          visibility: MENU_VISIBILITY.ADMIN,
+        },
+      ],
     },
   ],
 

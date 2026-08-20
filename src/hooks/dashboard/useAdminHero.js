@@ -6,6 +6,7 @@ import heroService from '@/services/hero-service/hero.service';
 export const HERO_KEYS = {
   all: ['hero'],
   content: ['hero', 'content'],
+  shop: ['hero', 'shop'],
 };
 
 const DEFAULT_HERO = {
@@ -25,9 +26,14 @@ const DEFAULT_HERO = {
   enabled: true,
 };
 
+const DEFAULT_SHOP_HERO = {
+  imageUrl: '',
+  publicId: '',
+};
+
 /**
- * Fetch the singleton hero content.
- * Returns the raw API envelope { success, message, data }.
+ * Fetch the singleton homepage hero content.
+ * Returns the data payload.
  */
 export function useHeroContent(enabled = true) {
   return useQuery({
@@ -45,7 +51,12 @@ export function useHeroContent(enabled = true) {
 }
 
 /**
- * Admin mutation: save hero content.
+ * Alias for useHeroContent.
+ */
+export const useHomepageHeroContent = useHeroContent;
+
+/**
+ * Admin mutation: save homepage hero content.
  * Invalidates the hero cache so the public site refreshes.
  */
 export function useUpdateHero() {
@@ -65,7 +76,51 @@ export function useUpdateHero() {
 }
 
 /**
- * Admin mutation: upload a new hero image.
+ * Alias for useUpdateHero.
+ */
+export const useUpdateHomepageHero = useUpdateHero;
+
+/**
+ * Fetch the shop hero image content.
+ */
+export function useShopHeroContent(enabled = true) {
+  return useQuery({
+    queryKey: HERO_KEYS.shop,
+    queryFn: async () => {
+      const res = await heroService.getShopHero();
+      return res?.data || null;
+    },
+    enabled,
+    staleTime: 5 * 60 * 1000,
+    gcTime: 10 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+}
+
+/**
+ * Admin mutation: save shop hero image data.
+ * Invalidates the shop hero cache.
+ */
+export function useUpdateShopHero() {
+  const queryClient = useQueryClient();
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: HERO_KEYS.shop });
+    queryClient.invalidateQueries({ queryKey: HERO_KEYS.all });
+  };
+
+  return useMutation({
+    mutationFn: async (payload) => {
+      const res = await heroService.updateShopHero(payload);
+      return res?.data || res;
+    },
+    onSettled: invalidate,
+  });
+}
+
+/**
+ * Admin mutation: upload a new hero image (works for both Homepage & Shop Hero).
  * Returns { url, publicId }.
  */
 export function useUploadHeroImage() {
@@ -77,4 +132,4 @@ export function useUploadHeroImage() {
   });
 }
 
-export { DEFAULT_HERO };
+export { DEFAULT_HERO, DEFAULT_SHOP_HERO };
