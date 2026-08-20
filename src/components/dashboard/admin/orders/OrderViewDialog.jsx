@@ -138,9 +138,12 @@ export default function OrderViewDialog({ open, onOpenChange, order, isLoading =
             <Section icon={MapPin} title="Shipping">
               {order.shippingAddress ? (
                 <>
+                  {order.shippingAddress.fullName && <Row label="Recipient" value={order.shippingAddress.fullName} />}
+                  {order.shippingAddress.phone && <Row label="Phone" value={order.shippingAddress.phone} />}
                   <Row label="Address" value={order.shippingAddress.address || '—'} />
-                  <Row label="City" value={`${order.shippingAddress.city || ''}, ${order.shippingAddress.state || ''}`} />
+                  <Row label="City / State" value={[order.shippingAddress.city, order.shippingAddress.state].filter(Boolean).join(', ') || '—'} />
                   <Row label="ZIP" value={order.shippingAddress.postalCode || '—'} />
+                  {order.shippingAddress.country && <Row label="Country" value={order.shippingAddress.country} />}
                 </>
               ) : (
                 <p className="text-xs text-foreground-tertiary">No shipping address</p>
