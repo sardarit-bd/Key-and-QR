@@ -35,7 +35,12 @@ export function useReceiveQuoteMutation() {
       queryClient.invalidateQueries({ queryKey: receivedQuoteKeys.all });
     },
     onError: (error) => {
-      toast.error(error?.message || 'Failed to receive quote');
+      const msg = error?.message || 'Failed to receive quote';
+      if (msg.includes('No available quotes')) {
+        toast.error('No inspiration is available in this category yet.');
+      } else {
+        toast.error(msg);
+      }
     },
   });
 }

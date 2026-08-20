@@ -58,6 +58,7 @@ export default function DashboardHome({
       image: q.image || null,
       theme: q.theme || null,
       editorData: q.editorData || payload?.editorData || null,
+      renderedImages: q.renderedImages || payload?.renderedImages || null,
       category: payload?.category || null,
       receivedAt: payload?.receivedAt || null,
       favorite: !!payload?.favorite,
@@ -122,8 +123,10 @@ export default function DashboardHome({
       {hasReceivedQuote ? (
         <LatestInspirationCard
           inspiration={latestInspiration}
+          onInspire={handleReceiveFirst}
           onShare={handleShare}
           onReadAgain={() => latestInspiration?.id && handleReadAgain(latestInspiration.id)}
+          isReceiving={receiveQuote.isPending}
         />
       ) : (
         <WelcomeCard
@@ -136,6 +139,7 @@ export default function DashboardHome({
       {/* 3. Explore Categories */}
       <CategorySection
         categories={categories}
+        onSelectCategory={handleSelectCategory}
         disabled={receiveQuote.isPending}
       />
 

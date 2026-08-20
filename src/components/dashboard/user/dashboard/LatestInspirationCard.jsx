@@ -9,9 +9,11 @@ import VisualQuoteAudioPlayer from "@/components/quote/VisualQuoteAudioPlayer";
 
 export default function LatestInspirationCard({
   inspiration,
+  onInspire,
   onShare,
   onReadAgain,
   onFavoriteChange,
+  isReceiving,
 }) {
   const reduceMotion = useReducedMotion();
   const quote = inspiration?.text || "";
@@ -108,9 +110,9 @@ export default function LatestInspirationCard({
 
       {/* ===== Controls & Legacy Text Overlay ===== */}
       <div className="relative z-10 flex flex-col justify-between h-full p-4 sm:p-5 md:p-6 pointer-events-none">
-        {/* Top row: Today's Quote badge (left) & Floating Audio Button (right) */}
+        {/* Top row: Quote badge (left) & Floating Audio Button (right) */}
         <div className="flex items-center justify-between pointer-events-auto">
-          {/* Today's Quote badge */}
+          {/* Quote badge */}
           <motion.span
             initial={reduceMotion ? false : { opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
@@ -119,7 +121,7 @@ export default function LatestInspirationCard({
           >
             <Sparkles size={12} className="text-accent" fill="currentColor" />
             <span className="text-[11px] sm:text-[12px] font-semibold uppercase tracking-[0.12em] text-white/90">
-              Today&apos;s Quote
+              {usedToday > 0 ? "Today's Quote" : "Daily Inspiration Available"}
             </span>
           </motion.span>
 
@@ -167,17 +169,26 @@ export default function LatestInspirationCard({
           </div>
         )}
 
-        {/* Bottom row: Action Buttons (left) & Usage Status Pill (right) — Hover reveal on desktop */}
-        <div className="flex items-center justify-between flex-wrap gap-2.5 sm:gap-3 transition-all duration-300 ease-out opacity-100 translate-y-0 pointer-events-auto md:opacity-0 md:translate-y-2 md:pointer-events-none md:group-hover:opacity-100 md:group-hover:translate-y-0 md:group-hover:pointer-events-auto">
+        {/* Bottom row: Action Buttons (left) & Usage Status Pill (right) — Always visible for clear accessibility */}
+        <div className="flex items-center justify-between flex-wrap gap-2.5 sm:gap-3 transition-all duration-300 ease-out opacity-100 translate-y-0 pointer-events-auto">
           {/* Left Actions: Inspire + Favorite + Share + Read Again */}
           <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
-            {/* Primary Action: Inspire */}
+            {/* Primary Action: Inspire (Receive Today's / Random Inspiration) */}
             <button
-              onClick={onReadAgain}
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-accent px-4 sm:px-4.5 py-2 text-[12px] sm:text-[13px] font-semibold text-accent-foreground shadow-md shadow-accent/20 transition-all duration-150 hover:brightness-105 active:scale-[0.97]"
+              onClick={onInspire}
+              disabled={isReceiving}
+              className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-accent px-4 sm:px-4.5 py-2 text-[12px] sm:text-[13px] font-semibold text-accent-foreground shadow-md shadow-accent/20 transition-all duration-150 hover:brightness-105 active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed ${
+                usedToday === 0 ? "ring-2 ring-accent/60 shadow-lg shadow-accent/30" : ""
+              }`}
             >
               <Sparkles size={14} fill="currentColor" />
-              <span>Inspire</span>
+              <span>
+                {isReceiving
+                  ? "Inspiring..."
+                  : usedToday === 0
+                    ? "Receive Today's Inspiration"
+                    : "Inspire"}
+              </span>
             </button>
 
             {/* Favorite */}

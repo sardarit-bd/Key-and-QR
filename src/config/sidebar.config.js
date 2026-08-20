@@ -20,6 +20,7 @@ import {
   CreditCardIcon,
   DollarSign,
   Layers,
+  ImageIcon,
 } from "lucide-react";
 
 /**
@@ -281,6 +282,13 @@ export const SIDEBAR_CONFIG = {
       visibility: MENU_VISIBILITY.ADMIN,
     },
     {
+      id: "admin-hero",
+      title: "Hero Section",
+      icon: ImageIcon,
+      href: "/new-dashboard/admin/hero",
+      visibility: MENU_VISIBILITY.ADMIN,
+    },
+    {
       id: "admin-subscriptions",
       title: "Subscriptions",
       icon: CreditCard,
@@ -361,6 +369,7 @@ export const ICON_MAP = {
   CreditCardIcon,
   DollarSign,
   Layers,
+  ImageIcon,
 };
 
 export default SIDEBAR_CONFIG;
