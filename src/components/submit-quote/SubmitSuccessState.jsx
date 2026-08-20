@@ -3,11 +3,16 @@
 import { motion } from 'framer-motion';
 import { CheckCircle2, Clock, Sparkles } from 'lucide-react';
 import Link from 'next/link';
+import CooldownNotice from './CooldownNotice';
 
 /**
  * Premium post-submission success state.
+ *
+ * The user has just created a submission, so the cooldown is active.
+ * "Write Another Quote" is replaced by the live cooldown notice — the
+ * submission form must not be reachable while the cooldown is running.
  */
-export default function SubmitSuccessState({ onWriteAnother }) {
+export default function SubmitSuccessState({ cooldownEndsAt, plan, onCooldownEnd }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.96 }}
@@ -39,14 +44,18 @@ export default function SubmitSuccessState({ onWriteAnother }) {
         We&apos;ll notify you once it&apos;s approved.
       </div>
 
+      {/* Live cooldown countdown — the form stays locked until it expires */}
+      {cooldownEndsAt && (
+        <div className="mt-6">
+          <CooldownNotice
+            cooldownEndsAt={cooldownEndsAt}
+            plan={plan}
+            onCooldownEnd={onCooldownEnd}
+          />
+        </div>
+      )}
+
       <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
-        <button
-          onClick={onWriteAnother}
-          className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-gradient-to-r from-accent to-accent/85 px-6 py-3 text-sm font-semibold text-accent-foreground shadow-[0_12px_32px_-8px_rgba(253,182,92,0.5)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_16px_40px_-8px_rgba(253,182,92,0.6)] active:scale-95"
-        >
-          <Sparkles size={15} />
-          Write Another Quote
-        </button>
         <Link
           href="/new-dashboard/user/submit-quote/history"
           className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-background-secondary/50 px-6 py-3 text-sm font-medium text-foreground-secondary transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/30 hover:text-foreground active:scale-95 light:border-[#E8DFCE]/70 light:bg-white/70"
