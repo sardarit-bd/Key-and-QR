@@ -70,19 +70,38 @@ export default function MyQuotesPage() {
     totalPages: meta.totalPage || 0,
   };
 
-  // Client-side sort + search across the fetched library (the backend history
-  // endpoint has no search/sort params — pagination stays server-driven).
+  // Client-side sort + search across the fetched library (filter invalid/empty records).
   const filteredQuotes = quoteList
     .filter((item) => {
+      const q = item?.quote || item;
+      if (!q) return false;
+      const text = typeof q.text === 'string' ? q.text.trim() : '';
+      const hasArtwork = Boolean(
+        q.renderedImages?.desktop?.url ||
+        q.renderedImages?.mobile?.url ||
+        q.quote?.renderedImages?.desktop?.url ||
+        q.quote?.renderedImages?.mobile?.url ||
+        q.imageUrl ||
+        q.image?.url ||
+        (typeof q.image === 'string' && (q.image.startsWith('http') || q.image.startsWith('/'))) ||
+        (q.editorData && ((q.editorData.desktop?.elements?.length > 0) || (q.editorData.mobile?.elements?.length > 0) || (q.editorData.elements?.length > 0)))
+      );
+      if (!text && !hasArtwork) return false;
+
       if (!search) return true;
-      const text = `${item.quote?.text || ''} ${item.quote?.author || ''}`.toLowerCase();
-      return text.includes(search.toLowerCase());
+      const searchTarget = `${text} ${q.author || ''}`.toLowerCase();
+      return searchTarget.includes(search.toLowerCase());
     })
     .sort((a, b) => {
-      if (sort === 'oldest') return new Date(a.receivedAt) - new Date(b.receivedAt);
-      if (sort === 'alphabetical')
-        return (a.quote?.text || '').localeCompare(b.quote?.text || '');
-      return new Date(b.receivedAt) - new Date(a.receivedAt);
+      const aDate = a.receivedAt || a.createdAt || 0;
+      const bDate = b.receivedAt || b.createdAt || 0;
+      if (sort === 'oldest') return new Date(aDate) - new Date(bDate);
+      if (sort === 'alphabetical') {
+        const aText = (a.quote?.text || a.text || '').trim();
+        const bText = (b.quote?.text || b.text || '').trim();
+        return aText.localeCompare(bText);
+      }
+      return new Date(bDate) - new Date(aDate);
     });
 
   const handlePageChange = useCallback((newPage) => {
