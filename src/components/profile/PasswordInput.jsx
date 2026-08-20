@@ -5,7 +5,7 @@ import { Eye, EyeOff, Lock } from 'lucide-react';
 
 /**
  * PasswordInput — premium password field with show/hide toggle.
- * Pure UI, no auth logic.
+ * Follows standard React input event contract: calls onChange(e).
  */
 export default function PasswordInput({
   id,
@@ -17,6 +17,12 @@ export default function PasswordInput({
   hasError = false,
 }) {
   const [visible, setVisible] = useState(false);
+
+  const handleChange = (e) => {
+    if (typeof onChange === 'function') {
+      onChange(e);
+    }
+  };
 
   return (
     <div>
@@ -33,8 +39,8 @@ export default function PasswordInput({
         <input
           id={id}
           type={visible ? 'text' : 'password'}
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
+          value={value ?? ''}
+          onChange={handleChange}
           autoComplete={autoComplete}
           placeholder={placeholder}
           aria-invalid={hasError || undefined}

@@ -88,9 +88,14 @@ export const SIDEBAR_CONFIG = {
       id: "submit-quote",
       title: "Submit Quote",
       icon: PenLine,
-      href: "/new-dashboard/user/submit-quote",
       visibility: MENU_VISIBILITY.ALL,
       children: [
+        {
+          id: "submit-quote-submit",
+          title: "Submit",
+          href: "/new-dashboard/user/submit-quote",
+          visibility: MENU_VISIBILITY.ALL,
+        },
         {
           id: "submission-history",
           title: "Submission History",
@@ -98,6 +103,13 @@ export const SIDEBAR_CONFIG = {
           visibility: MENU_VISIBILITY.ALL,
         },
       ],
+    },
+    {
+      id: "my-qr",
+      title: "My QR",
+      icon: QrCode,
+      href: "/new-dashboard/user/my-qr",
+      visibility: MENU_VISIBILITY.ALL,
     },
     {
       id: "favorites",
@@ -307,6 +319,13 @@ export const SIDEBAR_CONFIG = {
           visibility: MENU_VISIBILITY.ADMIN,
         },
       ],
+    },
+    {
+      id: "admin-profile",
+      title: "Profile",
+      icon: UserCircle,
+      href: "/admin/profile",
+      visibility: MENU_VISIBILITY.ADMIN,
     },
   ],
 

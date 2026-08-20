@@ -927,7 +927,7 @@ export default function ProfilePage() {
                         id="pw-old"
                         label="Current Password"
                         value={pwOld}
-                        onChange={setPwOld}
+                        onChange={(e) => setPwOld(e.target?.value ?? e)}
                         placeholder="Enter current password"
                         autoComplete="current-password"
                         hasError={!!pwError}
@@ -937,7 +937,7 @@ export default function ProfilePage() {
                           id="pw-new"
                           label="New Password"
                           value={pwNew}
-                          onChange={setPwNew}
+                          onChange={(e) => setPwNew(e.target?.value ?? e)}
                           placeholder="Min 8 characters"
                           autoComplete="new-password"
                           hasError={!!pwError}
@@ -948,7 +948,7 @@ export default function ProfilePage() {
                         id="pw-confirm"
                         label="Confirm New Password"
                         value={pwConfirm}
-                        onChange={setPwConfirm}
+                        onChange={(e) => setPwConfirm(e.target?.value ?? e)}
                         placeholder="Re-enter new password"
                         autoComplete="new-password"
                         hasError={!!pwError}

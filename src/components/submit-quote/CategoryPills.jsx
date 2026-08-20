@@ -1,6 +1,7 @@
 'use client';
 
 import { Sparkles } from 'lucide-react';
+import { getCategoryIcon } from '@/components/category';
 import { useSubmissionCategoryOptions } from './submitQuote.constants';
 
 /**
@@ -9,7 +10,7 @@ import { useSubmissionCategoryOptions } from './submitQuote.constants';
  * collection (single source of truth) filtered to the valid submission set.
  */
 export default function CategoryPills({ value, onChange }) {
-  const { options } = useSubmissionCategoryOptions();
+  const { options, isLoading } = useSubmissionCategoryOptions();
 
   return (
     <div className="space-y-2.5">
@@ -26,6 +27,8 @@ export default function CategoryPills({ value, onChange }) {
       <div className="hide-scrollbar -mx-1 flex gap-2 overflow-x-auto px-1 pb-1.5 sm:flex-wrap sm:overflow-visible sm:pb-0">
         {options.map((cat) => {
           const isSelected = value === cat.id;
+          const CategoryIcon = getCategoryIcon(cat.id);
+
           return (
             <button
               key={cat.id}
@@ -44,6 +47,14 @@ export default function CategoryPills({ value, onChange }) {
                   <span className="pointer-events-none absolute -inset-px rounded-full bg-accent/15 blur-[6px]" />
                   <span className="pointer-events-none absolute inset-0 rounded-full border border-accent/30" />
                 </>
+              )}
+              {CategoryIcon && (
+                <CategoryIcon
+                  size={14}
+                  className={`relative z-10 shrink-0 transition-colors ${
+                    isSelected ? 'text-accent' : 'text-foreground-tertiary group-hover:text-foreground-secondary'
+                  }`}
+                />
               )}
               <span className="relative z-10">{cat.label}</span>
               {isSelected && (

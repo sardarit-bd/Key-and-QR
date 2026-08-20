@@ -65,6 +65,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   const [isClaiming, setIsClaiming] = useState(false);
   const [isClaimed, setIsClaimed] = useState(false);
 
+  const isGift = Boolean(data?.isGift || data?.gift || data?.giftOrderId || data?.giftStatus || data?.gift?.giftStatus);
   const isGiftClaimable = (data?.isClaimable || data?.gift?.isClaimable) && !isClaimed;
   const giftOrderId = data?.giftOrderId || data?.gift?.orderId;
 
