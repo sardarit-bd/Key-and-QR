@@ -71,6 +71,13 @@ export const SIDEBAR_CONFIG = {
       visibility: MENU_VISIBILITY.ALL,
     },
     {
+      id: "my-qr",
+      title: "My QR",
+      icon: QrCode,
+      href: "/new-dashboard/user/my-qr",
+      visibility: MENU_VISIBILITY.ALL,
+    },
+    {
       id: "scan-history",
       title: "Scan History",
       icon: QrCode,
@@ -82,6 +89,13 @@ export const SIDEBAR_CONFIG = {
       title: "My Quotes",
       icon: Quote,
       href: "/new-dashboard/user/my-quotes",
+      visibility: MENU_VISIBILITY.ALL,
+    },
+    {
+      id: "favorites",
+      title: "Collection",
+      icon: Heart,
+      href: "/new-dashboard/user/favorites",
       visibility: MENU_VISIBILITY.ALL,
     },
     {
@@ -103,20 +117,6 @@ export const SIDEBAR_CONFIG = {
           visibility: MENU_VISIBILITY.ALL,
         },
       ],
-    },
-    {
-      id: "my-qr",
-      title: "My QR",
-      icon: QrCode,
-      href: "/new-dashboard/user/my-qr",
-      visibility: MENU_VISIBILITY.ALL,
-    },
-    {
-      id: "favorites",
-      title: "Collection",
-      icon: Heart,
-      href: "/new-dashboard/user/favorites",
-      visibility: MENU_VISIBILITY.ALL,
     },
     {
       id: "orders",
