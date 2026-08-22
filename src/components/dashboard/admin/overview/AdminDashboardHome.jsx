@@ -43,13 +43,13 @@ export default function AdminDashboardHome({ data, selectedRange, onRangeChange 
       </div>
 
       {/* 6. Recent Activity + System Status */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
+      {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
         <AdminRecentActivity activity={recentActivity} />
         <AdminSystemStatus systemStatus={systemStatus} />
-      </div>
+      </div> */}
 
       {/* 7. Quick Actions */}
-      <AdminQuickActions actions={quickActions} />
+      {/* <AdminQuickActions actions={quickActions} /> */}
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Sidebar from '@/components/dashboard/user/layout/Sidebar';
+import MobileTopNavbar from '@/components/dashboard/user/layout/MobileTopNavbar';
 import { ThemeProvider } from '@/config/dashboard/engine/ThemeProvider';
 import { THEME_IDS } from '@/config/dashboard/themes';
 import { useAuthStore } from '@/store/authStore';
@@ -49,6 +50,7 @@ export default function AdminDashboardLayout({ children }) {
 
   const [hydrated, setHydrated] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setHydrated(true);
@@ -74,11 +76,19 @@ export default function AdminDashboardLayout({ children }) {
 
   return (
     <ThemeProvider themeId={THEME_IDS.ADMIN_DASHBOARD}>
-      <div className="min-h-screen flex bg-background text-foreground font-sans selection:bg-primary/30">
+      <div className="min-h-screen flex flex-col lg:flex-row bg-background text-foreground font-sans selection:bg-primary/30">
+        {/* Mobile Top Navbar */}
+        <MobileTopNavbar onMenuClick={() => setIsMobileMenuOpen(true)} />
+
+        {/* Sidebar (Permanent Left on Desktop, Right-Sliding Drawer on Mobile) */}
         <Sidebar
           user={user}
+          isCollapsed={sidebarCollapsed}
           onToggle={(collapsed) => setSidebarCollapsed(collapsed)}
+          isMobileOpen={isMobileMenuOpen}
+          onMobileClose={() => setIsMobileMenuOpen(false)}
         />
+
         <main className={`flex-1 w-full ${marginLeftClass} transition-all duration-300`}>
           <div className="min-h-screen">
             {children}

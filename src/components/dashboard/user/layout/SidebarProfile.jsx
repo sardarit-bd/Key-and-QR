@@ -10,6 +10,7 @@ export default function SidebarProfile({ profile, isCollapsed }) {
     profile?.plan === 'admin' ||
     pathname?.startsWith('/new-dashboard/admin') ||
     pathname?.startsWith('/admin');
+
   const profileHref = isAdmin
     ? '/new-dashboard/admin/profile'
     : '/new-dashboard/user/profile';
@@ -21,22 +22,17 @@ export default function SidebarProfile({ profile, isCollapsed }) {
       <div className="flex justify-center px-4 mb-6">
         <Link
           href={profileHref}
-          className="relative w-10 h-10 rounded-full bg-sidebar-accent flex items-center justify-center text-sidebar-primary text-lg border border-sidebar-border overflow-hidden hover:ring-2 hover:ring-primary/40 transition-all cursor-pointer"
-          title={`${profile?.name || 'Profile'} (${isAdmin ? 'Admin Profile' : 'User Profile'})`}
-          aria-label="View Profile"
+          className="relative w-11 h-11 rounded-xl bg-indigo-50/50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-sm font-bold shadow-sm border border-indigo-100/50 dark:border-indigo-500/20 overflow-hidden hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-400/50 transition-all cursor-pointer"
+          title={`${profile?.name || 'Profile'}`}
         >
           {hasAvatar ? (
-            <img
-              src={hasAvatar}
-              alt={profile?.name || 'User'}
-              className="w-full h-full object-cover"
-            />
+            <img src={hasAvatar} alt="User" className="w-full h-full object-cover" />
           ) : (
-            profile?.initials
+            profile?.initials || 'SA'
           )}
           {profile?.plan === 'premium' && (
-            <div className="absolute -top-1 -right-1">
-              <Crown className="w-3.5 h-3.5 text-accent" />
+            <div className="absolute -top-1 -right-1 bg-white dark:bg-gray-900 rounded-full p-0.5 shadow-sm border border-transparent dark:border-gray-800">
+              <Crown className="w-3 h-3 text-amber-500 dark:text-amber-400" />
             </div>
           )}
         </Link>
@@ -45,55 +41,44 @@ export default function SidebarProfile({ profile, isCollapsed }) {
   }
 
   return (
-    <div className="flex flex-col items-center px-5 py-5 mb-4">
-      {/* Avatar with Profile Link */}
-      <Link
-        href={profileHref}
-        className="group relative flex-shrink-0 mb-3 block focus:outline-none"
-        title="View profile settings"
-      >
-        <div className="relative w-16 h-16 rounded-full bg-sidebar-accent flex items-center justify-center text-sidebar-primary text-[28px] border border-sidebar-border overflow-hidden group-hover:ring-2 group-hover:ring-primary/40 transition-all">
-          {hasAvatar ? (
-            <img
-              src={hasAvatar}
-              alt={profile?.name || 'User'}
-              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-            />
-          ) : (
-            profile?.initials
-          )}
-        </div>
-        {profile?.plan === 'premium' && (
-          <div className="absolute -bottom-0.5 -right-0.5 flex h-5 w-5 items-center justify-center rounded-full border border-accent/40 bg-background">
-            <Crown className="w-3 h-3 text-accent" />
+    <div className="px-4 mb-6">
+      {/* Modern Floating Card Effect with Dark Mode Support */}
+      <div className="relative flex flex-col items-center p-5 rounded-2xl bg-white/50 dark:bg-gray-900/40 backdrop-blur-md border border-gray-200/60 dark:border-gray-800/60 shadow-sm transition-all hover:shadow-md hover:border-indigo-200/60 dark:hover:border-indigo-500/30">
+
+        {/* Avatar Section */}
+        <Link href={profileHref} className="group relative block mb-4">
+          <div className="w-16 h-16 rounded-full p-1 bg-white dark:bg-gray-950 shadow-sm border border-gray-100 dark:border-gray-800 group-hover:border-indigo-200 dark:group-hover:border-indigo-500/50 group-hover:scale-105 transition-all duration-300">
+            <div className="w-full h-full rounded-full bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center overflow-hidden text-indigo-600 dark:text-indigo-400 font-bold text-xl">
+              {hasAvatar ? (
+                <img src={hasAvatar} alt="User" className="w-full h-full object-cover" />
+              ) : (
+                profile?.initials || 'SA'
+              )}
+            </div>
           </div>
-        )}
-      </Link>
+          {profile?.plan === 'premium' && (
+            <div className="absolute bottom-0 right-0 p-1 bg-white dark:bg-gray-900 rounded-full shadow-sm border border-gray-100 dark:border-gray-800">
+              <Crown className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+            </div>
+          )}
+        </Link>
 
-      {/* User Info */}
-      <Link
-        href={profileHref}
-        className="text-[15px] font-semibold text-foreground mb-0.5 hover:text-primary transition-colors text-center truncate max-w-full"
-      >
-        {profile?.name}
-      </Link>
-      <p className="text-[12px] text-foreground-secondary mb-2 text-center truncate max-w-full">
-        {profile?.email}
-      </p>
+        {/* User Info Section */}
+        <div className="text-center w-full">
+          <Link href={profileHref} className="block text-[16px] font-bold text-gray-800 dark:text-gray-100 mb-0.5 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate">
+            {profile?.name || 'Super Admin'}
+          </Link>
+          <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-3 truncate">
+            {profile?.email || 'zzmante@gmail.com'}
+          </p>
 
-      {profile?.memberSince && (
-        <p className="text-[11px] text-foreground-tertiary mb-2">
-          Member since {profile?.memberSince}
-        </p>
-      )}
-
-      <span
-        className={`px-3 py-1 rounded-full bg-background-secondary text-[11px] font-medium ${
-          profile?.badgeColor || 'text-foreground-secondary'
-        }`}
-      >
-        {profile?.subscriptionLabel}
-      </span>
+          {/* Modern Badge */}
+          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100/80 dark:border-indigo-500/20 text-[12px] font-semibold text-indigo-600 dark:text-indigo-400">
+            <Shield className="w-3.5 h-3.5" />
+            {profile?.subscriptionLabel || 'Administrator'}
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
