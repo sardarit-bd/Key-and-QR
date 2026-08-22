@@ -11,10 +11,7 @@ function getCategoryTheme(slug, customColor) {
   if (customColor && customColor.startsWith('#')) {
     return {
       accentColor: customColor,
-      bgTint: 'bg-white/80 dark:bg-slate-900/60',
-      borderColor: 'border-border/80',
       iconBg: `${customColor}15`,
-      borderHover: 'hover:border-primary/50',
       pillBg: 'bg-muted text-foreground-secondary',
       arrowBg: 'group-hover:bg-primary group-hover:text-white',
     };
@@ -24,10 +21,7 @@ function getCategoryTheme(slug, customColor) {
     case 'love':
       return {
         accentColor: '#e11d48',
-        bgTint: 'bg-gradient-to-b from-rose-50/70 to-white/90 dark:from-rose-950/20 dark:to-slate-900/60',
-        borderColor: 'border-rose-100/90 dark:border-rose-900/30',
         iconBg: 'rgba(225, 29, 72, 0.12)',
-        borderHover: 'hover:border-rose-300 dark:hover:border-rose-700',
         pillBg: 'bg-rose-100/70 text-rose-700 dark:bg-rose-950/60 dark:text-rose-300',
         arrowBg: 'group-hover:bg-rose-500 group-hover:text-white',
       };
@@ -35,10 +29,7 @@ function getCategoryTheme(slug, customColor) {
     case 'strength':
       return {
         accentColor: '#ea580c',
-        bgTint: 'bg-gradient-to-b from-orange-50/70 to-white/90 dark:from-orange-950/20 dark:to-slate-900/60',
-        borderColor: 'border-orange-100/90 dark:border-orange-900/30',
         iconBg: 'rgba(234, 88, 12, 0.12)',
-        borderHover: 'hover:border-orange-300 dark:hover:border-orange-700',
         pillBg: 'bg-orange-100/70 text-orange-700 dark:bg-orange-950/60 dark:text-orange-300',
         arrowBg: 'group-hover:bg-orange-500 group-hover:text-white',
       };
@@ -48,20 +39,14 @@ function getCategoryTheme(slug, customColor) {
     case 'mindfulness':
       return {
         accentColor: '#9333ea',
-        bgTint: 'bg-gradient-to-b from-purple-50/70 to-white/90 dark:from-purple-950/20 dark:to-slate-900/60',
-        borderColor: 'border-purple-100/90 dark:border-purple-900/30',
         iconBg: 'rgba(147, 51, 234, 0.12)',
-        borderHover: 'hover:border-purple-300 dark:hover:border-purple-700',
         pillBg: 'bg-purple-100/70 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300',
         arrowBg: 'group-hover:bg-purple-600 group-hover:text-white',
       };
     case 'test':
       return {
         accentColor: '#d97706',
-        bgTint: 'bg-gradient-to-b from-amber-50/70 to-white/90 dark:from-amber-950/20 dark:to-slate-900/60',
-        borderColor: 'border-amber-100/90 dark:border-amber-900/30',
         iconBg: 'rgba(217, 119, 6, 0.12)',
-        borderHover: 'hover:border-amber-300 dark:hover:border-amber-700',
         pillBg: 'bg-amber-100/70 text-amber-700 dark:bg-amber-950/60 dark:text-amber-300',
         arrowBg: 'group-hover:bg-amber-600 group-hover:text-white',
       };
@@ -69,20 +54,14 @@ function getCategoryTheme(slug, customColor) {
     case 'healing':
       return {
         accentColor: '#0d9488',
-        bgTint: 'bg-gradient-to-b from-teal-50/70 to-white/90 dark:from-teal-950/20 dark:to-slate-900/60',
-        borderColor: 'border-teal-100/90 dark:border-teal-900/30',
         iconBg: 'rgba(13, 148, 136, 0.12)',
-        borderHover: 'hover:border-teal-300 dark:hover:border-teal-700',
         pillBg: 'bg-teal-100/70 text-teal-700 dark:bg-teal-950/60 dark:text-teal-300',
         arrowBg: 'group-hover:bg-teal-600 group-hover:text-white',
       };
     default:
       return {
         accentColor: '#6366f1',
-        bgTint: 'bg-gradient-to-b from-indigo-50/50 to-white/90 dark:from-indigo-950/20 dark:to-slate-900/60',
-        borderColor: 'border-indigo-100/80 dark:border-indigo-900/30',
         iconBg: 'rgba(99, 102, 241, 0.12)',
-        borderHover: 'hover:border-indigo-300 dark:hover:border-indigo-700',
         pillBg: 'bg-indigo-100/70 text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300',
         arrowBg: 'group-hover:bg-indigo-600 group-hover:text-white',
       };
@@ -107,53 +86,55 @@ export default function InspirationCategoryCard({ category, index = 0 }) {
         ease: [0.22, 1, 0.36, 1],
       }}
       whileHover={!reduceMotion ? { y: -4, transition: { duration: 0.2 } } : undefined}
-      className={`group relative flex flex-col justify-between min-h-[100px] sm:min-h-[100px] rounded-3xl border ${theme.borderColor} ${theme.bgTint} ${theme.borderHover} backdrop-blur-md p-5 sm:p-6 transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-black/5 dark:hover:shadow-black/30 overflow-hidden cursor-pointer`}
+      className="group relative flex flex-col justify-between w-full rounded-3xl border border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/50 backdrop-blur-md p-4.5 sm:p-5 md:p-6 transition-all duration-300 shadow-sm hover:shadow-xl hover:border-primary/40 dark:hover:border-primary/40 overflow-hidden cursor-pointer"
     >
-      {/* Background glow accent */}
+      {/* Background soft ambient glow */}
       <div
-        className="pointer-events-none absolute -right-10 -top-10 h-28 w-28 sm:h-32 sm:w-32 rounded-full blur-2xl opacity-15 group-hover:opacity-30 transition-opacity duration-300"
+        className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 sm:h-28 sm:w-28 rounded-full blur-2xl opacity-15 group-hover:opacity-30 transition-opacity duration-300"
         style={{ backgroundColor: theme.accentColor }}
       />
 
       <div className="space-y-4">
-        {/* Top Area: Large category icon & small quote-count pill */}
-        <div className="flex items-center justify-between gap-2">
-
-
-          {quoteCount !== null && (
-            <span className={`rounded-full px-3 py-1 text-xs font-semibold tracking-tight whitespace-nowrap shadow-2xs ${theme.pillBg}`}>
+        {/* Top Header: Badge if quoteCount is available */}
+        {quoteCount !== null && (
+          <div className="flex items-center justify-end">
+            <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-tight whitespace-nowrap shadow-2xs ${theme.pillBg}`}>
               {quoteCount} {quoteCount === 1 ? 'Quote' : 'Quotes'}
             </span>
-          )}
-        </div>
+          </div>
+        )}
 
-        {/* Main Area: Category Name & Short Description */}
-        <div className="flex justify-center items-center gap-10">
-
+        {/* Main Content Area: Perfectly Aligned Icon & Category Name */}
+        <div className="flex items-center gap-3.5 sm:gap-4">
           <div
-            className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-105"
+            className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl transition-transform duration-300 group-hover:scale-105 shadow-2xs"
             style={{
-              // backgroundColor: theme.iconBg,
+              backgroundColor: theme.iconBg,
               color: theme.accentColor,
             }}
           >
             {category?.iconUrl ? (
-              <img src={category.iconUrl} alt={label} className="h-10 w-10 sm:h-10 sm:w-10 object-contain" />
+              <img src={category.iconUrl} alt={label} className="h-6 w-6 sm:h-7 sm:w-7 object-contain" />
             ) : (
-              <IconComponent className="h-10 w-10 sm:h-10 sm:w-10" strokeWidth={2.2} />
+              <IconComponent className="h-6 w-6 sm:h-7 sm:w-7" strokeWidth={2.2} />
             )}
           </div>
-          <h3 className="font-serif text-xl sm:text-2xl font-bold text-foreground tracking-tight group-hover:text-primary transition-colors">
-            {label}
-          </h3>
-          {/* <p className="mt-2 line-clamp-2 text-xs sm:text-sm text-foreground-secondary leading-relaxed">
-            {category?.description || `Explore meaningful ${label.toLowerCase()} inspiration and empowering daily wisdom.`}
-          </p> */}
+
+          <div className="min-w-0 flex-1">
+            <h3 className="font-sans font-semibold text-base sm:text-lg text-foreground tracking-tight group-hover:text-primary transition-colors truncate">
+              {label}
+            </h3>
+            {category?.description ? (
+              <p className="mt-0.5 line-clamp-1 text-xs text-foreground-secondary">
+                {category.description}
+              </p>
+            ) : null}
+          </div>
         </div>
       </div>
 
-      {/* Bottom Area: Divider + Explore Quotes + Right Arrow */}
-      <div className="mt-6 pt-3.5 border-t border-border/60 flex items-center justify-between">
+      {/* Bottom Area: Subtle Divider + Explore Quotes + Circular Arrow Button */}
+      <div className="mt-5 pt-3.5 border-t border-gray-100 dark:border-gray-800/80 flex items-center justify-between">
         <span className="text-xs sm:text-sm font-semibold text-foreground-secondary group-hover:text-foreground transition-colors">
           Explore Quotes
         </span>
@@ -171,4 +152,3 @@ export default function InspirationCategoryCard({ category, index = 0 }) {
     </motion.div>
   );
 }
-

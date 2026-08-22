@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Sidebar from "@/components/dashboard/user/layout/Sidebar";
+import MobileTopNavbar from "@/components/dashboard/user/layout/MobileTopNavbar";
 import BottomTabBar from "@/components/dashboard/user/layout/BottomTabBar";
 import { ThemeProvider } from "@/config/dashboard/engine/ThemeProvider";
 import { THEME_IDS } from "@/config/dashboard/themes";
@@ -46,9 +47,9 @@ function DashboardSkeleton() {
 
 export default function UserDashboardLayout({ children }) {
   const { user } = useAuthStore();
-
-  // useState(false) ensures SSR renders false, useEffect sets true on client
   const [hydrated, setHydrated] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
   useEffect(() => {
     setHydrated(true);
   }, []);
@@ -60,18 +61,26 @@ export default function UserDashboardLayout({ children }) {
 
   return (
     <ThemeProvider themeId={THEME_IDS.USER_DASHBOARD}>
-      <div className="min-h-screen flex bg-background text-foreground font-sans selection:bg-primary/30">
+      <div className="min-h-screen flex flex-col lg:flex-row bg-background text-foreground font-sans selection:bg-primary/30">
         
-        {/* Sidebar Component */}
-        <Sidebar user={user} />
+        {/* 1. Mobile Top Navbar (sticky at top on mobile/tablet) */}
+        <MobileTopNavbar onMenuClick={() => setIsMobileMenuOpen(true)} />
 
+        {/* 2. Sidebar (Desktop Left + Mobile Right Drawer) */}
+        <Sidebar
+          user={user}
+          isMobileOpen={isMobileMenuOpen}
+          onMobileClose={() => setIsMobileMenuOpen(false)}
+        />
+
+        {/* 3. Main Content Container */}
         <main className="flex-1 w-full lg:ml-72 transition-all duration-300">
           <div className="pb-20 lg:pb-0">
             {children}
           </div>
         </main>
 
-        {/* Mobile Bottom Tab Bar */}
+        {/* 4. Mobile Bottom Tab Bar */}
         <BottomTabBar />
         
       </div>
