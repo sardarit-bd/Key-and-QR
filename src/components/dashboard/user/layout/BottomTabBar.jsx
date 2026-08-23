@@ -37,7 +37,7 @@ export default function BottomTabBar() {
       return pathname === '/shop' || pathname?.startsWith('/shop/') || pathname?.startsWith('/products/');
     }
     if (tab.id === 'inspire') {
-      return pathname === '/inspiration' || pathname?.startsWith('/inspiration/') || pathname?.startsWith('/new-dashboard/user/my-quotes');
+      return pathname === '/inspiration' || pathname?.startsWith('/inspiration/');
     }
     if (tab.id === 'collection') {
       return pathname === '/new-dashboard/user/favorites' || pathname?.startsWith('/new-dashboard/user/favorites/');

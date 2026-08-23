@@ -36,6 +36,21 @@ const nextConfig = {
     ];
   },
 
+  async redirects() {
+    return [
+      {
+        source: "/new-dashboard/user/my-quotes",
+        destination: "/new-dashboard/user/favorites",
+        permanent: true,
+      },
+      {
+        source: "/my-quotes",
+        destination: "/new-dashboard/user/favorites",
+        permanent: true,
+      },
+    ];
+  },
+
   async rewrites() {
     if (process.env.NODE_ENV === "development") {
       return [

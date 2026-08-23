@@ -54,6 +54,18 @@ export default function FavoritesPage() {
   const favorites = data?.data || [];
   const meta = data?.meta || { page: 1, limit: FAVORITES_PER_PAGE, total: 0, totalPage: 0 };
 
+  // Alphabetical sort (A-Z) handling
+  const displayedFavorites = useMemo(() => {
+    if (sort === 'alphabetical') {
+      return [...favorites].sort((a, b) => {
+        const aText = (a.quote?.text || a.text || '').trim();
+        const bText = (b.quote?.text || b.text || '').trim();
+        return aText.localeCompare(bText);
+      });
+    }
+    return favorites;
+  }, [favorites, sort]);
+
   // Reset page when filters change.
   useEffect(() => { setPage(1); }, [debouncedSearch, category, sort]);
 
@@ -129,7 +141,7 @@ export default function FavoritesPage() {
               <AnimatePresence mode="wait">
                 <motion.div key={view} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
                   className={`grid ${view === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5' : 'grid-cols-1 gap-4'}`}>
-                  {favorites.map((fav, i) => (
+                  {displayedFavorites.map((fav, i) => (
                     <motion.div key={fav._id} custom={i} initial="hidden" animate="show" variants={itemVariants}>
                       <FavoriteCard favorite={fav} view={view} onRemove={handleRemove} onViewDetail={setDetailItem} onShare={shareQuote} />
                     </motion.div>

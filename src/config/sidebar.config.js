@@ -85,13 +85,6 @@ export const SIDEBAR_CONFIG = {
       visibility: MENU_VISIBILITY.ALL,
     },
     {
-      id: "my-quotes",
-      title: "My Quotes",
-      icon: Quote,
-      href: "/new-dashboard/user/my-quotes",
-      visibility: MENU_VISIBILITY.ALL,
-    },
-    {
       id: "favorites",
       title: "Collection",
       icon: Heart,

@@ -10,6 +10,7 @@ import { useRef, useCallback } from 'react';
 const SORT_OPTIONS = [
   { id: 'newest', name: 'Newest First' },
   { id: 'oldest', name: 'Oldest First' },
+  { id: 'alphabetical', name: 'A-Z' },
 ];
 
 const CONTROL_CLASS =

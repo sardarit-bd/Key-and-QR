@@ -128,7 +128,7 @@ export default function ProfilePage() {
 
   // ---------- Subscription ----------
   useEffect(() => {
-    fetchMySubscriptions().catch(() => {});
+    fetchMySubscriptions().catch(() => { });
   }, [fetchMySubscriptions]);
 
   const isPremium = useMemo(() => {
@@ -136,8 +136,8 @@ export default function ProfilePage() {
     if (user?.isPremium === true || user?.premium === true || user?.plan === 'premium') return true;
     return Array.isArray(mySubscriptions)
       ? mySubscriptions.some(
-          (sub) => sub?.status === 'active' || sub?.status === 'trialing'
-        )
+        (sub) => sub?.status === 'active' || sub?.status === 'trialing'
+      )
       : false;
   }, [user, mySubscriptions]);
 
@@ -165,10 +165,10 @@ export default function ProfilePage() {
     }
     const cycle = activeSubscription.currentPeriodEnd
       ? new Date(activeSubscription.currentPeriodEnd).toLocaleDateString('en-US', {
-          month: 'short',
-          day: 'numeric',
-          year: 'numeric',
-        })
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+      })
       : null;
     return {
       plan: activeSubscription.subscriptionType === 'subscriber' ? 'Premium' : 'Premium',
@@ -540,11 +540,10 @@ export default function ProfilePage() {
                     maxLength={50}
                     placeholder="Your name"
                     aria-label="Full name"
-                    className={`w-full rounded-xl border border-white/10 py-2.5 pl-9 pr-4 text-left text-lg font-semibold text-foreground placeholder:text-foreground-tertiary transition-all duration-300 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20 light:border-[#E8DFCE]/80 ${
-                      nameCooldownInfo.isLocked
-                        ? 'bg-muted/40 cursor-not-allowed opacity-80 select-none'
-                        : 'bg-background-secondary/50 light:bg-white/70'
-                    }`}
+                    className={`w-full rounded-xl border border-white/10 py-2.5 pl-9 pr-4 text-left text-lg font-semibold text-foreground placeholder:text-foreground-tertiary transition-all duration-300 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20 light:border-[#E8DFCE]/80 ${nameCooldownInfo.isLocked
+                      ? 'bg-muted/40 cursor-not-allowed opacity-80 select-none'
+                      : 'bg-background-secondary/50 light:bg-white/70'
+                      }`}
                   />
                   {nameCooldownInfo.isLocked ? (
                     <p className="text-[11px] text-amber-500/90 dark:text-amber-400/90 font-medium mt-2 flex items-center justify-start gap-1.5 px-1">
@@ -611,11 +610,10 @@ export default function ProfilePage() {
                       disabled={nameCooldownInfo.isLocked}
                       maxLength={50}
                       aria-label="Full name"
-                      className={`w-full max-w-[220px] rounded-lg border border-white/10 px-3 py-1.5 text-right text-[13px] text-foreground focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20 ${
-                        nameCooldownInfo.isLocked
-                          ? 'bg-muted/40 cursor-not-allowed opacity-80 select-none'
-                          : 'bg-background-secondary/50'
-                      }`}
+                      className={`w-full max-w-[220px] rounded-lg border border-white/10 px-3 py-1.5 text-right text-[13px] text-foreground focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20 ${nameCooldownInfo.isLocked
+                        ? 'bg-muted/40 cursor-not-allowed opacity-80 select-none'
+                        : 'bg-background-secondary/50'
+                        }`}
                     />
                     {nameCooldownInfo.isLocked ? (
                       <p className="text-[11px] text-amber-500/90 dark:text-amber-400/90 mt-1 flex items-center justify-end gap-1 font-medium">
@@ -646,20 +644,14 @@ export default function ProfilePage() {
                 <ProviderBadge provider={user.provider} />
               </Row>
               <Divider />
-              <Row label="Member Since" icon={Calendar}>
-                <span className="text-foreground-secondary">
-                  {formatMemberSince(user.createdAt) || '—'}
-                </span>
-              </Row>
-              <Divider />
               <Row label="Account Created" icon={BadgeCheck}>
                 <span className="text-foreground-secondary">
                   {user.createdAt
                     ? new Date(user.createdAt).toLocaleDateString('en-US', {
-                        month: 'short',
-                        day: 'numeric',
-                        year: 'numeric',
-                      })
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric',
+                    })
                     : '—'}
                 </span>
               </Row>
@@ -830,7 +822,7 @@ export default function ProfilePage() {
         </div>
 
         {/* ---------- Quick Actions ---------- */}
-        <div className="mt-5">
+        {/* <div className="mt-5">
           <div className="mb-3 flex items-center gap-2.5">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-accent/25 bg-accent/10 shadow-[0_0_16px_rgba(253,182,92,0.12)]">
               <Zap className="w-3.5 h-3.5 text-accent" />
@@ -840,10 +832,10 @@ export default function ProfilePage() {
             </h2>
           </div>
           <QuickActions />
-        </div>
+        </div> */}
 
         {/* ---------- Support links ---------- */}
-        <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {/* <div className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {SECTION_LINKS.map((link) => {
             const Icon = link.icon;
             return (
@@ -863,7 +855,7 @@ export default function ProfilePage() {
               </Link>
             );
           })}
-        </div>
+        </div> */}
       </div>
 
       {/* ---------- Change Password Modal ---------- */}
