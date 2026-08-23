@@ -17,16 +17,21 @@ const LOADING_MESSAGES = [
  * Strictly preserves the 800×450 (16:9) quote artwork aspect ratio on both desktop and mobile.
  */
 export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose }) {
-  const renderedImageUrl =
+  const renderedDesktopUrl =
     quote?.renderedImages?.desktop?.url ||
-    quote?.renderedImages?.mobile?.url ||
     quote?.quote?.renderedImages?.desktop?.url ||
+    null;
+
+  const renderedMobileUrl =
+    quote?.renderedImages?.mobile?.url ||
     quote?.quote?.renderedImages?.mobile?.url ||
     null;
 
+  const hasRenderedImage = Boolean(renderedDesktopUrl || renderedMobileUrl);
+
   const editorData = quote?.editorData || quote?.quote?.editorData;
   const hasVisualDesign = Boolean(
-    renderedImageUrl ||
+    hasRenderedImage ||
     (editorData &&
       ((editorData.desktop?.elements && editorData.desktop.elements.length > 0) ||
         (editorData.mobile?.elements && editorData.mobile.elements.length > 0) ||
@@ -48,7 +53,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
             /* ---------- Reveal Modal Card ---------- */
             <motion.div
               key="reveal"
-              className="relative w-full max-w-[860px] max-h-[calc(100dvh-24px)] sm:max-h-[calc(100dvh-48px)] overflow-y-auto rounded-[24px] sm:rounded-[32px] border border-white/10 bg-card p-4 sm:p-6 shadow-2xl"
+              className="relative w-full max-w-[420px] sm:max-w-[860px] max-h-[calc(100dvh-24px)] sm:max-h-[calc(100dvh-48px)] overflow-y-auto rounded-[24px] sm:rounded-[32px] border border-white/10 bg-card p-4 sm:p-6 shadow-2xl"
               initial={{ scale: 0.94, opacity: 0, y: 14 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.96, opacity: 0, y: 10 }}
@@ -73,28 +78,36 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
                 )}
               </div>
 
-              {/* 16:9 Artwork Canvas / Preview Stage */}
+              {/* Responsive Artwork Canvas / Preview Stage (Portrait on mobile, 16:9 on sm+) */}
               <div className="mt-3.5 sm:mt-4 w-full">
                 {hasVisualDesign ? (
-                  <div className="w-full aspect-[16/9] relative rounded-2xl overflow-hidden bg-black/60 border border-white/10 shadow-xl flex items-center justify-center">
+                  <div className="w-full aspect-[375/667] sm:aspect-[16/9] max-h-[70vh] sm:max-h-none relative rounded-2xl overflow-hidden bg-black/60 border border-white/10 shadow-xl flex items-center justify-center">
                     {editorData ? (
                       <VisualQuoteRenderer
                         editorData={editorData}
-                        mode="desktop"
+                        mode="auto"
                         showAudioPlayer={true}
                         className="w-full h-full"
                       />
-                    ) : renderedImageUrl ? (
-                      <img
-                        src={renderedImageUrl}
-                        alt={quote?.text || 'Inspiration'}
-                        className="w-full h-full object-contain rounded-2xl"
-                      />
+                    ) : hasRenderedImage ? (
+                      <picture className="w-full h-full flex items-center justify-center">
+                        {renderedMobileUrl && (
+                          <source media="(max-width: 639px)" srcSet={renderedMobileUrl} />
+                        )}
+                        {renderedDesktopUrl && (
+                          <source media="(min-width: 640px)" srcSet={renderedDesktopUrl} />
+                        )}
+                        <img
+                          src={renderedMobileUrl || renderedDesktopUrl}
+                          alt={quote?.text || 'Inspiration'}
+                          className="w-full h-full object-contain rounded-2xl"
+                        />
+                      </picture>
                     ) : null}
                   </div>
                 ) : (
-                  /* Legacy non-canvas Quote text styled in 16:9 canvas stage */
-                  <div className="w-full aspect-[16/9] flex flex-col justify-center items-center p-6 sm:p-10 relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] text-center border border-white/10 shadow-xl">
+                  /* Legacy non-canvas Quote text styled in responsive canvas stage */
+                  <div className="w-full aspect-[375/667] sm:aspect-[16/9] flex flex-col justify-center items-center p-6 sm:p-10 relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] text-center border border-white/10 shadow-xl">
                     <motion.blockquote
                       className="text-[20px] sm:text-[28px] md:text-[34px] leading-[1.25] italic text-white font-light max-w-[680px]"
                       initial={{ opacity: 0, y: 10 }}

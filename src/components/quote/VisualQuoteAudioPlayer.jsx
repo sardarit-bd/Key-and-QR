@@ -1,16 +1,53 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import { Music, Play, Pause, Volume2 } from 'lucide-react';
 
-export default function VisualQuoteAudioPlayer({
+const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
   track,
   compact = false,
   className = '',
-}) {
+  disableAutoplay = false,
+}, ref) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const audioRef = useRef(null);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      play: async () => {
+        if (audioRef.current) {
+          try {
+            await audioRef.current.play();
+            setIsPlaying(true);
+            return true;
+          } catch (err) {
+            console.warn('[AudioPlayer] Play error:', err?.message || err);
+            setIsPlaying(false);
+            return false;
+          }
+        }
+        return false;
+      },
+      pause: () => {
+        if (audioRef.current) {
+          audioRef.current.pause();
+          setIsPlaying(false);
+        }
+      },
+      togglePlay: () => {
+        togglePlay();
+      },
+      get isPlaying() {
+        return isPlaying;
+      },
+      get audio() {
+        return audioRef.current;
+      },
+    }),
+    [isPlaying]
+  );
 
   useEffect(() => {
     setIsPlaying(false);
@@ -22,7 +59,7 @@ export default function VisualQuoteAudioPlayer({
       audio.loop = track.loop ?? true;
       audio.volume = track.volume ?? 1;
 
-      if (track.autoplay) {
+      if (track.autoplay && !disableAutoplay) {
         audio
           .play()
           .then(() => setIsPlaying(true))
@@ -39,7 +76,7 @@ export default function VisualQuoteAudioPlayer({
         audioRef.current.pause();
       }
     };
-  }, [track]);
+  }, [track, disableAutoplay]);
 
   if (!track?.source) return null;
 
@@ -96,4 +133,6 @@ export default function VisualQuoteAudioPlayer({
       </button>
     </div>
   );
-}
+});
+
+export default VisualQuoteAudioPlayer;

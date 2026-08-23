@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { Heart, Share2, Sparkles, BookOpen, X, Gift, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Heart, Share2, Sparkles, BookOpen, X, Gift, Check, Music } from "lucide-react";
 import { toast } from "react-hot-toast";
 import favoriteService from "@/services/favorite-service/favorite.service";
 import premiumService from "@/services/premium-service/premium.service";
@@ -38,7 +39,21 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     data?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
     data?.editorData?.mobile?.audio ||
     data?.editorData?.desktop?.audio ||
+    data?.editorData?.audio ||
     null;
+
+  const hasAutoplayAudio = Boolean(audioTrack?.source && (audioTrack?.autoplay ?? true));
+
+  // If there is NO audio or autoplay is false, default to revealed
+  const [isRevealed, setIsRevealed] = useState(!hasAutoplayAudio);
+  const audioPlayerRef = useRef(null);
+
+  const handleReveal = async () => {
+    if (audioPlayerRef.current) {
+      await audioPlayerRef.current.play();
+    }
+    setIsRevealed(true);
+  };
 
   const hasVisualDesign =
     !isPersonalMessage &&
@@ -229,10 +244,93 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             </p>
             <div className="w-11 flex justify-end">
               {audioTrack?.source && (
-                <VisualQuoteAudioPlayer track={audioTrack} compact />
+                <VisualQuoteAudioPlayer
+                  ref={audioPlayerRef}
+                  track={audioTrack}
+                  disableAutoplay={!isRevealed}
+                  compact
+                />
               )}
             </div>
           </div>
+
+          {/* Full-screen Interaction Overlay Fallback for Autoplay Audio on Mobile */}
+          <AnimatePresence>
+            {!isRevealed && (
+              <motion.div
+                key="reveal-overlay"
+                initial={{ opacity: 1 }}
+                exit={{ opacity: 0, scale: 0.97 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute inset-0 z-40 flex flex-col justify-between items-center p-6 bg-black/90 backdrop-blur-2xl text-center select-none"
+                style={
+                  backgroundImage
+                    ? {
+                        backgroundImage: `radial-gradient(ellipse at center, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.95) 100%), url(${backgroundImage})`,
+                        backgroundSize: "cover",
+                        backgroundPosition: "center",
+                      }
+                    : undefined
+                }
+              >
+                {/* Ambient glow */}
+                <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                  <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 h-72 w-72 rounded-full bg-amber-500/15 blur-3xl" />
+                </div>
+
+                {/* Top: Category Pill */}
+                <div className="relative z-10 pt-5">
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-widest text-[#f3d6a0] shadow-sm">
+                    <Sparkles size={11} className="text-amber-400 fill-current" />
+                    <span>{categoryLabel}</span>
+                  </div>
+                </div>
+
+                {/* Center: Hero Teaser & Reveal Button */}
+                <div className="relative z-10 flex flex-col items-center my-auto px-4 max-w-[340px]">
+                  {/* Glowing Aura Icon */}
+                  <div className="relative mb-6 flex h-20 w-20 items-center justify-center">
+                    <div className="absolute inset-0 rounded-full bg-amber-400/25 blur-xl animate-pulse" />
+                    <div className="relative flex h-16 w-16 items-center justify-center rounded-full border border-amber-400/40 bg-black/70 shadow-[0_0_25px_rgba(245,158,11,0.35)]">
+                      <Sparkles size={26} className="text-amber-300 fill-amber-300/30" />
+                    </div>
+                  </div>
+
+                  <h2 className="text-[22px] sm:text-[26px] font-light tracking-tight text-white drop-shadow-md mb-2">
+                    Your Inspiration Awaits
+                  </h2>
+                  <p className="text-xs sm:text-sm text-white/70 font-light leading-relaxed mb-7">
+                    A personalized message and soundtrack have been prepared for you.
+                  </p>
+
+                  {/* The Primary Interaction Button */}
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.03 }}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={handleReveal}
+                    className="cursor-pointer group relative inline-flex items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 px-6 sm:px-7 py-3.5 sm:py-4 text-xs sm:text-sm font-bold text-black shadow-[0_0_30px_rgba(245,158,11,0.45)] hover:shadow-[0_0_40px_rgba(245,158,11,0.65)] hover:brightness-105 transition-all duration-200"
+                  >
+                    <Sparkles size={15} className="fill-current text-black" />
+                    <span className="tracking-wide font-bold">Reveal Your Inspiration</span>
+                    <Music size={15} className="text-black/80" />
+                  </motion.button>
+
+                  <div className="mt-4 inline-flex items-center gap-1.5 text-[11px] text-white/50 font-medium">
+                    <Music size={11} className="text-amber-400/80" />
+                    <span>Includes audio experience</span>
+                  </div>
+                </div>
+
+                {/* Bottom branding */}
+                <div className="relative z-10 pb-4">
+                  <p className="text-[11px] text-[#e6b76f]/60 tracking-wide">
+                    myinspiretag.com
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Main Visual Quote Area */}
           {hasVisualDesign ? (
