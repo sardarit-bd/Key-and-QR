@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import api from "@/lib/api";
-import Loader from "@/shared/Loader";
+import ScanLoadingScreen from "@/components/scan/public/ScanLoadingScreen";
 import PublicQuoteDisplay from "@/components/scan/public/PublicQuoteDisplay";
 import InvalidQrScreen from "@/components/scan/public/InvalidQrScreen";
 import InactiveQrScreen from "@/components/scan/public/InactiveQrScreen";
@@ -63,7 +63,7 @@ export default function PublicScanPage() {
     }, [tagCode, fetchQuote]);
 
     if (status === "loading") {
-        return <Loader text="QKey..." fullScreen />;
+        return <ScanLoadingScreen message="Awakening your inspiration..." />;
     }
 
     if (status === "invalid") {
