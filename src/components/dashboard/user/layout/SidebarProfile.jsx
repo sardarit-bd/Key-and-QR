@@ -4,7 +4,7 @@ import { Crown, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-export default function SidebarProfile({ profile, isCollapsed }) {
+export default function SidebarProfile({ profile, isCollapsed, isCompact = false }) {
   const pathname = usePathname();
   const isAdmin =
     profile?.plan === 'admin' ||
@@ -19,20 +19,20 @@ export default function SidebarProfile({ profile, isCollapsed }) {
 
   if (isCollapsed) {
     return (
-      <div className="flex justify-center px-4 mb-6">
+      <div className="flex justify-center px-4 mb-4">
         <Link
           href={profileHref}
-          className="relative w-11 h-11 rounded-xl bg-indigo-50/50 dark:bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-sm font-bold shadow-sm border border-indigo-100/50 dark:border-indigo-500/20 overflow-hidden hover:shadow-md hover:border-indigo-300 dark:hover:border-indigo-400/50 transition-all cursor-pointer"
+          className="relative w-11 h-11 rounded-xl bg-accent/10 flex items-center justify-center text-accent text-sm font-bold shadow-xs border border-accent/20 overflow-hidden hover:shadow-sm hover:border-accent/40 transition-all cursor-pointer"
           title={`${profile?.name || 'Profile'}`}
         >
           {hasAvatar ? (
             <img src={hasAvatar} alt="User" className="w-full h-full object-cover" />
           ) : (
-            profile?.initials || 'SA'
+            profile?.initials || 'U'
           )}
           {profile?.plan === 'premium' && (
-            <div className="absolute -top-1 -right-1 bg-white dark:bg-gray-900 rounded-full p-0.5 shadow-sm border border-transparent dark:border-gray-800">
-              <Crown className="w-3 h-3 text-amber-500 dark:text-amber-400" />
+            <div className="absolute -top-1 -right-1 bg-background rounded-full p-0.5 shadow-xs border border-border">
+              <Crown className="w-3 h-3 text-amber-400" />
             </div>
           )}
         </Link>
@@ -40,42 +40,83 @@ export default function SidebarProfile({ profile, isCollapsed }) {
     );
   }
 
-  return (
-    <div className="px-4 mb-6">
-      {/* Modern Floating Card Effect with Dark Mode Support */}
-      <div className="relative flex flex-col items-center p-5 rounded-2xl bg-white/50 dark:bg-gray-900/40 backdrop-blur-md border border-gray-200/60 dark:border-gray-800/60 shadow-sm transition-all hover:shadow-md hover:border-indigo-200/60 dark:hover:border-indigo-500/30">
-
-        {/* Avatar Section */}
-        <Link href={profileHref} className="group relative block mb-4">
-          <div className="w-16 h-16 rounded-full p-1 bg-white dark:bg-gray-950 shadow-sm border border-gray-100 dark:border-gray-800 group-hover:border-indigo-200 dark:group-hover:border-indigo-500/50 group-hover:scale-105 transition-all duration-300">
-            <div className="w-full h-full rounded-full bg-indigo-50 dark:bg-indigo-950/50 flex items-center justify-center overflow-hidden text-indigo-600 dark:text-indigo-400 font-bold text-xl">
+  // Compact horizontal layout for mobile or compact viewports
+  if (isCompact) {
+    return (
+      <div className="mb-3">
+        <div className="relative flex items-center gap-3 p-3 rounded-2xl bg-card/60 backdrop-blur-md border border-border shadow-xs transition-all hover:border-accent/30">
+          {/* Avatar on the Left */}
+          <Link href={profileHref} className="group relative shrink-0">
+            <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center overflow-hidden text-accent font-bold text-base shadow-2xs group-hover:scale-105 transition-all duration-300">
               {hasAvatar ? (
                 <img src={hasAvatar} alt="User" className="w-full h-full object-cover" />
               ) : (
-                profile?.initials || 'SA'
+                profile?.initials || 'U'
+              )}
+            </div>
+            {profile?.plan === 'premium' && (
+              <div className="absolute -top-1 -right-1 bg-background rounded-full p-0.5 shadow-xs border border-border">
+                <Crown className="w-3.5 h-3.5 text-amber-400" />
+              </div>
+            )}
+          </Link>
+
+          {/* User Info on the Right */}
+          <div className="min-w-0 flex-1">
+            <Link
+              href={profileHref}
+              className="block text-sm font-semibold text-foreground truncate hover:text-accent transition-colors"
+            >
+              {profile?.name || 'User'}
+            </Link>
+            <p className="text-xs text-foreground-tertiary truncate">
+              {profile?.email || ''}
+            </p>
+            <div className="mt-1 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20 text-[10px] font-semibold text-accent">
+              <Shield className="w-3 h-3 shrink-0" />
+              <span className="truncate">{profile?.subscriptionLabel || 'Free Plan'}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="px-4 mb-4">
+      {/* Modern Card Effect */}
+      <div className="relative flex flex-col items-center p-4 rounded-2xl bg-card/60 backdrop-blur-md border border-border shadow-xs transition-all hover:shadow-sm hover:border-accent/30">
+        {/* Avatar Section */}
+        <Link href={profileHref} className="group relative block mb-3">
+          <div className="w-14 h-14 rounded-full p-1 bg-background shadow-xs border border-border group-hover:border-accent/40 group-hover:scale-105 transition-all duration-300">
+            <div className="w-full h-full rounded-full bg-accent/10 flex items-center justify-center overflow-hidden text-accent font-bold text-lg">
+              {hasAvatar ? (
+                <img src={hasAvatar} alt="User" className="w-full h-full object-cover" />
+              ) : (
+                profile?.initials || 'U'
               )}
             </div>
           </div>
           {profile?.plan === 'premium' && (
-            <div className="absolute bottom-0 right-0 p-1 bg-white dark:bg-gray-900 rounded-full shadow-sm border border-gray-100 dark:border-gray-800">
-              <Crown className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+            <div className="absolute bottom-0 right-0 p-0.5 bg-background rounded-full shadow-xs border border-border">
+              <Crown className="w-3.5 h-3.5 text-amber-400" />
             </div>
           )}
         </Link>
 
         {/* User Info Section */}
         <div className="text-center w-full">
-          <Link href={profileHref} className="block text-[16px] font-bold text-gray-800 dark:text-gray-100 mb-0.5 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors truncate">
-            {profile?.name || 'Super Admin'}
+          <Link href={profileHref} className="block text-[15px] font-bold text-foreground mb-0.5 hover:text-accent transition-colors truncate">
+            {profile?.name || 'User'}
           </Link>
-          <p className="text-[13px] text-gray-500 dark:text-gray-400 mb-3 truncate">
-            {profile?.email || 'zzmante@gmail.com'}
+          <p className="text-[12px] text-foreground-tertiary mb-2.5 truncate">
+            {profile?.email || ''}
           </p>
 
           {/* Modern Badge */}
-          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-indigo-50 dark:bg-indigo-500/10 border border-indigo-100/80 dark:border-indigo-500/20 text-[12px] font-semibold text-indigo-600 dark:text-indigo-400">
-            <Shield className="w-3.5 h-3.5" />
-            {profile?.subscriptionLabel || 'Administrator'}
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-accent/10 border border-accent/20 text-[11px] font-semibold text-accent">
+            <Shield className="w-3 h-3 shrink-0" />
+            <span className="truncate">{profile?.subscriptionLabel || 'Free Plan'}</span>
           </div>
         </div>
       </div>

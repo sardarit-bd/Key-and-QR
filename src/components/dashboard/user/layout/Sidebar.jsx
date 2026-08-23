@@ -63,25 +63,25 @@ export default function Sidebar({
       {/* ============================================================
           1. MOBILE RIGHT-SLIDING DRAWER (< lg)
          ============================================================ */}
-      {/* Mobile Backdrop Overlay */}
+      {/* Mobile Backdrop Overlay (z-[60] covers bottom tab bar) */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs lg:hidden transition-opacity duration-300"
+          className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-xs lg:hidden transition-opacity duration-300"
           onClick={onMobileClose}
           aria-hidden="true"
         />
       )}
 
-      {/* Mobile Drawer (Slides from RIGHT) */}
+      {/* Mobile Drawer (Slides from RIGHT, z-[70] covers all elements) */}
       <aside
-        className={`fixed top-0 right-0 z-50 h-screen w-72 sm:w-80 max-w-[85vw] bg-sidebar border-l border-sidebar-border shadow-2xl transition-transform duration-300 ease-out lg:hidden flex flex-col ${
+        className={`fixed top-0 right-0 z-[70] h-[100dvh] w-72 sm:w-80 max-w-[85vw] bg-sidebar border-l border-sidebar-border shadow-2xl transition-transform duration-300 ease-out lg:hidden flex flex-col ${
           isMobileOpen ? 'translate-x-0' : 'translate-x-full pointer-events-none'
         }`}
         aria-label="Mobile navigation drawer"
         aria-hidden={!isMobileOpen}
       >
         {/* Mobile Drawer Header with Close (X) Button */}
-        <div className="flex-shrink-0 p-4 border-b border-sidebar-border/60 flex items-center justify-between">
+        <div className="flex-shrink-0 px-4 py-3.5 border-b border-sidebar-border flex items-center justify-between">
           <SidebarHeader isCollapsed={false} />
           <button
             type="button"
@@ -93,23 +93,22 @@ export default function Sidebar({
           </button>
         </div>
 
-        {/* Profile Card */}
-        <div className="flex-shrink-0 px-4 pt-4">
+        {/* Scrollable Navigation (Compact Profile Card + Navigation Menu + Upgrade Card) */}
+        <div className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar min-h-0 px-3 pt-3 pb-8">
+          {/* Compact Profile Card */}
           <SidebarProfile
             profile={sidebarData.profile}
             isCollapsed={false}
+            isCompact={true}
           />
-        </div>
 
-        {/* Scrollable Navigation */}
-        <div className="flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar min-h-0 px-3 py-4">
           <SidebarMenu
             menuItems={sidebarData.menuItems}
             pathname={pathname}
             isCollapsed={false}
           />
 
-          <div className="mt-5">
+          <div className="mt-4">
             <SidebarUpgradeCard
               isCollapsed={false}
               config={sidebarData.upgradeCard}
@@ -119,9 +118,9 @@ export default function Sidebar({
           </div>
         </div>
 
-        {/* Mobile Footer */}
-        <div className="flex-shrink-0 px-4 pb-6 pt-3 border-t border-sidebar-border/40">
-          <SidebarFooter isCollapsed={false} />
+        {/* Mobile Footer - Pinned to bottom with safe-area spacing */}
+        <div className="flex-shrink-0 p-3.5 pb-6 border-t border-sidebar-border bg-sidebar/95 backdrop-blur-md shadow-[0_-4px_16px_rgba(0,0,0,0.15)]">
+          <SidebarFooter isCollapsed={false} isMobile={true} />
         </div>
       </aside>
 

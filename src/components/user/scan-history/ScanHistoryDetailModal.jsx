@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useEffect, useRef } from 'react';
+import { memo, useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Tag, Share2, Copy, Quote as QuoteIcon } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -46,6 +46,12 @@ const PANEL_VARIANTS = {
  */
 function ScanHistoryDetailModal({ isOpen, onClose, data }) {
   const modalRef = useRef(null);
+  const { isShareOpen, shareData, closeShare, shareQuote } = useShareQuote();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Handle escape key + body scroll lock
   useEffect(() => {
@@ -73,16 +79,22 @@ function ScanHistoryDetailModal({ isOpen, onClose, data }) {
     }
   }, [isOpen]);
 
-  if (!data) return null;
-  if (!isOpen) return null;
+  if (!isOpen || !data || !mounted) return null;
 
   const quote = data?.quote;
   const tag = data?.tag;
-  const category = quote?.category || 'motivation';
+  const category = quote?.category || data?.category || 'motivation';
   const categoryLabel = getCategoryLabel(category);
   const chip = getCategoryChipTheme(category);
   const chipClass = `${chip.border} ${chip.bg} ${chip.text} ${chip.lightText}`.trim();
-  const backgroundImage = quote?.image?.url || resolveBackgroundImage(category);
+  const quoteText = quote?.text || (data?.category === 'personal' ? 'Personal Message' : 'Inspiration Quote');
+  const quoteAuthor = quote?.author || (data?.category === 'personal' ? 'Personal Tag' : 'MyInspireTag');
+  const backgroundImage =
+    quote?.renderedImages?.desktop?.url ||
+    quote?.renderedImages?.mobile?.url ||
+    quote?.image?.url ||
+    (typeof quote?.image === 'string' ? quote.image : null) ||
+    resolveBackgroundImage(category);
 
   const formattedDate = data.createdAt
     ? format(new Date(data.createdAt), 'MMMM d, yyyy')
@@ -91,20 +103,18 @@ function ScanHistoryDetailModal({ isOpen, onClose, data }) {
     ? format(new Date(data.createdAt), 'h:mm a')
     : '';
 
-  const { isShareOpen, shareData, closeShare, shareQuote } = useShareQuote();
-
   const handleShare = () => {
     shareQuote({
       quoteId: quote?._id,
-      text: quote?.text,
-      author: quote?.author,
+      text: quoteText,
+      author: quoteAuthor,
       category,
-      imageUrl: quote?.renderedImages?.desktop?.url || (typeof quote?.image === 'string' ? quote?.image : quote?.image?.url) || null,
+      imageUrl: backgroundImage,
     });
   };
 
   const handleCopy = () => {
-    const text = `"${quote?.text || ''}" — ${quote?.author || 'InspireTag'}`;
+    const text = `"${quoteText}" — ${quoteAuthor}`;
     navigator.clipboard?.writeText(text);
     toast.success('Quote copied!');
   };
@@ -185,15 +195,13 @@ function ScanHistoryDetailModal({ isOpen, onClose, data }) {
                   <QuoteIcon className="h-5 w-5 text-emerald-400" />
                 </div>
                 <p className="text-xl leading-[1.55] font-medium text-foreground sm:text-[22px]">
-                  &ldquo;{quote?.text || ''}&rdquo;
+                  &ldquo;{quoteText}&rdquo;
                 </p>
 
                 {/* Author */}
-                {quote?.author && (
-                  <p className="mt-3 text-sm font-medium text-accent">
-                    — {quote.author} —
-                  </p>
-                )}
+                <p className="mt-3 text-sm font-medium text-accent">
+                  — {quoteAuthor} —
+                </p>
               </div>
 
               {/* Detail rows */}

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Copy, Check, Download, Share2, Sparkles, ImageOff } from "lucide-react";
 import { FaWhatsapp, FaFacebookF, FaXTwitter } from "react-icons/fa6";
@@ -13,13 +14,18 @@ import {
 } from "@/utils/share.utils";
 
 export default function ShareQuoteModal({ isOpen, onClose, quoteData, quote }) {
+  const [mounted, setMounted] = useState(false);
   const [copied, setCopied] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [imageError, setImageError] = useState(false);
 
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   const activeQuoteData = quoteData || quote;
 
-  if (!isOpen || !activeQuoteData) return null;
+  if (!isOpen || !activeQuoteData || !mounted || typeof document === "undefined") return null;
 
   const publicUrl = getPublicShareUrl(activeQuoteData);
   const shareText = formatShareText(activeQuoteData);
@@ -111,9 +117,12 @@ export default function ShareQuoteModal({ isOpen, onClose, quoteData, quote }) {
     }
   };
 
-  return (
+  return createPortal(
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div 
+        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      >
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 12 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -158,11 +167,11 @@ export default function ShareQuoteModal({ isOpen, onClose, quoteData, quote }) {
                 </div>
               )}
               <blockquote className="text-sm font-medium text-white/95 italic leading-relaxed line-clamp-3">
-                &ldquo;{quoteData.text || quoteData.quote}&rdquo;
+                &ldquo;{activeQuoteData.text || activeQuoteData.quote || ""}&rdquo;
               </blockquote>
-              {quoteData.author && (
+              {activeQuoteData.author && (
                 <p className="mt-2 text-xs font-semibold text-amber-300">
-                  — {quoteData.author}
+                  — {activeQuoteData.author}
                 </p>
               )}
             </div>
@@ -240,6 +249,7 @@ export default function ShareQuoteModal({ isOpen, onClose, quoteData, quote }) {
           </div>
         </motion.div>
       </div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }
