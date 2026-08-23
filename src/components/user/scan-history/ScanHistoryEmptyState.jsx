@@ -34,14 +34,14 @@ export default function ScanHistoryEmptyState() {
         Every quote you discover will appear here.
       </p>
 
-      <Link href="/" className="inline-block">
+      <Link href="/new-dashboard/user" className="inline-block">
         <motion.button
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           className="mt-7 inline-flex cursor-pointer items-center gap-2 rounded-full bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_32px_-8px_rgba(52,211,153,0.5)] transition-shadow duration-300 hover:shadow-[0_16px_40px_-8px_rgba(52,211,153,0.6)]"
         >
           <Scan className="h-4 w-4" />
-          Scan Your First Tag
+          Discover Inspiration
         </motion.button>
       </Link>
     </motion.div>

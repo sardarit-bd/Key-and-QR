@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { Scan, Sparkles, ArrowRight } from 'lucide-react';
 
 /**
@@ -33,16 +34,18 @@ export default function ScanHistoryHeader() {
       </div>
 
       {/* Premium glass button */}
-      <button
-        type="button"
-        className="group relative inline-flex cursor-pointer items-center gap-2 overflow-hidden rounded-full border border-emerald-500/25 bg-gradient-to-r from-emerald-500/15 to-emerald-500/5 px-4 py-2 text-[13px] font-medium text-emerald-600 shadow-[0_8px_24px_-8px_rgba(52,211,153,0.3)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-500/40 hover:shadow-[0_12px_32px_-8px_rgba(52,211,153,0.4)] active:translate-y-0 active:scale-[0.98] light:text-emerald-700"
-      >
-        {/* Sheen sweep on hover */}
-        <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-        <Sparkles className="h-3.5 w-3.5 text-emerald-500 transition-transform duration-300 group-hover:rotate-12 light:text-emerald-600" />
-        <span>Scan Journey</span>
-        <ArrowRight className="h-3.5 w-3.5 text-emerald-500/70 transition-transform duration-300 group-hover:translate-x-0.5 light:text-emerald-600/70" />
-      </button>
+      <Link href="/new-dashboard/user" className="inline-block">
+        <button
+          type="button"
+          className="group relative inline-flex cursor-pointer items-center gap-2 overflow-hidden rounded-full border border-emerald-500/25 bg-gradient-to-r from-emerald-500/15 to-emerald-500/5 px-4 py-2 text-[13px] font-medium text-emerald-600 shadow-[0_8px_24px_-8px_rgba(52,211,153,0.3)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-emerald-500/40 hover:shadow-[0_12px_32px_-8px_rgba(52,211,153,0.4)] active:translate-y-0 active:scale-[0.98] light:text-emerald-700"
+        >
+          {/* Sheen sweep on hover */}
+          <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+          <Sparkles className="h-3.5 w-3.5 text-emerald-500 transition-transform duration-300 group-hover:rotate-12 light:text-emerald-600" />
+          <span>Scan Journey</span>
+          <ArrowRight className="h-3.5 w-3.5 text-emerald-500/70 transition-transform duration-300 group-hover:translate-x-0.5 light:text-emerald-600/70" />
+        </button>
+      </Link>
     </div>
   );
 }

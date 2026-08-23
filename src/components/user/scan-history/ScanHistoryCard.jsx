@@ -32,10 +32,17 @@ export default function ScanHistoryCard({
 }) {
   const quote = item?.quote;
   const tag = item?.tag;
-  const category = quote?.category || 'motivation';
+  const category = quote?.category || item?.category || 'motivation';
   const categoryLabel = getCategoryLabel(category);
   const chip = getCategoryChipTheme(category);
-  const backgroundImage = quote?.image?.url || resolveBackgroundImage(category);
+  const quoteText = quote?.text || (item?.category === 'personal' ? 'Personal Message' : 'Inspiration Quote');
+  const quoteAuthor = quote?.author || (item?.category === 'personal' ? 'Personal Tag' : 'MyInspireTag');
+  const backgroundImage =
+    quote?.renderedImages?.desktop?.url ||
+    quote?.renderedImages?.mobile?.url ||
+    quote?.image?.url ||
+    (typeof quote?.image === 'string' ? quote.image : null) ||
+    resolveBackgroundImage(category);
 
   const formattedDate = item.createdAt
     ? format(new Date(item.createdAt), 'MMM d, yyyy')
@@ -51,10 +58,10 @@ export default function ScanHistoryCard({
     e.preventDefault();
     shareQuote({
       quoteId: quote?._id,
-      text: quote?.text,
-      author: quote?.author,
+      text: quoteText,
+      author: quoteAuthor,
       category,
-      imageUrl: quote?.renderedImages?.desktop?.url || (typeof quote?.image === 'string' ? quote?.image : quote?.image?.url) || null,
+      imageUrl: backgroundImage,
     });
   };
 
@@ -79,11 +86,11 @@ export default function ScanHistoryCard({
       >
         <div className="min-w-0 flex-1">
           <p className="line-clamp-2 text-sm font-medium text-foreground">
-            &ldquo;{quote?.text || ''}&rdquo;
+            &ldquo;{quoteText}&rdquo;
           </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="text-xs text-foreground-tertiary">
-              {quote?.author || 'InspireTag'}
+              {quoteAuthor}
             </span>
             <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold capitalize ${chip.border} ${chip.bg} ${chip.text} ${chip.lightText}`}>
               {categoryLabel}
@@ -181,7 +188,7 @@ export default function ScanHistoryCard({
           <div className="text-center">
             <QuoteIcon className="mx-auto mb-2 h-4 w-4 text-white/60 dark:text-white/60 light:text-[#8A7558]" strokeWidth={2} />
             <p className="line-clamp-4 text-[15px] font-medium leading-[1.6] text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.55)] dark:text-white dark:drop-shadow-[0_2px_10px_rgba(0,0,0,0.55)] light:text-[#201A15] light:drop-shadow-none">
-              &ldquo;{quote?.text || ''}&rdquo;
+              &ldquo;{quoteText}&rdquo;
             </p>
           </div>
         </div>
@@ -191,7 +198,7 @@ export default function ScanHistoryCard({
           <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
             {/* Brand — left */}
             <span className="truncate text-[11px] font-medium text-white/80 light:text-[#6F5D46]">
-              {quote?.author || 'MyInspireTag'}
+              {quoteAuthor}
             </span>
 
             {/* Date — center */}
