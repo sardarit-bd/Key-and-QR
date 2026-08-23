@@ -70,13 +70,13 @@ export const SIDEBAR_CONFIG = {
       exact: true,
       visibility: MENU_VISIBILITY.ALL,
     },
-    {
-      id: "my-qr",
-      title: "My QR",
-      icon: QrCode,
-      href: "/new-dashboard/user/my-qr",
-      visibility: MENU_VISIBILITY.ALL,
-    },
+    // {
+    //   id: "my-qr",
+    //   title: "My QR",
+    //   icon: QrCode,
+    //   href: "/new-dashboard/user/my-qr",
+    //   visibility: MENU_VISIBILITY.ALL,
+    // },
     {
       id: "scan-history",
       title: "Scan History",

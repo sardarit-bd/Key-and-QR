@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { Suspense, useMemo } from 'react';
 import { useDashboardOverview } from '@/hooks/dashboard/useDashboardOverview';
 import { buildDashboardProps } from '@/utils/dashboard.utils';
 import DashboardHome from '@/components/dashboard/user/dashboard/DashboardHome';
@@ -69,15 +69,17 @@ export default function UserDashboardPage() {
   }
 
   return (
-    <DashboardHome
-      greeting={props.greeting}
-      latestInspiration={props.latestInspiration}
-      streak={props.streak}
-      statistics={props.statistics}
-      categories={props.categories}
-      user={props.user}
-      subscription={props.subscription}
-      dailyUsage={props.dailyUsage}
-    />
+    <Suspense fallback={null}>
+      <DashboardHome
+        greeting={props.greeting}
+        latestInspiration={props.latestInspiration}
+        streak={props.streak}
+        statistics={props.statistics}
+        categories={props.categories}
+        user={props.user}
+        subscription={props.subscription}
+        dailyUsage={props.dailyUsage}
+      />
+    </Suspense>
   );
 }

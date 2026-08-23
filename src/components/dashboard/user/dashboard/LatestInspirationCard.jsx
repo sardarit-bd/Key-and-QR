@@ -1,11 +1,14 @@
 "use client";
 
+import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Sparkles, Heart, Share2, BookOpen } from "lucide-react";
+import { Sparkles, Heart, Share2, BookOpen, Play, Pause } from "lucide-react";
 import FavoriteButton from "@/components/favorite/FavoriteButton";
 import VisualQuoteRenderer from "@/components/quote/VisualQuoteRenderer";
 import VisualQuoteAudioPlayer from "@/components/quote/VisualQuoteAudioPlayer";
+
+const SESSION_INTERACTION_KEY = "myinspire_user_interacted";
 
 export default function LatestInspirationCard({
   inspiration,
@@ -23,6 +26,48 @@ export default function LatestInspirationCard({
   const usedToday = inspiration?.dailyUsage?.usedToday ?? 0;
   const dailyLimit = inspiration?.dailyUsage?.dailyLimit ?? 0;
   const quoteId = inspiration?.quoteId || inspiration?.id || null;
+  // 0 dailyLimit means unlimited (premium); only block when limit > 0 and reached.
+  const isLimitReached = dailyLimit > 0 && usedToday >= dailyLimit;
+
+  // Video and Media Detection
+  const videoUrl =
+    inspiration?.videoUrl ||
+    inspiration?.video ||
+    inspiration?.mediaUrl ||
+    inspiration?.media?.url ||
+    inspiration?.quote?.videoUrl ||
+    inspiration?.quote?.video ||
+    inspiration?.quote?.mediaUrl ||
+    (typeof image === "string" && (image.endsWith(".mp4") || image.endsWith(".webm") || image.endsWith(".mov")) ? image : null) ||
+    null;
+
+  const audioTrack =
+    inspiration?.editorData?.desktop?.elements?.find((e) => e.type === "audio" && e.audioData?.source)?.audioData ||
+    inspiration?.editorData?.mobile?.elements?.find((e) => e.type === "audio" && e.audioData?.source)?.audioData ||
+    inspiration?.editorData?.desktop?.audio ||
+    inspiration?.editorData?.mobile?.audio ||
+    inspiration?.quote?.editorData?.desktop?.elements?.find((e) => e.type === "audio" && e.audioData?.source)?.audioData ||
+    inspiration?.quote?.editorData?.mobile?.elements?.find((e) => e.type === "audio" && e.audioData?.source)?.audioData ||
+    inspiration?.quote?.editorData?.desktop?.audio ||
+    inspiration?.quote?.editorData?.mobile?.audio ||
+    null;
+
+  // Dynamic Quote Media Configuration (from Admin Quote Editor / Schema)
+  const shouldAutoplay =
+    inspiration?.autoplay ??
+    inspiration?.quote?.autoplay ??
+    audioTrack?.autoplay ??
+    true;
+
+  const shouldLoop =
+    inspiration?.loop ??
+    inspiration?.quote?.loop ??
+    audioTrack?.loop ??
+    true;
+
+  const [isVideoPlaying, setIsVideoPlaying] = useState(shouldAutoplay);
+  const [hasInteracted, setHasInteracted] = useState(false);
+  const videoRef = useRef(null);
 
   const renderedDesktopUrl =
     inspiration?.renderedImages?.desktop?.url ||
@@ -36,17 +81,6 @@ export default function LatestInspirationCard({
 
   const hasRenderedImage = Boolean(renderedDesktopUrl || renderedMobileUrl);
 
-  const audioTrack =
-    inspiration?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
-    inspiration?.editorData?.mobile?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
-    inspiration?.editorData?.desktop?.audio ||
-    inspiration?.editorData?.mobile?.audio ||
-    inspiration?.quote?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
-    inspiration?.quote?.editorData?.mobile?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
-    inspiration?.quote?.editorData?.desktop?.audio ||
-    inspiration?.quote?.editorData?.mobile?.audio ||
-    null;
-
   const editorData = inspiration?.editorData || inspiration?.quote?.editorData;
   const hasVisualDesign = Boolean(
     hasRenderedImage ||
@@ -55,6 +89,98 @@ export default function LatestInspirationCard({
         (editorData.mobile?.elements && editorData.mobile.elements.length > 0) ||
         (editorData.elements && editorData.elements.length > 0)))
   );
+
+  // Initialize session interaction state on mount & register global unlock listeners
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const alreadyInteracted = sessionStorage.getItem(SESSION_INTERACTION_KEY) === "true";
+    if (alreadyInteracted) {
+      setHasInteracted(true);
+    }
+
+    const handleFirstInteraction = () => {
+      sessionStorage.setItem(SESSION_INTERACTION_KEY, "true");
+      setHasInteracted(true);
+
+      // If video is active and muted, safely unmute it on user interaction
+      if (videoRef.current && videoRef.current.muted) {
+        videoRef.current.muted = false;
+        videoRef.current.play().catch((err) => {
+          console.warn("[Video] Unmuted playback warning:", err);
+        });
+      }
+    };
+
+    window.addEventListener("click", handleFirstInteraction, { once: true });
+    window.addEventListener("touchstart", handleFirstInteraction, { once: true });
+    window.addEventListener("keydown", handleFirstInteraction, { once: true });
+
+    return () => {
+      window.removeEventListener("click", handleFirstInteraction);
+      window.removeEventListener("touchstart", handleFirstInteraction);
+      window.removeEventListener("keydown", handleFirstInteraction);
+    };
+  }, []);
+
+  // Video Autoplay & Dynamic Sound Logic
+  useEffect(() => {
+    if (!videoRef.current || !videoUrl) return;
+
+    const video = videoRef.current;
+    if (!shouldAutoplay) {
+      video.pause();
+      setIsVideoPlaying(false);
+      return;
+    }
+
+    // If user has interacted in this session, attempt unmuted playback; otherwise start muted
+    const canPlayWithSound = hasInteracted || (typeof window !== "undefined" && sessionStorage.getItem(SESSION_INTERACTION_KEY) === "true");
+    video.muted = !canPlayWithSound;
+
+    video
+      .play()
+      .then(() => {
+        setIsVideoPlaying(true);
+      })
+      .catch((err) => {
+        console.warn("[Video] Play with sound prevented by browser policy, falling back to muted:", err?.message || err);
+        // Fallback to muted autoplay
+        video.muted = true;
+        video
+          .play()
+          .then(() => setIsVideoPlaying(true))
+          .catch((e) => {
+            console.warn("[Video] Muted autoplay prevented:", e);
+            setIsVideoPlaying(false);
+          });
+      });
+  }, [videoUrl, shouldAutoplay, hasInteracted]);
+
+  const toggleVideoPlay = useCallback(() => {
+    if (!videoRef.current) return;
+
+    // Record interaction
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem(SESSION_INTERACTION_KEY, "true");
+      setHasInteracted(true);
+    }
+
+    if (isVideoPlaying) {
+      videoRef.current.pause();
+      setIsVideoPlaying(false);
+    } else {
+      // Unmute on explicit user trigger
+      videoRef.current.muted = false;
+      videoRef.current
+        .play()
+        .then(() => setIsVideoPlaying(true))
+        .catch((err) => {
+          console.warn("[Video] Play error:", err);
+          setIsVideoPlaying(false);
+        });
+    }
+  }, [isVideoPlaying]);
 
   const actionButtonClass =
     "inline-flex h-8.5 sm:h-9 cursor-pointer items-center gap-1.5 rounded-full border border-white/15 bg-black/40 backdrop-blur-md px-3 sm:px-3.5 text-[12px] sm:text-[13px] font-medium text-white/90 transition-all duration-150 ease-out hover:bg-white/15 hover:border-white/30 hover:text-white active:scale-[0.97]";
@@ -65,10 +191,11 @@ export default function LatestInspirationCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={reduceMotion ? undefined : { scale: 1.008 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className={`group relative w-full sm:max-w-[800px] mx-auto overflow-hidden rounded-[24px] sm:rounded-[28px] md:rounded-[32px] bg-card border border-white/10 shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-black/35 ${hasVisualDesign
-          ? 'aspect-[375/667] sm:aspect-[16/9]'
-          : 'aspect-[16/9] min-h-[380px]'
-        }`}
+      className={`group relative w-full sm:max-w-[800px] mx-auto overflow-hidden rounded-[24px] sm:rounded-[28px] md:rounded-[32px] bg-card border border-white/10 shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-black/35 ${
+        hasVisualDesign
+          ? "aspect-[375/667] sm:aspect-[16/9]"
+          : "aspect-[16/9] min-h-[380px]"
+      }`}
     >
       {/* ===== Full Visual Quote Stage (Visual Quotes) ===== */}
       {hasVisualDesign ? (
@@ -99,10 +226,23 @@ export default function LatestInspirationCard({
           ) : null}
         </div>
       ) : (
-        /* ===== Full-bleed background image (Legacy Quotes only) ===== */
+        /* ===== Full-bleed Media Stage (Video or Background Image) ===== */
         <>
-          {image ? (
-            <div className="absolute inset-0">
+          {videoUrl ? (
+            <div className="absolute inset-0 z-0 overflow-hidden">
+              <video
+                ref={videoRef}
+                src={videoUrl}
+                autoPlay={shouldAutoplay}
+                loop={shouldLoop}
+                playsInline={true}
+                className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-[1.015]"
+                onPlay={() => setIsVideoPlaying(true)}
+                onPause={() => setIsVideoPlaying(false)}
+              />
+            </div>
+          ) : image ? (
+            <div className="absolute inset-0 z-0">
               <Image
                 src={image}
                 alt=""
@@ -116,9 +256,9 @@ export default function LatestInspirationCard({
             <div className="absolute inset-0 bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]" />
           )}
 
-          {/* Dark gradient overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/45 to-black/35" />
-          <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/30 to-transparent" />
+          {/* Dark gradient overlays for text readability */}
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/45 to-black/35 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-black/50 via-black/30 to-transparent pointer-events-none" />
         </>
       )}
 
@@ -130,7 +270,7 @@ export default function LatestInspirationCard({
 
       {/* ===== Controls & Legacy Text Overlay ===== */}
       <div className="relative z-10 flex flex-col justify-between h-full p-4 sm:p-5 md:p-6 pointer-events-none">
-        {/* Top row: Quote badge (left) & Floating Audio Button (right) — Always visible at all times */}
+        {/* Top row: Quote badge (left) & Floating Media Controls (right) */}
         <div className="flex items-center justify-between pointer-events-auto">
           {/* Quote badge */}
           <motion.span
@@ -145,12 +285,25 @@ export default function LatestInspirationCard({
             </span>
           </motion.span>
 
-          {/* Floating Audio Control — Always visible */}
-          {audioTrack?.source && (
-            <div className="pointer-events-auto">
+          {/* Floating Media Controls — Clean single Play/Pause trigger */}
+          <div className="pointer-events-auto flex items-center gap-2">
+            {videoUrl ? (
+              <button
+                type="button"
+                onClick={toggleVideoPlay}
+                aria-label={isVideoPlaying ? "Pause video" : "Play video"}
+                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-black/65 hover:bg-black/85 backdrop-blur-md border border-white/20 text-white shadow-xl flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer"
+              >
+                {isVideoPlaying ? (
+                  <Pause size={16} className="fill-current text-accent" />
+                ) : (
+                  <Play size={16} className="fill-current text-white translate-x-0.5" />
+                )}
+              </button>
+            ) : audioTrack?.source ? (
               <VisualQuoteAudioPlayer track={audioTrack} compact />
-            </div>
-          )}
+            ) : null}
+          </div>
         </div>
 
         {/* Middle: Legacy Quote Block (only shown if not a visual design) */}
@@ -189,25 +342,33 @@ export default function LatestInspirationCard({
           </div>
         )}
 
-        {/* Bottom row: Action Buttons (left) & Usage Status Pill (right) — Smooth Hover / Focus Reveal on Desktop, Accessible on Mobile */}
+        {/* Bottom row: Action Buttons (left) & Usage Status Pill (right) */}
         <div className="flex items-center justify-between flex-wrap gap-2.5 sm:gap-3 opacity-100 translate-y-0 pointer-events-auto md:opacity-0 md:translate-y-2 md:pointer-events-none md:group-hover:opacity-100 md:group-hover:translate-y-0 md:group-hover:pointer-events-auto md:group-focus-within:opacity-100 md:group-focus-within:translate-y-0 md:group-focus-within:pointer-events-auto transition-all duration-300 ease-out">
           {/* Left Actions: Inspire + Favorite + Share + Read Again */}
           <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
-            {/* Primary Action: Inspire (Receive Today's / Random Inspiration) */}
+            {/* Primary Action: Inspire */}
             <button
-              onClick={onInspire}
-              disabled={isReceiving}
-              className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full bg-accent px-4 sm:px-4.5 py-2 text-[12px] sm:text-[13px] font-semibold text-accent-foreground shadow-md shadow-accent/20 transition-all duration-150 hover:brightness-105 active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed ${
-                usedToday === 0 ? "ring-2 ring-accent/60 shadow-lg shadow-accent/30" : ""
+              onClick={isLimitReached ? undefined : onInspire}
+              disabled={isReceiving || isLimitReached}
+              aria-disabled={isLimitReached}
+              title={isLimitReached ? "Daily limit reached — come back tomorrow" : undefined}
+              className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-4 sm:px-4.5 py-2 text-[12px] sm:text-[13px] font-semibold transition-all duration-150 active:scale-[0.97] ${
+                isLimitReached
+                  ? "bg-white/10 border border-white/15 text-white/40 cursor-not-allowed opacity-60 backdrop-blur-md"
+                  : `bg-accent text-accent-foreground shadow-md shadow-accent/20 hover:brightness-105 disabled:opacity-60 disabled:cursor-not-allowed ${
+                      usedToday === 0 ? "ring-2 ring-accent/60 shadow-lg shadow-accent/30" : ""
+                    }`
               }`}
             >
-              <Sparkles size={14} fill="currentColor" />
+              <Sparkles size={14} fill={isLimitReached ? "none" : "currentColor"} />
               <span>
                 {isReceiving
                   ? "Inspiring..."
-                  : usedToday === 0
-                    ? "Receive Today's Inspiration"
-                    : "Inspire"}
+                  : isLimitReached
+                    ? "Today's limit reached"
+                    : usedToday === 0
+                      ? "Receive Today's Inspiration"
+                      : "Inspire"}
               </span>
             </button>
 
@@ -252,7 +413,7 @@ export default function LatestInspirationCard({
             </button>
           </div>
 
-          {/* Right: Consolidated Usage Status Pill */}
+          {/* Right: Usage Status Pill */}
           <div className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 backdrop-blur-md px-3 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-[12px] font-medium text-white/85 select-none">
             <Sparkles size={13} className="text-accent shrink-0" />
             <span>

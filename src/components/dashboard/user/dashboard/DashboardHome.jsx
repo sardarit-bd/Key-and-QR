@@ -1,6 +1,7 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, useReducedMotion } from 'framer-motion';
 import GreetingSection from './GreetingSection';
 import WelcomeCard from './WelcomeCard';
@@ -13,6 +14,7 @@ import ReceiveOverlay from './ReceiveOverlay';
 import { useReceiveQuoteMutation, useReadAgainMutation } from '@/hooks/received-quote/useReceivedQuote';
 import useShareQuote from "@/hooks/useShareQuote";
 import ShareQuoteModal from "@/components/quote/ShareQuoteModal";
+import toast from 'react-hot-toast';
 
 /**
  * User Dashboard — redesigned hierarchy:
@@ -36,18 +38,23 @@ export default function DashboardHome({
   dailyUsage,
 }) {
   const reduceMotion = useReducedMotion();
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const receiveQuote = useReceiveQuoteMutation();
   const readAgain = useReadAgainMutation();
   const { isShareOpen, shareData, closeShare, shareQuote } = useShareQuote();
 
   const overlayCategoryRef = useRef(null);
+  // Track whether the ?action=inspire trigger has already fired for this URL
+  // to prevent double-fire during StrictMode double-invocations.
+  const actionFiredRef = useRef(false);
 
   const [revealState, setRevealState] = useState(null);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
 
   const hasReceivedQuote = latestInspiration?.hasReceivedQuote;
 
-  const flattenQuotePayload = (payload) => {
+  const flattenQuotePayload = useCallback((payload) => {
     const q = payload?.quote || payload || {};
     return {
       _id: q._id,
@@ -64,9 +71,19 @@ export default function DashboardHome({
       favorite: !!payload?.favorite,
       favoriteId: payload?.favoriteId || null,
     };
-  };
+  }, []);
 
-  const handleSelectCategory = (category) => {
+  const handleSelectCategory = useCallback((category) => {
+    // Pre-flight daily limit check — prevents the overlay from opening only
+    // to flash-close instantly when the backend returns 429.
+    if (dailyUsage?.isLimitReached) {
+      toast('Come back tomorrow for more inspiration ✨', {
+        icon: '✨',
+        style: { background: '#1e1e2e', color: '#e2e8f0', border: '1px solid rgba(255,255,255,0.1)' },
+      });
+      return;
+    }
+
     overlayCategoryRef.current = category?.name || 'Inspiration';
     setRevealState({ quote: null });
     setIsOverlayOpen(true);
@@ -79,11 +96,27 @@ export default function DashboardHome({
         setRevealState(null);
       },
     });
-  };
+  }, [dailyUsage, receiveQuote, flattenQuotePayload]);
 
-  const handleReceiveFirst = () => {
+  const handleReceiveFirst = useCallback(() => {
     handleSelectCategory({ slug: 'inspire', name: 'Inspiration' });
-  };
+  }, [handleSelectCategory]);
+
+  // Consume ?action=inspire from the BottomTabBar Inspire tap.
+  // Fire once, then replace the URL to remove the param so it doesn't
+  // re-trigger on subsequent renders or browser back navigation.
+  useEffect(() => {
+    if (searchParams?.get('action') === 'inspire' && !actionFiredRef.current) {
+      actionFiredRef.current = true;
+      handleReceiveFirst();
+      // Strip the query param cleanly without adding a history entry.
+      router.replace('/new-dashboard/user');
+    }
+    // Reset the guard whenever the param disappears (e.g. user navigates away and back)
+    if (searchParams?.get('action') !== 'inspire') {
+      actionFiredRef.current = false;
+    }
+  }, [searchParams, handleReceiveFirst, router]);
 
   const handleReadAgain = (receivedQuoteId) => {
     readAgain.mutate(receivedQuoteId, {
