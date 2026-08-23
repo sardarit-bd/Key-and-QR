@@ -60,6 +60,9 @@ export default function Header() {
 
   if (isScanPage) return null;
 
+  const dashboardHref = user?.role === "admin" ? "/new-dashboard/admin" : "/new-dashboard/user";
+  const profileHref = user?.role === "admin" ? "/new-dashboard/admin/profile" : "/new-dashboard/user/profile";
+
   // Navigation items
   const navItems = [
     { name: "Home", href: "/" },
@@ -77,14 +80,11 @@ export default function Header() {
   ];
 
   const sheetSecondaryItems = [
+    ...(isAuth ? [{ icon: LayoutDashboard, label: "Dashboard", href: dashboardHref }] : []),
     {
       icon: User,
       label: "My Account",
-      href: user
-        ? user?.role === "admin"
-          ? "/new-dashboard/admin"
-          : "/new-dashboard/user"
-        : "/login",
+      href: isAuth ? profileHref : "/login",
     },
     { icon: Heart, label: "Wishlist", href: "/wishlist" },
     { icon: ShoppingBag, label: "Cart", href: "/cart", badge: cartCount },
@@ -187,10 +187,10 @@ export default function Header() {
             </nav>
           )}
 
-           {/* Desktop Right Actions */}
+          {/* Desktop Right Actions */}
           <div className="flex items-center gap-6">
-             {/* User Dropdown - shadcn/ui */}
-             {isAuth && user ? (
+            {/* User Dropdown - shadcn/ui */}
+            {isAuth && user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <button className="cursor-pointer focus:outline-none">
@@ -389,7 +389,7 @@ export default function Header() {
                     })}
 
                     {/* Auth Section */}
-                     {!isAuth && (
+                    {!isAuth && (
                       <div className="pt-4 space-y-3">
                         <Button
                           asChild
@@ -422,7 +422,11 @@ export default function Header() {
 
                     {isAuth && user && (
                       <div className="pt-4 border-t border-gray-100">
-                        <div className="flex items-center gap-3 mb-4">
+                        <Link
+                          href={dashboardHref}
+                          onClick={() => setSheetOpen(false)}
+                          className="flex items-center gap-3 mb-4 p-2.5 rounded-2xl bg-gray-50/80 hover:bg-gray-100 transition-colors"
+                        >
                           <Avatar className="w-10 h-10">
                             <AvatarImage
                               src={getProfileImageUrl() || ""}
@@ -432,15 +436,16 @@ export default function Header() {
                               {getUserInitials()}
                             </AvatarFallback>
                           </Avatar>
-                          <div className="flex-1">
-                            <p className="text-sm font-semibold text-gray-800 capitalize">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-semibold text-gray-800 capitalize truncate">
                               {user?.name || "User"}
                             </p>
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-gray-500 truncate">
                               {user?.email}
                             </p>
                           </div>
-                        </div>
+                          <LayoutDashboard size={16} className="text-gray-400 shrink-0" />
+                        </Link>
                         <Button
                           onClick={handleLogout}
                           disabled={loading}

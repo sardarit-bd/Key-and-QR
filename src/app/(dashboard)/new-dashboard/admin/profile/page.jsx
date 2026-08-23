@@ -413,67 +413,72 @@ export default function AdminProfilePage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: 'easeOut' }}
-          className="relative overflow-hidden rounded-[24px] border border-border/80 bg-card p-6 sm:p-8 shadow-sm"
+          className="relative overflow-hidden rounded-[24px] border border-border/80 bg-gradient-to-r from-card to-card/50 p-6 sm:p-8 shadow-sm backdrop-blur-sm"
         >
           {/* Ambient glows */}
           <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-primary/[0.06] blur-3xl" />
           <div className="pointer-events-none absolute -bottom-24 -right-16 h-72 w-72 rounded-full bg-primary/[0.06] blur-3xl" />
 
-          <div className="relative z-10 flex flex-col items-center text-center">
-            <AvatarUploader
-              ref={avatarUploaderRef}
-              editing={isEditing}
-              compact={!isEditing}
-              size="lg"
-              onPendingChange={handleAvatarPendingChange}
-              onRemoved={handleAvatarRemoved}
-              onUploadStateChange={handleAvatarUploadStateChange}
-            />
-
-            {/* Name */}
-            {isEditing ? (
-              <div className="relative mt-5 w-full max-w-[320px]">
-                <User className="absolute left-3 top-3 text-foreground-tertiary" size={16} />
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  maxLength={50}
-                  placeholder="Admin Name"
-                  aria-label="Admin full name"
-                  className="w-full rounded-xl border border-border bg-background py-2.5 pl-9 pr-4 text-center text-lg font-bold text-foreground placeholder:text-foreground-tertiary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-                />
-              </div>
-            ) : (
-              <h2 className="mt-5 text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                {user.name}
-              </h2>
-            )}
-
-            {/* Email */}
-            <p className="mt-1.5 flex items-center gap-1.5 text-xs sm:text-sm text-foreground-secondary">
-              <Mail className="w-3.5 h-3.5" />
-              {user.email}
-            </p>
-
-            {/* Badges */}
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-xs font-semibold text-purple-600 dark:text-purple-400">
-                <ShieldCheck className="w-3.5 h-3.5" /> Administrator
-              </span>
-              <ProviderBadge provider={user.provider} />
-              <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-                <CheckCircle2 className="w-3 h-3" /> Active
-              </span>
+          <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            <div className="shrink-0">
+              <AvatarUploader
+                ref={avatarUploaderRef}
+                editing={isEditing}
+                compact={!isEditing}
+                size="lg"
+                onPendingChange={handleAvatarPendingChange}
+                onRemoved={handleAvatarRemoved}
+                onUploadStateChange={handleAvatarUploadStateChange}
+              />
             </div>
 
-            {/* Member since */}
-            {user.createdAt && (
-              <p className="mt-3 flex items-center gap-1.5 text-xs text-foreground-tertiary">
-                <Calendar className="w-3.5 h-3.5" />
-                Admin since {formatMemberSince(user.createdAt)}
+            {/* Info & Badges Section (Right) */}
+            <div className="flex-1 min-w-0 flex flex-col items-center sm:items-start text-center sm:text-left">
+              {/* Name */}
+              {isEditing ? (
+                <div className="relative w-full max-w-[340px]">
+                  <User className="absolute left-3 top-3 text-foreground-tertiary" size={16} />
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    maxLength={50}
+                    placeholder="Admin Name"
+                    aria-label="Admin full name"
+                    className="w-full rounded-xl border border-border bg-background py-2.5 pl-9 pr-4 text-left text-lg font-bold text-foreground placeholder:text-foreground-tertiary focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  />
+                </div>
+              ) : (
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  {user.name}
+                </h2>
+              )}
+
+              {/* Email */}
+              <p className="mt-1.5 flex items-center gap-1.5 text-xs sm:text-sm text-foreground-secondary">
+                <Mail className="w-3.5 h-3.5 shrink-0" />
+                <span>{user.email}</span>
               </p>
-            )}
+
+              {/* Badges */}
+              <div className="mt-3.5 flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-xs font-semibold text-purple-600 dark:text-purple-400">
+                  <ShieldCheck className="w-3.5 h-3.5" /> Administrator
+                </span>
+                <ProviderBadge provider={user.provider} />
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  <CheckCircle2 className="w-3 h-3" /> Active
+                </span>
+              </div>
+
+              {/* Member since */}
+              {user.createdAt && (
+                <p className="mt-3 flex items-center gap-1.5 text-xs text-foreground-tertiary">
+                  <Calendar className="w-3.5 h-3.5 shrink-0" />
+                  <span>Admin since {formatMemberSince(user.createdAt)}</span>
+                </p>
+              )}
+            </div>
           </div>
         </motion.section>
 

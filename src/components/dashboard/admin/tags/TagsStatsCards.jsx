@@ -40,13 +40,13 @@ export default function TagsStatsCards({ stats = {} }) {
         return (
           <motion.div key={def.key} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 + i * 0.04 }}>
             <Card className="p-3">
-              <div className="flex items-center gap-2.5">
-                <div className={`w-9 h-9 rounded-2xl flex items-center justify-center flex-shrink-0 ${c.bg} ${c.border}`}>
+              <div className="flex items-center justify-between gap-2">
+                <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-2xl flex items-center justify-center flex-shrink-0 ${c.bg} ${c.border}`}>
                   <Icon size={16} className={c.icon} />
                 </div>
-                <div className="min-w-0">
+                <div className="text-right min-w-0">
                   <p className="text-[10px] text-foreground-tertiary font-medium truncate">{def.label}</p>
-                  <h3 className="text-base font-bold text-foreground truncate">{Number(value).toLocaleString()}</h3>
+                  <h3 className="text-sm sm:text-base font-bold text-foreground truncate">{Number(value).toLocaleString()}</h3>
                 </div>
               </div>
             </Card>

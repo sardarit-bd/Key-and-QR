@@ -80,16 +80,18 @@ export default function Sidebar({
         aria-label="Mobile navigation drawer"
         aria-hidden={!isMobileOpen}
       >
-        {/* Mobile Drawer Header with Close (X) Button */}
-        <div className="flex-shrink-0 px-4 py-3.5 border-b border-sidebar-border flex items-center justify-between">
-          <SidebarHeader isCollapsed={false} />
+        {/* Mobile Drawer Header with Close (X) Button - Compact h-14 */}
+        <div className="flex-shrink-0 h-14 px-4 border-b border-sidebar-border flex items-center justify-between gap-2.5">
+          <div className="flex-1 min-w-0">
+            <SidebarHeader isCollapsed={false} isMobile={true} />
+          </div>
           <button
             type="button"
             onClick={onMobileClose}
             aria-label="Close navigation"
-            className="p-2 rounded-xl text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-muted/60 transition cursor-pointer"
+            className="p-1.5 rounded-xl text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-muted/60 transition cursor-pointer shrink-0"
           >
-            <X size={20} />
+            <X size={19} />
           </button>
         </div>
 
@@ -134,7 +136,7 @@ export default function Sidebar({
         aria-label="Desktop navigation"
       >
         {/* SECTION 1: Fixed Header + Profile */}
-        <div className="flex-shrink-0">
+        <div className="flex-shrink-0 px-4 pt-4">
           <SidebarHeader isCollapsed={isDesktopCollapsed} />
           <div className="mt-4">
             <SidebarProfile

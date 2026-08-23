@@ -324,7 +324,7 @@ export const SIDEBAR_CONFIG = {
       id: "admin-profile",
       title: "Profile",
       icon: UserCircle,
-      href: "/admin/profile",
+      href: "/new-dashboard/admin/profile",
       visibility: MENU_VISIBILITY.ADMIN,
     },
   ],

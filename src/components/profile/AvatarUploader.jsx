@@ -550,7 +550,7 @@ const AvatarUploader = forwardRef(function AvatarUploader(
           </>
         )}
 
-        {!isPending && !isUploading && displayImage && (
+        {!isPending && !isUploading && displayImage && editing && (
           <button
             type="button"
             onClick={handleRemove}

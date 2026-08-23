@@ -505,80 +505,90 @@ export default function ProfilePage() {
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.35, ease: 'easeOut' }}
-          className="relative overflow-hidden rounded-[24px] border border-white/6 bg-card p-6 sm:p-8 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.45)] light:border-[#E8DFCE]/80 light:bg-[#FBF7EF]/55 light:shadow-[0_20px_50px_-20px_rgba(100,72,24,0.28),0_10px_30px_-18px_rgba(100,72,24,0.16)]"
+          className="relative overflow-hidden rounded-[24px] border border-white/6 bg-gradient-to-r from-card to-card/60 p-6 sm:p-8 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.45)] backdrop-blur-sm light:border-[#E8DFCE]/80 light:bg-gradient-to-r light:from-[#FBF7EF]/75 light:to-[#FBF7EF]/40 light:shadow-[0_20px_50px_-20px_rgba(100,72,24,0.28),0_10px_30px_-18px_rgba(100,72,24,0.16)]"
         >
           {/* Ambient glows */}
           <div className="pointer-events-none absolute -left-20 -top-20 h-64 w-64 rounded-full bg-accent/[0.07] blur-3xl" />
           <div className="pointer-events-none absolute -bottom-24 -right-16 h-72 w-72 rounded-full bg-primary/[0.08] blur-3xl" />
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent light:via-[#E8DFCE]/70" />
 
-          <div className="relative z-10 flex flex-col items-center text-center">
+          <div className="relative z-10 flex flex-col sm:flex-row items-center sm:items-start gap-6">
             {/* Avatar — editing allows replace/remove; viewing shows compact */}
-            <AvatarUploader
-              ref={avatarUploaderRef}
-              editing={isEditing}
-              compact={!isEditing}
-              size="lg"
-              onPendingChange={handleAvatarPendingChange}
-              onRemoved={handleAvatarRemoved}
-              onUploadStateChange={handleAvatarUploadStateChange}
-            />
-
-            {/* Name */}
-            {isEditing ? (
-              <div className="relative mt-5 w-full max-w-[320px]">
-                <User className="absolute left-3 top-3 text-foreground-tertiary" size={16} />
-                <input
-                  type="text"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  disabled={nameCooldownInfo.isLocked}
-                  maxLength={50}
-                  placeholder="Your name"
-                  aria-label="Full name"
-                  className={`w-full rounded-xl border border-white/10 py-2.5 pl-9 pr-4 text-center text-lg font-semibold text-foreground placeholder:text-foreground-tertiary transition-all duration-300 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20 light:border-[#E8DFCE]/80 ${
-                    nameCooldownInfo.isLocked
-                      ? 'bg-muted/40 cursor-not-allowed opacity-80 select-none'
-                      : 'bg-background-secondary/50 light:bg-white/70'
-                  }`}
-                />
-                {nameCooldownInfo.isLocked && (
-                  <p className="text-[11px] text-amber-500/90 dark:text-amber-400/90 font-medium mt-2 flex items-center justify-center gap-1.5 px-2">
-                    <Lock className="w-3.5 h-3.5 shrink-0" />
-                    <span>Name changes available in {nameCooldownInfo.remainingDays} {nameCooldownInfo.remainingDays === 1 ? 'day' : 'days'} ({nameCooldownInfo.nextAllowedDate})</span>
-                  </p>
-                )}
-              </div>
-            ) : (
-              <h2 className="mt-5 text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                {user.name}
-              </h2>
-            )}
-
-            {/* Email */}
-            <p className="mt-1.5 flex items-center gap-1.5 text-[13px] text-foreground-secondary">
-              <Mail className="w-3.5 h-3.5" />
-              {user.email}
-            </p>
-
-            {/* Badges */}
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <MembershipBadge isPremium={isPremium} isAdmin={isAdmin} />
-              <ProviderBadge provider={user.provider} />
-              {user.role === 'moderator' && (
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-[11px] font-medium text-blue-400 backdrop-blur-md">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Moderator
-                </span>
-              )}
+            <div className="shrink-0">
+              <AvatarUploader
+                ref={avatarUploaderRef}
+                editing={isEditing}
+                compact={!isEditing}
+                size="lg"
+                onPendingChange={handleAvatarPendingChange}
+                onRemoved={handleAvatarRemoved}
+                onUploadStateChange={handleAvatarUploadStateChange}
+              />
             </div>
 
-            {/* Member since */}
-            {user.createdAt && (
-              <p className="mt-3 flex items-center gap-1.5 text-[12px] text-foreground-tertiary">
-                <Calendar className="w-3.5 h-3.5" />
-                Member since {formatMemberSince(user.createdAt)}
+            {/* Info & Badges Section (Right) */}
+            <div className="flex-1 min-w-0 flex flex-col items-center sm:items-start text-center sm:text-left">
+              {/* Name */}
+              {isEditing ? (
+                <div className="relative w-full max-w-[340px]">
+                  <User className="absolute left-3 top-3 text-foreground-tertiary" size={16} />
+                  <input
+                    type="text"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    disabled={nameCooldownInfo.isLocked}
+                    maxLength={50}
+                    placeholder="Your name"
+                    aria-label="Full name"
+                    className={`w-full rounded-xl border border-white/10 py-2.5 pl-9 pr-4 text-left text-lg font-semibold text-foreground placeholder:text-foreground-tertiary transition-all duration-300 focus:border-accent/50 focus:outline-none focus:ring-2 focus:ring-accent/20 light:border-[#E8DFCE]/80 ${
+                      nameCooldownInfo.isLocked
+                        ? 'bg-muted/40 cursor-not-allowed opacity-80 select-none'
+                        : 'bg-background-secondary/50 light:bg-white/70'
+                    }`}
+                  />
+                  {nameCooldownInfo.isLocked ? (
+                    <p className="text-[11px] text-amber-500/90 dark:text-amber-400/90 font-medium mt-2 flex items-center justify-start gap-1.5 px-1">
+                      <Lock className="w-3.5 h-3.5 shrink-0" />
+                      <span>Name changes available in {nameCooldownInfo.remainingDays} {nameCooldownInfo.remainingDays === 1 ? 'day' : 'days'} ({nameCooldownInfo.nextAllowedDate})</span>
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-foreground-tertiary font-medium mt-1.5 flex items-center justify-start gap-1.5 px-1">
+                      <Info className="w-3.5 h-3.5 shrink-0 text-foreground-tertiary" />
+                      <span>Note: You can only change your name once every 30 days.</span>
+                    </p>
+                  )}
+                </div>
+              ) : (
+                <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  {user.name}
+                </h2>
+              )}
+
+              {/* Email */}
+              <p className="mt-1.5 flex items-center gap-1.5 text-[13px] text-foreground-secondary">
+                <Mail className="w-3.5 h-3.5 shrink-0" />
+                <span>{user.email}</span>
               </p>
-            )}
+
+              {/* Badges */}
+              <div className="mt-3.5 flex flex-wrap items-center justify-center sm:justify-start gap-2">
+                <MembershipBadge isPremium={isPremium} isAdmin={isAdmin} />
+                <ProviderBadge provider={user.provider} />
+                {user.role === 'moderator' && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/30 bg-blue-500/10 px-3 py-1 text-[11px] font-medium text-blue-400 backdrop-blur-md">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Moderator
+                  </span>
+                )}
+              </div>
+
+              {/* Member since */}
+              {user.createdAt && (
+                <p className="mt-3 flex items-center gap-1.5 text-[12px] text-foreground-tertiary">
+                  <Calendar className="w-3.5 h-3.5 shrink-0" />
+                  <span>Member since {formatMemberSince(user.createdAt)}</span>
+                </p>
+              )}
+            </div>
           </div>
         </motion.section>
 
@@ -593,7 +603,7 @@ export default function ProfilePage() {
             <div className="divide-y divide-white/6 light:divide-[#E8DFCE]/70">
               <Row label="Full Name" icon={User}>
                 {isEditing ? (
-                  <div className="text-right">
+                  <div className="text-right flex flex-col items-end">
                     <input
                       type="text"
                       value={name}
@@ -607,10 +617,15 @@ export default function ProfilePage() {
                           : 'bg-background-secondary/50'
                       }`}
                     />
-                    {nameCooldownInfo.isLocked && (
+                    {nameCooldownInfo.isLocked ? (
                       <p className="text-[11px] text-amber-500/90 dark:text-amber-400/90 mt-1 flex items-center justify-end gap-1 font-medium">
                         <Lock className="w-3 h-3 shrink-0" />
                         <span>Available {nameCooldownInfo.nextAllowedDate}</span>
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-foreground-tertiary mt-1 flex items-center justify-end gap-1 font-medium">
+                        <Info className="w-3 h-3 shrink-0" />
+                        <span>Note: You can only change your name once every 30 days.</span>
                       </p>
                     )}
                   </div>
