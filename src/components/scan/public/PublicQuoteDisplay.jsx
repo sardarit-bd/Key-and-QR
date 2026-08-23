@@ -215,9 +215,9 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
   return (
     <>
-      <main className="h-[100dvh] w-full bg-black flex items-center justify-center overflow-hidden">
+      <main className="h-[calc(100dvh-64px)] lg:h-[100dvh] w-full bg-black flex items-center justify-center overflow-hidden">
         <section
-          className="relative w-full h-[100dvh] max-w-[430px] mx-auto overflow-hidden bg-black flex flex-col justify-between"
+          className="relative w-full h-[calc(100dvh-64px)] lg:h-[100dvh] max-w-[430px] mx-auto overflow-hidden bg-black flex flex-col justify-between"
           style={
             hasVisualDesign
               ? undefined
@@ -237,7 +237,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
           )}
 
           {/* Top Bar: Category Label & Audio Control */}
-          <div className="relative z-20 pt-3 sm:pt-4 px-5 flex items-center justify-between shrink-0">
+          <div className="relative z-20 pt-2.5 sm:pt-3 px-5 flex items-center justify-between shrink-0">
             <div className="w-11" />
             <p className="text-[12px] tracking-wide text-[#f3d6a0] font-light drop-shadow-md">
               {categoryLabel}
@@ -262,7 +262,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                 initial={{ opacity: 1 }}
                 exit={{ opacity: 0, scale: 0.97 }}
                 transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute inset-0 z-40 h-full w-full flex flex-col justify-between items-center px-4 py-5 bg-black/90 backdrop-blur-2xl text-center select-none overflow-hidden"
+                className="absolute inset-0 z-40 h-full w-full flex flex-col justify-between items-center px-4 py-3 sm:py-4 bg-black/90 backdrop-blur-2xl text-center select-none overflow-hidden"
                 style={
                   backgroundImage
                     ? {
@@ -280,8 +280,8 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
                 {/* Top: Category Pill */}
                 <div className="relative z-10 pt-1">
-                  <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-widest text-[#f3d6a0] shadow-sm">
-                    <Sparkles size={11} className="text-amber-400 fill-current" />
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-400/30 bg-amber-400/10 px-3 py-0.5 text-[10.5px] font-semibold uppercase tracking-widest text-[#f3d6a0] shadow-sm">
+                    <Sparkles size={10} className="text-amber-400 fill-current" />
                     <span>{categoryLabel}</span>
                   </div>
                 </div>
@@ -289,17 +289,17 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                 {/* Center: Hero Teaser & Reveal Button */}
                 <div className="relative z-10 flex-1 min-h-0 flex flex-col items-center justify-center my-auto px-4 max-w-[340px]">
                   {/* Glowing Aura Icon */}
-                  <div className="relative mb-4 sm:mb-5 flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center">
+                  <div className="relative mb-3 sm:mb-4 flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center">
                     <div className="absolute inset-0 rounded-full bg-amber-400/25 blur-xl animate-pulse" />
-                    <div className="relative flex h-14 w-14 sm:h-16 sm:w-16 items-center justify-center rounded-full border border-amber-400/40 bg-black/70 shadow-[0_0_25px_rgba(245,158,11,0.35)]">
-                      <Sparkles size={24} className="text-amber-300 fill-amber-300/30" />
+                    <div className="relative flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-full border border-amber-400/40 bg-black/70 shadow-[0_0_25px_rgba(245,158,11,0.35)]">
+                      <Sparkles size={20} className="text-amber-300 fill-amber-300/30" />
                     </div>
                   </div>
 
-                  <h2 className="text-xl sm:text-2xl font-light tracking-tight text-white drop-shadow-md mb-1.5">
+                  <h2 className="text-lg sm:text-2xl font-light tracking-tight text-white drop-shadow-md mb-1">
                     Your Inspiration Awaits
                   </h2>
-                  <p className="text-xs sm:text-sm text-white/70 font-light leading-relaxed mb-5 sm:mb-6 max-w-[280px]">
+                  <p className="text-xs sm:text-sm text-white/70 font-light leading-relaxed mb-4 max-w-[270px]">
                     A personalized message and soundtrack have been prepared for you.
                   </p>
 
@@ -309,22 +309,22 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                     whileHover={{ scale: 1.03 }}
                     whileTap={{ scale: 0.96 }}
                     onClick={handleReveal}
-                    className="cursor-pointer group relative inline-flex items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 px-6 sm:px-7 py-3 sm:py-3.5 text-xs sm:text-sm font-bold text-black shadow-[0_0_30px_rgba(245,158,11,0.45)] hover:shadow-[0_0_40px_rgba(245,158,11,0.65)] hover:brightness-105 transition-all duration-200"
+                    className="cursor-pointer group relative inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 px-5 sm:px-6 py-2.5 sm:py-3 text-xs sm:text-sm font-bold text-black shadow-[0_0_30px_rgba(245,158,11,0.45)] hover:shadow-[0_0_40px_rgba(245,158,11,0.65)] hover:brightness-105 transition-all duration-200"
                   >
-                    <Sparkles size={15} className="fill-current text-black" />
+                    <Sparkles size={14} className="fill-current text-black" />
                     <span className="tracking-wide font-bold">Reveal Your Inspiration</span>
-                    <Music size={15} className="text-black/80" />
+                    <Music size={14} className="text-black/80" />
                   </motion.button>
 
-                  <div className="mt-3.5 inline-flex items-center gap-1.5 text-[11px] text-white/50 font-medium">
-                    <Music size={11} className="text-amber-400/80" />
+                  <div className="mt-2.5 inline-flex items-center gap-1.5 text-[10.5px] text-white/50 font-medium">
+                    <Music size={10} className="text-amber-400/80" />
                     <span>Includes audio experience</span>
                   </div>
                 </div>
 
                 {/* Bottom branding */}
-                <div className="relative z-10 pb-1">
-                  <p className="text-[10.5px] text-[#e6b76f]/60 tracking-wide font-light">
+                <div className="relative z-10 pb-0.5">
+                  <p className="text-[10px] text-[#e6b76f]/60 tracking-wide font-light">
                     myinspiretag.com
                   </p>
                 </div>
@@ -334,7 +334,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
           {/* Main Visual Quote Area */}
           {hasVisualDesign ? (
-            <div className="relative z-10 flex-1 w-full min-h-0 flex items-center justify-center p-2.5 my-auto overflow-hidden">
+            <div className="relative z-10 flex-1 w-full min-h-0 flex items-center justify-center p-2 my-auto overflow-hidden">
               {data?.editorData ? (
                 <VisualQuoteRenderer
                   editorData={data.editorData}
@@ -343,11 +343,11 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                   className="w-full h-full"
                 />
               ) : renderedImageUrl ? (
-                <div className="relative w-full h-full max-h-[60vh] flex items-center justify-center overflow-hidden">
+                <div className="relative w-full h-full max-h-[52vh] sm:max-h-[55vh] flex items-center justify-center overflow-hidden">
                   <img
                     src={renderedImageUrl}
                     alt={quoteText || "Visual Quote"}
-                    className="w-full h-full max-h-[60vh] object-contain rounded-2xl shadow-2xl transition-all duration-300"
+                    className="w-full h-full max-h-[52vh] sm:max-h-[55vh] object-contain rounded-2xl shadow-2xl transition-all duration-300"
                   />
                 </div>
               ) : null}
@@ -355,11 +355,11 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
           ) : (
             /* Legacy Non-Canvas Quote Text & Author */
             <div className="relative z-10 flex-1 min-h-0 px-6 text-center my-auto flex flex-col justify-center items-center">
-              <h1 className="text-white text-[22px] sm:text-[26px] leading-[1.25] font-medium drop-shadow-xl max-w-[340px]">
+              <h1 className="text-white text-[20px] sm:text-[24px] leading-[1.25] font-medium drop-shadow-xl max-w-[340px]">
                 {quoteText}
               </h1>
               {quoteAuthor && (
-                <p className="mt-4 text-[#e7b96f] text-[13px]">
+                <p className="mt-3 text-[#e7b96f] text-[12.5px]">
                   - {quoteAuthor} -
                 </p>
               )}
@@ -368,23 +368,23 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
           {/* Gift Claim Banner */}
           {isGiftClaimable && (
-            <div className="relative z-30 mx-4 my-1 rounded-2xl border border-amber-400/40 bg-black/85 backdrop-blur-xl p-3 shadow-2xl animate-in fade-in duration-300 shrink-0">
-              <div className="flex items-center gap-2.5">
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/30">
-                  <Gift className="h-4.5 w-4.5" />
+            <div className="relative z-30 mx-4 my-1 rounded-2xl border border-amber-400/40 bg-black/85 backdrop-blur-xl p-2.5 shadow-2xl animate-in fade-in duration-300 shrink-0">
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/30">
+                  <Gift className="h-4 w-4" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="text-[12px] font-semibold text-white tracking-tight leading-snug">
+                  <h4 className="text-[11.5px] font-semibold text-white tracking-tight leading-snug">
                     Gifted MyInspireTag
                   </h4>
-                  <p className="text-[10.5px] text-white/70 truncate">
+                  <p className="text-[10px] text-white/70 truncate">
                     {user ? "Add this tag to your account" : "Sign in to claim this tag"}
                   </p>
                 </div>
                 <button
                   onClick={handleClaimGift}
                   disabled={isClaiming}
-                  className="shrink-0 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black px-3 py-1.5 text-[11px] font-bold shadow-lg transition-all duration-200 cursor-pointer disabled:opacity-50"
+                  className="shrink-0 rounded-xl bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 text-black px-2.5 py-1 text-[10.5px] font-bold shadow-lg transition-all duration-200 cursor-pointer disabled:opacity-50"
                 >
                   {isClaiming ? "Claiming..." : user ? "Claim Gift" : "Sign In"}
                 </button>
@@ -394,16 +394,16 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
           {/* Gift Claimed / Registered Status */}
           {isGift && (isClaimed || data?.gift?.giftStatus === "claimed") && !isGiftClaimable && (
-            <div className="relative z-30 mx-4 my-1 rounded-xl border border-emerald-400/30 bg-emerald-950/70 backdrop-blur-xl px-3 py-2 shadow-xl flex items-center justify-center gap-2 animate-in fade-in duration-300 shrink-0">
+            <div className="relative z-30 mx-4 my-1 rounded-xl border border-emerald-400/30 bg-emerald-950/70 backdrop-blur-xl px-3 py-1.5 shadow-xl flex items-center justify-center gap-2 animate-in fade-in duration-300 shrink-0">
               <Check className="h-3.5 w-3.5 text-emerald-400 shrink-0" />
-              <p className="text-[11px] font-medium text-emerald-200">
+              <p className="text-[10.5px] font-medium text-emerald-200">
                 {isClaimed ? "This MyInspireTag is now registered to your account!" : "Gift Claimed · MyInspireTag"}
               </p>
             </div>
           )}
 
           {/* Bottom Action Bar */}
-          <div className="relative z-20 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-3 pb-4 px-4 shrink-0">
+          <div className="relative z-20 bg-gradient-to-t from-black/90 via-black/60 to-transparent pt-2 pb-2.5 px-4 shrink-0">
             <div className="flex items-center justify-center gap-5 sm:gap-6">
               {/* Save / Heart */}
               <button
@@ -413,15 +413,15 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                 aria-label={saved ? "Remove from favorites" : "Save quote"}
               >
                 <div
-                  className={`w-10 h-10 rounded-full flex items-center justify-center border transition ${
+                  className={`w-9 h-9 rounded-full flex items-center justify-center border transition ${
                     saved
                       ? "bg-[#e6b76f]/20 border-[#e6b76f]"
                       : "border-white/20 hover:border-white/40"
                   }`}
                 >
-                  <Heart size={18} className={saved ? "fill-current" : ""} />
+                  <Heart size={16} className={saved ? "fill-current" : ""} />
                 </div>
-                <span className="text-[10px]">{saved ? "Saved" : "Save"}</span>
+                <span className="text-[9.5px]">{saved ? "Saved" : "Save"}</span>
               </button>
 
               {/* Inspire / Refresh */}
@@ -430,10 +430,10 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                 className="flex flex-col items-center gap-1 text-[#e6b76f] hover:text-white transition cursor-pointer"
                 aria-label="Get new inspiration"
               >
-                <div className="w-10 h-10 rounded-full flex items-center justify-center border border-white/20 hover:border-white/40 transition">
-                  <Sparkles size={18} />
+                <div className="w-9 h-9 rounded-full flex items-center justify-center border border-white/20 hover:border-white/40 transition">
+                  <Sparkles size={16} />
                 </div>
-                <span className="text-[10px]">Inspire</span>
+                <span className="text-[9.5px]">Inspire</span>
               </button>
 
               {/* Share */}
@@ -442,10 +442,10 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                 className="flex flex-col items-center gap-1 text-[#e6b76f] hover:text-white transition cursor-pointer"
                 aria-label="Share quote"
               >
-                <div className="w-10 h-10 rounded-full flex items-center justify-center border border-white/20 hover:border-white/40 transition">
-                  <Share2 size={18} />
+                <div className="w-9 h-9 rounded-full flex items-center justify-center border border-white/20 hover:border-white/40 transition">
+                  <Share2 size={16} />
                 </div>
-                <span className="text-[10px]">Share</span>
+                <span className="text-[9.5px]">Share</span>
               </button>
 
               {/* Reflect */}
@@ -454,14 +454,14 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                 className="flex flex-col items-center gap-1 text-[#e6b76f] hover:text-white transition cursor-pointer"
                 aria-label="Write a reflection"
               >
-                <div className="w-10 h-10 rounded-full flex items-center justify-center border border-white/20 hover:border-white/40 transition">
-                  <BookOpen size={18} />
+                <div className="w-9 h-9 rounded-full flex items-center justify-center border border-white/20 hover:border-white/40 transition">
+                  <BookOpen size={16} />
                 </div>
-                <span className="text-[10px]">Reflect</span>
+                <span className="text-[9.5px]">Reflect</span>
               </button>
             </div>
 
-            <p className="mt-2.5 text-center text-[10.5px] text-[#e6b76f]/60 tracking-wide font-light">
+            <p className="mt-1.5 text-center text-[10px] text-[#e6b76f]/60 tracking-wide font-light">
               myinspiretag.com
             </p>
           </div>
