@@ -104,16 +104,9 @@ export default function VisualQuoteRenderer({
 
     if (containerW <= 0) return;
 
-    let uniformScale;
-    if (isMobileMode) {
-      // On mobile: scale based on available content width so it fills 100% of the mobile width
-      uniformScale = containerW / canvasW;
-    } else {
-      // On desktop: uniform fit respecting both width and height to maintain 16:9 ratio
-      const scaleX = containerW / canvasW;
-      const scaleY = containerH > 0 ? containerH / canvasH : scaleX;
-      uniformScale = Math.min(scaleX, scaleY);
-    }
+    const scaleX = containerW / canvasW;
+    const scaleY = containerH > 0 ? containerH / canvasH : scaleX;
+    const uniformScale = Math.min(scaleX, scaleY);
 
     const computedScale = Math.min(uniformScale, maxScale);
     setScale(Number.isFinite(computedScale) && computedScale > 0 ? computedScale : 1);

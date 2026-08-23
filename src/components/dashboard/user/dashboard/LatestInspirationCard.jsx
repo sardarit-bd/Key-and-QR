@@ -24,12 +24,17 @@ export default function LatestInspirationCard({
   const dailyLimit = inspiration?.dailyUsage?.dailyLimit ?? 0;
   const quoteId = inspiration?.quoteId || inspiration?.id || null;
 
-  const renderedImageUrl =
+  const renderedDesktopUrl =
     inspiration?.renderedImages?.desktop?.url ||
     inspiration?.quote?.renderedImages?.desktop?.url ||
+    null;
+
+  const renderedMobileUrl =
     inspiration?.renderedImages?.mobile?.url ||
     inspiration?.quote?.renderedImages?.mobile?.url ||
     null;
+
+  const hasRenderedImage = Boolean(renderedDesktopUrl || renderedMobileUrl);
 
   const audioTrack =
     inspiration?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
@@ -44,7 +49,7 @@ export default function LatestInspirationCard({
 
   const editorData = inspiration?.editorData || inspiration?.quote?.editorData;
   const hasVisualDesign = Boolean(
-    renderedImageUrl ||
+    hasRenderedImage ||
     (editorData &&
       ((editorData.desktop?.elements && editorData.desktop.elements.length > 0) ||
         (editorData.mobile?.elements && editorData.mobile.elements.length > 0) ||
@@ -75,13 +80,21 @@ export default function LatestInspirationCard({
               showAudioPlayer={false}
               className="w-full h-full"
             />
-          ) : renderedImageUrl ? (
+          ) : hasRenderedImage ? (
             <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-              <img
-                src={renderedImageUrl}
-                alt={quote || "Daily Inspiration"}
-                className="w-full h-full object-contain"
-              />
+              <picture className="w-full h-full flex items-center justify-center">
+                {renderedMobileUrl && (
+                  <source media="(max-width: 639px)" srcSet={renderedMobileUrl} />
+                )}
+                {renderedDesktopUrl && (
+                  <source media="(min-width: 640px)" srcSet={renderedDesktopUrl} />
+                )}
+                <img
+                  src={renderedMobileUrl || renderedDesktopUrl}
+                  alt={quote || "Daily Inspiration"}
+                  className="w-full h-full object-contain"
+                />
+              </picture>
             </div>
           ) : null}
         </div>
