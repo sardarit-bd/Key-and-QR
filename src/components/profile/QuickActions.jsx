@@ -23,10 +23,10 @@ const DEFAULT_ACTIONS = [
     tone: 'default',
   },
   {
-    id: 'my-quotes',
-    label: 'My Quotes',
-    description: 'Your personal inspiration library',
-    href: '/new-dashboard/user/my-quotes',
+    id: 'scan-history',
+    label: 'Scan History',
+    description: 'Your scanned tags and QR codes',
+    href: '/new-dashboard/user/scan-history',
     tone: 'default',
   },
   {

@@ -14,17 +14,17 @@ export default function LibrarySection({
   const cards = [
     {
       id: 'saved',
-      label: 'Saved Quotes',
+      label: 'Saved Collection',
       value: savedCount,
       icon: Heart,
       href: '/new-dashboard/user/favorites',
     },
     {
-      id: 'recent',
-      label: 'Recent Quotes',
+      id: 'history',
+      label: 'Scan History',
       value: recentCount,
       icon: Clock,
-      href: '/new-dashboard/user/my-quotes',
+      href: '/new-dashboard/user/scan-history',
     },
   ];
 

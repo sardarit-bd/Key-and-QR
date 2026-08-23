@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
-import { Music, Play, Pause, Volume2 } from 'lucide-react';
+import { useState, useRef, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
+import { Play, Pause } from 'lucide-react';
 
 const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
   track,
@@ -9,30 +9,51 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
   className = '',
   disableAutoplay = false,
 }, ref) {
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
-  const audioRef = useRef(null);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const mediaRef = useRef(null);
+
+  const isVideoSource = Boolean(
+    track?.source &&
+    (track.source.endsWith('.mp4') ||
+     track.source.endsWith('.webm') ||
+     track.source.endsWith('.mov') ||
+     track.type === 'video')
+  );
+
+  const attemptPlay = useCallback(async () => {
+    if (!mediaRef.current) return;
+    try {
+      await mediaRef.current.play();
+      setIsPlaying(true);
+      return true;
+    } catch (err) {
+      console.warn('[AudioPlayer] Play attempt warning:', err?.message || err);
+      // Attempt muted fallback
+      if (mediaRef.current && !mediaRef.current.muted) {
+        mediaRef.current.muted = true;
+        try {
+          await mediaRef.current.play();
+          setIsPlaying(true);
+          return true;
+        } catch (e) {
+          setIsPlaying(false);
+          return false;
+        }
+      }
+      setIsPlaying(false);
+      return false;
+    }
+  }, []);
 
   useImperativeHandle(
     ref,
     () => ({
       play: async () => {
-        if (audioRef.current) {
-          try {
-            await audioRef.current.play();
-            setIsPlaying(true);
-            return true;
-          } catch (err) {
-            console.warn('[AudioPlayer] Play error:', err?.message || err);
-            setIsPlaying(false);
-            return false;
-          }
-        }
-        return false;
+        return attemptPlay();
       },
       pause: () => {
-        if (audioRef.current) {
-          audioRef.current.pause();
+        if (mediaRef.current) {
+          mediaRef.current.pause();
           setIsPlaying(false);
         }
       },
@@ -42,80 +63,92 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
       get isPlaying() {
         return isPlaying;
       },
-      get audio() {
-        return audioRef.current;
+      get media() {
+        return mediaRef.current;
       },
     }),
-    [isPlaying]
+    [isPlaying, attemptPlay]
   );
 
+  // Auto-play on mount / track change
   useEffect(() => {
-    setIsPlaying(false);
-    setIsLoaded(false);
+    if (mediaRef.current && track?.source) {
+      const media = mediaRef.current;
+      media.src = track.source;
+      media.loop = track.loop ?? true;
+      media.muted = true;
+      media.volume = track.volume ?? 1;
 
-    if (audioRef.current && track?.source) {
-      const audio = audioRef.current;
-      audio.src = track.source;
-      audio.loop = track.loop ?? true;
-      audio.volume = track.volume ?? 1;
-
-      if (track.autoplay && !disableAutoplay) {
-        audio
+      if (!disableAutoplay) {
+        media
           .play()
           .then(() => setIsPlaying(true))
           .catch((err) => {
-            // Autoplay blocked by browser policy - user interaction required
-            console.warn('[AudioPlayer] Autoplay prevented by browser:', err?.message || err);
+            console.warn('[AudioPlayer] Autoplay prevented:', err?.message || err);
             setIsPlaying(false);
           });
       }
     }
 
     return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
+      if (mediaRef.current) {
+        mediaRef.current.pause();
       }
     };
   }, [track, disableAutoplay]);
 
   if (!track?.source) return null;
 
-  const togglePlay = () => {
-    if (!audioRef.current) return;
+  const togglePlay = async () => {
+    if (!mediaRef.current) return;
     if (isPlaying) {
-      audioRef.current.pause();
+      mediaRef.current.pause();
       setIsPlaying(false);
     } else {
-      audioRef.current
-        .play()
-        .then(() => setIsPlaying(true))
-        .catch((err) => {
-          console.warn('[AudioPlayer] Audio playback prevented:', err?.message || err);
-          setIsPlaying(false);
-        });
+      mediaRef.current.muted = false;
+      attemptPlay();
     }
   };
 
   return (
     <div className={`inline-flex items-center z-30 ${className}`}>
-      <audio
-        ref={audioRef}
-        src={track.source}
-        loop={track.loop ?? true}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-        onEnded={() => setIsPlaying(false)}
-        onCanPlay={() => setIsLoaded(true)}
-        onError={(err) => console.warn('[AudioPlayer] Audio load error:', err)}
-      />
+      {isVideoSource ? (
+        <video
+          ref={mediaRef}
+          src={track.source}
+          autoPlay={true}
+          muted={true}
+          loop={true}
+          playsInline={true}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onEnded={() => setIsPlaying(false)}
+          onError={(err) => console.warn('[AudioPlayer] Video load error:', err)}
+          className="hidden"
+        />
+      ) : (
+        <audio
+          ref={mediaRef}
+          src={track.source}
+          autoPlay={true}
+          muted={true}
+          loop={true}
+          onPlay={() => setIsPlaying(true)}
+          onPause={() => setIsPlaying(false)}
+          onEnded={() => setIsPlaying(false)}
+          onError={(err) => console.warn('[AudioPlayer] Audio load error:', err)}
+        />
+      )}
+
+      {/* Main Play/Pause Button */}
       <button
         type="button"
         onClick={togglePlay}
-        aria-label={isPlaying ? 'Pause quote audio' : 'Play quote audio'}
+        aria-label={isPlaying ? 'Pause media' : 'Play media'}
         className={`group cursor-pointer flex items-center justify-center gap-2 rounded-full bg-black/65 hover:bg-black/85 backdrop-blur-md border border-white/20 text-white shadow-xl transition-all duration-200 active:scale-95 focus:outline-none focus:ring-2 focus:ring-accent/50 ${
           compact
-            ? 'w-11 h-11 min-w-[44px] min-h-[44px] sm:w-10 sm:h-10 sm:min-w-[40px] sm:min-h-[40px]'
-            : 'min-h-[44px] px-3.5 py-2 sm:px-4 sm:py-2 text-xs sm:text-sm font-medium'
+            ? 'w-10 h-10 min-w-[40px] min-h-[40px]'
+            : 'min-h-[40px] px-3.5 py-2 text-xs sm:text-sm font-medium'
         }`}
       >
         <div className="relative flex items-center justify-center">
@@ -127,7 +160,7 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
         </div>
         {!compact && (
           <span className="text-white/90 group-hover:text-white font-medium select-none tracking-wide text-xs">
-            {isPlaying ? 'Pause Music' : 'Play Music'}
+            {isPlaying ? 'Pause' : 'Play'}
           </span>
         )}
       </button>

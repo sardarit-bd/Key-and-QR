@@ -11,7 +11,7 @@ export default function RecentQuotesCard({ quotes, onQuoteClick }) {
   const reduceMotion = useReducedMotion();
 
   const handleViewAll = () => {
-    router.push('/new-dashboard/user/my-quotes');
+    router.push('/new-dashboard/user/favorites');
   };
 
   const handleClick = (quote) => {

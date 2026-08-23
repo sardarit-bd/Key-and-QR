@@ -49,18 +49,18 @@ export default function UsersStatsCards({ stats = {} }) {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 + i * 0.04 }}
           >
-            <Card className="p-3 sm:p-4">
-              <div className="flex items-center gap-3">
+            <Card className="p-3.5 sm:p-4">
+              <div className="flex items-center justify-between gap-2.5">
                 <div
                   className={`w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0 ${color.bg} ${color.border} ${color.glow}`}
                 >
                   <Icon size={18} className={`${color.icon}`} />
                 </div>
-                <div className="min-w-0">
-                  <p className="text-[10px] text-foreground-tertiary font-medium truncate">
+                <div className="text-right min-w-0">
+                  <p className="text-[10px] sm:text-[11px] text-foreground-tertiary font-medium truncate">
                     {def.label}
                   </p>
-                  <h3 className="text-lg sm:text-xl font-bold text-foreground leading-tight truncate">
+                  <h3 className="text-base sm:text-lg font-bold text-foreground leading-tight truncate">
                     {Number(value).toLocaleString('en-US')}
                   </h3>
                 </div>

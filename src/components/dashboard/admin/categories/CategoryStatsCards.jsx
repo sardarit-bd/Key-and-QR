@@ -5,13 +5,13 @@ import Card from '@/components/dashboard/user/dashboard/Card';
 
 function StatCard({ icon: Icon, label, value, iconClass = 'text-primary', bgClass = 'bg-primary/10 border-primary/20' }) {
   return (
-    <Card className="p-4 flex items-center gap-3">
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 border ${bgClass}`}>
-        <Icon size={18} className={iconClass} />
+    <Card className="p-4 sm:p-5 flex items-center justify-between gap-3 transition-all duration-200 hover:-translate-y-0.5">
+      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0 border ${bgClass}`}>
+        <Icon size={19} className={iconClass} />
       </div>
-      <div className="min-w-0">
-        <p className="text-xl font-bold text-foreground leading-tight">{value}</p>
-        <p className="text-[11px] text-foreground-tertiary truncate">{label}</p>
+      <div className="text-right min-w-0">
+        <p className="text-xl sm:text-2xl font-bold text-foreground leading-tight">{value}</p>
+        <p className="text-[11px] sm:text-xs text-foreground-tertiary truncate">{label}</p>
       </div>
     </Card>
   );

@@ -5,7 +5,6 @@ import { toast } from 'react-hot-toast';
 import { useAuthStore } from '@/store/authStore';
 import { useFavoriteStore } from '@/store/favoriteStore';
 import { favoriteKeys } from '@/hooks/favorite-service/useFavorites';
-import { myQuoteKeys } from '@/hooks/my-quotes-service/useMyQuotes';
 import premiumService from '@/services/premium-service/premium.service';
 import api from '@/lib/api';
 import { useShallow } from 'zustand/react/shallow';
@@ -92,9 +91,8 @@ export const useFavorite = (options = {}) => {
           removeFavorite(id);
           toast.success('Removed from favorites');
           
-          // Keep Favorites + My Quotes caches in sync.
+          // Keep Favorites cache in sync.
           queryClient.invalidateQueries({ queryKey: favoriteKeys.all });
-          queryClient.invalidateQueries({ queryKey: myQuoteKeys.all });
 
           if (onSuccess) {
             onSuccess({ action: 'remove', favorite: response.data?.data });
@@ -125,9 +123,8 @@ export const useFavorite = (options = {}) => {
           addFavorite(id, newFavorite);
           toast.success('Added to favorites');
           
-          // Keep Favorites + My Quotes caches in sync.
+          // Keep Favorites cache in sync.
           queryClient.invalidateQueries({ queryKey: favoriteKeys.all });
-          queryClient.invalidateQueries({ queryKey: myQuoteKeys.all });
 
           if (onSuccess) {
             onSuccess({ action: 'add', favorite: newFavorite });

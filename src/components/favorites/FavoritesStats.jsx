@@ -32,14 +32,14 @@ function StatCard({ stat }) {
       <div className="pointer-events-none absolute -left-16 -top-16 h-48 w-48 rounded-full bg-primary/[0.04] blur-3xl" />
       <div className="pointer-events-none absolute -bottom-16 -right-16 h-48 w-48 rounded-full bg-accent/[0.04] blur-3xl" />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
-      <div className="relative z-10 flex items-center gap-4">
+      <div className="relative z-10 flex items-center justify-between gap-4">
         <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${theme.border} ${theme.iconBg} ${theme.glow} ring-1 ${theme.ring} transition-transform duration-300 group-hover:scale-105`}>
           <Icon className={`h-5 w-5 ${theme.iconColor}`} strokeWidth={1.9} />
         </div>
-        <div className="min-w-0">
+        <div className="text-right min-w-0">
           <p className="text-[11px] font-medium tracking-wide text-foreground-tertiary">{stat.label}</p>
           <h3 className="mt-0.5 text-[26px] font-semibold leading-tight tracking-tight text-foreground tabular-nums sm:text-[30px]">{count}</h3>
-          <p className="mt-0.5 text-[11px] text-foreground-tertiary">{stat.sub}</p>
+          <p className="mt-0.5 text-[11px] text-foreground-tertiary truncate">{stat.sub}</p>
         </div>
       </div>
     </div>

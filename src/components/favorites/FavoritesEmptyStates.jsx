@@ -20,7 +20,7 @@ export function FavoritesEmptyState() {
       <p className="mx-auto mt-3 max-w-sm text-sm leading-relaxed text-foreground-tertiary">
         Discover quotes through Inspire and save the ones that matter to you.
       </p>
-      <Link href="/new-dashboard/user/my-quotes" className="inline-block">
+      <Link href="/new-dashboard/user" className="inline-block">
         <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
           className="mt-7 inline-flex cursor-pointer items-center gap-2 rounded-full bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-3 text-sm font-semibold text-white shadow-[0_12px_32px_-8px_rgba(244,114,182,0.5)] transition-shadow duration-300 hover:shadow-[0_16px_40px_-8px_rgba(244,114,182,0.6)]">
           <Sparkles className="h-4 w-4" /> Discover Quotes
