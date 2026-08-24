@@ -234,6 +234,7 @@ api.interceptors.response.use(
 let isLoggingOut = false;
 
 export const forceLogout = () => {
+    // Mutex: prevent multiple concurrent 401 interceptors from triggering duplicate redirects
     if (isLoggingOut) return;
     isLoggingOut = true;
 
@@ -261,9 +262,9 @@ export const forceLogout = () => {
         window.location.replace("/login?session=expired");
     }
 
-    setTimeout(() => {
-        isLoggingOut = false;
-    }, 1000);
+    // Do NOT reset isLoggingOut — once we're navigating away,
+    // the lock must hold for the rest of the page lifecycle
+    // to prevent AbortError from concurrent redirect attempts.
 };
 
 // ============================================================

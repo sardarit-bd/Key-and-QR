@@ -5,11 +5,11 @@ import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { ProductImage } from "@/components/ui/ProductImage";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import CheckoutSkeleton from "@/components/skeletons/CheckoutSkeleton";
 import { CHECKOUT_CONFIG, formatPrice, getCountryName } from "@/config/checkout.config";
@@ -25,22 +25,21 @@ const PLACEHOLDER_IMAGE = "https://placehold.co/400x400/e2e8f0/1e293b?text=No+Im
 
 // Shared input styling for consistent premium form fields
 const inputClass = (hasError) =>
-  `w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-[#2E2A24] placeholder:text-[#A99B7F] transition-all duration-300 focus:outline-none focus:ring-2 ${
-    hasError
-      ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
-      : "border-[#E5DCC8] focus:border-[#C6922D]/60 focus:ring-[#C6922D]/15 hover:border-[#C9BB9C]"
-  }`;
+    `w-full rounded-xl border bg-white px-4 py-2.5 text-sm text-[#2E2A24] placeholder:text-[#A99B7F] transition-all duration-300 focus:outline-none focus:ring-2 ${hasError
+        ? "border-red-400 focus:border-red-500 focus:ring-red-500/15"
+        : "border-[#E5DCC8] focus:border-[#C6922D]/60 focus:ring-[#C6922D]/15 hover:border-[#C9BB9C]"
+    }`;
 
 function Field({ label, htmlFor, required = false, error, children }) {
-  return (
-    <div>
-      <label htmlFor={htmlFor} className="mb-1.5 block text-[13px] font-medium text-[#5C5346]">
-        {label} {required && <span className="text-red-500">*</span>}
-      </label>
-      {children}
-      {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
-    </div>
-  );
+    return (
+        <div>
+            <label htmlFor={htmlFor} className="mb-1.5 block text-[13px] font-medium text-[#5C5346]">
+                {label} {required && <span className="text-red-500">*</span>}
+            </label>
+            {children}
+            {error && <p className="mt-1 text-xs text-red-500">{error}</p>}
+        </div>
+    );
 }
 
 export default function Checkout() {
@@ -491,9 +490,8 @@ export default function Checkout() {
                                                                 setFieldErrors(prev => ({ ...prev, country: errors.country }));
                                                             }
                                                         }}
-                                                        className={`w-full cursor-pointer px-4 py-2.5 text-left text-sm transition-colors hover:bg-[#F5EDDC]/60 ${
-                                                            formData.country === c.code ? "font-semibold text-[#2E2A24]" : "text-[#5C5346]"
-                                                        }`}
+                                                        className={`w-full cursor-pointer px-4 py-2.5 text-left text-sm transition-colors hover:bg-[#F5EDDC]/60 ${formData.country === c.code ? "font-semibold text-[#2E2A24]" : "text-[#5C5346]"
+                                                            }`}
                                                     >
                                                         {c.name}
                                                     </button>
@@ -664,11 +662,10 @@ export default function Checkout() {
                         <button
                             type="submit"
                             disabled={isSubmitting || loading || isRedirecting || checkoutItems.length === 0}
-                            className={`w-full flex items-center justify-center gap-2 rounded-xl py-4 text-sm font-bold transition-all duration-300 ${
-                                isSubmitting || loading || isRedirecting || checkoutItems.length === 0
-                                    ? "bg-[#EDE4D0] text-[#A99B7F] cursor-not-allowed"
-                                    : "bg-[#2E2A24] text-white hover:bg-[#1F1C18] active:scale-[0.99] cursor-pointer"
-                            }`}
+                            className={`w-full flex items-center justify-center gap-2 rounded-xl py-4 text-sm font-bold transition-all duration-300 ${isSubmitting || loading || isRedirecting || checkoutItems.length === 0
+                                ? "bg-[#EDE4D0] text-[#A99B7F] cursor-not-allowed"
+                                : "bg-[#2E2A24] text-white hover:bg-[#1F1C18] active:scale-[0.99] cursor-pointer"
+                                }`}
                         >
                             {isSubmitting || loading ? (
                                 <span className="flex items-center justify-center gap-2">
@@ -720,10 +717,12 @@ export default function Checkout() {
                                                     className="h-full w-full object-cover"
                                                     fill={false}
                                                 />
-                                                <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#2E2A24] px-1 text-[11px] font-bold text-white">
+
+                                                <span className="absolute right-1 top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#2E2A24] px-1 text-[11px] font-bold text-white z-50 shadow-md">
                                                     {item.qty || 1}
                                                 </span>
                                             </div>
+
                                             <div className="min-w-0 flex-1">
                                                 <h3 className="truncate text-sm font-semibold text-[#2E2A24]">{item.name}</h3>
                                                 <p className="text-xs text-[#8A7A5C]">{formatPrice(item.price)} each</p>

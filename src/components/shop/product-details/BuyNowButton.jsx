@@ -52,7 +52,7 @@ export const BuyNowButton = ({
             variant="default"
             onClick={handleBuyNow}
             disabled={product.stock <= 0}
-            className="h-12 px-7 py-3 rounded-xl bg-[#C6922D] hover:bg-[#A6782B] text-white shadow-[0_8px_24px_-8px_rgba(198,146,45,0.6)] transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] disabled:cursor-not-allowed disabled:hover:translate-y-0"
+            className="h-12 px-7 py-3 rounded-xl bg-[#C6922D] hover:bg-[#A6782B] text-white shadow-[0_8px_24px_-8px_rgba(198,146,45,0.6)] transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer"
         >
             <Zap size={14} className="mr-1.5" />
             Buy it Now
