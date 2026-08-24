@@ -86,7 +86,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
   const handleClaimGift = async () => {
     if (!user) {
-      goToAuth("login");
+      setShowAuthModal(true);
       return;
     }
 
@@ -490,38 +490,55 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
       {/* Auth Modal */}
       {showAuthModal && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center px-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl relative">
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl relative animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 duration-300">
             <button
               onClick={() => setShowAuthModal(false)}
-              className="absolute right-4 top-4 text-gray-500 hover:text-gray-700"
+              className="absolute right-4 top-4 text-gray-400 hover:text-gray-700 transition-colors"
               aria-label="Close"
             >
-              <X size={20} />
+              <X size={18} />
             </button>
-            <h3 className="text-xl font-semibold text-gray-900 mb-3">
-              Save your quote
-            </h3>
-            <p className="text-gray-600 mb-5">
-              Please log in or create an account to save this quote to your favorites.
-            </p>
-            <div className="rounded-xl bg-gray-50 border border-gray-200 p-4 mb-6">
-              <p className="text-gray-700 italic text-center">&ldquo;{quoteText}&rdquo;</p>
+
+            {/* Icon */}
+            <div className="flex justify-center mb-4">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-amber-50 border border-amber-200">
+                <Sparkles size={20} className="text-amber-500" />
+              </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+
+            <h3 className="text-[17px] font-semibold text-gray-900 text-center mb-1">
+              Create an account to save this
+            </h3>
+            <p className="text-[13px] text-gray-500 text-center mb-4 leading-relaxed">
+              Save quotes to your collection, track your inspiration history, and more — for free.
+            </p>
+
+            {/* Quote Preview */}
+            {quoteText && (
+              <div className="rounded-xl bg-amber-50/60 border border-amber-200/60 px-4 py-3 mb-5">
+                <p className="text-[13px] text-gray-600 italic text-center line-clamp-2">&ldquo;{quoteText}&rdquo;</p>
+              </div>
+            )}
+
+            {/* Primary CTA: Sign Up */}
+            <button
+              onClick={() => goToAuth("register")}
+              className="w-full h-11 rounded-xl bg-gray-900 text-white text-sm font-semibold hover:bg-gray-800 active:scale-[0.98] transition-all duration-150 cursor-pointer"
+            >
+              Create Account — It&apos;s Free
+            </button>
+
+            {/* Secondary: Log In */}
+            <p className="mt-3 text-center text-[13px] text-gray-500">
+              Already have an account?{" "}
               <button
                 onClick={() => goToAuth("login")}
-                className="h-11 rounded-xl bg-gray-900 text-white font-medium hover:bg-gray-800 transition"
+                className="font-medium text-gray-800 underline underline-offset-2 hover:text-gray-600 transition-colors cursor-pointer"
               >
-                Log In
+                Log in
               </button>
-              <button
-                onClick={() => goToAuth("register")}
-                className="h-11 rounded-xl border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition"
-              >
-                Register
-              </button>
-            </div>
+            </p>
           </div>
         </div>
       )}
