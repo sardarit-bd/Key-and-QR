@@ -89,8 +89,14 @@ function LoginPageContent() {
   // Redirect if already logged in
   useEffect(() => {
     if (isInitialized && user) {
-      const target = user.role === "admin" ? "/new-dashboard/admin" : redirectPath;
-      router.replace(target);
+      if (user.role === "admin") {
+        router.replace("/new-dashboard/admin");
+      } else {
+        const safeRedirect = redirectPath.startsWith("/new-dashboard/admin") || redirectPath.startsWith("/admin")
+          ? "/new-dashboard/user"
+          : redirectPath;
+        router.replace(safeRedirect);
+      }
     }
   }, [user, isInitialized, router, redirectPath]);
 

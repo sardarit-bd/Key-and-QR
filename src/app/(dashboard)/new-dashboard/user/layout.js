@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from "@/components/dashboard/user/layout/Sidebar";
 import MobileTopNavbar from "@/components/dashboard/user/layout/MobileTopNavbar";
 import BottomTabBar from "@/components/dashboard/user/layout/BottomTabBar";
@@ -46,7 +47,8 @@ function DashboardSkeleton() {
 }
 
 export default function UserDashboardLayout({ children }) {
-  const { user } = useAuthStore();
+  const { user, isInitialized, isAuthenticated } = useAuthStore();
+  const router = useRouter();
   const [hydrated, setHydrated] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -54,8 +56,15 @@ export default function UserDashboardLayout({ children }) {
     setHydrated(true);
   }, []);
 
-  // Show skeleton until client-side hydration is complete
-  if (!hydrated) {
+  // Admin guard: Admins should not access user dashboard
+  useEffect(() => {
+    if (hydrated && isInitialized && isAuthenticated && user?.role === 'admin') {
+      router.replace('/new-dashboard/admin');
+    }
+  }, [hydrated, isInitialized, isAuthenticated, user, router]);
+
+  // Show skeleton until client-side hydration is complete or if admin is being redirected
+  if (!hydrated || (isInitialized && isAuthenticated && user?.role === 'admin')) {
     return <DashboardSkeleton />;
   }
 

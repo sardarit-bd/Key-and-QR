@@ -59,8 +59,14 @@ function SignUpPageContent() {
   // Redirect if already logged in
   useEffect(() => {
     if (user) {
-      const target = user.role === "admin" ? "/new-dashboard/admin" : redirectPath;
-      router.push(target);
+      if (user.role === "admin") {
+        router.push("/new-dashboard/admin");
+      } else {
+        const safeRedirect = redirectPath.startsWith("/new-dashboard/admin") || redirectPath.startsWith("/admin")
+          ? "/new-dashboard/user"
+          : redirectPath;
+        router.push(safeRedirect);
+      }
     }
   }, [user, router, redirectPath]);
 

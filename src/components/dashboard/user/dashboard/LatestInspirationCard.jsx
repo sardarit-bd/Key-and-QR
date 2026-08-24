@@ -191,11 +191,7 @@ export default function LatestInspirationCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={reduceMotion ? undefined : { scale: 1.008 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className={`group relative w-full sm:max-w-[800px] mx-auto overflow-hidden rounded-[24px] sm:rounded-[28px] md:rounded-[32px] bg-card border border-white/10 shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-black/35 ${
-        hasVisualDesign
-          ? "aspect-[375/667] sm:aspect-[16/9]"
-          : "aspect-[16/9] min-h-[380px]"
-      }`}
+      className="group relative w-full sm:max-w-[800px] mx-auto overflow-hidden rounded-[24px] sm:rounded-[28px] md:rounded-[32px] bg-card border border-white/10 shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-black/35 aspect-[375/667] sm:aspect-[16/9] max-h-[75vh] sm:max-h-none min-h-[460px] sm:min-h-0"
     >
       {/* ===== Full Visual Quote Stage (Visual Quotes) ===== */}
       {hasVisualDesign ? (
@@ -219,7 +215,7 @@ export default function LatestInspirationCard({
                 <img
                   src={renderedMobileUrl || renderedDesktopUrl}
                   alt={quote || "Daily Inspiration"}
-                  className="w-full h-full object-contain"
+                  className="w-full h-full object-cover sm:object-contain"
                 />
               </picture>
             </div>
@@ -277,10 +273,10 @@ export default function LatestInspirationCard({
             initial={reduceMotion ? false : { opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.4, delay: 0.1 }}
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 backdrop-blur-md px-3.5 py-1.5 shadow-sm"
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 backdrop-blur-md px-3 sm:px-3.5 py-1.5 shadow-sm"
           >
             <Sparkles size={12} className="text-accent" fill="currentColor" />
-            <span className="text-[11px] sm:text-[12px] font-semibold uppercase tracking-[0.12em] text-white/90">
+            <span className="text-[10.5px] sm:text-[12px] font-semibold uppercase tracking-[0.1em] sm:tracking-[0.12em] text-white/90">
               {usedToday > 0 ? "Today's Quote" : "Daily Inspiration Available"}
             </span>
           </motion.span>
@@ -292,12 +288,12 @@ export default function LatestInspirationCard({
                 type="button"
                 onClick={toggleVideoPlay}
                 aria-label={isVideoPlaying ? "Pause video" : "Play video"}
-                className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-black/65 hover:bg-black/85 backdrop-blur-md border border-white/20 text-white shadow-xl flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer"
+                className="w-9 h-9 sm:w-10 sm:h-10 min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] rounded-full bg-black/65 hover:bg-black/85 backdrop-blur-md border border-white/20 text-white shadow-xl flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer"
               >
                 {isVideoPlaying ? (
-                  <Pause size={16} className="fill-current text-accent" />
+                  <Pause size={15} className="fill-current text-accent" />
                 ) : (
-                  <Play size={16} className="fill-current text-white translate-x-0.5" />
+                  <Play size={15} className="fill-current text-white translate-x-0.5" />
                 )}
               </button>
             ) : audioTrack?.source ? (
@@ -308,7 +304,7 @@ export default function LatestInspirationCard({
 
         {/* Middle: Legacy Quote Block (only shown if not a visual design) */}
         {!hasVisualDesign && (
-          <div className="flex-1 flex flex-col justify-center items-center my-2 w-full min-h-0 overflow-hidden pointer-events-auto">
+          <div className="flex-1 flex flex-col justify-center items-center my-auto w-full min-h-0 overflow-hidden pointer-events-auto px-2 sm:px-4 text-center">
             <AnimatePresence mode="wait">
               <motion.blockquote
                 key={quote}
@@ -316,21 +312,21 @@ export default function LatestInspirationCard({
                 animate={{ opacity: 1, y: 0 }}
                 exit={reduceMotion ? undefined : { opacity: 0, y: -12 }}
                 transition={{ duration: 0.45, ease: "easeOut" }}
-                className="max-w-[720px]"
+                className="max-w-[340px] sm:max-w-[720px] mx-auto"
               >
-                <p className="text-[28px] sm:text-[36px] md:text-[44px] lg:text-[52px] xl:text-[58px] leading-[1.15] sm:leading-[1.18] tracking-tight text-white font-light sm:font-normal text-pretty drop-shadow-[0_2px_12px_rgba(0,0,0,0.3)]">
+                <p className="text-[20px] sm:text-[28px] md:text-[36px] lg:text-[44px] leading-[1.28] sm:leading-[1.2] tracking-tight text-white font-medium sm:font-light text-pretty drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
                   {quote}
                 </p>
 
                 {(author || category?.name) && (
-                  <footer className="mt-6 sm:mt-8 flex items-center gap-3">
+                  <footer className="mt-4 sm:mt-6 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
                     {author && (
-                      <cite className="not-italic text-[15px] sm:text-[16px] md:text-[18px] text-white/75 font-medium tracking-wide drop-shadow-[0_1px_4px_rgba(0,0,0,0.2)]">
-                        &mdash; {author}
+                      <cite className="not-italic text-[13px] sm:text-[15px] md:text-[16px] text-amber-300/90 font-medium tracking-wide drop-shadow-[0_1px_4px_rgba(0,0,0,0.3)]">
+                        &mdash; {author} &mdash;
                       </cite>
                     )}
                     {category?.name && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/8 backdrop-blur-md px-2.5 py-1 text-[11px] sm:text-[12px] font-medium text-white/70">
+                      <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/10 backdrop-blur-md px-2.5 py-0.5 text-[10.5px] sm:text-[12px] font-medium text-white/80">
                         <Sparkles size={10} className="text-accent" />
                         {category.name}
                       </span>
@@ -343,7 +339,7 @@ export default function LatestInspirationCard({
         )}
 
         {/* Bottom row: Action Buttons (left) & Usage Status Pill (right) */}
-        <div className="flex items-center justify-between flex-wrap gap-2.5 sm:gap-3 opacity-100 translate-y-0 pointer-events-auto md:opacity-0 md:translate-y-2 md:pointer-events-none md:group-hover:opacity-100 md:group-hover:translate-y-0 md:group-hover:pointer-events-auto md:group-focus-within:opacity-100 md:group-focus-within:translate-y-0 md:group-focus-within:pointer-events-auto transition-all duration-300 ease-out">
+        <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-3 opacity-100 translate-y-0 pointer-events-auto transition-all duration-300 ease-out z-20">
           {/* Left Actions: Inspire + Favorite + Share + Read Again */}
           <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
             {/* Primary Action: Inspire */}
