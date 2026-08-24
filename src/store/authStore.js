@@ -303,7 +303,11 @@ export const useAuthStore = create(
                         guestClaimed: claimResult?.claimed || false,
                     };
                 } catch (error) {
-                    const message = error.response?.data?.message || "Registration failed";
+                    const message =
+                        error.response?.data?.message ||
+                        (Array.isArray(error.response?.data?.data) ? error.response.data.data[0] : null) ||
+                        error.message ||
+                        "Registration failed. Please check your details and try again.";
                     set({ loading: false, isLoading: false, error: message });
                     return { success: false, error: message };
                 }
