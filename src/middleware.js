@@ -65,10 +65,16 @@ export async function middleware(request) {
             const payload = await verifyAccessToken(accessToken);
 
             if (payload) {
-                // Admin route check - use verified role from JWT
+                // Admin route check - regular users cannot access admin routes
                 if (isAdminRoute(pathname) && payload.role !== "admin") {
                     return NextResponse.redirect(new URL("/new-dashboard/user", request.url));
                 }
+
+                // User dashboard route check - admins accessing user dashboard are routed to admin panel
+                if ((pathname.startsWith("/new-dashboard/user") || pathname.startsWith("/dashboard/user")) && payload.role === "admin") {
+                    return NextResponse.redirect(new URL("/new-dashboard/admin", request.url));
+                }
+
                 return NextResponse.next();
             }
         }

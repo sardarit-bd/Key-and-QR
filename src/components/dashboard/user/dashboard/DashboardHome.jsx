@@ -51,8 +51,65 @@ export default function DashboardHome({
 
   const [revealState, setRevealState] = useState(null);
   const [isOverlayOpen, setIsOverlayOpen] = useState(false);
+  const [activeInspiration, setActiveInspiration] = useState(latestInspiration);
 
-  const hasReceivedQuote = latestInspiration?.hasReceivedQuote;
+  // Consume pending quote saved during scan-page authentication
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    try {
+      const savedQuoteStr = localStorage.getItem("pending_dashboard_quote");
+      if (savedQuoteStr) {
+        const parsed = JSON.parse(savedQuoteStr);
+        const isRecent = parsed.timestamp && Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000;
+
+        if (isRecent && (parsed.text || parsed.quote || parsed.renderedImages || parsed.editorData)) {
+          const categorySlug =
+            typeof parsed.category === "string" ? parsed.category.toLowerCase() : parsed.category?.slug || "faith";
+          const categoryName =
+            typeof parsed.category === "string" ? parsed.category : parsed.category?.name || "Faith";
+
+          const preservedInspiration = {
+            hasReceivedQuote: true,
+            id: parsed._id || null,
+            quoteId: parsed._id || null,
+            text: parsed.text || parsed.quote || "",
+            previewText: parsed.text || parsed.quote || "",
+            author: parsed.author || "MyInspireTag",
+            image: parsed.image || null,
+            renderedImages: parsed.renderedImages || null,
+            theme: parsed.theme || null,
+            editorData: parsed.editorData || null,
+            category: { name: categoryName, slug: categorySlug },
+            receivedAt: parsed.timestamp ? new Date(parsed.timestamp).toISOString() : new Date().toISOString(),
+            favorite: false,
+            favoriteId: null,
+            dailyUsage: dailyUsage || null,
+          };
+          setActiveInspiration(preservedInspiration);
+        }
+        // Immediately clean up from localStorage so it doesn't leak into subsequent sessions
+        localStorage.removeItem("pending_dashboard_quote");
+      }
+    } catch (err) {
+      console.error("Failed to restore pending scanned quote in dashboard:", err);
+    }
+  }, [dailyUsage]);
+
+  // Sync if latestInspiration is updated from server
+  useEffect(() => {
+    if (latestInspiration?.hasReceivedQuote) {
+      setActiveInspiration(latestInspiration);
+    }
+  }, [latestInspiration]);
+
+  const currentInspiration = activeInspiration || latestInspiration;
+  const hasReceivedQuote = Boolean(
+    currentInspiration?.hasReceivedQuote ||
+      currentInspiration?.text ||
+      currentInspiration?.renderedImages ||
+      currentInspiration?.editorData
+  );
 
   const flattenQuotePayload = useCallback((payload) => {
     const q = payload?.quote || payload || {};
@@ -134,8 +191,8 @@ export default function DashboardHome({
   };
 
   const handleShare = () => {
-    if (latestInspiration) {
-      shareQuote(latestInspiration);
+    if (currentInspiration) {
+      shareQuote(currentInspiration);
     }
   };
 
@@ -155,10 +212,10 @@ export default function DashboardHome({
       {/* 2. Today's Quote — PRIMARY FOCUS */}
       {hasReceivedQuote ? (
         <LatestInspirationCard
-          inspiration={latestInspiration}
+          inspiration={currentInspiration}
           onInspire={handleReceiveFirst}
           onShare={handleShare}
-          onReadAgain={() => latestInspiration?.id && handleReadAgain(latestInspiration.id)}
+          onReadAgain={() => currentInspiration?.id && handleReadAgain(currentInspiration.id)}
           isReceiving={receiveQuote.isPending}
         />
       ) : (
