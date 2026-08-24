@@ -60,11 +60,10 @@ export async function middleware(request) {
     // ************* PROTECTED ROUTES - Require authentication *************
 
     if (isProtectedRoute(pathname)) {
-        // Try to verify access token
+        // 1. Valid access token: verify and allow through
         if (accessToken) {
             const payload = await verifyAccessToken(accessToken);
 
-            // Valid access token
             if (payload) {
                 // Admin route check - use verified role from JWT
                 if (isAdminRoute(pathname) && payload.role !== "admin") {
@@ -72,22 +71,15 @@ export async function middleware(request) {
                 }
                 return NextResponse.next();
             }
-
-            // Invalid/expired access token - clear and redirect to login
-            if (!refreshToken) {
-                const response = NextResponse.redirect(
-                    new URL("/login?session=expired", request.url)
-                );
-                return clearAuthCookies(response);
-            }
         }
 
-        // No access token but has refresh token - allow through (client will refresh)
+        // 2. Access token missing or expired, but refresh token exists:
+        // DO NOT redirect to /login?session=expired. Pass through to allow client-side silent refresh
         if (refreshToken) {
             return NextResponse.next();
         }
 
-        // No tokens at all - redirect to login
+        // 3. No tokens at all - redirect to login with return path
         const url = new URL("/login", request.url);
         url.searchParams.set("redirect", pathname);
         return NextResponse.redirect(url);

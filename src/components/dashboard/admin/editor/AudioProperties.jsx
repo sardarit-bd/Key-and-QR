@@ -59,6 +59,9 @@ export default function AudioProperties({ selectedEl }) {
     [id, patchElementData, incrementVersion, pushHistory]
   );
 
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+  const ALLOWED_EXTENSIONS = ['.mp3', '.wav', '.aac', '.m4a', '.ogg', '.flac'];
+
   const handleFileChange = async (e) => {
     if (uploading) return;
     const file = e.target.files?.[0];
@@ -67,8 +70,23 @@ export default function AudioProperties({ selectedEl }) {
     // Reset input value so selecting the same file later triggers onChange
     e.target.value = '';
 
-    if (!file.type.startsWith('audio/')) {
-      toast.error('Please select an audio file (MP3, WAV, AAC, etc.)');
+    const hasValidExtension = ALLOWED_EXTENSIONS.some((ext) =>
+      file.name.toLowerCase().endsWith(ext)
+    );
+    const isAudioMime = file.type.startsWith('audio/');
+
+    if (!isAudioMime && !hasValidExtension) {
+      const msg = 'Please select a valid audio file (MP3, WAV, AAC, M4A, OGG, FLAC)';
+      toast.error(msg);
+      setUploadError(msg);
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      const sizeMb = (file.size / (1024 * 1024)).toFixed(1);
+      const msg = `File is too large (${sizeMb} MB). Maximum allowed size is 10 MB.`;
+      toast.error(msg);
+      setUploadError(msg);
       return;
     }
 
@@ -95,7 +113,14 @@ export default function AudioProperties({ selectedEl }) {
       }
     } catch (err) {
       console.error('[AudioUpload]', err);
-      const userMessage = err?.response?.data?.message || 'Audio upload failed. Please try again.';
+      let userMessage = err?.response?.data?.message;
+      if (!userMessage) {
+        if (err?.response?.status === 500 || err?.response?.status === 413) {
+          userMessage = 'Audio upload failed. The file may exceed the 10 MB limit or have an unsupported format.';
+        } else {
+          userMessage = 'Audio upload failed. Please try again.';
+        }
+      }
       setUploadError(userMessage);
       toast.error(userMessage);
     } finally {
@@ -183,6 +208,9 @@ export default function AudioProperties({ selectedEl }) {
             </>
           )}
         </button>
+        <p className="mt-1.5 text-[10px] text-foreground-tertiary">
+          Supported: MP3, WAV, AAC, M4A, OGG, FLAC (Max 10 MB)
+        </p>
         {uploadError && (
           <div className="mt-2 p-2.5 rounded-lg bg-red-500/10 border border-red-500/20 text-[11px] text-red-600 dark:text-red-400 flex items-center justify-between">
             <span>{uploadError}</span>

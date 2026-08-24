@@ -26,13 +26,17 @@ const getCookieValue = (name) => {
 
 const setCookie = (name, value, maxAge, secure = false) => {
     if (typeof document === "undefined" || !value) return;
-    const sameSite = secure ? "None" : "Lax";
-    document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=${sameSite}${secure ? "; Secure" : ""}`;
+    const isHttps = typeof window !== "undefined" && window.location.protocol === "https:";
+    const isSecure = secure || isHttps;
+    const sameSite = isSecure ? "None" : "Lax";
+    document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=${sameSite}${isSecure ? "; Secure" : ""}`;
 };
 
 const clearCookie = (name) => {
     if (typeof document === "undefined") return;
-    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax`;
+    const isHttps = typeof window !== "undefined" && window.location.protocol === "https:";
+    const sameSite = isHttps ? "None" : "Lax";
+    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=${sameSite}${isHttps ? "; Secure" : ""}`;
 };
 
 // ============================================================
@@ -51,11 +55,11 @@ export const writeTokens = (accessToken, refreshToken) => {
     // Single source of truth: localStorage
     if (accessToken) {
         localStorage.setItem(TOKEN_KEY, accessToken);
-        setCookie("accessToken", accessToken, 900, false);
+        setCookie("accessToken", accessToken, 15 * 60, false); // 15 minutes (900s)
     }
     if (refreshToken) {
         localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-        setCookie("refreshToken", refreshToken, 604800, false);
+        setCookie("refreshToken", refreshToken, 30 * 24 * 60 * 60, false); // 30 days (2,592,000s)
     }
 };
 
