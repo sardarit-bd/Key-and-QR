@@ -51,11 +51,11 @@ export const writeTokens = (accessToken, refreshToken) => {
     // Single source of truth: localStorage
     if (accessToken) {
         localStorage.setItem(TOKEN_KEY, accessToken);
-        setCookie("accessToken", accessToken, 900, false);
+        setCookie("accessToken", accessToken, 15 * 60, false); // 15 minutes (900s)
     }
     if (refreshToken) {
         localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
-        setCookie("refreshToken", refreshToken, 604800, false);
+        setCookie("refreshToken", refreshToken, 30 * 24 * 60 * 60, false); // 30 days (2,592,000s)
     }
 };
 

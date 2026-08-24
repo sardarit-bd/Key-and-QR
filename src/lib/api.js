@@ -145,7 +145,7 @@ const executeRefresh = async () => {
         );
 
         const newAccessToken = response.data?.data?.accessToken;
-        const newRefreshToken = response.data?.data?.refreshToken ?? refreshToken;
+        const newRefreshToken = response.data?.data?.refreshToken || refreshToken;
 
         if (!newAccessToken) {
             throw new Error("No new access token returned from server");
