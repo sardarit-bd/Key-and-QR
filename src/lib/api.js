@@ -153,6 +153,10 @@ const executeRefresh = async () => {
 
         // Synchronously save new tokens
         setTokens(newAccessToken, newRefreshToken);
+
+        // Broadcast new tokens to all sibling tabs so they stop using the old (now-revoked) refresh token
+        broadcastTokenSync(newAccessToken, newRefreshToken);
+
         return newAccessToken;
     } finally {
         if (typeof window !== "undefined") {
@@ -328,7 +332,88 @@ export const stopTokenRefreshTimer = () => {
     }
 };
 
+// ============================================================
+// CROSS-TAB TOKEN SYNC — BroadcastChannel + storage fallback
+// ============================================================
+
+const AUTH_SYNC_CHANNEL = "auth_token_sync";
+
+/**
+ * Broadcast fresh tokens to all sibling tabs after a successful rotation.
+ * Uses BroadcastChannel where available, falls back to a localStorage pulse.
+ */
+const broadcastTokenSync = (accessToken, refreshToken) => {
+    if (typeof window === "undefined") return;
+    const payload = JSON.stringify({ accessToken, refreshToken, ts: Date.now() });
+
+    try {
+        const bc = new BroadcastChannel(AUTH_SYNC_CHANNEL);
+        bc.postMessage(payload);
+        bc.close();
+    } catch {
+        // BroadcastChannel not available (e.g. some privacy modes) — use storage event as fallback
+        try {
+            localStorage.setItem("auth_token_broadcast", payload);
+            // Remove immediately so next rotation can fire a fresh event
+            setTimeout(() => localStorage.removeItem("auth_token_broadcast"), 200);
+        } catch { /* silent */ }
+    }
+};
+
+/**
+ * Handle a token sync message from another tab.
+ * Applies the new tokens only if they are actually newer than what we have.
+ */
+const handleCrossTabTokenSync = (data) => {
+    try {
+        const { accessToken, refreshToken, ts } = typeof data === "string" ? JSON.parse(data) : data;
+        if (!accessToken || !refreshToken) return;
+
+        const currentToken = getAccessToken();
+        if (currentToken === accessToken) return; // Already up-to-date
+
+        // Verify the broadcast token is newer — compare exp timestamps
+        try {
+            const currentExp = currentToken ? JSON.parse(atob(currentToken.split(".")[1])).exp : 0;
+            const newExp = JSON.parse(atob(accessToken.split(".")[1])).exp;
+            if (newExp <= currentExp) return; // Don't downgrade tokens
+        } catch { /* accept if we can't compare */ }
+
+        setTokens(accessToken, refreshToken);
+        // Reset the in-tab active refresh promise so the next request uses the fresh token
+        activeRefreshPromise = null;
+    } catch { /* silent */ }
+};
+
+// ============================================================
+// VISIBILITY CHANGE — Eager Refresh on Tab Focus
+// ============================================================
+
+let _visibilityRefreshScheduled = false;
+
+const handleVisibilityChange = async () => {
+    if (typeof document === "undefined" || document.visibilityState !== "visible") return;
+    if (_visibilityRefreshScheduled) return;
+
+    const token = getAccessToken();
+    const refresh = getRefreshToken();
+
+    // Only attempt if we have a refresh token and the access token is expired or near-expired
+    if (!refresh) return;
+    if (token && !isTokenExpired(token)) return;
+
+    _visibilityRefreshScheduled = true;
+    try {
+        await performTokenRefresh();
+    } catch {
+        // forceLogout will be called by executeRefresh if the refresh token is invalid
+    } finally {
+        _visibilityRefreshScheduled = false;
+    }
+};
+
 if (typeof window !== "undefined") {
+    // --- Lifecycle timers ---
     window.addEventListener('beforeunload', () => {
         stopTokenRefreshTimer();
     });
@@ -336,6 +421,23 @@ if (typeof window !== "undefined") {
     window.addEventListener('auth:force-logout', () => {
         stopTokenRefreshTimer();
     });
+
+    // --- Eager refresh on tab reactivation ---
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // --- Cross-tab token sync via BroadcastChannel ---
+    try {
+        const bc = new BroadcastChannel(AUTH_SYNC_CHANNEL);
+        bc.addEventListener('message', (e) => handleCrossTabTokenSync(e.data));
+        // Do NOT close bc — it must remain open to receive messages
+    } catch {
+        // BroadcastChannel unavailable — fall back to storage events
+        window.addEventListener('storage', (e) => {
+            if (e.key === "auth_token_broadcast" && e.newValue) {
+                handleCrossTabTokenSync(e.newValue);
+            }
+        });
+    }
 }
 
 // ============================================================

@@ -170,8 +170,8 @@ export const isTokenExpired = (token) => {
     if (!token) return true;
     try {
         const payload = JSON.parse(atob(token.split(".")[1]));
-        // Add 30 second buffer to avoid edge cases
-        return payload.exp * 1000 <= Date.now() + 30000;
+        // Add 10 second buffer to handle network latency without triggering premature refresh storms
+        return payload.exp * 1000 <= Date.now() + 10000;
     } catch {
         return true;
     }
