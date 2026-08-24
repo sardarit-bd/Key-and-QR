@@ -131,9 +131,31 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     }
   }, [isInitialized, user, tagCode, canFavorite]);
 
-  const goToAuth = (type = "login") => {
+  const goToAuth = (type = "register") => {
+    if (typeof window !== "undefined" && data) {
+      try {
+        const quoteToPreserve = {
+          _id: data?._id || null,
+          quote: quoteText || data?.quote || data?.text || "",
+          text: quoteText || data?.quote || data?.text || "",
+          author: quoteAuthor || data?.author || "",
+          category: category || data?.category || "faith",
+          isPersonalMessage: !!isPersonalMessage,
+          renderedImages: data?.renderedImages || null,
+          editorData: data?.editorData || null,
+          image: typeof backgroundImage === "string" ? backgroundImage : (data?.image || null),
+          audioTrack: audioTrack || null,
+          tagCode: tagCode || null,
+          timestamp: Date.now(),
+        };
+        localStorage.setItem("pending_dashboard_quote", JSON.stringify(quoteToPreserve));
+      } catch (err) {
+        console.error("Failed to save pending quote:", err);
+      }
+    }
+
     const target = type === "register" ? "/signup" : "/login";
-    router.push(`${target}?redirect=${encodeURIComponent(pathname)}`);
+    router.push(`${target}?redirect=${encodeURIComponent("/new-dashboard/user")}`);
   };
 
   const handleFavoriteClick = async () => {
