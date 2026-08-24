@@ -236,24 +236,6 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             </>
           )}
 
-          {/* Top Bar: Category Label & Audio Control */}
-          <div className="relative z-20 pt-2.5 sm:pt-3 px-5 flex items-center justify-between shrink-0">
-            <div className="w-11" />
-            <p className="text-[12px] tracking-wide text-[#f3d6a0] font-light drop-shadow-md">
-              {categoryLabel}
-            </p>
-            <div className="w-11 flex justify-end">
-              {audioTrack?.source && (
-                <VisualQuoteAudioPlayer
-                  ref={audioPlayerRef}
-                  track={audioTrack}
-                  disableAutoplay={!isRevealed}
-                  compact
-                />
-              )}
-            </div>
-          </div>
-
           {/* Full-screen Interaction Overlay Fallback for Autoplay Audio on Mobile */}
           <AnimatePresence>
             {!isRevealed && (
@@ -335,6 +317,25 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
           {/* Main Visual Quote Area */}
           {hasVisualDesign ? (
             <div className="relative z-10 flex-1 w-full min-h-0 flex items-center justify-center p-2 my-auto overflow-hidden">
+              {/* Subtle top-right overlay: Category above, Play button underneath */}
+              <div className="absolute top-4 right-4 flex flex-col items-end gap-2 z-20 pointer-events-auto">
+                {categoryLabel && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 backdrop-blur-md px-3 py-1 text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-[#f3d6a0] shadow-sm">
+                    <Sparkles size={11} className="text-amber-400 fill-current" />
+                    <span>{categoryLabel}</span>
+                  </span>
+                )}
+
+                {audioTrack?.source && (
+                  <VisualQuoteAudioPlayer
+                    ref={audioPlayerRef}
+                    track={audioTrack}
+                    disableAutoplay={!isRevealed}
+                    compact
+                  />
+                )}
+              </div>
+
               {data?.editorData ? (
                 <VisualQuoteRenderer
                   editorData={data.editorData}
@@ -355,6 +356,25 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
           ) : (
             /* Legacy Non-Canvas Quote Text & Author */
             <div className="relative z-10 flex-1 min-h-0 px-6 text-center my-auto flex flex-col justify-center items-center">
+              {/* Subtle top-right overlay: Category above, Play button underneath */}
+              <div className="absolute top-4 right-4 flex flex-col items-end gap-2 z-20 pointer-events-auto">
+                {categoryLabel && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 backdrop-blur-md px-3 py-1 text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-[#f3d6a0] shadow-sm">
+                    <Sparkles size={11} className="text-amber-400 fill-current" />
+                    <span>{categoryLabel}</span>
+                  </span>
+                )}
+
+                {audioTrack?.source && (
+                  <VisualQuoteAudioPlayer
+                    ref={audioPlayerRef}
+                    track={audioTrack}
+                    disableAutoplay={!isRevealed}
+                    compact
+                  />
+                )}
+              </div>
+
               <h1 className="text-white text-[20px] sm:text-[24px] leading-[1.25] font-medium drop-shadow-xl max-w-[340px]">
                 {quoteText}
               </h1>
