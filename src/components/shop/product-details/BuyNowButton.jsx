@@ -27,6 +27,8 @@ export const BuyNowButton = ({
             price: product.price,
             img: selectedImage,
             qty: qtyToAdd,
+            stock: product.stock,
+            stockQuantity: product.stock,
             purchaseType: selectedOption === "gift" ? "gift" : "self",
             giftMessage: selectedOption === "gift" ? customMessage?.trim() || null : null,
         });

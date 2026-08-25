@@ -27,9 +27,11 @@ export const useCartStore = create(
                 const targetQty = existingItem ? existingItem.qty + quantityToAdd : quantityToAdd;
                 
                 // Check stock
+                let resolvedStock = product.stock ?? product.stockQuantity;
                 try {
                     const stock = await getProductStockWithCache(product.id);
                     if (typeof stock === "number") {
+                        resolvedStock = stock;
                         if (stock <= 0) {
                             return {
                                 success: false,
@@ -54,7 +56,12 @@ export const useCartStore = create(
                 if (existingItem) {
                     const updatedCart = cart.map((item) =>
                         item.id === product.id
-                            ? { ...item, qty: targetQty }
+                            ? { 
+                                ...item, 
+                                qty: targetQty,
+                                stock: typeof resolvedStock === 'number' ? resolvedStock : item.stock,
+                                stockQuantity: typeof resolvedStock === 'number' ? resolvedStock : item.stockQuantity,
+                              }
                             : item
                     );
                     set({ cart: updatedCart });
@@ -63,6 +70,8 @@ export const useCartStore = create(
                         cart: [...cart, { 
                             ...product, 
                             qty: quantityToAdd,
+                            stock: typeof resolvedStock === 'number' ? resolvedStock : product.stock,
+                            stockQuantity: typeof resolvedStock === 'number' ? resolvedStock : product.stockQuantity,
                             addedAt: new Date().toISOString()
                         }] 
                     });
@@ -86,7 +95,7 @@ export const useCartStore = create(
                 });
             },
 
-            // Increase quantity - Optimized with cache
+            // Increase quantity - Optimized with cache and stock limit checks
             increaseQty: async (id) => {
                 const { cart } = get();
                 const item = cart.find((i) => i.id === id);
@@ -96,11 +105,22 @@ export const useCartStore = create(
 
                 try {
                     const stock = await getProductStockWithCache(id);
-                    if (typeof stock === "number" && stock <= item.qty) {
-                        return { 
-                            success: false, 
-                            error: `Only ${stock} items available in stock.` 
-                        };
+                    if (typeof stock === "number") {
+                        // Update stock on cart item
+                        set({
+                            cart: get().cart.map((i) =>
+                                i.id === id ? { ...i, stock, stockQuantity: stock } : i
+                            )
+                        });
+
+                        if (stock <= item.qty) {
+                            return { 
+                                success: false, 
+                                error: `Only ${stock} items available in stock.`,
+                                availableStock: stock,
+                                maxLimitReached: true
+                            };
+                        }
                     }
                 } catch (error) {
                     console.warn("Stock check failed:", error);
@@ -111,7 +131,7 @@ export const useCartStore = create(
                 }
 
                 set({
-                    cart: cart.map((item) =>
+                    cart: get().cart.map((item) =>
                         item.id === id ? { ...item, qty: item.qty + 1 } : item
                     ),
                 });
@@ -202,15 +222,14 @@ export const useCartStore = create(
                 const stockChecks = cart.map(async (item) => {
                     try {
                         const stock = await getProductStockWithCache(item.id);
-                        if (stock < item.qty) {
-                            return {
-                                id: item.id,
-                                name: item.name,
-                                available: stock,
-                                requested: item.qty,
-                            };
-                        }
-                        return null;
+                        return {
+                            id: item.id,
+                            name: item.name,
+                            stock: typeof stock === 'number' ? stock : item.stock,
+                            isExceeded: typeof stock === 'number' && stock < item.qty,
+                            available: stock,
+                            requested: item.qty,
+                        };
                     } catch (error) {
                         console.warn('Stock check failed for:', item.id);
                         return null;
@@ -219,8 +238,18 @@ export const useCartStore = create(
 
                 const results = await Promise.all(stockChecks);
                 
-                // Filter out null results (successful checks)
-                const errors = results.filter(result => result !== null);
+                // Update cached stock on cart items in store
+                const updatedCart = get().cart.map((item) => {
+                    const found = results.find(r => r && r.id === item.id);
+                    if (found && typeof found.stock === 'number') {
+                        return { ...item, stock: found.stock, stockQuantity: found.stock };
+                    }
+                    return item;
+                });
+                set({ cart: updatedCart });
+                
+                // Filter out stock exceeded errors
+                const errors = results.filter(result => result && result.isExceeded);
                 
                 return errors;
             },

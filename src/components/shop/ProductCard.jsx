@@ -72,6 +72,8 @@ function ProductCardBase({ product, index = 0, priority = false }) {
       price: product.price,
       img: product.image?.url,
       qty: 1,
+      stock: product.stock,
+      stockQuantity: product.stock,
       purchaseType: "self",
       giftMessage: null,
     });
