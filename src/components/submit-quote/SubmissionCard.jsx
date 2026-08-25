@@ -32,7 +32,7 @@ export default function SubmissionCard({ submission, index = 0 }) {
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: (index % 3) * 0.06, duration: 0.3, ease: 'easeOut' }}
-      className="group relative overflow-hidden rounded-[22px] border border-white/6 bg-card p-5 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.45)] transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-[0_24px_48px_-16px_rgb(0_0_0/0.55)] light:border-[#E8DFCE]/80 light:bg-[#FBF7EF]/55 light:shadow-[0_20px_50px_-20px_rgba(100,72,24,0.28),0_10px_30px_-18px_rgba(100,72,24,0.16)]"
+      className="group relative overflow-hidden rounded-[22px] border border-white/6 bg-card p-4 sm:p-5 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.45)] transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-[0_24px_48px_-16px_rgb(0_0_0/0.55)] light:border-[#E8DFCE]/80 light:bg-[#FBF7EF]/55 light:shadow-[0_20px_50px_-20px_rgba(100,72,24,0.28),0_10px_30px_-18px_rgba(100,72,24,0.16)]"
     >
       {/* Ambient glows */}
       <div className="pointer-events-none absolute -left-16 -top-16 h-48 w-48 rounded-full bg-accent/[0.05] blur-3xl" />
@@ -44,7 +44,8 @@ export default function SubmissionCard({ submission, index = 0 }) {
         {/* Top row: category chip + status */}
         <div className="flex items-center justify-between gap-2">
           <span
-            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize backdrop-blur-md ${chipClass}`}
+            className={`inline-flex max-w-[140px] sm:max-w-[180px] truncate items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] sm:text-[11px] font-semibold capitalize backdrop-blur-md ${chipClass}`}
+            title={categoryLabel}
           >
             {categoryLabel}
           </span>

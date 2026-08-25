@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   SubmitQuoteHeader,
@@ -10,13 +10,14 @@ import {
   SubmitButton,
   SubmitSuccessState,
   CooldownNotice,
+  SubmitQuoteSkeleton,
 } from '@/components/submit-quote';
 import {
   useSubmitQuoteMutation,
   useSubmissionStatus,
 } from '@/hooks/pending-quote/usePendingQuote';
 import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
-import { SUBMISSION_CATEGORY_SLUGS } from '@/components/submit-quote/submitQuote.constants';
+import { useAuthStore } from '@/store/authStore';
 
 const MAX_LENGTH = 500;
 
@@ -32,30 +33,45 @@ const MAX_LENGTH = 500;
 export default function SubmitQuotePage() {
   const [text, setText] = useState('');
   const [author, setAuthor] = useState('');
-  const [category, setCategory] = useState('inspire');
+  const [category, setCategory] = useState('');
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
 
+  const { isInitialized } = useAuthStore();
   const submitQuote = useSubmitQuoteMutation();
-  const { data: quoteCategories = [] } = useQuoteCategories();
+  const { data: quoteCategories = [], isLoading: isCategoriesLoading } = useQuoteCategories();
   const {
     data: status,
+    isLoading: isStatusLoading,
+    isPending: isStatusPending,
     refetch: refetchStatus,
   } = useSubmissionStatus();
 
   // Backend is the source of truth for eligibility.
+  const isCheckingEligibility = isStatusLoading || (!status && isStatusPending) || !isInitialized;
   const canSubmit = status?.canSubmit !== false;
   const plan = status?.plan || 'free';
   const cooldownEndsAt = status?.cooldownEndsAt || null;
 
-  // Default category — first valid submission slug from the backend list,
-  // otherwise the fallback 'inspire'.
+  // Default category — dynamically resolved from active categories sorted by sortOrder
   const defaultCategory = useMemo(() => {
-    const first = quoteCategories.find(
-      (cat) => cat?.slug && SUBMISSION_CATEGORY_SLUGS.includes(cat.slug)
-    );
-    return first?.slug || 'inspire';
+    const active = (quoteCategories || [])
+      .filter((cat) => cat && cat.isActive !== false)
+      .sort((a, b) => {
+        const orderA = typeof a.sortOrder === 'number' ? a.sortOrder : 9999;
+        const orderB = typeof b.sortOrder === 'number' ? b.sortOrder : 9999;
+        if (orderA !== orderB) return orderA - orderB;
+        return (a.name || a.slug || '').localeCompare(b.name || b.slug || '');
+      });
+    return active[0]?.slug || active[0]?.name?.toLowerCase() || 'inspire';
   }, [quoteCategories]);
+
+  // Set initial category once categories load if not explicitly set
+  useEffect(() => {
+    if (!category && defaultCategory) {
+      setCategory(defaultCategory);
+    }
+  }, [defaultCategory, category]);
 
   // When the countdown hits zero, revalidate eligibility (no page refresh).
   const handleCooldownEnd = useCallback(() => {
@@ -82,7 +98,7 @@ export default function SubmitQuotePage() {
       try {
         await submitQuote.mutateAsync({
           text: text.trim(),
-          category,
+          category: category || defaultCategory,
           author: author.trim() || null,
           type: 'community',
         });
@@ -112,9 +128,9 @@ export default function SubmitQuotePage() {
         transition={{ duration: 0.3 }}
         className="min-h-screen bg-background"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-20 sm:pb-24">
           <SubmitQuoteHeader />
-          <div className="mt-10">
+          <div className="mt-8 sm:mt-10">
             <SubmitSuccessState
               cooldownEndsAt={cooldownEndsAt}
               plan={plan}
@@ -123,6 +139,20 @@ export default function SubmitQuotePage() {
           </div>
         </div>
       </motion.div>
+    );
+  }
+
+  // Loading / verifying eligibility state — prevents FOUC
+  if (isCheckingEligibility) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-20 sm:pb-24">
+          <SubmitQuoteHeader />
+          <div className="mx-auto mt-6 sm:mt-10 w-full max-w-2xl">
+            <SubmitQuoteSkeleton />
+          </div>
+        </div>
+      </div>
     );
   }
 
@@ -135,9 +165,9 @@ export default function SubmitQuotePage() {
         transition={{ duration: 0.3 }}
         className="min-h-screen bg-background"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-20 sm:pb-24">
           <SubmitQuoteHeader />
-          <div className="mx-auto mt-10 w-full max-w-md">
+          <div className="mx-auto mt-8 sm:mt-10 w-full max-w-md">
             <CooldownNotice
               cooldownEndsAt={cooldownEndsAt}
               plan={plan}
@@ -160,13 +190,13 @@ export default function SubmitQuotePage() {
       transition={{ duration: 0.3 }}
       className="min-h-screen bg-background"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-20 sm:pb-24">
         {/* Header */}
         <SubmitQuoteHeader />
 
         {/* Centered writing column */}
-        <div className="mx-auto mt-10 w-full max-w-2xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="mx-auto mt-6 sm:mt-10 w-full max-w-2xl">
+          <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
             {/* Quote textarea */}
             <QuoteWriter text={text} onChange={setText} />
 
@@ -174,7 +204,11 @@ export default function SubmitQuotePage() {
             <AuthorInput author={author} onChange={setAuthor} />
 
             {/* Category selection */}
-            <CategoryPills value={category} onChange={setCategory} />
+            <CategoryPills
+              value={category || defaultCategory}
+              onChange={setCategory}
+              categories={quoteCategories}
+            />
 
             {/* Error */}
             {error && (
@@ -184,14 +218,14 @@ export default function SubmitQuotePage() {
             )}
 
             {/* Plan-aware limit helper */}
-            <div className="rounded-xl border border-border/60 bg-card/40 px-4 py-3 text-center text-[13px] text-foreground-tertiary">
+            <div className="rounded-xl border border-border/60 bg-card/40 px-4 py-3 text-center text-[12px] sm:text-[13px] text-foreground-tertiary">
               {plan === 'subscriber'
                 ? 'MyInspire+ members can submit 1 quote per day.'
                 : 'Free members can submit 1 quote every 7 days.'}
             </div>
 
             {/* Helper text */}
-            <p className="text-center text-[13px] leading-relaxed text-foreground-tertiary">
+            <p className="text-center text-[12px] sm:text-[13px] leading-relaxed text-foreground-tertiary">
               Your quote will be reviewed before publishing.
               <br className="hidden sm:block" />
               We&apos;ll notify you once it&apos;s approved.

@@ -14,10 +14,10 @@ export const categoryKeys = quoteCategoryKeys;
  * Get all active quote categories
  * GET /categories
  */
-export function useQuoteCategories() {
+export function useQuoteCategories(params = {}) {
   return useQuery({
-    queryKey: quoteCategoryKeys.list(),
-    queryFn: () => categoryService.getAllCategories(),
+    queryKey: [...quoteCategoryKeys.list(), params],
+    queryFn: () => categoryService.getAllCategories({ limit: 100, ...params }),
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
     retry: 2,

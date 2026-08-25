@@ -15,7 +15,8 @@ export const pendingQuoteKeys = {
  * GET /pending-quotes/status — the backend is the source of truth.
  */
 export function useSubmissionStatus(enabled = true) {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isInitialized } = useAuthStore();
+  const authed = isInitialized ? (typeof isAuthenticated === 'function' ? isAuthenticated() : true) : false;
 
   return useQuery({
     queryKey: pendingQuoteKeys.status(),
@@ -23,7 +24,7 @@ export function useSubmissionStatus(enabled = true) {
     staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,
     retry: 1,
-    enabled: enabled && isAuthenticated(),
+    enabled: enabled && authed,
     select: (result) => ({
       canSubmit: result.data?.canSubmit ?? true,
       plan: result.data?.plan || 'free',
@@ -41,7 +42,8 @@ export function useSubmissionStatus(enabled = true) {
  */
 export function useSubmissionHistory(params = {}) {
   const { page = 1, limit = 10, search = '', category = 'all', status = 'all', sortBy = 'newest' } = params;
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, isInitialized } = useAuthStore();
+  const authed = isInitialized ? (typeof isAuthenticated === 'function' ? isAuthenticated() : true) : false;
 
   return useQuery({
     queryKey: pendingQuoteKeys.submissionList({ page, limit, search, category, status, sortBy }),
@@ -50,7 +52,7 @@ export function useSubmissionHistory(params = {}) {
     staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,
     retry: 1,
-    enabled: isAuthenticated(),
+    enabled: authed,
     select: (result) => ({
       data: result.data || [],
       meta: result.meta || { page: 1, limit, total: 0, totalPage: 0 },
