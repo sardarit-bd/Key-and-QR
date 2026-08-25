@@ -65,7 +65,7 @@ export const isValidPostalCode = (postalCode) => {
 
 // Country validation
 export const isValidCountry = (country) => {
-    if (!country || country === 'Select your country') {
+    if (!country || typeof country !== 'string' || country.trim() === '' || country === 'Select your country') {
         return { valid: false, error: 'Please select a country' };
     }
     return { valid: true, error: null };

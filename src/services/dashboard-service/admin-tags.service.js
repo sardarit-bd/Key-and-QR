@@ -62,6 +62,12 @@ export const adminTagsService = {
     return response.data;
   },
 
+  /** Permanently delete an unassigned tag */
+  deleteTag: async (id) => {
+    const response = await api.delete(`/tags/${id}`);
+    return response.data;
+  },
+
   /** Fetch assigned tags (activated + with owner) — server-side pagination + filter */
   getAssignedTags: async ({ page = 1, limit = 10, search = '', subscriptionType = '' } = {}) => {
     const params = { page, limit, isActivated: 'true', isActive: 'true' };

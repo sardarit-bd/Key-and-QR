@@ -15,6 +15,7 @@ import CheckoutSkeleton from "@/components/skeletons/CheckoutSkeleton";
 import { CHECKOUT_CONFIG, formatPrice, getCountryName } from "@/config/checkout.config";
 import { validateCheckoutForm } from "@/lib/validators/checkout.validator";
 import { ChevronDown, ShieldCheck, Lock, CreditCard, Gift } from "lucide-react";
+import CountryCombobox from "@/components/ui/CountryCombobox";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -61,7 +62,6 @@ export default function Checkout() {
 
     const [loading, setLoading] = useState(false);
     const [pageLoading, setPageLoading] = useState(false);
-    const [countryOpen, setCountryOpen] = useState(false);
     const [imageErrors, setImageErrors] = useState({});
     const [existingOrder, setExistingOrder] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -80,8 +80,6 @@ export default function Checkout() {
         purchaseType: CHECKOUT_CONFIG.defaults.purchaseType,
         giftMessage: "",
     });
-
-    const countries = CHECKOUT_CONFIG.countries;
 
     // Get checkout items from cart
     const checkoutItems = useMemo(() => {
@@ -448,57 +446,23 @@ export default function Checkout() {
                                     />
                                 </Field>
 
-                                {/* Country Select */}
+                                {/* Country Combobox (Searchable ISO-3166) */}
                                 <Field label="Country" htmlFor="country" required error={fieldErrors.country}>
-                                    <div className="relative">
-                                        <button
-                                            id="country"
-                                            type="button"
-                                            onClick={() => setCountryOpen(!countryOpen)}
-                                            className={`${inputClass(fieldErrors.country)} flex cursor-pointer items-center justify-between text-left`}
-                                            disabled={isSubmitting || loading || isRedirecting}
-                                            aria-label="Select country"
-                                            aria-expanded={countryOpen}
-                                        >
-                                            <span className={formData.country ? 'text-[#2E2A24]' : 'text-[#A99B7F]'}>
-                                                {formData.country ? getCountryName(formData.country) : 'Select your country'}
-                                            </span>
-                                            <ChevronDown size={18} className={`shrink-0 text-[#A99B7F] transition-transform ${countryOpen ? 'rotate-180' : ''}`} />
-                                        </button>
-
-                                        {countryOpen && (
-                                            <div className="absolute z-20 mt-2 w-full overflow-hidden rounded-xl border border-[#E5DCC8] bg-white shadow-xl">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setFormData({ ...formData, country: '' });
-                                                        setCountryOpen(false);
-                                                    }}
-                                                    className="w-full cursor-pointer px-4 py-2.5 text-left text-sm text-[#8A7A5C] transition-colors hover:bg-[#F5EDDC]/60"
-                                                >
-                                                    Select your country
-                                                </button>
-                                                {countries.map((c) => (
-                                                    <button
-                                                        key={c.code}
-                                                        type="button"
-                                                        onClick={() => {
-                                                            setFormData({ ...formData, country: c.code });
-                                                            setCountryOpen(false);
-                                                            if (fieldErrors.country) {
-                                                                const { errors } = validateCheckoutForm({ ...formData, country: c.code });
-                                                                setFieldErrors(prev => ({ ...prev, country: errors.country }));
-                                                            }
-                                                        }}
-                                                        className={`w-full cursor-pointer px-4 py-2.5 text-left text-sm transition-colors hover:bg-[#F5EDDC]/60 ${formData.country === c.code ? "font-semibold text-[#2E2A24]" : "text-[#5C5346]"
-                                                            }`}
-                                                    >
-                                                        {c.name}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        )}
-                                    </div>
+                                    <CountryCombobox
+                                        id="country"
+                                        name="country"
+                                        value={formData.country}
+                                        onChange={(code) => {
+                                            setFormData({ ...formData, country: code });
+                                            if (fieldErrors.country) {
+                                                const { errors } = validateCheckoutForm({ ...formData, country: code });
+                                                setFieldErrors(prev => ({ ...prev, country: errors.country }));
+                                            }
+                                        }}
+                                        error={fieldErrors.country}
+                                        disabled={isSubmitting || loading || isRedirecting}
+                                        placeholder="Select your country"
+                                    />
                                 </Field>
 
                                 <Field label="Address" htmlFor="address" required error={fieldErrors.address}>

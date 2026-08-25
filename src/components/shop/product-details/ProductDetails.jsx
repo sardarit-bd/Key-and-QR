@@ -90,7 +90,7 @@ export const ProductDetails = () => {
 
   // ************* Main Render *************
   return (
-    <section className="bg-[#FDFBF6] text-[#2E2A24] pb-28 lg:pb-16">
+    <section className="bg-[#FDFBF6] text-[#2E2A24] pb-8 sm:pb-12">
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         {/* Breadcrumb */}
         <ProductBreadcrumb productName={product.name} />

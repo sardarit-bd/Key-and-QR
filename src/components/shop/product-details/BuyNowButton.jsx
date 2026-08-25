@@ -3,6 +3,7 @@ import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
 import { ShieldBan, Zap } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const BuyNowButton = ({
     product,
@@ -10,6 +11,7 @@ export const BuyNowButton = ({
     selectedOption,
     customMessage,
     quantity,
+    className,
 }) => {
     const router = useRouter();
     const user = useAuthStore((state) => state.user);
@@ -27,6 +29,8 @@ export const BuyNowButton = ({
             price: product.price,
             img: selectedImage,
             qty: qtyToAdd,
+            stock: product.stock,
+            stockQuantity: product.stock,
             purchaseType: selectedOption === "gift" ? "gift" : "self",
             giftMessage: selectedOption === "gift" ? customMessage?.trim() || null : null,
         });
@@ -39,7 +43,7 @@ export const BuyNowButton = ({
             <Button
                 variant="outline"
                 disabled
-                className="h-12 px-6 py-3 rounded-xl opacity-50 cursor-not-allowed"
+                className={cn("h-12 px-6 py-3 rounded-xl opacity-50 cursor-not-allowed", className)}
             >
                 <ShieldBan size={14} className="mr-1.5" />
                 Purchases Disabled
@@ -52,9 +56,12 @@ export const BuyNowButton = ({
             variant="default"
             onClick={handleBuyNow}
             disabled={product.stock <= 0}
-            className="h-12 px-7 py-3 rounded-xl bg-[#C6922D] hover:bg-[#A6782B] text-white shadow-[0_8px_24px_-8px_rgba(198,146,45,0.6)] transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer"
+            className={cn(
+                "h-12 px-7 py-3 rounded-xl bg-[#C6922D] hover:bg-[#A6782B] text-white shadow-[0_8px_24px_-8px_rgba(198,146,45,0.6)] transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] disabled:cursor-not-allowed disabled:hover:translate-y-0 cursor-pointer font-medium",
+                className
+            )}
         >
-            <Zap size={14} className="mr-1.5" />
+            <Zap size={14} className="mr-1.5 fill-current" />
             Buy it Now
         </Button>
     );

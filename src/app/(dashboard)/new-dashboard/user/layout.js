@@ -84,7 +84,7 @@ export default function UserDashboardLayout({ children }) {
 
         {/* 3. Main Content Container */}
         <main className="flex-1 w-full lg:ml-72 transition-all duration-300">
-          <div className="pb-20 lg:pb-0">
+          <div className="pb-28 lg:pb-0">
             {children}
           </div>
         </main>

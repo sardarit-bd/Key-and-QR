@@ -100,7 +100,7 @@ function PromoBanner() {
       initial={reduceMotion ? false : { opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-      className="group relative mb-6 h-52 overflow-hidden rounded-2xl border border-[#EDE4D0]/70 bg-[#2E2A24] shadow-[0_8px_32px_-16px_rgb(60_45_15/0.35)] sm:h-60"
+      className="group relative mb-6 h-52 overflow-hidden rounded-2xl sm:h-60"
     >
       {imageUrl ? (
         <>
@@ -110,7 +110,7 @@ function PromoBanner() {
             src={imageUrl}
             alt=""
             aria-hidden="true"
-            className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+            className="h-full w-full object-cover"
           />
           {/* Subtle premium overlay for image readability only */}
           <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[#1F1C18]/25 via-transparent to-transparent" />
@@ -175,11 +175,10 @@ function CheckItem({ label, checked, count, onToggle }) {
     >
       <span className="flex items-center gap-2.5">
         <span
-          className={`flex h-[18px] w-[18px] items-center justify-center rounded-md border transition-all duration-200 ${
-            checked
-              ? "border-[#C6922D] bg-[#C6922D] text-white"
-              : "border-[#D8CCB2] bg-white group-hover:border-[#C6922D]/50"
-          }`}
+          className={`flex h-[18px] w-[18px] items-center justify-center rounded-md border transition-all duration-200 ${checked
+            ? "border-[#C6922D] bg-[#C6922D] text-white"
+            : "border-[#D8CCB2] bg-white group-hover:border-[#C6922D]/50"
+            }`}
         >
           {checked && <Check size={12} strokeWidth={3} />}
         </span>
@@ -456,9 +455,8 @@ export default function ShopGrid() {
                       onClick={() => setView("grid")}
                       aria-label="Grid view"
                       aria-pressed={view === "grid"}
-                      className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-all duration-200 ${
-                        view === "grid" ? "bg-[#2E2A24] text-white shadow-sm" : "text-[#A99B7F] hover:bg-[#F5EDDC]"
-                      }`}
+                      className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-all duration-200 ${view === "grid" ? "bg-[#2E2A24] text-white shadow-sm" : "text-[#A99B7F] hover:bg-[#F5EDDC]"
+                        }`}
                     >
                       <LayoutGrid size={15} />
                     </button>
@@ -467,9 +465,8 @@ export default function ShopGrid() {
                       onClick={() => setView("list")}
                       aria-label="List view"
                       aria-pressed={view === "list"}
-                      className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-all duration-200 ${
-                        view === "list" ? "bg-[#2E2A24] text-white shadow-sm" : "text-[#A99B7F] hover:bg-[#F5EDDC]"
-                      }`}
+                      className={`flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-all duration-200 ${view === "list" ? "bg-[#2E2A24] text-white shadow-sm" : "text-[#A99B7F] hover:bg-[#F5EDDC]"
+                        }`}
                     >
                       <List size={15} />
                     </button>
@@ -628,9 +625,8 @@ export default function ShopGrid() {
                       <p className="mt-1.5 text-sm text-[#8A7A5C] line-clamp-2">{product.description}</p>
                       <div className="mt-3 flex items-center justify-between">
                         <p className="text-xl font-bold text-[#2E2A24]">${Number(product.price).toFixed(2)}</p>
-                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold ${
-                          (product.stock ?? 0) <= 0 ? "bg-[#FCE8E8] text-[#8A2E2E]" : (product.stock ?? 0) <= 2 ? "bg-[#FCE8CB] text-[#7A4A10]" : "bg-[#E4F2E8] text-[#2E5B3A]"
-                        }`}>
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-semibold ${(product.stock ?? 0) <= 0 ? "bg-[#FCE8E8] text-[#8A2E2E]" : (product.stock ?? 0) <= 2 ? "bg-[#FCE8CB] text-[#7A4A10]" : "bg-[#E4F2E8] text-[#2E5B3A]"
+                          }`}>
                           {(product.stock ?? 0) <= 0 ? "Out of Stock" : (product.stock ?? 0) <= 2 ? `Only ${product.stock} left` : `${product.stock} in stock`}
                         </span>
                       </div>
@@ -719,9 +715,8 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
       <button
         onClick={() => onPageChange(Math.max(1, currentPage - 1))}
         disabled={currentPage === 1}
-        className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border transition-all ${
-          currentPage === 1 ? "border-[#EDE4D0] text-[#C4B99F] cursor-not-allowed" : "border-[#E5DCC8] text-[#5C5346] hover:bg-[#F5EDDC] active:scale-95"
-        }`}
+        className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border transition-all ${currentPage === 1 ? "border-[#EDE4D0] text-[#C4B99F] cursor-not-allowed" : "border-[#E5DCC8] text-[#5C5346] hover:bg-[#F5EDDC] active:scale-95"
+          }`}
         aria-label="Previous page"
       >
         <ChevronRight size={15} className="rotate-180" />
@@ -734,11 +729,10 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
           ) : (
             <button
               onClick={() => onPageChange(page)}
-              className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border text-sm font-medium transition-all ${
-                currentPage === page
-                  ? "border-[#2E2A24] bg-[#2E2A24] text-white shadow-sm"
-                  : "border-[#E5DCC8] text-[#5C5346] hover:bg-[#F5EDDC] active:scale-95"
-              }`}
+              className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border text-sm font-medium transition-all ${currentPage === page
+                ? "border-[#2E2A24] bg-[#2E2A24] text-white shadow-sm"
+                : "border-[#E5DCC8] text-[#5C5346] hover:bg-[#F5EDDC] active:scale-95"
+                }`}
               aria-label={`Page ${page}`}
               aria-current={currentPage === page ? "page" : undefined}
             >
@@ -751,9 +745,8 @@ function Pagination({ currentPage, totalPages, onPageChange }) {
       <button
         onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
         disabled={currentPage === totalPages}
-        className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border transition-all ${
-          currentPage === totalPages ? "border-[#EDE4D0] text-[#C4B99F] cursor-not-allowed" : "border-[#E5DCC8] text-[#5C5346] hover:bg-[#F5EDDC] active:scale-95"
-        }`}
+        className={`flex h-9 w-9 cursor-pointer items-center justify-center rounded-lg border transition-all ${currentPage === totalPages ? "border-[#EDE4D0] text-[#C4B99F] cursor-not-allowed" : "border-[#E5DCC8] text-[#5C5346] hover:bg-[#F5EDDC] active:scale-95"
+          }`}
         aria-label="Next page"
       >
         <ChevronRight size={15} />

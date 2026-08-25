@@ -227,11 +227,12 @@ export default function AdminSubscriptionsPage() {
             </p>
           </div>
           <button
+            type="button"
             onClick={handleSyncWithStripe}
             disabled={loading}
-            className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/10 bg-card px-4 py-2 text-[13px] font-medium text-foreground-secondary hover:border-accent/30 hover:text-foreground transition disabled:opacity-50 disabled:cursor-not-allowed light:border-[#E8DFCE]/80 light:bg-[#FBF7EF]/55"
+            className="px-4 py-2.5 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-200 border border-neutral-700/80 hover:border-neutral-600 rounded-xl font-medium shadow-sm transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 cursor-pointer select-none text-sm disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50"
           >
-            <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+            <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
             Sync with Stripe
           </button>
         </div>

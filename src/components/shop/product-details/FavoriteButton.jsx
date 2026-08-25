@@ -9,7 +9,7 @@ import { Loader2 } from "lucide-react";
 import toast from "react-hot-toast";
 import { cn } from "@/lib/utils";
 
-export const FavoriteButton = ({ productId, className }) => {
+export const FavoriteButton = ({ productId, className, showText = false }) => {
     const router = useRouter();
     const { isAuthenticated } = useAuthStore();
 
@@ -44,19 +44,21 @@ export const FavoriteButton = ({ productId, className }) => {
             variant={isFavorite ? "default" : "outline"}
             onClick={handleFavorite}
             disabled={isPending || isFavoriteLoading}
+            title={isFavorite ? "Remove from Wishlist" : "Save to Wishlist"}
             className={cn(
-                "h-12 px-5 py-3 gap-2 rounded-xl border-[#E5DCC8] bg-white text-[#5C5346] transition-all duration-300 hover:-translate-y-0.5 hover:border-[#C6922D]/40 hover:text-[#C6922D] active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:hover:translate-y-0",
-                isFavorite && "!border-[#C25B5B]/30 !bg-[#FCE8E8] !text-[#C25B5B] hover:!border-[#C25B5B]/40 hover:!text-[#C25B5B]",
+                "h-12 rounded-xl border-[#E5DCC8] bg-white text-[#5C5346] shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-[#C25B5B]/50 hover:text-[#C25B5B] active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:hover:translate-y-0 shrink-0",
+                showText ? "px-5 py-3 gap-2" : "w-12 p-0 flex items-center justify-center",
+                isFavorite && "!border-[#C25B5B]/40 !bg-[#FDF2F2] !text-[#C25B5B] hover:!border-[#C25B5B]/60 hover:!text-[#C25B5B]",
                 className
             )}
-            aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            aria-label={isFavorite ? "Remove from wishlist" : "Save to wishlist"}
         >
             {isPending ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <Loader2 className="h-5 w-5 animate-spin" />
             ) : (
-                <Heart className={cn("w-4 h-4 transition-all duration-200", isFavorite && "fill-current")} />
+                <Heart className={cn("w-5 h-5 transition-transform duration-200", isFavorite && "fill-current text-[#C25B5B]")} />
             )}
-            {isFavorite ? "Saved" : "Save"}
+            {showText && (isFavorite ? "Saved" : "Save")}
         </Button>
     );
 };

@@ -19,7 +19,7 @@ export default function WebsiteLayout({ children }) {
       <TopHeader />
       <Header />
 
-      <main className={`flex-1 ${isScanPage ? 'h-full overflow-hidden' : 'pb-16 lg:pb-0'}`}>
+      <main className={`flex-1 ${isScanPage ? 'h-full overflow-hidden' : ''}`}>
         {children}
       </main>
 

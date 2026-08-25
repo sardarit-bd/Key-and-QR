@@ -7,6 +7,7 @@ export const HERO_KEYS = {
   all: ['hero'],
   content: ['hero', 'content'],
   shop: ['hero', 'shop'],
+  announcement: ['hero', 'announcement-banner'],
 };
 
 const DEFAULT_HERO = {
@@ -29,6 +30,21 @@ const DEFAULT_HERO = {
 const DEFAULT_SHOP_HERO = {
   imageUrl: '',
   publicId: '',
+};
+
+const DEFAULT_ANNOUNCEMENT_BANNER = {
+  isEnabled: true,
+  backgroundColor: '#000000',
+  textColor: '#ffffff',
+  isDismissible: true,
+  rotationSpeed: 5,
+  messages: [
+    { text: 'FREE SHIPPING ON ORDERS OVER $50', icon: 'Truck', linkUrl: '/shop', enabled: true },
+    { text: 'GET 10% OFF YOUR FIRST ORDER', icon: 'Gift', linkUrl: '/shop', enabled: true },
+    { text: '24/7 CUSTOMER SUPPORT', icon: 'Clock', linkUrl: '/how-it-works', enabled: true },
+  ],
+  text: 'FREE SHIPPING ON ORDERS OVER $50',
+  linkUrl: '',
 };
 
 /**
@@ -120,6 +136,45 @@ export function useUpdateShopHero() {
 }
 
 /**
+ * Fetch the announcement banner content.
+ */
+export function useAnnouncementBanner(enabled = true) {
+  return useQuery({
+    queryKey: HERO_KEYS.announcement,
+    queryFn: async () => {
+      const res = await heroService.getAnnouncementBanner();
+      return res?.data || DEFAULT_ANNOUNCEMENT_BANNER;
+    },
+    enabled,
+    staleTime: 2 * 60 * 1000,
+    gcTime: 5 * 60 * 1000,
+    retry: 1,
+    refetchOnWindowFocus: false,
+  });
+}
+
+/**
+ * Admin mutation: save announcement banner data.
+ * Invalidates the announcement banner cache.
+ */
+export function useUpdateAnnouncementBanner() {
+  const queryClient = useQueryClient();
+
+  const invalidate = () => {
+    queryClient.invalidateQueries({ queryKey: HERO_KEYS.announcement });
+    queryClient.invalidateQueries({ queryKey: HERO_KEYS.all });
+  };
+
+  return useMutation({
+    mutationFn: async (payload) => {
+      const res = await heroService.updateAnnouncementBanner(payload);
+      return res?.data || res;
+    },
+    onSettled: invalidate,
+  });
+}
+
+/**
  * Admin mutation: upload a new hero image (works for both Homepage & Shop Hero).
  * Returns { url, publicId }.
  */
@@ -132,4 +187,5 @@ export function useUploadHeroImage() {
   });
 }
 
-export { DEFAULT_HERO, DEFAULT_SHOP_HERO };
+export { DEFAULT_HERO, DEFAULT_SHOP_HERO, DEFAULT_ANNOUNCEMENT_BANNER };
+

@@ -53,12 +53,24 @@ export default function Cart() {
     }, []);
 
     // Handle quantity increase with stock check
-    const handleIncrease = async (id) => {
+    const handleIncrease = async (id, name, itemStock) => {
+        const item = cart.find((i) => i.id === id);
+        const currentQty = item?.qty || 1;
+        const availableStock = typeof itemStock === "number" ? itemStock : (item?.stock ?? item?.stockQuantity);
+
+        if (typeof availableStock === "number" && currentQty >= availableStock) {
+            toast.error(`Only ${availableStock} items left in stock`);
+            return;
+        }
+
         setIsLoading(true);
         try {
-            await increaseQty(id);
+            const res = await increaseQty(id);
+            if (res && !res.success) {
+                toast.error(res.error || "Maximum stock limit reached");
+            }
         } catch (error) {
-            toast.error(error.message);
+            toast.error(error?.message || "Failed to update quantity");
         } finally {
             setIsLoading(false);
         }
@@ -152,94 +164,105 @@ export default function Cart() {
 
                         <div className="space-y-4">
                             <AnimatePresence>
-                                {cart.map((item) => (
-                                    <motion.div
-                                        key={item.id}
-                                        layout
-                                        initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        exit={reduceMotion ? undefined : { opacity: 0, x: -24 }}
-                                        transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
-                                        className="flex flex-col sm:flex-row gap-4 rounded-2xl border border-[#EDE4D0]/80 bg-white p-4 shadow-[0_2px_12px_-4px_rgb(60_45_15/0.06)] transition-all duration-300 hover:border-[#C6922D]/30 hover:shadow-[0_16px_36px_-16px_rgb(60_45_15/0.2)]"
-                                    >
-                                        {/* Image + Info */}
-                                        <div className="flex flex-1 items-center gap-4 min-w-0">
-                                            <Link href={`/shop/${item.id}`} className="shrink-0 cursor-pointer">
-                                                <div className="relative h-20 w-20 overflow-hidden rounded-xl bg-[#F5F0E4]">
-                                                    <ProductImage
-                                                        src={item.img}
-                                                        alt={item.name}
-                                                        width={80}
-                                                        height={80}
-                                                        className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
-                                                        fill={false}
-                                                    />
-                                                </div>
-                                            </Link>
+                                {cart.map((item) => {
+                                    const itemStock = typeof item.stock === "number" ? item.stock : (typeof item.stockQuantity === "number" ? item.stockQuantity : null);
+                                    const isMaxStock = typeof itemStock === "number" && item.qty >= itemStock;
 
-                                            <div className="min-w-0 flex-1">
-                                                <Link href={`/shop/${item.id}`} className="cursor-pointer">
-                                                    <h3 className="truncate text-[15px] font-semibold text-[#2E2A24] transition-colors hover:text-[#A6782B]">
-                                                        {item.name}
-                                                    </h3>
+                                    return (
+                                        <motion.div
+                                            key={item.id}
+                                            layout
+                                            initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            exit={reduceMotion ? undefined : { opacity: 0, x: -24 }}
+                                            transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                                            className="flex flex-col sm:flex-row gap-4 rounded-2xl border border-[#EDE4D0]/80 bg-white p-4 shadow-[0_2px_12px_-4px_rgb(60_45_15/0.06)] transition-all duration-300 hover:border-[#C6922D]/30 hover:shadow-[0_16px_36px_-16px_rgb(60_45_15/0.2)]"
+                                        >
+                                            {/* Image + Info */}
+                                            <div className="flex flex-1 items-center gap-4 min-w-0">
+                                                <Link href={`/shop/${item.id}`} className="shrink-0 cursor-pointer">
+                                                    <div className="relative h-20 w-20 overflow-hidden rounded-xl bg-[#F5F0E4]">
+                                                        <ProductImage
+                                                            src={item.img}
+                                                            alt={item.name}
+                                                            width={80}
+                                                            height={80}
+                                                            className="h-full w-full object-cover transition-transform duration-500 hover:scale-105"
+                                                            fill={false}
+                                                        />
+                                                    </div>
                                                 </Link>
-                                                <p className="mt-1 text-sm font-medium text-[#5C5346]">
-                                                    ${Number(item.price).toFixed(2)}
-                                                </p>
-                                                {item.purchaseType === "gift" && (
-                                                    <span className="mt-1.5 inline-flex items-center rounded-full bg-[#FCE8E8] px-2 py-0.5 text-[11px] font-semibold text-[#C25B5B]">
-                                                        Gift
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
 
-                                        {/* Controls */}
-                                        <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">
-                                            {/* Quantity */}
-                                            <div className="flex items-center overflow-hidden rounded-lg border border-[#E5DCC8] bg-white">
-                                                <button
-                                                    onClick={() => decreaseQty(item.id)}
-                                                    className="flex h-9 w-9 items-center justify-center text-[#8A7A5C] transition-colors hover:bg-[#F5EDDC] hover:text-[#2E2A24] cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
-                                                    disabled={isLoading || item.qty <= 1}
-                                                    aria-label="Decrease quantity"
-                                                >
-                                                    <Minus size={15} />
-                                                </button>
-                                                <span className="w-9 text-center text-sm font-semibold text-[#2E2A24] tabular-nums" aria-live="polite">
-                                                    {item.qty}
-                                                </span>
-                                                <button
-                                                    onClick={() => handleIncrease(item.id)}
-                                                    className="flex h-9 w-9 items-center justify-center text-[#8A7A5C] transition-colors hover:bg-[#F5EDDC] hover:text-[#2E2A24] cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
-                                                    disabled={isLoading}
-                                                    aria-label="Increase quantity"
-                                                >
-                                                    <Plus size={15} />
-                                                </button>
-                                            </div>
-
-                                            {/* Line total + remove */}
-                                            <div className="flex items-center gap-4">
-                                                <p className="w-20 text-right font-semibold text-[#2E2A24] tabular-nums">
-                                                    ${(item.price * item.qty).toFixed(2)}
-                                                </p>
-                                                <button
-                                                    onClick={() => handleRemove(item.id, item.name)}
-                                                    className="flex h-9 w-9 items-center justify-center rounded-full text-[#C25B5B] transition-all duration-200 hover:bg-[#FCE8E8] hover:text-[#C25B5B] cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
-                                                    disabled={isLoading || removingId === item.id}
-                                                    aria-label="Remove item"
-                                                >
-                                                    {removingId === item.id ? (
-                                                        <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C25B5B]/40 border-t-transparent" />
-                                                    ) : (
-                                                        <Trash2 size={17} />
+                                                <div className="min-w-0 flex-1">
+                                                    <Link href={`/shop/${item.id}`} className="cursor-pointer">
+                                                        <h3 className="truncate text-[15px] font-semibold text-[#2E2A24] transition-colors hover:text-[#A6782B]">
+                                                            {item.name}
+                                                        </h3>
+                                                    </Link>
+                                                    <p className="mt-1 text-sm font-medium text-[#5C5346]">
+                                                        ${Number(item.price).toFixed(2)}
+                                                    </p>
+                                                    {item.purchaseType === "gift" && (
+                                                        <span className="mt-1.5 inline-flex items-center rounded-full bg-[#FCE8E8] px-2 py-0.5 text-[11px] font-semibold text-[#C25B5B]">
+                                                            Gift
+                                                        </span>
                                                     )}
-                                                </button>
+                                                    {isMaxStock && (
+                                                        <p className="mt-1.5 text-[11.5px] font-medium text-[#C25B5B] flex items-center gap-1">
+                                                            <span>Max limit reached ({itemStock} available)</span>
+                                                        </p>
+                                                    )}
+                                                </div>
                                             </div>
-                                        </div>
-                                    </motion.div>
-                                ))}
+
+                                            {/* Controls */}
+                                            <div className="flex items-center justify-between gap-4 sm:flex-col sm:items-end sm:justify-center">
+                                                {/* Quantity */}
+                                                <div className="flex items-center overflow-hidden rounded-lg border border-[#E5DCC8] bg-white">
+                                                    <button
+                                                        onClick={() => decreaseQty(item.id)}
+                                                        className="flex h-9 w-9 items-center justify-center text-[#8A7A5C] transition-colors hover:bg-[#F5EDDC] hover:text-[#2E2A24] cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                                                        disabled={isLoading || item.qty <= 1}
+                                                        aria-label="Decrease quantity"
+                                                    >
+                                                        <Minus size={15} />
+                                                    </button>
+                                                    <span className="w-9 text-center text-sm font-semibold text-[#2E2A24] tabular-nums" aria-live="polite">
+                                                        {item.qty}
+                                                    </span>
+                                                    <button
+                                                        onClick={() => handleIncrease(item.id, item.name, itemStock)}
+                                                        className="flex h-9 w-9 items-center justify-center text-[#8A7A5C] transition-colors hover:bg-[#F5EDDC] hover:text-[#2E2A24] cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                                                        disabled={isLoading || isMaxStock}
+                                                        title={isMaxStock ? `Maximum limit reached (${itemStock} available)` : "Increase quantity"}
+                                                        aria-label="Increase quantity"
+                                                    >
+                                                        <Plus size={15} />
+                                                    </button>
+                                                </div>
+
+                                                {/* Line total + remove */}
+                                                <div className="flex items-center gap-4">
+                                                    <p className="w-20 text-right font-semibold text-[#2E2A24] tabular-nums">
+                                                        ${(item.price * item.qty).toFixed(2)}
+                                                    </p>
+                                                    <button
+                                                        onClick={() => handleRemove(item.id, item.name)}
+                                                        className="flex h-9 w-9 items-center justify-center rounded-full text-[#C25B5B] transition-all duration-200 hover:bg-[#FCE8E8] hover:text-[#C25B5B] cursor-pointer disabled:cursor-not-allowed disabled:opacity-40"
+                                                        disabled={isLoading || removingId === item.id}
+                                                        aria-label="Remove item"
+                                                    >
+                                                        {removingId === item.id ? (
+                                                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-[#C25B5B]/40 border-t-transparent" />
+                                                        ) : (
+                                                            <Trash2 size={17} />
+                                                        )}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })}
                             </AnimatePresence>
                         </div>
                     </div>

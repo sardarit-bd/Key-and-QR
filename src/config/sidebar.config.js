@@ -21,6 +21,7 @@ import {
   DollarSign,
   Layers,
   ImageIcon,
+  Megaphone,
 } from "lucide-react";
 
 /**
@@ -309,6 +310,13 @@ export const SIDEBAR_CONFIG = {
           id: "admin-content-shop-hero",
           title: "Shop Hero",
           href: "/new-dashboard/admin/content/shop-hero",
+          visibility: MENU_VISIBILITY.ADMIN,
+        },
+        {
+          id: "admin-content-announcement",
+          title: "Announcement Banner",
+          icon: Megaphone,
+          href: "/new-dashboard/admin/content/announcement",
           visibility: MENU_VISIBILITY.ADMIN,
         },
       ],

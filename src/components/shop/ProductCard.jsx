@@ -3,11 +3,9 @@
 import { useMemo, useState, useEffect, memo } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   ArrowRight,
   Eye,
-  Heart,
   Loader2,
   ShoppingCart,
   Sparkles,
@@ -15,24 +13,16 @@ import {
 } from "lucide-react";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { useCartStore } from "@/store/cartStore";
-import { useFavoriteStatus, useToggleFavoriteMutation } from "@/hooks/favorite-service/useFavorites";
-import { useAuthStore } from "@/store/authStore";
 import toast from "react-hot-toast";
 
 /**
  * ProductCard — the single premium product card used across the Shop page
  * AND Related Products. Keeps every surface visually identical.
- *
- * Business logic (add to cart, wishlist, quick view) is unchanged.
  */
 
 function ProductCardBase({ product, index = 0, priority = false }) {
-  const router = useRouter();
   const reduceMotion = useReducedMotion();
   const addToCart = useCartStore((s) => s.addToCart);
-  const { isAuthenticated } = useAuthStore();
-  const { data: favData } = useFavoriteStatus(product._id, null);
-  const toggleFav = useToggleFavoriteMutation();
   const [isAdding, setIsAdding] = useState(false);
   const [isQuickViewOpen, setIsQuickViewOpen] = useState(false);
   const [hovered, setHovered] = useState(false);
@@ -51,7 +41,6 @@ function ProductCardBase({ product, index = 0, priority = false }) {
     };
   }, [isQuickViewOpen]);
 
-  const isFavorite = favData?.exists || false;
   const stock = product.stock ?? 0;
   const outOfStock = stock <= 0;
 
@@ -72,32 +61,14 @@ function ProductCardBase({ product, index = 0, priority = false }) {
       price: product.price,
       img: product.image?.url,
       qty: 1,
+      stock: product.stock,
+      stockQuantity: product.stock,
       purchaseType: "self",
       giftMessage: null,
     });
     setIsAdding(false);
     if (result?.success) toast.success(`${product.name} added to cart`);
     else if (result?.error) toast.error(result.error);
-  };
-
-  const handleFavorite = async (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!isAuthenticated()) {
-      sessionStorage.setItem("pendingFavorite", JSON.stringify({ productId: product._id }));
-      toast.error("Please login to add favorites");
-      router.push(`/login?redirect=/shop/${product._id}`);
-      return;
-    }
-    try {
-      await toggleFav.mutateAsync({
-        productId: product._id,
-        isFavorite,
-        favoriteId: favData?.favoriteId || null,
-      });
-    } catch (err) {
-      console.error("Favorite error:", err);
-    }
   };
 
   // Quick View — modal ONLY, never navigates.
@@ -196,32 +167,11 @@ function ProductCardBase({ product, index = 0, priority = false }) {
 
         {/* Content */}
         <div className="flex flex-1 flex-col p-4">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="text-[15px] font-semibold leading-snug text-[#2E2A24] line-clamp-1">
-              <Link href={`/shop/${product._id}`} className="transition-colors hover:text-[#A6782B]">
-                {product.name}
-              </Link>
-            </h3>
-            <motion.button
-              type="button"
-              onClick={handleFavorite}
-              whileHover={reduceMotion ? undefined : { scale: 1.15 }}
-              whileTap={reduceMotion ? undefined : { scale: 0.85 }}
-              transition={{ type: "spring", stiffness: 400, damping: 15 }}
-              aria-pressed={isFavorite}
-              aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
-              className={`relative flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center rounded-full border transition-[border-color,background-color,box-shadow] duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C6922D]/50 focus-visible:ring-offset-2 ${
-                isFavorite
-                  ? "border-[#C25B5B]/30 bg-[#FCE8E8] text-[#C25B5B] shadow-[0_0_12px_-2px_rgba(194,91,91,0.4)]"
-                  : "border-[#E5DCC8] text-[#A99B7F] hover:border-[#C6922D]/40 hover:text-[#C6922D] hover:shadow-[0_0_12px_-4px_rgba(198,146,45,0.45)]"
-              }`}
-            >
-              <Heart
-                size={14}
-                className={`transition-all duration-200 ${isFavorite ? "fill-current" : ""}`}
-              />
-            </motion.button>
-          </div>
+          <h3 className="text-[15px] font-semibold leading-snug text-[#2E2A24] line-clamp-1">
+            <Link href={`/shop/${product._id}`} className="transition-colors hover:text-[#A6782B]">
+              {product.name}
+            </Link>
+          </h3>
 
           <p className="mt-1.5 text-[12px] leading-relaxed text-[#8A7A5C] line-clamp-2">
             {product.description}

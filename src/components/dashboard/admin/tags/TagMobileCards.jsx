@@ -32,14 +32,20 @@ function TagCard({ tag, onShowQR, onToggleStatus, onDelete }) {
   const style = STATUS_STYLES[sk];
   const label = STATUS_LABELS[sk];
   const isDisabled = !tag.isActive;
+  const isAssigned = !!(tag.owner || tag.assignedOrderId || tag.isActivated);
 
   const actions = [
     { label: 'Show QR Code', onClick: () => onShowQR(tag) },
     { separator: true },
     { label: isDisabled ? 'Enable Tag' : 'Disable Tag', onClick: () => onToggleStatus(tag), destructive: !isDisabled },
-    { separator: true },
-    { label: 'Delete Tag', onClick: () => onDelete(tag), destructive: true },
   ];
+
+  if (!isAssigned) {
+    actions.push(
+      { separator: true },
+      { label: 'Permanent Delete', onClick: () => onDelete(tag), destructive: true }
+    );
+  }
 
   return (
     <div className="flex items-start gap-3 py-3 px-1 hover:bg-muted/30 rounded-lg transition-colors">

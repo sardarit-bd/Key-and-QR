@@ -525,10 +525,21 @@ export default function ProductEditDialog({
         </div>
 
         <DialogFooter className="mt-4 border-t border-border/40 pt-4 flex gap-2 justify-end">
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading} className="h-10 rounded-lg px-4 cursor-pointer">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+            className="h-10 px-4 rounded-xl bg-neutral-800/80 hover:bg-neutral-700 text-neutral-200 border border-neutral-700/80 font-medium transition-all cursor-pointer select-none"
+          >
             Cancel
           </Button>
-          <Button onClick={handleSave} disabled={isLoading} className="h-10 rounded-lg px-5 flex items-center gap-1.5 cursor-pointer">
+          <Button
+            type="button"
+            onClick={handleSave}
+            disabled={isLoading}
+            className="h-10 px-5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all cursor-pointer select-none flex items-center gap-1.5"
+          >
             {isLoading ? 'Saving...' : (
               <><Save size={15} /> {mode === 'create' ? 'Create Product' : 'Save Changes'}</>
             )}

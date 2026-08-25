@@ -220,22 +220,42 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
                           {quote.status}
                         </span>
                       </div>
-                      <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => setViewQuote(quote)} className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center hover:bg-primary/20 transition-colors cursor-pointer" title="View">
-                          <Eye size={13} className="text-primary" />
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => setViewQuote(quote)}
+                          className="h-8 w-8 rounded-lg text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/70 border border-transparent hover:border-neutral-700/50 flex items-center justify-center transition-all duration-150 cursor-pointer"
+                          title="View"
+                        >
+                          <Eye size={15} />
                         </button>
                         {quote.status === 'pending' && (
                           <>
-                            <button onClick={() => { setReviewQuote(quote); setAdminNote(''); }} className="w-7 h-7 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center hover:bg-emerald-500/20 transition-colors cursor-pointer" title="Approve">
-                              <CheckCircle size={13} className="text-emerald-400" />
+                            <button
+                              type="button"
+                              onClick={() => { setReviewQuote(quote); setAdminNote(''); }}
+                              className="h-8 w-8 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/50 flex items-center justify-center transition-all duration-150 cursor-pointer"
+                              title="Approve"
+                            >
+                              <CheckCircle size={15} />
                             </button>
-                            <button onClick={() => { setReviewQuote(quote); setAdminNote(''); }} className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center hover:bg-red-500/20 transition-colors cursor-pointer" title="Reject">
-                              <XCircle size={13} className="text-red-400" />
+                            <button
+                              type="button"
+                              onClick={() => { setReviewQuote(quote); setAdminNote(''); }}
+                              className="h-8 w-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 hover:border-red-500/50 flex items-center justify-center transition-all duration-150 cursor-pointer"
+                              title="Reject"
+                            >
+                              <XCircle size={15} />
                             </button>
                           </>
                         )}
-                        <button onClick={() => handleDelete(quote)} className="w-7 h-7 rounded-lg bg-red-500/10 border border-red-500/20 flex items-center justify-center hover:bg-red-500/20 transition-colors cursor-pointer" title="Delete">
-                          <Trash2 size={13} className="text-red-400" />
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(quote)}
+                          className="h-8 w-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 hover:border-red-500/50 flex items-center justify-center transition-all duration-150 cursor-pointer"
+                          title="Delete"
+                        >
+                          <Trash2 size={15} />
                         </button>
                       </div>
                     </motion.div>
@@ -328,12 +348,31 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
                 <label className="block text-xs font-medium text-foreground-secondary">Admin Note (optional)</label>
                 <Textarea value={adminNote} onChange={(e) => setAdminNote(e.target.value)} placeholder="Add a note..." rows={2} />
               </div>
-              <DialogFooter className="flex gap-2 sm:gap-0">
-                <Button variant="outline" onClick={() => { setReviewQuote(null); setAdminNote(''); }} disabled={reviewLoading}>Cancel</Button>
-                <Button variant="destructive" onClick={handleReject} disabled={reviewLoading} className="cursor-pointer">
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => { setReviewQuote(null); setAdminNote(''); }}
+                  disabled={reviewLoading}
+                  className="h-10 px-4 rounded-xl bg-neutral-800/80 hover:bg-neutral-700 text-neutral-200 border border-neutral-700/80 font-medium transition-all cursor-pointer select-none"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={handleReject}
+                  disabled={reviewLoading}
+                  className="h-10 px-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-medium shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-all cursor-pointer select-none"
+                >
                   {reviewLoading ? 'Processing...' : 'Reject'}
                 </Button>
-                <Button onClick={handleApprove} disabled={reviewLoading} className="cursor-pointer">
+                <Button
+                  type="button"
+                  onClick={handleApprove}
+                  disabled={reviewLoading}
+                  className="h-10 px-5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all cursor-pointer select-none"
+                >
                   {reviewLoading ? 'Processing...' : 'Approve'}
                 </Button>
               </DialogFooter>
