@@ -9,7 +9,8 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
   className = '',
   disableAutoplay = false,
 }, ref) {
-  const [isPlaying, setIsPlaying] = useState(true);
+  // Initialize to false by default to prevent UI desync if browser blocks autoplay
+  const [isPlaying, setIsPlaying] = useState(false);
   const mediaRef = useRef(null);
 
   const isVideoSource = Boolean(
@@ -20,8 +21,10 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
      track.type === 'video')
   );
 
+  const isLooping = Boolean(track?.loop ?? true);
+
   const attemptPlay = useCallback(async () => {
-    if (!mediaRef.current) return;
+    if (!mediaRef.current) return false;
     try {
       await mediaRef.current.play();
       setIsPlaying(true);
@@ -70,43 +73,71 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
     [isPlaying, attemptPlay]
   );
 
-  // Auto-play on mount / track change
+  // Auto-play on mount / track change with strict browser autoplay policy handling
   useEffect(() => {
-    if (mediaRef.current && track?.source) {
-      const media = mediaRef.current;
-      media.src = track.source;
-      media.loop = track.loop ?? true;
-      media.muted = true;
-      media.volume = track.volume ?? 1;
+    const media = mediaRef.current;
+    if (!media || !track?.source) return;
 
-      if (!disableAutoplay) {
-        media
-          .play()
-          .then(() => setIsPlaying(true))
-          .catch((err) => {
-            console.warn('[AudioPlayer] Autoplay prevented:', err?.message || err);
-            setIsPlaying(false);
-          });
-      }
+    media.src = track.source;
+    media.loop = isLooping;
+    media.volume = track.volume ?? 1;
+
+    const shouldAutoplay = !disableAutoplay && Boolean(track?.autoplay);
+
+    if (shouldAutoplay) {
+      media
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+        })
+        .catch((err) => {
+          console.warn('[AudioPlayer] Autoplay blocked by browser policy:', err?.message || err);
+          setIsPlaying(false);
+        });
+    } else {
+      setIsPlaying(false);
     }
 
     return () => {
-      if (mediaRef.current) {
-        mediaRef.current.pause();
+      if (media) {
+        media.pause();
+        media.src = '';
       }
     };
-  }, [track, disableAutoplay]);
+  }, [track?.source, track?.autoplay, isLooping, track?.volume, disableAutoplay]);
 
   if (!track?.source) return null;
 
-  const togglePlay = async () => {
-    if (!mediaRef.current) return;
+  const togglePlay = () => {
+    const media = mediaRef.current;
+    if (!media) return;
+
     if (isPlaying) {
-      mediaRef.current.pause();
+      media.pause();
       setIsPlaying(false);
     } else {
-      mediaRef.current.muted = false;
-      attemptPlay();
+      media.muted = false;
+      media
+        .play()
+        .then(() => {
+          setIsPlaying(true);
+        })
+        .catch((err) => {
+          console.warn('[AudioPlayer] User play trigger prevented:', err?.message || err);
+          setIsPlaying(false);
+        });
+    }
+  };
+
+  const handleEnded = () => {
+    if (isLooping && mediaRef.current) {
+      mediaRef.current.currentTime = 0;
+      mediaRef.current
+        .play()
+        .then(() => setIsPlaying(true))
+        .catch(() => setIsPlaying(false));
+    } else {
+      setIsPlaying(false);
     }
   };
 
@@ -116,13 +147,11 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
         <video
           ref={mediaRef}
           src={track.source}
-          autoPlay={true}
-          muted={true}
-          loop={true}
+          loop={isLooping}
           playsInline={true}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
-          onEnded={() => setIsPlaying(false)}
+          onEnded={handleEnded}
           onError={(err) => console.warn('[AudioPlayer] Video load error:', err)}
           className="hidden"
         />
@@ -130,12 +159,10 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
         <audio
           ref={mediaRef}
           src={track.source}
-          autoPlay={true}
-          muted={true}
-          loop={true}
+          loop={isLooping}
           onPlay={() => setIsPlaying(true)}
           onPause={() => setIsPlaying(false)}
-          onEnded={() => setIsPlaying(false)}
+          onEnded={handleEnded}
           onError={(err) => console.warn('[AudioPlayer] Audio load error:', err)}
         />
       )}
@@ -169,3 +196,4 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
 });
 
 export default VisualQuoteAudioPlayer;
+
