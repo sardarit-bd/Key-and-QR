@@ -71,6 +71,25 @@ export const heroService = {
     });
     return response.data?.data || response.data;
   },
+
+  /**
+   * Get the public announcement banner content.
+   * GET /content/announcement-banner
+   */
+  getAnnouncementBanner: async () => {
+    const response = await api.get('/content/announcement-banner');
+    return response.data; // { success, message, data: { text, isEnabled, linkUrl, backgroundColor, textColor, isDismissible } }
+  },
+
+  /**
+   * Update announcement banner content (admin only).
+   * PUT /admin/content/announcement-banner
+   */
+  updateAnnouncementBanner: async (payload) => {
+    const response = await api.put('/admin/content/announcement-banner', payload);
+    return response.data;
+  },
 };
 
 export default heroService;
+
