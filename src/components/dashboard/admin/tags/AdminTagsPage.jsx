@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { QrCode } from 'lucide-react';
+import { QrCode, Layers, Plus } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import Card from '@/components/dashboard/user/dashboard/Card';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
@@ -56,8 +56,9 @@ export default function AdminTagsPage() {
   const [downloadTag, setDownloadTag] = useState(null);
 
   // Delete confirmation
-  const [deleteTag, setDeleteTag] = useState(null);
+  const [tagToDelete, setTagToDelete] = useState(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
 
   // Toggle status confirmation
   const [toggleTag, setToggleTag] = useState(null);
@@ -67,7 +68,7 @@ export default function AdminTagsPage() {
   const filters = mapFilters({ debouncedSearch, status, page, limit: ITEMS_PER_PAGE });
   const { data, isLoading, isError, error, refetch } = useAdminTags(filters);
   const { data: statsData } = useAdminTagStats();
-  const { createTag, updateTag, bulkGenerateTags } = useAdminTagActions();
+  const { createTag, updateTag, bulkGenerateTags, deleteTag: deleteTagMutation } = useAdminTagActions();
 
   const tags = data?.data || [];
   const meta = data?.meta || { page: 1, totalPage: 0, total: 0 };
@@ -166,23 +167,33 @@ export default function AdminTagsPage() {
     }
   }, [toggleTag, updateTag]);
 
-  // Delete
+  // Permanent Delete (Guardrailed for unassigned tags)
   const handleDelete = useCallback((tag) => {
-    setDeleteTag(tag);
+    if (tag.isActivated || tag.owner || tag.assignedOrderId) {
+      toast.error('Assigned or activated tags cannot be deleted. You can disable them instead.', {
+        duration: 4000,
+        icon: '⚠️',
+      });
+      return;
+    }
+    setTagToDelete(tag);
     setDeleteOpen(true);
   }, []);
 
   const handleDeleteConfirm = useCallback(async () => {
-    if (!deleteTag) return;
+    if (!tagToDelete) return;
+    setDeleteLoading(true);
     try {
-      await updateTag.mutateAsync({ id: deleteTag._id, payload: { isActive: false } });
-      toast.success(`Tag "${deleteTag.tagCode}" disabled`);
+      await deleteTagMutation.mutateAsync(tagToDelete._id);
+      toast.success(`Tag "${tagToDelete.tagCode}" permanently deleted successfully`);
       setDeleteOpen(false);
-      setDeleteTag(null);
+      setTagToDelete(null);
     } catch (err) {
       toast.error(err?.response?.data?.message || err?.message || 'Failed to delete tag');
+    } finally {
+      setDeleteLoading(false);
     }
-  }, [deleteTag, updateTag]);
+  }, [tagToDelete, deleteTagMutation]);
 
   // Loading
   if (isLoading && tags.length === 0) {
@@ -232,11 +243,21 @@ export default function AdminTagsPage() {
               Manage QR tags, track assignments, and generate new codes.
             </p>
           </div>
-          <div className="flex items-center gap-2 ml-[52px] sm:ml-0">
-            <button onClick={() => setBatchOpen(true)} className="px-4 py-2 bg-secondary text-secondary-foreground font-medium rounded-xl hover:bg-secondary/90 transition-colors text-sm cursor-pointer">
+          <div className="flex items-center gap-2.5 ml-[52px] sm:ml-0 flex-wrap">
+            <button
+              type="button"
+              onClick={() => setBatchOpen(true)}
+              className="px-4 py-2.5 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-200 border border-neutral-700/80 rounded-xl font-medium transition-all shadow-sm active:scale-95 flex items-center gap-2 text-sm cursor-pointer"
+            >
+              <Layers size={16} className="text-neutral-300" />
               Batch Generate
             </button>
-            <button onClick={() => setCreateOpen(true)} className="px-4 py-2 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors text-sm cursor-pointer">
+            <button
+              type="button"
+              onClick={() => setCreateOpen(true)}
+              className="px-4.5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-medium shadow-[0_0_20px_rgba(99,102,241,0.35)] transition-all active:scale-95 flex items-center gap-2 text-sm cursor-pointer"
+            >
+              <Plus size={16} />
               Create Tag
             </button>
           </div>
@@ -313,8 +334,32 @@ export default function AdminTagsPage() {
       <TagBatchGenerateDialog open={batchOpen} onOpenChange={setBatchOpen} onSave={handleBatchGenerateSave} isLoading={batchLoading} />
       <AssignOrderModal open={assignOpen} onOpenChange={setAssignOpen} onAssign={handleAssignConfirm} />
 
-      <ConfirmDialog open={toggleOpen} onOpenChange={setToggleOpen} variant={toggleTag?.isActive ? 'suspend' : 'activate'} userName={toggleTag?.tagCode || ''} onConfirm={handleToggleConfirm} isLoading={updateTag.isPending} />
-      <ConfirmDialog open={deleteOpen} onOpenChange={setDeleteOpen} variant="delete" userName={deleteTag?.tagCode || ''} onConfirm={handleDeleteConfirm} isLoading={updateTag.isPending} />
+      <ConfirmDialog
+        open={toggleOpen}
+        onOpenChange={setToggleOpen}
+        variant={toggleTag?.isActive ? 'suspend' : 'activate'}
+        userName={toggleTag?.tagCode || ''}
+        title={toggleTag?.isActive ? 'Disable QR Tag' : 'Enable QR Tag'}
+        description={
+          toggleTag?.isActive
+            ? 'This tag will be disabled and will not resolve quotes until re-enabled.'
+            : 'This tag will be activated and ready to resolve quotes.'
+        }
+        confirmLabel={toggleTag?.isActive ? 'Disable Tag' : 'Enable Tag'}
+        onConfirm={handleToggleConfirm}
+        isLoading={updateTag.isPending}
+      />
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        variant="delete"
+        userName={tagToDelete?.tagCode || ''}
+        title="Permanently Delete QR Tag"
+        description="Are you sure you want to permanently delete this unassigned tag? This action cannot be undone."
+        confirmLabel="Delete Permanently"
+        onConfirm={handleDeleteConfirm}
+        isLoading={deleteLoading || deleteTagMutation.isPending}
+      />
 
       <Toaster position="top-right" toastOptions={{ duration: 3000, style: { borderRadius: '12px', background: 'var(--popover)', color: 'var(--popover-foreground)', border: '1px solid var(--border)' }, success: { iconTheme: { primary: '#22c55e', secondary: '#fff' } }, error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } } }} />
     </div>

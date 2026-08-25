@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { Layers } from 'lucide-react';
+import { Layers, Plus } from 'lucide-react';
 import Card from '@/components/dashboard/user/dashboard/Card';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import {
@@ -31,110 +31,102 @@ function mapFilters({ debouncedSearch, isActive, page, limit }) {
 }
 
 export default function AdminCategoriesPage() {
-  // Filters
   const [search, setSearch] = useState('');
   const [isActive, setIsActive] = useState('all');
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
 
-  // Dialogs
   const [formOpen, setFormOpen] = useState(false);
-  const [editingCategory, setEditingCategory] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [formLoading, setFormLoading] = useState(false);
 
-  // Toggle confirmation
-  const [toggleCategoryState, setToggleCategoryState] = useState(null);
+  const [toggleCategory, setToggleCategory] = useState(null);
   const [toggleOpen, setToggleOpen] = useState(false);
 
-  // Delete confirmation
-  const [deleteCategoryState, setDeleteCategoryState] = useState(null);
+  const [deleteCategoryItem, setDeleteCategoryItem] = useState(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  // Data
   const filters = mapFilters({ debouncedSearch, isActive, page, limit: ITEMS_PER_PAGE });
   const { data, isLoading, isError, error, refetch } = useAdminCategories(filters);
   const { data: countsData } = useAdminCategoryQuoteCounts();
-  const { createCategory, updateCategory, toggleCategory, deleteCategory } = useAdminCategoryActions();
+  const { createCategory, updateCategory, deleteCategory } = useAdminCategoryActions();
 
   const categories = data?.data || [];
   const meta = data?.meta || { page: 1, totalPage: 0, total: 0 };
-  const counts = countsData?.counts || {};
+  const counts = countsData?.data || {};
 
   const handleSearchChange = useCallback((v) => { setSearch(v); setPage(1); }, []);
   const handleStatusChange = useCallback((v) => { setIsActive(v); setPage(1); }, []);
 
   const handleOpenCreate = useCallback(() => {
-    setEditingCategory(null);
+    setSelectedCategory(null);
     setFormOpen(true);
   }, []);
 
   const handleOpenEdit = useCallback((category) => {
-    setEditingCategory(category);
+    setSelectedCategory(category);
     setFormOpen(true);
   }, []);
 
-  const handleFormSave = useCallback(async ({ name, description, color, icon, iconType, iconUrl, sortOrder, isActive: active, isPremium }) => {
+  const handleFormSave = useCallback(async (payload) => {
     setFormLoading(true);
     try {
-      const payload = { name, description, color, icon, iconType, iconUrl, sortOrder, isActive: active, isPremium };
-      if (editingCategory) {
-        await updateCategory.mutateAsync({ id: editingCategory._id, payload });
-        toast.success(`Category "${name}" updated successfully`);
+      if (selectedCategory) {
+        await updateCategory.mutateAsync({ id: selectedCategory._id, payload });
+        toast.success(`Category "${payload.name}" updated successfully`);
       } else {
         await createCategory.mutateAsync(payload);
-        toast.success(`Category "${name}" created successfully`);
+        toast.success(`Category "${payload.name}" created successfully`);
       }
       setFormOpen(false);
+      setSelectedCategory(null);
     } catch (err) {
       toast.error(err?.response?.data?.message || err?.message || 'Failed to save category');
+      throw err;
     } finally {
       setFormLoading(false);
     }
-  }, [editingCategory, createCategory, updateCategory]);
+  }, [selectedCategory, createCategory, updateCategory]);
 
-  const handleToggle = useCallback((category) => {
-    setToggleCategoryState(category);
+  const handleToggleStatus = useCallback((category) => {
+    setToggleCategory(category);
     setToggleOpen(true);
   }, []);
 
   const handleToggleConfirm = useCallback(async () => {
-    if (!toggleCategoryState) return;
+    if (!toggleCategory) return;
+    const newActive = !toggleCategory.isActive;
     try {
-      await toggleCategory.mutateAsync(toggleCategoryState._id);
-      toast.success(toggleCategoryState.isActive ? 'Category deactivated' : 'Category activated');
+      await updateCategory.mutateAsync({ id: toggleCategory._id, payload: { isActive: newActive } });
+      toast.success(newActive ? 'Category activated' : 'Category deactivated');
       setToggleOpen(false);
-      setToggleCategoryState(null);
+      setToggleCategory(null);
     } catch (err) {
-      toast.error(err?.response?.data?.message || err?.message || 'Failed to update category status');
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to update status');
     }
-  }, [toggleCategoryState, toggleCategory]);
+  }, [toggleCategory, updateCategory]);
 
   const handleDelete = useCallback((category) => {
-    setDeleteCategoryState(category);
+    setDeleteCategoryItem(category);
     setDeleteOpen(true);
   }, []);
 
   const handleDeleteConfirm = useCallback(async () => {
-    if (!deleteCategoryState) return;
+    if (!deleteCategoryItem) return;
     try {
-      await deleteCategory.mutateAsync(deleteCategoryState._id);
-      toast.success(`Category "${deleteCategoryState.name}" deleted`);
+      await deleteCategory.mutateAsync(deleteCategoryItem._id);
+      toast.success(`Category "${deleteCategoryItem.name}" deleted successfully`);
       setDeleteOpen(false);
-      setDeleteCategoryState(null);
+      setDeleteCategoryItem(null);
     } catch (err) {
-      const message = err?.response?.data?.message || err?.message || 'Failed to delete category';
-      toast.error(message);
-      // Data-integrity: if the backend refuses, surface it clearly.
-      setDeleteOpen(false);
-      setDeleteCategoryState(null);
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to delete category');
     }
-  }, [deleteCategoryState, deleteCategory]);
+  }, [deleteCategoryItem, deleteCategory]);
 
-  // Loading
   if (isLoading && categories.length === 0) {
     return (
       <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 animate-pulse">
-        <div className="grid grid-cols-2 sm:grid-cols-4 xl:grid-cols-8 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {[...Array(4)].map((_, i) => <div key={i} className="bg-card rounded-[22px] border border-border h-20" />)}
         </div>
         <div className="h-9 bg-card rounded-lg border border-border w-full" />
@@ -146,7 +138,6 @@ export default function AdminCategoriesPage() {
     );
   }
 
-  // Error
   if (isError && categories.length === 0) {
     return (
       <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 flex items-center justify-center">
@@ -166,7 +157,7 @@ export default function AdminCategoriesPage() {
     <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
               <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 border border-primary/20">
@@ -178,7 +169,12 @@ export default function AdminCategoriesPage() {
               Organize quote categories, manage visibility, and track usage.
             </p>
           </div>
-          <button onClick={handleOpenCreate} className="px-4 py-2 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors text-sm cursor-pointer">
+          <button
+            type="button"
+            onClick={handleOpenCreate}
+            className="px-4.5 py-2.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-600 text-white font-medium rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 cursor-pointer select-none text-sm shrink-0 ml-[52px] sm:ml-0"
+          >
+            <Plus size={16} />
             Create Category
           </button>
         </div>
@@ -214,7 +210,7 @@ export default function AdminCategoriesPage() {
             categories={categories}
             counts={counts}
             onEdit={handleOpenEdit}
-            onToggle={handleToggle}
+            onToggle={handleToggleStatus}
             onDelete={handleDelete}
           />
         </div>
@@ -226,7 +222,7 @@ export default function AdminCategoriesPage() {
           categories={categories}
           counts={counts}
           onEdit={handleOpenEdit}
-          onToggle={handleToggle}
+          onToggle={handleToggleStatus}
           onDelete={handleDelete}
         />
       )}
@@ -241,24 +237,34 @@ export default function AdminCategoriesPage() {
         open={formOpen}
         onOpenChange={setFormOpen}
         onSave={handleFormSave}
-        category={editingCategory}
+        category={selectedCategory}
         isLoading={formLoading}
       />
 
       <ConfirmDialog
         open={toggleOpen}
         onOpenChange={setToggleOpen}
-        variant={toggleCategoryState?.isActive ? 'suspend' : 'activate'}
-        userName={toggleCategoryState?.name || ''}
+        variant={toggleCategory?.isActive ? 'suspend' : 'activate'}
+        userName={toggleCategory?.name || ''}
+        title={toggleCategory?.isActive ? 'Deactivate Category' : 'Activate Category'}
+        description={
+          toggleCategory?.isActive
+            ? 'This category will be hidden from public selection.'
+            : 'This category will be visible and active for quotes.'
+        }
+        confirmLabel={toggleCategory?.isActive ? 'Deactivate' : 'Activate'}
         onConfirm={handleToggleConfirm}
-        isLoading={toggleCategory.isPending}
+        isLoading={updateCategory.isPending}
       />
 
       <ConfirmDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
         variant="delete"
-        userName={deleteCategoryState?.name || ''}
+        userName={deleteCategoryItem?.name || ''}
+        title="Delete Category"
+        description="Are you sure you want to delete this category? This action cannot be undone."
+        confirmLabel="Delete Category"
         onConfirm={handleDeleteConfirm}
         isLoading={deleteCategory.isPending}
       />

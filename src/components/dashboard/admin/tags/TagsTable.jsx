@@ -36,6 +36,7 @@ function TagRow({ tag, onShowQR, onDownload, onAssign, onToggleStatus, onDelete 
   const style = STATUS_STYLES[sk];
   const label = STATUS_LABELS[sk];
   const isDisabled = !tag.isActive;
+  const isAssigned = !!(tag.owner || tag.assignedOrderId || tag.isActivated);
 
   const actions = [
     { label: 'Show QR Code', onClick: () => onShowQR(tag) },
@@ -49,10 +50,15 @@ function TagRow({ tag, onShowQR, onDownload, onAssign, onToggleStatus, onDelete 
   }
 
   actions.push(
-    { label: isDisabled ? 'Enable Tag' : 'Disable Tag', onClick: () => onToggleStatus(tag), destructive: !isDisabled },
-    { separator: true },
-    { label: 'Delete Tag', onClick: () => onDelete(tag), destructive: true }
+    { label: isDisabled ? 'Enable Tag' : 'Disable Tag', onClick: () => onToggleStatus(tag), destructive: !isDisabled }
   );
+
+  if (!isAssigned) {
+    actions.push(
+      { separator: true },
+      { label: 'Permanent Delete', onClick: () => onDelete(tag), destructive: true }
+    );
+  }
 
   return (
     <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,2fr)_minmax(0,100px)_minmax(0,36px)] items-center gap-2 py-3 px-2 hover:bg-muted/30 rounded-lg transition-colors">

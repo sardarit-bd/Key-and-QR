@@ -46,10 +46,19 @@ export default function ConfirmDialog({
   onOpenChange,
   variant = 'delete',
   userName = '',
+  title,
+  description,
+  confirmLabel,
   onConfirm,
   isLoading = false,
 }) {
-  const config = CONFIG[variant] || CONFIG.delete;
+  const baseConfig = CONFIG[variant] || CONFIG.delete;
+  const config = {
+    ...baseConfig,
+    ...(title && { title }),
+    ...(description && { description }),
+    ...(confirmLabel && { confirmLabel }),
+  };
   const Icon = config.icon;
 
   return (
@@ -69,14 +78,26 @@ export default function ConfirmDialog({
             )}
           </DialogDescription>
         </DialogHeader>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
+        <DialogFooter className="gap-2 sm:gap-0">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+            className="h-10 px-4 rounded-xl bg-neutral-800/80 hover:bg-neutral-700 text-neutral-200 border border-neutral-700/80 font-medium transition-all cursor-pointer select-none"
+          >
             Cancel
           </Button>
           <Button
+            type="button"
             variant={config.confirmVariant}
             onClick={onConfirm}
             disabled={isLoading}
+            className={
+              config.confirmVariant === 'destructive'
+                ? "h-10 px-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-medium shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-all cursor-pointer select-none"
+                : "h-10 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all cursor-pointer select-none"
+            }
           >
             {isLoading ? 'Processing...' : config.confirmLabel}
           </Button>

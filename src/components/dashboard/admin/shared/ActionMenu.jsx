@@ -19,10 +19,10 @@ export default function ActionMenu({ actions = [] }) {
         <Button
           variant="ghost"
           size="icon"
-          className="w-8 h-8 rounded-xl hover:bg-muted"
-          aria-label="User actions"
+          className="h-8 w-8 rounded-lg text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/70 border border-transparent hover:border-neutral-700/50 transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50"
+          aria-label="Actions"
         >
-          <MoreHorizontal size={16} className="text-foreground-tertiary" />
+          <MoreHorizontal size={16} />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-40">

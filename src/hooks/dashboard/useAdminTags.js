@@ -81,5 +81,13 @@ export function useAdminTagActions() {
     onSettled: invalidate,
   });
 
-  return { createTag, updateTag, bulkGenerateTags };
+  const deleteTag = useMutation({
+    mutationFn: async (id) => {
+      const res = await adminTagsService.deleteTag(id);
+      return res.data;
+    },
+    onSettled: invalidate,
+  });
+
+  return { createTag, updateTag, bulkGenerateTags, deleteTag };
 }

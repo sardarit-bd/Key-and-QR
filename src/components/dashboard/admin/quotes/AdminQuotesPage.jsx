@@ -329,9 +329,9 @@ export default function AdminQuotesPage() {
 
         <Link
           href="/new-dashboard/admin/quotes/create-visual"
-          className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-primary text-white hover:bg-primary/90 font-semibold text-xs sm:text-sm shadow-sm transition-all shrink-0 hover:shadow-md"
+          className="inline-flex items-center justify-center gap-2 px-4.5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-600 text-white font-medium text-sm shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] transition-all duration-200 active:scale-95 shrink-0 select-none cursor-pointer"
         >
-          <Plus className="w-4 h-4" />
+          <Plus size={16} />
           <span>Create Quote</span>
         </Link>
       </div>

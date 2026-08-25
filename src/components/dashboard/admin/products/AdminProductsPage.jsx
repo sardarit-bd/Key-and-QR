@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { Package } from 'lucide-react';
+import { Package, Plus } from 'lucide-react';
 import Card from '@/components/dashboard/user/dashboard/Card';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import {
@@ -23,7 +23,6 @@ import Pagination from '@/components/ui/Pagination';
 const ITEMS_PER_PAGE = 10;
 
 export default function AdminProductsPage() {
-  // Filters
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
   const [status, setStatus] = useState('active');
@@ -31,23 +30,25 @@ export default function AdminProductsPage() {
   const [page, setPage] = useState(1);
   const debouncedSearch = useDebounce(search, 300);
 
-  // View dialog
-  const [viewProduct, setViewProduct] = useState(null);
-
-  // Edit/Create dialog
-  const [editProduct, setEditProduct] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [viewOpen, setViewOpen] = useState(false);
   const [formLoading, setFormLoading] = useState(false);
 
-  // Delete / Restore / Permanent delete confirmation
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogVariant, setDialogVariant] = useState('delete');
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [pDeleteOpen, setPDeleteOpen] = useState(false);
 
-  // Data
-  const filters = { search: debouncedSearch, category, status, sort, page, limit: ITEMS_PER_PAGE };
-  const { data, isLoading, isError, error, refetch } = useAdminProducts(filters);
+  const { data, isLoading, isError, error, refetch } = useAdminProducts({
+    page,
+    limit: ITEMS_PER_PAGE,
+    search: debouncedSearch,
+    category: category !== 'all' ? category : undefined,
+    status,
+    sort,
+  });
   const { data: categories = [] } = useAdminProductCategories();
   const {
     createProduct,
@@ -59,7 +60,6 @@ export default function AdminProductsPage() {
 
   const isProcessing = deleteProduct.isPending || restoreProduct.isPending || permanentDeleteProduct.isPending;
 
-  // Response from backend: { meta: { page, limit, total, totalPage }, data: [...] }
   const products = data?.data || [];
   const meta = data?.meta || { page: 1, totalPage: 0, total: 0 };
 
@@ -70,39 +70,52 @@ export default function AdminProductsPage() {
 
   const viewTrash = status === 'inactive';
 
-  // View
-  const handleView = useCallback((product) => setViewProduct(product), []);
+  const handleView = useCallback((product) => {
+    setSelectedProduct(product);
+    setViewOpen(true);
+  }, []);
 
-  // Edit
-  const handleEdit = useCallback((product) => setEditProduct(product), []);
+  const handleEdit = useCallback((product) => {
+    setSelectedProduct(product);
+    setEditOpen(true);
+  }, []);
 
-  const handleFormSave = useCallback(async ({ formData, id }) => {
+  const handleCreateSave = useCallback(async (formData) => {
     setFormLoading(true);
     try {
-      if (id) {
-        await updateProduct.mutateAsync({ id, formData });
-        toast.success('Product updated successfully');
-        setEditProduct(null);
-      } else {
-        await createProduct.mutateAsync(formData);
-        toast.success('Product created successfully');
-        setCreateOpen(false);
-      }
+      await createProduct.mutateAsync(formData);
+      toast.success('Product created successfully');
+      setCreateOpen(false);
     } catch (err) {
-      toast.error(err?.response?.data?.message || err?.message || 'Failed to save product');
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to create product');
+      throw err;
     } finally {
       setFormLoading(false);
     }
-  }, [createProduct, updateProduct]);
+  }, [createProduct]);
 
-  // Delete → trash
+  const handleEditSave = useCallback(async (formData) => {
+    if (!selectedProduct) return;
+    setFormLoading(true);
+    try {
+      await updateProduct.mutateAsync({ id: selectedProduct._id, formData });
+      toast.success('Product updated successfully');
+      setEditOpen(false);
+      setSelectedProduct(null);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to update product');
+      throw err;
+    } finally {
+      setFormLoading(false);
+    }
+  }, [selectedProduct, updateProduct]);
+
   const handleDelete = useCallback((id) => {
     setDialogVariant('delete');
     setSelectedProductId(id);
     setDialogOpen(true);
   }, []);
 
-  // Restore
   const handleRestore = useCallback(async (id) => {
     try {
       await restoreProduct.mutateAsync(id);
@@ -112,7 +125,6 @@ export default function AdminProductsPage() {
     }
   }, [restoreProduct]);
 
-  // Permanent delete
   const handlePermanentDelete = useCallback((id) => {
     setSelectedProductId(id);
     setPDeleteOpen(true);
@@ -142,7 +154,6 @@ export default function AdminProductsPage() {
     }
   }, [selectedProductId, permanentDeleteProduct]);
 
-  // Loading
   if (isLoading && products.length === 0) {
     return (
       <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6 animate-pulse">
@@ -155,7 +166,6 @@ export default function AdminProductsPage() {
     );
   }
 
-  // Error
   if (isError && products.length === 0) {
     return (
       <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 flex items-center justify-center">
@@ -173,9 +183,8 @@ export default function AdminProductsPage() {
 
   return (
     <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6">
-      {/* Header */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
               <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 border border-primary/20">
@@ -188,15 +197,16 @@ export default function AdminProductsPage() {
             </p>
           </div>
           <button
+            type="button"
             onClick={() => setCreateOpen(true)}
-            className="px-4 py-2 bg-primary text-primary-foreground font-medium rounded-xl hover:bg-primary/90 transition-colors text-sm cursor-pointer"
+            className="px-4.5 py-2.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-600 text-white font-medium rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 cursor-pointer select-none text-sm shrink-0 ml-[52px] sm:ml-0"
           >
+            <Plus size={16} />
             Add Product
           </button>
         </div>
       </motion.div>
 
-      {/* Filters */}
       <ProductsFilters
         search={search}
         onSearchChange={handleSearchChange}
@@ -259,14 +269,14 @@ export default function AdminProductsPage() {
       )}
 
       {/* View dialog */}
-      <ProductViewDialog open={!!viewProduct} onOpenChange={(o) => { if (!o) setViewProduct(null); }} product={viewProduct} />
+      <ProductViewDialog open={viewOpen} onOpenChange={setViewOpen} product={selectedProduct} />
 
       {/* Edit dialog */}
       <ProductEditDialog
-        open={!!editProduct}
-        onOpenChange={(o) => { if (!o) setEditProduct(null); }}
-        product={editProduct}
-        onSave={handleFormSave}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        product={selectedProduct}
+        onSave={handleEditSave}
         isLoading={formLoading}
         mode="edit"
       />
@@ -276,7 +286,7 @@ export default function AdminProductsPage() {
         open={createOpen}
         onOpenChange={setCreateOpen}
         product={null}
-        onSave={handleFormSave}
+        onSave={handleCreateSave}
         isLoading={formLoading}
         mode="create"
       />
