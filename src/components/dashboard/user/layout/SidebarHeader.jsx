@@ -29,7 +29,7 @@ export default function SidebarHeader({ isCollapsed, isMobile = false }) {
       
       {/* Theme Toggle */}
       <div className="flex items-center shrink-0">
-        <ThemeToggle className="text-sidebar-foreground hover:text-sidebar-primary" />
+        <ThemeToggle />
       </div>
     </div>
   );
