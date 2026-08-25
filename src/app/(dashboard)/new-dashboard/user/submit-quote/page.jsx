@@ -188,14 +188,14 @@ export default function SubmitQuotePage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="min-h-screen bg-background"
+      className="min-h-screen bg-background overflow-x-hidden"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-20 sm:pb-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-24 sm:pb-28">
         {/* Header */}
         <SubmitQuoteHeader />
 
         {/* Centered writing column */}
-        <div className="mx-auto mt-6 sm:mt-10 w-full max-w-2xl">
+        <div className="mx-auto mt-6 sm:mt-10 w-full max-w-2xl px-0 overflow-x-hidden">
           <form onSubmit={handleSubmit} className="space-y-5 sm:space-y-6">
             {/* Quote textarea */}
             <QuoteWriter text={text} onChange={setText} />

@@ -2,7 +2,6 @@
 
 import PurchaseOptions from "@/components/shop/product-details/PurchaseOptions";
 import AddToCartSection from "@/components/shop/product-details/AddToCartSection";
-import FavoriteButton from "@/components/shop/product-details/FavoriteButton";
 import BuyNowButton from "@/components/shop/product-details/BuyNowButton";
 
 /**
@@ -31,7 +30,7 @@ export default function ProductActions({
       />
 
       {/* Quantity + Add to Cart */}
-      <div className="flex flex-wrap items-center gap-3">
+      <div className="flex items-center gap-3 w-full">
         <AddToCartSection
           product={product}
           selectedImage={selectedImage}
@@ -40,16 +39,16 @@ export default function ProductActions({
         />
       </div>
 
-      {/* Buy Now + Save */}
-      <div className="flex flex-wrap items-center gap-3">
+      {/* Buy Now Button — Full Width */}
+      <div className="w-full">
         <BuyNowButton
           product={product}
           selectedImage={selectedImage}
           selectedOption={selectedOption}
           customMessage={customMessage}
           quantity={quantity}
+          className="w-full flex items-center justify-center"
         />
-        <FavoriteButton productId={product._id} />
       </div>
 
       {/* Low stock warning */}

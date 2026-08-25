@@ -113,9 +113,9 @@ export default function SubmissionHistoryPage() {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.3 }}
-      className="min-h-screen bg-background"
+      className="min-h-screen bg-background overflow-x-hidden"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-20 sm:pb-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-24 sm:pb-28">
         {/* Header */}
         <SubmissionHistoryHeader />
 

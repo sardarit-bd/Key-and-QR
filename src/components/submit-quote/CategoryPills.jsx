@@ -24,7 +24,7 @@ export default function CategoryPills({ value, onChange, categories }) {
       </div>
 
       {isLoading && options.length === 0 ? (
-        <div className="hide-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+        <div className="flex w-full max-w-full gap-2 overflow-x-auto pb-1.5 sm:flex-wrap sm:overflow-visible [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {[72, 88, 64, 80].map((w, i) => (
             <div
               key={i}
@@ -35,7 +35,7 @@ export default function CategoryPills({ value, onChange, categories }) {
         </div>
       ) : (
         /* Horizontal scroll on mobile with touch padding, wrap on desktop */
-        <div className="hide-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 pb-2 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+        <div className="flex w-full max-w-full gap-2 overflow-x-auto pb-1.5 sm:flex-wrap sm:overflow-visible [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
           {options.map((cat) => {
             const isSelected = value === cat.id;
             const CategoryIcon = getCategoryIcon(cat.id);

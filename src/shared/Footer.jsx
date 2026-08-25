@@ -63,7 +63,7 @@ export default function Footer() {
 
  return (
  <footer className="w-full border-t border-neutral-200 bg-white">
- <div className="mx-auto max-w-[1200px] xl:max-w-[1340px] 2xl:max-w-[1440px] px-6 md:px-8 lg:px-14 py-14">
+ <div className="mx-auto max-w-[1200px] xl:max-w-[1340px] 2xl:max-w-[1440px] px-6 md:px-8 lg:px-14 pt-12 sm:pt-14 pb-28 sm:pb-14">
  {/* Top Section with Stagger Animation */}
  <motion.div
  ref={footerRef}

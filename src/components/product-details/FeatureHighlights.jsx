@@ -17,7 +17,7 @@ export default function FeatureHighlights() {
   const reduceMotion = useReducedMotion();
 
   return (
-    <section className="mx-auto max-w-7xl px-4 sm:px-6 py-10 sm:py-12">
+    <section className="mx-auto max-w-7xl px-4 sm:px-6 py-6 sm:py-8">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {HIGHLIGHTS.map((item, index) => {
           const Icon = item.icon;

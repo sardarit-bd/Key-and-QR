@@ -360,26 +360,41 @@ function OrdersHeader({ total }) {
 
 function OrdersStats({ stats }) {
   const configs = [
-    { label: 'Total Orders', value: stats.total, sub: 'All time', color: 'bg-blue-500/20', iconColor: 'text-blue-400', glow: 'shadow-[0_0_24px_-4px_rgba(96,165,250,0.25)]', ring: 'ring-blue-500/20', border: 'border-blue-500/25', icon: Package },
-    { label: 'Processing', value: stats.processing, sub: 'In progress', color: 'bg-amber-500/20', iconColor: 'text-amber-400', glow: 'shadow-[0_0_24px_-4px_rgba(251,191,36,0.25)]', ring: 'ring-amber-500/20', border: 'border-amber-500/25', icon: Clock },
-    { label: 'Completed', value: stats.completed, sub: 'Delivered', color: 'bg-emerald-500/20', iconColor: 'text-emerald-400', glow: 'shadow-[0_0_24px_-4px_rgba(52,211,153,0.25)]', ring: 'ring-emerald-500/20', border: 'border-emerald-500/25', icon: CheckCircle },
+    { label: 'Total Orders', value: stats.total ?? 0, sub: 'All time', color: 'bg-blue-500/20', iconColor: 'text-blue-400', glow: 'shadow-[0_0_24px_-4px_rgba(96,165,250,0.25)]', ring: 'ring-blue-500/20', border: 'border-blue-500/25', icon: Package },
+    { label: 'Processing', value: stats.processing ?? 0, sub: 'In progress', color: 'bg-amber-500/20', iconColor: 'text-amber-400', glow: 'shadow-[0_0_24px_-4px_rgba(251,191,36,0.25)]', ring: 'ring-amber-500/20', border: 'border-amber-500/25', icon: Clock },
+    { label: 'Completed', value: stats.completed ?? 0, sub: 'Delivered', color: 'bg-emerald-500/20', iconColor: 'text-emerald-400', glow: 'shadow-[0_0_24px_-4px_rgba(52,211,153,0.25)]', ring: 'ring-emerald-500/20', border: 'border-emerald-500/25', icon: CheckCircle },
     { label: 'Total Spent', value: `$${(stats.spent || 0).toFixed(0)}`, sub: 'Lifetime', color: 'bg-violet-500/20', iconColor: 'text-violet-400', glow: 'shadow-[0_0_24px_-4px_rgba(167,139,250,0.25)]', ring: 'ring-violet-500/20', border: 'border-violet-500/25', icon: CreditCard },
   ];
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-5">
       {configs.map((s, idx) => {
         const Icon = s.icon;
         return (
-          <div key={idx} className={`group relative h-full overflow-hidden rounded-2xl border border-white/6 bg-card p-5 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.45)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_-16px_rgb(0_0_0/0.5)] light:border-[#E8DFCE]/80 light:bg-[#FBF7EF]/55 light:shadow-[0_20px_50px_-20px_rgba(100,72,24,0.28),0_10px_30px_-18px_rgba(100,72,24,0.16)]`}>
+          <div
+            key={idx}
+            className="group relative h-full overflow-hidden rounded-2xl border border-white/10 bg-card p-5 sm:p-6 shadow-[0_12px_32px_-12px_rgb(0_0_0/0.45)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_20px_40px_-16px_rgb(0_0_0/0.5)] light:border-[#E8DFCE]/80 light:bg-[#FBF7EF]/55 light:shadow-[0_20px_50px_-20px_rgba(100,72,24,0.28),0_10px_30px_-18px_rgba(100,72,24,0.16)]"
+          >
             <div className="pointer-events-none absolute -left-16 -top-16 h-48 w-48 rounded-full bg-primary/[0.04] blur-3xl" />
             <div className="pointer-events-none absolute -bottom-16 -right-16 h-48 w-48 rounded-full bg-accent/[0.04] blur-3xl" />
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent" />
-            <div className="relative z-10 flex items-center gap-4">
-              <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border ${s.border} ${s.color} ${s.glow} ring-1 ${s.ring} transition-transform duration-300 group-hover:scale-105`}>
-                <Icon className={`h-5 w-5 ${s.iconColor}`} strokeWidth={1.9} />
+            <div className="relative z-10 flex items-center justify-between gap-4 sm:gap-5">
+              <div
+                className={`flex h-12 w-12 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl border ${s.border} ${s.color} ${s.glow} ring-1 ${s.ring} transition-transform duration-300 group-hover:scale-105`}
+              >
+                <Icon className={`h-5 w-5 sm:h-6 sm:w-6 ${s.iconColor}`} strokeWidth={1.9} />
               </div>
-              <div className="min-w-0"><p className="text-[11px] font-medium tracking-wide text-foreground-tertiary">{s.label}</p><h3 className="mt-0.5 text-[22px] font-semibold leading-tight tracking-tight text-foreground sm:text-[26px]">{s.value}</h3><p className="mt-0.5 text-[11px] text-foreground-tertiary">{s.sub}</p></div>
+              <div className="text-right min-w-0">
+                <p className="text-[11px] sm:text-xs font-medium tracking-wide text-foreground-tertiary">
+                  {s.label}
+                </p>
+                <h3 className="mt-0.5 text-[24px] sm:text-[28px] md:text-[30px] font-semibold leading-tight tracking-tight text-foreground tabular-nums">
+                  {s.value}
+                </h3>
+                <p className="mt-0.5 text-[11px] sm:text-xs text-foreground-tertiary truncate">
+                  {s.sub}
+                </p>
+              </div>
             </div>
           </div>
         );

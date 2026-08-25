@@ -1,25 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import ProductCard from "@/components/shop/ProductCard";
+import { useProducts } from "@/hooks/product-service/useProducts";
 import { useProductStore } from "@/store/productStore";
 
 export default function RelatedProducts({ currentProductId }) {
-    const { products } = useProductStore();
+    const { products: storeProducts } = useProductStore();
+    const { data } = useProducts({ limit: 8 });
     const [visibleCount, setVisibleCount] = useState(4);
-    const [relatedProducts, setRelatedProducts] = useState([]);
 
-    useEffect(() => {
-        // Get up to 6 random products excluding current product
-        const otherProducts = products
-            .filter(p => p._id !== currentProductId)
-            .sort(() => 0.5 - Math.random())
-            .slice(0, 6);
-
-        setRelatedProducts(otherProducts);
-    }, [products, currentProductId]);
+    const relatedProducts = useMemo(() => {
+        const productList = data?.data?.products || data?.data || storeProducts || [];
+        return productList
+            .filter((p) => p && p._id !== currentProductId)
+            .slice(0, 8);
+    }, [data, storeProducts, currentProductId]);
 
     const handleShowMore = () => {
         setVisibleCount((prev) => prev + 4);
@@ -30,14 +28,14 @@ export default function RelatedProducts({ currentProductId }) {
     }
 
     return (
-        <section className="mt-16 sm:mt-24 py-10">
+        <section className="mt-8 sm:mt-12 py-4 sm:py-6">
             <div className="mx-auto max-w-7xl px-4 sm:px-6">
-                <div className="mb-8 flex items-end justify-between gap-4">
+                <div className="mb-6 flex items-end justify-between gap-4">
                     <div>
                         <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-[#A99B7F]">
                             Keep exploring
                         </span>
-                        <h2 className="mt-1.5 text-2xl sm:text-3xl font-bold tracking-tight text-[#2E2A24]">
+                        <h2 className="mt-1 text-2xl sm:text-3xl font-bold tracking-tight text-[#2E2A24]">
                             You may also like
                         </h2>
                     </div>

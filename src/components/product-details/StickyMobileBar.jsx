@@ -1,6 +1,5 @@
 "use client";
 
-import FavoriteButton from "@/components/shop/product-details/FavoriteButton";
 import BuyNowButton from "@/components/shop/product-details/BuyNowButton";
 
 /**
@@ -22,8 +21,7 @@ export default function StickyMobileBar({
             ${Number(product.price).toFixed(2)}
           </p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <FavoriteButton productId={product._id} className="!h-11 !w-11 !px-0" />
+        <div className="flex shrink-0 items-center">
           <BuyNowButton
             product={product}
             selectedImage={selectedImage}

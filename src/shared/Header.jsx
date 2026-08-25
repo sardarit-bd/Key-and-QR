@@ -86,7 +86,6 @@ export default function Header() {
       label: "My Account",
       href: isAuth ? profileHref : "/login",
     },
-    { icon: Heart, label: "Wishlist", href: "/wishlist" },
     { icon: ShoppingBag, label: "Cart", href: "/cart", badge: cartCount },
   ];
 
