@@ -37,7 +37,7 @@ export default function QuoteWriter({ text, onChange }) {
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/8 to-transparent light:via-[#E8DFCE]/70" />
 
         {/* Label */}
-        <div className="relative z-10 flex items-center justify-between px-5 pt-4">
+        <div className="relative z-10 flex items-center justify-between px-4 sm:px-5 pt-3.5 sm:pt-4">
           <div className="flex items-center gap-2">
             <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-accent/25 bg-accent/10 shadow-[0_0_16px_rgba(253,182,92,0.12)]">
               <QuoteIcon size={13} className="text-accent" fill="currentColor" stroke="none" />
@@ -57,14 +57,14 @@ export default function QuoteWriter({ text, onChange }) {
           value={text}
           onChange={(e) => onChange(e.target.value)}
           maxLength={MAX_LENGTH}
-          rows={5}
+          rows={4}
           placeholder="Write something that could change someone's day..."
           aria-label="Quote text"
-          className="relative z-10 block w-full resize-none border-0 bg-transparent px-5 py-4 text-[17px] leading-[1.7] text-foreground placeholder:text-foreground-tertiary/70 focus:outline-none focus:ring-0 sm:text-[18px]"
+          className="relative z-10 block w-full resize-none border-0 bg-transparent px-4 sm:px-5 py-3 sm:py-4 text-[15px] leading-[1.6] text-foreground placeholder:text-foreground-tertiary/70 focus:outline-none focus:ring-0 sm:text-[17px] sm:leading-[1.7]"
         />
 
         {/* Character progress bar */}
-        <div className="relative z-10 px-5 pb-4">
+        <div className="relative z-10 px-4 sm:px-5 pb-3.5 sm:pb-4">
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-background-tertiary/60 light:bg-[#E8DFCE]/60">
             <div
               className={`h-full rounded-full transition-all duration-300 ${

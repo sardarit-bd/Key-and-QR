@@ -47,10 +47,10 @@ export default function SubmissionFilters({
   const { options: submissionCategoryOptions } = useSubmissionCategoryOptions(categories);
 
   return (
-    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-      <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-3 w-full lg:w-auto">
+    <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3 sm:gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row flex-wrap items-center gap-2.5 sm:gap-3 w-full lg:w-auto">
         {/* Search */}
-        <div className={`relative w-full sm:w-64 ${CONTROL_CLASS}`}>
+        <div className={`relative w-full lg:w-64 col-span-1 sm:col-span-2 lg:col-span-1 ${CONTROL_CLASS}`}>
           <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-tertiary" />
           <Input
             type="text"
@@ -63,10 +63,10 @@ export default function SubmissionFilters({
 
         {/* Category */}
         <Select value={category} onValueChange={onCategoryChange}>
-          <SelectTrigger className={`w-full sm:w-44 ${CONTROL_CLASS} bg-transparent text-foreground-secondary`}>
+          <SelectTrigger className={`w-full lg:w-44 ${CONTROL_CLASS} bg-transparent text-foreground-secondary`}>
             <SelectValue placeholder="Category" />
           </SelectTrigger>
-          <SelectContent className="rounded-xl border border-white/6 bg-popover text-foreground shadow-xl backdrop-blur-xl light:border-[#E8DFCE]/80">
+          <SelectContent className="rounded-xl border border-white/6 bg-popover text-foreground shadow-xl backdrop-blur-xl light:border-[#E8DFCE]/80 max-h-64">
             <SelectItem value="all">All Categories</SelectItem>
             {submissionCategoryOptions.map((cat) => (
               <SelectItem key={cat.id} value={cat.id}>
@@ -78,7 +78,7 @@ export default function SubmissionFilters({
 
         {/* Status */}
         <Select value={status} onValueChange={onStatusChange}>
-          <SelectTrigger className={`w-full sm:w-40 ${CONTROL_CLASS} bg-transparent text-foreground-secondary`}>
+          <SelectTrigger className={`w-full lg:w-40 ${CONTROL_CLASS} bg-transparent text-foreground-secondary`}>
             <SelectValue placeholder="Status" />
           </SelectTrigger>
           <SelectContent className="rounded-xl border border-white/6 bg-popover text-foreground shadow-xl backdrop-blur-xl light:border-[#E8DFCE]/80">
@@ -92,7 +92,7 @@ export default function SubmissionFilters({
 
         {/* Sort */}
         <Select value={sort} onValueChange={onSortChange}>
-          <SelectTrigger className={`w-full sm:w-40 ${CONTROL_CLASS} bg-transparent text-foreground-secondary`}>
+          <SelectTrigger className={`w-full lg:w-40 ${CONTROL_CLASS} bg-transparent text-foreground-secondary`}>
             <SelectValue placeholder="Sort" />
           </SelectTrigger>
           <SelectContent className="rounded-xl border border-white/6 bg-popover text-foreground shadow-xl backdrop-blur-xl light:border-[#E8DFCE]/80">
@@ -110,15 +110,15 @@ export default function SubmissionFilters({
             variant="ghost"
             size="sm"
             onClick={onReset}
-            className="h-11 cursor-pointer gap-1.5 rounded-xl px-3.5 text-foreground-tertiary transition-all duration-300 hover:bg-background-secondary/70 hover:text-foreground"
+            className="h-11 w-full sm:w-auto cursor-pointer gap-1.5 rounded-xl px-3.5 text-foreground-tertiary transition-all duration-300 hover:bg-background-secondary/70 hover:text-foreground col-span-1 sm:col-span-2 lg:col-span-1"
           >
             <X className="h-4 w-4" />
-            Reset
+            Reset Filters
           </Button>
         )}
       </div>
 
-      <span className="flex items-center gap-1.5 text-sm text-foreground-tertiary">
+      <span className="flex items-center gap-1.5 text-xs sm:text-sm text-foreground-tertiary self-end lg:self-center">
         <SlidersHorizontal className="h-3.5 w-3.5" />
         {hasActiveFilters ? 'Filters applied' : 'All submissions'}
       </span>

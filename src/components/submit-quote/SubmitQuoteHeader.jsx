@@ -38,10 +38,10 @@ export default function SubmitQuoteHeader() {
       </div>
 
       {/* Premium glass button — link to history */}
-      <Link href="/new-dashboard/user/submit-quote/history">
+      <Link href="/new-dashboard/user/submit-quote/history" className="w-full sm:w-auto">
         <button
           type="button"
-          className="group relative inline-flex cursor-pointer items-center gap-2 overflow-hidden rounded-full border border-primary/25 bg-gradient-to-r from-primary/15 to-primary/5 px-4 py-2 text-[13px] font-medium text-primary shadow-[0_8px_24px_-8px_rgba(168,85,247,0.3)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_12px_32px_-8px_rgba(168,85,247,0.4)] active:translate-y-0 active:scale-[0.98] dark:text-violet-300"
+          className="group relative inline-flex w-full sm:w-auto cursor-pointer items-center justify-center gap-2 overflow-hidden rounded-full border border-primary/25 bg-gradient-to-r from-primary/15 to-primary/5 px-4 py-2.5 sm:py-2 text-[13px] font-medium text-primary shadow-[0_8px_24px_-8px_rgba(168,85,247,0.3)] backdrop-blur-md transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_12px_32px_-8px_rgba(168,85,247,0.4)] active:translate-y-0 active:scale-[0.98] dark:text-violet-300"
         >
           {/* Sheen sweep on hover */}
           <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />

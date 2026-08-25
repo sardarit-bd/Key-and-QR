@@ -115,12 +115,12 @@ export default function SubmissionHistoryPage() {
       transition={{ duration: 0.3 }}
       className="min-h-screen bg-background"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6 pb-20 sm:pb-24">
         {/* Header */}
         <SubmissionHistoryHeader />
 
         {/* Filters */}
-        <div className="mt-6">
+        <div className="mt-5 sm:mt-6">
           <SubmissionFilters
             search={search}
             category={category}
@@ -136,7 +136,7 @@ export default function SubmissionHistoryPage() {
         </div>
 
         {/* Grid */}
-        <div className="mt-6">
+        <div className="mt-5 sm:mt-6">
           <SubmissionGrid
             submissions={submissions}
             loading={isLoading}

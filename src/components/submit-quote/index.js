@@ -11,4 +11,5 @@ export { default as SubmissionFilters } from './SubmissionFilters';
 export { default as SubmissionEmptyState } from './SubmissionEmptyState';
 export { default as SubmissionHistoryHeader } from './SubmissionHistoryHeader';
 export { default as SubmissionGrid } from './SubmissionGrid';
+export { default as SubmitQuoteSkeleton } from './SubmitQuoteSkeleton';
 export * from './submitQuote.constants';

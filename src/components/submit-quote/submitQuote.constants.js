@@ -54,34 +54,37 @@ const SUBMISSION_CATEGORY_FALLBACK = [
   { id: 'other', label: 'Other' },
 ];
 
-export const isSubmissionCategory = (slug) =>
-  SUBMISSION_CATEGORY_SLUGS.includes(slug);
-
 /**
- * Get the submission category options — backend-driven, validated against
- * the backend submission enum. Pass `categories` (from useQuoteCategories)
- * to avoid re-querying; otherwise the hook is used directly.
+ * Get the submission category options — dynamic, DB-driven, and sorted by sortOrder.
+ * Pass `categories` (from useQuoteCategories) to avoid re-querying; otherwise the hook is used directly.
  */
 export function useSubmissionCategoryOptions(categories) {
   const { data: backendCategories = [], isLoading } = useQuoteCategories();
 
-  if (isLoading || backendCategories.length === 0) {
-    return { options: SUBMISSION_CATEGORY_FALLBACK, isLoading: true };
-  }
+  const source = categories && categories.length > 0 ? categories : backendCategories;
 
-  const source = categories || backendCategories;
-  const options = source
-    .filter((cat) => isSubmissionCategory(cat.slug))
-    .map((cat) => ({
-      id: cat.slug,
-      label: cat.name || getCategoryLabel(cat.slug),
-    }));
+  // Filter active categories and sort strictly by sortOrder ascending, then alphabetically by name/slug
+  const activeCategories = (source || [])
+    .filter((cat) => cat && cat.isActive !== false)
+    .sort((a, b) => {
+      const orderA = typeof a.sortOrder === 'number' ? a.sortOrder : 9999;
+      const orderB = typeof b.sortOrder === 'number' ? b.sortOrder : 9999;
+      if (orderA !== orderB) return orderA - orderB;
+      return (a.name || a.slug || '').localeCompare(b.name || b.slug || '');
+    });
 
-  if (options.length === 0) {
-    return { options: SUBMISSION_CATEGORY_FALLBACK, isLoading: false };
-  }
+  const options = activeCategories.map((cat) => ({
+    id: cat.slug || cat.name?.toLowerCase(),
+    label: cat.name || getCategoryLabel(cat.slug),
+    sortOrder: cat.sortOrder,
+    icon: cat.icon,
+    color: cat.color,
+  }));
 
-  return { options, isLoading: false };
+  return {
+    options,
+    isLoading: isLoading && options.length === 0,
+  };
 }
 
 /**

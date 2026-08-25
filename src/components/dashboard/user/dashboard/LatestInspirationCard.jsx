@@ -53,19 +53,22 @@ export default function LatestInspirationCard({
     null;
 
   // Dynamic Quote Media Configuration (from Admin Quote Editor / Schema)
-  const shouldAutoplay =
+  const shouldAutoplay = Boolean(
     inspiration?.autoplay ??
     inspiration?.quote?.autoplay ??
     audioTrack?.autoplay ??
-    true;
+    false
+  );
 
-  const shouldLoop =
+  const shouldLoop = Boolean(
     inspiration?.loop ??
     inspiration?.quote?.loop ??
     audioTrack?.loop ??
-    true;
+    true
+  );
 
-  const [isVideoPlaying, setIsVideoPlaying] = useState(shouldAutoplay);
+  // Initialize playback state to false to avoid UI desync if browser blocks autoplay
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
   const [hasInteracted, setHasInteracted] = useState(false);
   const videoRef = useRef(null);
 
@@ -128,6 +131,8 @@ export default function LatestInspirationCard({
     if (!videoRef.current || !videoUrl) return;
 
     const video = videoRef.current;
+    video.loop = shouldLoop;
+
     if (!shouldAutoplay) {
       video.pause();
       setIsVideoPlaying(false);
@@ -155,7 +160,13 @@ export default function LatestInspirationCard({
             setIsVideoPlaying(false);
           });
       });
-  }, [videoUrl, shouldAutoplay, hasInteracted]);
+
+    return () => {
+      if (video) {
+        video.pause();
+      }
+    };
+  }, [videoUrl, shouldAutoplay, shouldLoop, hasInteracted]);
 
   const toggleVideoPlay = useCallback(() => {
     if (!videoRef.current) return;
@@ -261,7 +272,7 @@ export default function LatestInspirationCard({
       {/* Subtle bottom gradient scrim revealed on desktop hover/focus for readability */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-32 bg-gradient-to-t from-black/70 via-black/30 to-transparent opacity-100 md:opacity-0 transition-opacity duration-300 ease-out md:group-hover:opacity-100 md:group-focus-within:opacity-100 z-[5]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-100 sm:opacity-0 transition-opacity duration-300 ease-out sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 z-[5]"
       />
 
       {/* ===== Controls & Legacy Text Overlay ===== */}
@@ -339,7 +350,9 @@ export default function LatestInspirationCard({
         )}
 
         {/* Bottom row: Action Buttons (left) & Usage Status Pill (right) */}
-        <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-3 opacity-100 translate-y-0 pointer-events-auto transition-all duration-300 ease-out z-20">
+        {/* On desktop (sm: >= 640px), hidden by default and reveals smoothly on hover/focus */}
+        {/* On mobile (< 640px), permanently visible and touch-accessible */}
+        <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-3 opacity-100 translate-y-0 pointer-events-auto sm:opacity-0 sm:translate-y-2 sm:pointer-events-none sm:group-hover:opacity-100 sm:group-hover:translate-y-0 sm:group-hover:pointer-events-auto sm:group-focus-within:opacity-100 sm:group-focus-within:translate-y-0 sm:group-focus-within:pointer-events-auto transition-all duration-300 ease-out z-20">
           {/* Left Actions: Inspire + Favorite + Share + Read Again */}
           <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
             {/* Primary Action: Inspire */}
