@@ -14,12 +14,17 @@ export default function WebsiteLayout({ children }) {
     pathname?.startsWith('/TAG-') ||
     pathname?.startsWith('/QR-');
 
+  // Completely bypass website layout chrome on scan routes so it fills the raw viewport
+  if (isScanPage) {
+    return <>{children}</>;
+  }
+
   return (
-    <div className={`flex flex-col ${isScanPage ? 'h-[100dvh] overflow-hidden' : 'min-h-screen'}`}>
+    <div className="flex flex-col min-h-screen">
       <TopHeader />
       <Header />
 
-      <main className={`flex-1 ${isScanPage ? 'h-full overflow-hidden' : ''}`}>
+      <main className="flex-1">
         {children}
       </main>
 
