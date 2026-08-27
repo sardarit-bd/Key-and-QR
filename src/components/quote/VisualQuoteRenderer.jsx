@@ -19,6 +19,10 @@ import { Play, Pause, Music, Loader2 } from 'lucide-react';
  * - mode: 'auto' | 'desktop' | 'mobile' (default: 'auto')
  * - showAudioPlayer: boolean (default: true if audio track exists)
  * - maxScale: number (default: 1)
+ * - fit: 'contain' | 'cover' (default: 'contain') - 'contain' scales the
+ *   design to fit fully inside the container (may letterbox). 'cover' scales
+ *   the design to fill the container edge-to-edge, cropping overflow - use
+ *   this for full-screen backgrounds (e.g. the public QR scan page).
  * - className: additional wrapper CSS classes
  * - onRenderComplete: callback when canvas finishes rendering
  */
@@ -29,6 +33,7 @@ export default function VisualQuoteRenderer({
   mode = 'auto',
   showAudioPlayer = true,
   maxScale = 2,
+  fit = 'contain',
   className = '',
   onRenderComplete,
 }) {
@@ -106,11 +111,16 @@ export default function VisualQuoteRenderer({
 
     const scaleX = containerW / canvasW;
     const scaleY = containerH > 0 ? containerH / canvasH : scaleX;
-    const uniformScale = Math.min(scaleX, scaleY);
+    // 'cover' fills the container edge-to-edge (cropping overflow), like
+    // CSS object-fit: cover. 'contain' fits the whole design inside the
+    // container (may letterbox), like CSS object-fit: contain.
+    const uniformScale = fit === 'cover' ? Math.max(scaleX, scaleY) : Math.min(scaleX, scaleY);
 
-    const computedScale = Math.min(uniformScale, maxScale);
+    // Don't cap 'cover' scaling - it needs to grow past maxScale on some
+    // aspect ratios to fully fill the screen without gaps.
+    const computedScale = fit === 'cover' ? uniformScale : Math.min(uniformScale, maxScale);
     setScale(Number.isFinite(computedScale) && computedScale > 0 ? computedScale : 1);
-  }, [resolveActiveDesign, maxScale]);
+  }, [resolveActiveDesign, maxScale, fit]);
 
   // 3. Render static Fabric canvas on design change
   useEffect(() => {
