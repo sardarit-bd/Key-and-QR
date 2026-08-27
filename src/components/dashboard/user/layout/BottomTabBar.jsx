@@ -7,18 +7,18 @@ import { Home, Sparkles, BookOpen, User, LayoutDashboard, Users, ShoppingBag, Se
 import { useAuthStore } from '@/store/authStore';
 
 const USER_TABS = [
-  { id: 'home',        label: 'Home',       icon: Home,        href: '/new-dashboard/user',                 exact: true  },
-  { id: 'inspire',    label: 'Inspire',    icon: Sparkles,    href: '/new-dashboard/user?action=inspire',  exact: true  },
-  { id: 'collection', label: 'Collection', icon: BookOpen,    href: '/new-dashboard/user/favorites',       exact: false },
-  { id: 'shop',       label: 'Shop',       icon: ShoppingBag, href: '/shop',                               exact: false },
-  { id: 'profile',    label: 'Profile',    icon: User,        href: '/new-dashboard/user/profile',         exact: false },
+  { id: 'home', label: 'Home', icon: Home, href: '/new-dashboard/user', exact: true },
+  { id: 'inspire', label: 'Inspire', icon: Sparkles, href: '/new-dashboard/user?action=inspire', exact: true },
+  { id: 'collection', label: 'Collection', icon: BookOpen, href: '/new-dashboard/user/favorites', exact: false },
+  { id: 'shop', label: 'Shop', icon: ShoppingBag, href: '/shop', exact: false },
+  { id: 'profile', label: 'Profile', icon: User, href: '/new-dashboard/user/profile', exact: false },
 ];
 
 const ADMIN_TABS = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/new-dashboard/admin',        exact: true  },
-  { id: 'orders',    label: 'Orders',    icon: ShoppingBag,     href: '/new-dashboard/admin/orders',  exact: false },
-  { id: 'users',     label: 'Users',     icon: Users,           href: '/new-dashboard/admin/users',   exact: false },
-  { id: 'settings',  label: 'Settings',  icon: Settings,        href: '/new-dashboard/admin/settings',exact: false },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/new-dashboard/admin', exact: true },
+  { id: 'orders', label: 'Orders', icon: ShoppingBag, href: '/new-dashboard/admin/orders', exact: false },
+  { id: 'users', label: 'Users', icon: Users, href: '/new-dashboard/admin/users', exact: false },
+  { id: 'settings', label: 'Settings', icon: Settings, href: '/new-dashboard/admin/settings', exact: false },
 ];
 
 /**
@@ -69,11 +69,10 @@ function TabBarInner() {
           <Link
             key={tab.id}
             href={tab.href}
-            className={`flex flex-col items-center justify-center flex-1 h-full cursor-pointer transition-all duration-200 ${
-              active
+            className={`flex flex-col items-center justify-center flex-1 h-full cursor-pointer transition-all duration-200 ${active
                 ? 'text-primary font-semibold'
                 : 'text-foreground-secondary/70 hover:text-foreground'
-            }`}
+              }`}
           >
             <Icon size={20} strokeWidth={active ? 2.5 : 2} className="shrink-0" />
             <span className={`text-[11px] mt-1 tracking-tight ${active ? 'font-bold' : 'font-medium'}`}>
