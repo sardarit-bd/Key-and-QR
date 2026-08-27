@@ -146,7 +146,28 @@ export default function DashboardHome({
     setIsOverlayOpen(true);
     receiveQuote.mutate(category?.slug || 'inspire', {
       onSuccess: (quote) => {
-        setTimeout(() => setRevealState({ quote: flattenQuotePayload(quote) }), 600);
+        const flattened = flattenQuotePayload(quote);
+        const formattedInspiration = {
+          hasReceivedQuote: true,
+          id: flattened._id || flattened.receivedQuoteId,
+          quoteId: flattened._id,
+          receivedQuoteId: flattened.receivedQuoteId || flattened._id,
+          text: flattened.text || '',
+          previewText: flattened.text || '',
+          author: flattened.author || 'MyInspireTag',
+          image: flattened.image || null,
+          renderedImages: flattened.renderedImages || null,
+          theme: flattened.theme || null,
+          editorData: flattened.editorData || null,
+          category: flattened.category || { name: category?.name || 'Inspiration', slug: category?.slug || 'inspire' },
+          receivedAt: flattened.receivedAt || new Date().toISOString(),
+          favorite: flattened.favorite || false,
+          favoriteId: flattened.favoriteId || null,
+          dailyUsage: dailyUsage || null,
+        };
+        // Immediately synchronize the main dashboard's Today's Quote card state
+        setActiveInspiration(formattedInspiration);
+        setTimeout(() => setRevealState({ quote: flattened }), 600);
       },
       onError: () => {
         setIsOverlayOpen(false);
@@ -178,8 +199,29 @@ export default function DashboardHome({
   const handleReadAgain = (receivedQuoteId) => {
     readAgain.mutate(receivedQuoteId, {
       onSuccess: (data) => {
+        const flattened = flattenQuotePayload(data);
         overlayCategoryRef.current = data?.category?.name || 'Inspiration';
-        setRevealState({ quote: flattenQuotePayload(data) });
+        const formattedInspiration = {
+          hasReceivedQuote: true,
+          id: flattened._id || flattened.receivedQuoteId,
+          quoteId: flattened._id,
+          receivedQuoteId: flattened.receivedQuoteId || flattened._id,
+          text: flattened.text || '',
+          previewText: flattened.text || '',
+          author: flattened.author || 'MyInspireTag',
+          image: flattened.image || null,
+          renderedImages: flattened.renderedImages || null,
+          theme: flattened.theme || null,
+          editorData: flattened.editorData || null,
+          category: flattened.category || { name: data?.category?.name || 'Inspiration', slug: data?.category?.slug || 'inspire' },
+          receivedAt: flattened.receivedAt || new Date().toISOString(),
+          favorite: flattened.favorite || false,
+          favoriteId: flattened.favoriteId || null,
+          dailyUsage: dailyUsage || null,
+        };
+        // Synchronize main dashboard quote state
+        setActiveInspiration(formattedInspiration);
+        setRevealState({ quote: flattened });
         setIsOverlayOpen(true);
       },
     });

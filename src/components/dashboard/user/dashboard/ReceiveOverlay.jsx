@@ -17,6 +17,33 @@ const LOADING_MESSAGES = [
  * Strictly preserves the 800×450 (16:9) quote artwork aspect ratio on both desktop and mobile.
  */
 export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose }) {
+  // Mobile & Desktop Scroll Lock with exact position restoration
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
+    const originalOverflow = document.body.style.overflow;
+    const originalTouchAction = document.body.style.touchAction;
+    const originalPosition = document.body.style.position;
+    const originalTop = document.body.style.top;
+    const originalWidth = document.body.style.width;
+
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.touchAction = originalTouchAction;
+      document.body.style.position = originalPosition;
+      document.body.style.top = originalTop;
+      document.body.style.width = originalWidth;
+      window.scrollTo(0, scrollY);
+    };
+  }, [isOpen]);
+
   const renderedDesktopUrl =
     quote?.renderedImages?.desktop?.url ||
     quote?.quote?.renderedImages?.desktop?.url ||
@@ -42,7 +69,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-3 sm:p-6"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-6 touch-none overscroll-none select-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -53,7 +80,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
             /* ---------- Reveal Modal Card ---------- */
             <motion.div
               key="reveal"
-              className="relative w-full max-w-[420px] sm:max-w-[860px] max-h-[calc(100dvh-24px)] sm:max-h-[calc(100dvh-48px)] overflow-y-auto rounded-[24px] sm:rounded-[32px] border border-white/10 bg-card p-4 sm:p-6 shadow-2xl"
+              className="relative w-full max-w-[420px] sm:max-w-[860px] max-h-[calc(100dvh-24px)] sm:max-h-[calc(100dvh-48px)] overflow-y-auto overscroll-contain touch-auto rounded-[24px] sm:rounded-[32px] border border-white/15 bg-card text-card-foreground p-4 sm:p-6 shadow-2xl"
               initial={{ scale: 0.94, opacity: 0, y: 14 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.96, opacity: 0, y: 10 }}
@@ -62,8 +89,8 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
             >
               {/* Top Header Bar: Category Badge (left) & Close Button (right) */}
               <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-border/60">
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-accent/25 bg-accent/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-accent">
-                  <Sparkles size={12} className="text-accent" />
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-accent">
+                  <Sparkles size={12} className="text-accent fill-current" />
                   <span>{categoryName || 'Inspiration'}</span>
                 </div>
 
@@ -71,7 +98,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
                   <button
                     onClick={onClose}
                     aria-label="Close modal"
-                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-background-secondary/80 text-foreground-secondary hover:text-foreground hover:bg-background-secondary transition"
+                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-background/80 text-foreground-secondary hover:text-foreground hover:bg-muted transition-colors active:scale-95"
                   >
                     <X size={16} />
                   </button>
@@ -81,7 +108,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
               {/* Responsive Artwork Canvas / Preview Stage (Portrait on mobile, 16:9 on sm+) */}
               <div className="mt-3.5 sm:mt-4 w-full">
                 {hasVisualDesign ? (
-                  <div className="w-full aspect-[375/667] sm:aspect-[16/9] max-h-[70vh] sm:max-h-none relative rounded-2xl overflow-hidden bg-black/60 border border-white/10 shadow-xl flex items-center justify-center">
+                  <div className="w-full aspect-[375/667] sm:aspect-[16/9] max-h-[70vh] sm:max-h-none relative rounded-2xl overflow-hidden bg-black/80 border border-white/10 shadow-xl flex items-center justify-center">
                     {editorData ? (
                       <VisualQuoteRenderer
                         editorData={editorData}
@@ -97,6 +124,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
                         {renderedDesktopUrl && (
                           <source media="(min-width: 640px)" srcSet={renderedDesktopUrl} />
                         )}
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
                           src={renderedMobileUrl || renderedDesktopUrl}
                           alt={quote?.text || 'Inspiration'}
@@ -142,7 +170,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
               transition={{ duration: 0.2 }}
             >
               <div className="relative mb-6 flex h-20 w-20 items-center justify-center">
-                <div className="absolute inset-0 rounded-full bg-accent/10 blur-xl" />
+                <div className="absolute inset-0 rounded-full bg-accent/20 blur-xl animate-pulse" />
                 <Loader2 size={36} className="relative z-10 animate-spin text-accent" />
               </div>
               <LoadingMessages />
@@ -171,7 +199,7 @@ function LoadingMessages() {
     <AnimatePresence mode="wait">
       <motion.p
         key={index}
-        className="text-[15px] sm:text-[16px] font-medium text-white"
+        className="text-[15px] sm:text-[16px] font-medium text-white drop-shadow-md"
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -8 }}

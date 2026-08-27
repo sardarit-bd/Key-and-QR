@@ -430,6 +430,16 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             </div>
           )}
 
+          {/* Repeat Scan Notice (Same Day) */}
+          {data?.isAlreadyUnlockedToday && data?.message && (
+            <div className="w-full mb-3 rounded-2xl border border-amber-400/25 bg-neutral-950/75 backdrop-blur-xl px-3.5 py-2 shadow-lg flex items-center justify-center gap-2 text-center animate-in fade-in duration-300">
+              <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+              <p className="text-[11.5px] text-amber-200/90 font-light">
+                {data.message}
+              </p>
+            </div>
+          )}
+
           {/* Liquid Glass Floating Action Card */}
           <div className="backdrop-blur-2xl bg-neutral-950/40 border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_12px_32px_rgba(0,0,0,0.7)] rounded-3xl p-3 flex justify-around items-center">
             {/* Save button */}
