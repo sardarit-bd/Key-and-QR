@@ -356,11 +356,12 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
       {/* Center Typography / Quote Content */}
       <main className="relative z-10 flex-1 w-full h-full flex flex-col justify-center items-center text-center px-6 sm:px-12 my-auto pointer-events-none">
         {data?.editorData && !quoteText && !resolvedBgUrl ? (
-          <div className="w-full h-full max-w-2xl flex items-center justify-center pointer-events-auto">
+          <div className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-auto -z-20">
             <VisualQuoteRenderer
               editorData={data.editorData}
               mode="auto"
               showAudioPlayer={false}
+              fit="cover"
               className="w-full h-full"
             />
           </div>
@@ -439,11 +440,10 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
               aria-label={saved ? "Saved to favorites" : "Save quote"}
             >
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all duration-200 ${
-                  saved
+                className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all duration-200 ${saved
                     ? "bg-amber-400/25 border-amber-400 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.4)]"
                     : "border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10 group-hover:scale-105"
-                }`}
+                  }`}
               >
                 <Heart size={17} className={saved ? "fill-current text-amber-400" : ""} />
               </div>
