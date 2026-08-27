@@ -91,6 +91,15 @@ function TabBarInner() {
  * only the interactive tab content while useSearchParams() resolves.
  */
 export default function BottomTabBar() {
+  const pathname = usePathname();
+  const isScanPage =
+    pathname?.startsWith('/t/') ||
+    pathname?.startsWith('/tag/') ||
+    pathname?.startsWith('/TAG-') ||
+    pathname?.startsWith('/QR-');
+
+  if (isScanPage) return null;
+
   return (
     <nav
       data-slot="mobile-bottom-nav"
@@ -102,3 +111,4 @@ export default function BottomTabBar() {
     </nav>
   );
 }
+

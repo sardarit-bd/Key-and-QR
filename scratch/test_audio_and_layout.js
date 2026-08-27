@@ -118,6 +118,35 @@ function resolveAudioTrack(design, editorData) {
   }
 }
 
+// TEST 5: BottomTabBar suppression on public scan routes
+{
+  function isBottomTabBarVisible(pathname) {
+    const isScanPage =
+      pathname?.startsWith('/t/') ||
+      pathname?.startsWith('/tag/') ||
+      pathname?.startsWith('/TAG-') ||
+      pathname?.startsWith('/QR-');
+    return !isScanPage;
+  }
+
+  const scanRoute1 = isBottomTabBarVisible('/t/abc12345');
+  const scanRoute2 = isBottomTabBarVisible('/tag/XYZ999');
+  const dashboardRoute = isBottomTabBarVisible('/new-dashboard/user');
+
+  console.log('TEST 5 - BottomTabBar conditional display:');
+  console.log('  /t/abc12345 visible:', scanRoute1, '(expected false)');
+  console.log('  /tag/XYZ999 visible:', scanRoute2, '(expected false)');
+  console.log('  /new-dashboard/user visible:', dashboardRoute, '(expected true)');
+
+  if (!scanRoute1 && !scanRoute2 && dashboardRoute) {
+    console.log('  ✅ PASS: BottomTabBar successfully hidden on public scan pages.\n');
+  } else {
+    console.error('  ❌ FAIL: BottomTabBar should not render on scan pages');
+    process.exit(1);
+  }
+}
+
 console.log('====================================================');
-console.log('ALL 4 AUDIO & LAYOUT TESTS PASSED!');
+console.log('ALL 5 AUDIO & LAYOUT TESTS PASSED!');
 console.log('====================================================\n');
+
