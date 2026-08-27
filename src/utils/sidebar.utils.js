@@ -119,10 +119,10 @@ export const isMenuItemVisible = (item, userPlan) => {
  */
 const getDashboardContext = (pathname) => {
   if (!pathname) return null;
-  if (pathname.startsWith('/new-dashboard/admin') || pathname.startsWith('/dashboard/admin')) {
+  if (pathname.startsWith('/dashboard/admin') || pathname.startsWith('/dashboard/admin')) {
     return 'admin';
   }
-  if (pathname.startsWith('/new-dashboard') || pathname.startsWith('/dashboard')) {
+  if (pathname.startsWith('/dashboard') || pathname.startsWith('/dashboard')) {
     return 'user';
   }
   return null;

@@ -1,6 +1,6 @@
 'use client';
 
-import { getCategoryLabel } from '@/components/category/categoryLabels';
+import { getCategoryLabel } from '@/components/public/quote/category/categoryLabels';
 import * as LucideIcons from 'lucide-react';
 
 /**

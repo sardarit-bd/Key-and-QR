@@ -24,7 +24,7 @@ export default function LoginPage() {
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = searchParams.get("redirect") || "/new-dashboard/user";
+  const redirectPath = searchParams.get("redirect") || "/dashboard/user";
 
   const { user, isInitialized } = useAuthStore();
   const loginMutation = useLoginMutation();
@@ -90,10 +90,10 @@ function LoginPageContent() {
   useEffect(() => {
     if (isInitialized && user) {
       if (user.role === "admin") {
-        router.replace("/new-dashboard/admin");
+        router.replace("/dashboard/admin");
       } else {
-        const safeRedirect = redirectPath.startsWith("/new-dashboard/admin") || redirectPath.startsWith("/admin")
-          ? "/new-dashboard/user"
+        const safeRedirect = redirectPath.startsWith("/dashboard/admin") || redirectPath.startsWith("/admin")
+          ? "/dashboard/user"
           : redirectPath;
         router.replace(safeRedirect);
       }

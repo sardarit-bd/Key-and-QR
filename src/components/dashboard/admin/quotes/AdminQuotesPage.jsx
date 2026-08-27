@@ -47,7 +47,7 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
-import { getCategoryBadgeClass, getCategoryLabel } from '@/components/category';
+import { getCategoryBadgeClass, getCategoryLabel } from '@/components/public/quote/category';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 
@@ -328,7 +328,7 @@ export default function AdminQuotesPage() {
         </div>
 
         <Link
-          href="/new-dashboard/admin/quotes/create-visual"
+          href="/dashboard/admin/quotes/create-visual"
           className="inline-flex items-center justify-center gap-2 px-4.5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-600 text-white font-medium text-sm shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] transition-all duration-200 active:scale-95 shrink-0 select-none cursor-pointer"
         >
           <Plus size={16} />
@@ -582,7 +582,7 @@ export default function AdminQuotesPage() {
                       </button>
 
                       <Link
-                        href={`/new-dashboard/admin/quotes/${quote._id}/edit-visual`}
+                        href={`/dashboard/admin/quotes/${quote._id}/edit-visual`}
                         className="px-3 py-2 rounded-xl border border-border bg-card hover:bg-muted text-foreground font-medium text-xs sm:text-sm transition-colors text-center cursor-pointer"
                       >
                         Edit

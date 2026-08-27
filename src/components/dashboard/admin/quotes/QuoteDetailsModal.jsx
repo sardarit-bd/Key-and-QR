@@ -26,7 +26,7 @@ import {
   Tag as TagIcon,
 } from 'lucide-react';
 import Link from 'next/link';
-import { getCategoryBadgeClass, getCategoryLabel } from '@/components/category';
+import { getCategoryBadgeClass, getCategoryLabel } from '@/components/public/quote/category';
 
 function formatDate(iso) {
   if (!iso) return '—';
@@ -363,7 +363,7 @@ export default function QuoteDetailsModal({
             </button>
 
             <Link
-              href={`/new-dashboard/admin/quotes/${quote._id}/edit-visual`}
+              href={`/dashboard/admin/quotes/${quote._id}/edit-visual`}
               className="px-3.5 py-2.5 text-xs sm:text-sm font-medium rounded-xl border border-border bg-card hover:bg-muted text-foreground flex items-center gap-1.5 transition-colors"
             >
               <PenSquare className="w-4 h-4" />

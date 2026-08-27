@@ -57,14 +57,14 @@ export default function EditorHeader() {
     if (isDirty) {
       setConfirmExitOpen(true);
     } else {
-      router.push('/new-dashboard/admin/quotes');
+      router.push('/dashboard/admin/quotes');
     }
   };
 
   const handleConfirmExit = () => {
     setConfirmExitOpen(false);
     useEditorStore.setState({ isDirty: false });
-    router.push('/new-dashboard/admin/quotes');
+    router.push('/dashboard/admin/quotes');
   };
 
   const handleSave = async (redirectAfter = true) => {
@@ -160,7 +160,7 @@ export default function EditorHeader() {
       }
       useEditorStore.setState({ isDirty: false });
       if (redirectAfter) {
-        router.push('/new-dashboard/admin/quotes');
+        router.push('/dashboard/admin/quotes');
       }
     } catch (err) {
       console.error('Save quote error:', err);

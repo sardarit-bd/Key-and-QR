@@ -60,7 +60,7 @@ export default function AdminRecentUsers({ users = [] }) {
             Recent Users
           </h2>
           <Link
-            href="/new-dashboard/admin/users"
+            href="/dashboard/admin/users"
             className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
           >
             View All <UserPlus size={13} />

@@ -12,12 +12,12 @@ import { useAuthStore } from "@/store/authStore";
 import {
   getPrettyCategoryLabel,
   resolveBackgroundImage,
-} from "@/components/category";
+} from "@/components/public/quote/category";
 
-import VisualQuoteRenderer from "@/components/quote/VisualQuoteRenderer";
-import VisualQuoteAudioPlayer from "@/components/quote/VisualQuoteAudioPlayer";
+import VisualQuoteRenderer from "@/components/public/quote/VisualQuoteRenderer";
+import VisualQuoteAudioPlayer from "@/components/public/quote/VisualQuoteAudioPlayer";
 import useShareQuote from "@/hooks/useShareQuote";
-import ShareQuoteModal from "@/components/quote/ShareQuoteModal";
+import ShareQuoteModal from "@/components/public/quote/ShareQuoteModal";
 
 export default function PublicQuoteDisplay({ data, tagCode }) {
   const router = useRouter();
@@ -488,7 +488,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
             {/* Collection button */}
             <button
-              onClick={() => router.push(user ? "/new-dashboard/user/favorites" : "/login")}
+              onClick={() => router.push(user ? "/dashboard/user/favorites" : "/login")}
               className="flex flex-col items-center gap-1 text-[#e6b76f] hover:text-white transition-all active:scale-95 cursor-pointer group"
               aria-label="View collection"
             >
@@ -590,7 +590,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => router.push("/new-dashboard/user/premium")}
+                onClick={() => router.push("/dashboard/user/premium")}
                 className="h-11 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 hover:brightness-110 text-black font-bold text-sm shadow-md transition-all active:scale-[0.98] cursor-pointer"
               >
                 Upgrade Now

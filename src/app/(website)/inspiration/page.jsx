@@ -11,7 +11,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
-import InspirationCategoryCard from '@/components/inspiration/InspirationCategoryCard';
+import InspirationCategoryCard from '@/components/public/quote/inspiration/InspirationCategoryCard';
 
 export default function InspirationPage() {
   const [categorySearch, setCategorySearch] = useState('');

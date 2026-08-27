@@ -13,7 +13,7 @@ import YourStats from './YourStats';
 import ReceiveOverlay from './ReceiveOverlay';
 import { useReceiveQuoteMutation, useReadAgainMutation } from '@/hooks/received-quote/useReceivedQuote';
 import useShareQuote from "@/hooks/useShareQuote";
-import ShareQuoteModal from "@/components/quote/ShareQuoteModal";
+import ShareQuoteModal from "@/components/public/quote/ShareQuoteModal";
 import toast from 'react-hot-toast';
 
 /**
@@ -188,7 +188,7 @@ export default function DashboardHome({
       actionFiredRef.current = true;
       handleReceiveFirst();
       // Strip the query param cleanly without adding a history entry.
-      router.replace('/new-dashboard/user');
+      router.replace('/dashboard/user');
     }
     // Reset the guard whenever the param disappears (e.g. user navigates away and back)
     if (searchParams?.get('action') !== 'inspire') {

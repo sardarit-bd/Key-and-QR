@@ -47,9 +47,9 @@ export default function CallbackContent() {
                 // Redirect based on role
                 setTimeout(() => {
                     if (user.role === "admin") {
-                        router.push("/new-dashboard/admin");
+                        router.push("/dashboard/admin");
                     } else {
-                        router.push("/new-dashboard/user");
+                        router.push("/dashboard/user");
                     }
                 }, 100);
 

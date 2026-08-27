@@ -96,14 +96,14 @@ function SubscriptionSuccessContent() {
 
           <div className="space-y-3">
             <Link
-              href="/new-dashboard/user/premium"
+              href="/dashboard/user/premium"
               className="flex w-full items-center justify-center gap-2 py-3 px-4 bg-gradient-to-r from-accent to-accent/85 text-accent-foreground rounded-full text-sm font-semibold shadow-[0_8px_24px_-8px_rgba(253,182,92,0.5)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-8px_rgba(253,182,92,0.6)] active:scale-95"
             >
               <span>View Membership Details</span>
               <ArrowRight size={15} />
             </Link>
             <Link
-              href="/new-dashboard/user"
+              href="/dashboard/user"
               className="block w-full py-2.5 px-4 rounded-full border border-white/10 bg-background-secondary/40 text-foreground-secondary text-xs font-medium transition-all hover:bg-background-secondary hover:text-foreground active:scale-95"
             >
               Go to Dashboard

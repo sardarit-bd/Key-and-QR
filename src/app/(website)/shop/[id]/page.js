@@ -1,7 +1,7 @@
 import { HydrationBoundary, dehydrate, QueryClient } from "@tanstack/react-query";
 import { productKeys } from "@/hooks/product-service/useProducts";
 import productService from "@/services/product-service/product.service";
-import ProductDetails from "@/components/shop/product-details/ProductDetails";
+import ProductDetails from "@/components/public/shop/product-details/ProductDetails";
 
 export default async function ProductDetailsPage({ params }) {
     const { id } = await params;

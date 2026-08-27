@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Sparkles, Loader2, X } from 'lucide-react';
-import VisualQuoteRenderer from '@/components/quote/VisualQuoteRenderer';
+import VisualQuoteRenderer from '@/components/public/quote/VisualQuoteRenderer';
 
 const LOADING_MESSAGES = [
   'Finding today\'s message...',

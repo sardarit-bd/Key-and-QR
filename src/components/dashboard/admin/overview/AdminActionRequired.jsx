@@ -36,7 +36,7 @@ export default function AdminActionRequired({ actionRequired = {} }) {
     pendingOrdersCount > 0 && {
       title: `${pendingOrdersCount} Pending Orders`,
       description: 'Orders awaiting fulfillment or tag assignment',
-      href: '/new-dashboard/admin/orders',
+      href: '/dashboard/admin/orders',
       btnText: 'Fulfill Orders',
       icon: Clock,
       color: 'amber',
@@ -44,7 +44,7 @@ export default function AdminActionRequired({ actionRequired = {} }) {
     failedPaymentsCount > 0 && {
       title: `${failedPaymentsCount} Failed Payments`,
       description: 'Transactions that need customer follow-up',
-      href: '/new-dashboard/admin/orders',
+      href: '/dashboard/admin/orders',
       btnText: 'Inspect Orders',
       icon: CreditCard,
       color: 'rose',
@@ -52,7 +52,7 @@ export default function AdminActionRequired({ actionRequired = {} }) {
     lowStockCount > 0 && {
       title: `${lowStockCount} Inventory Alerts`,
       description: 'Products that are out of stock or low in inventory',
-      href: '/new-dashboard/admin/products',
+      href: '/dashboard/admin/products',
       btnText: 'Restock Products',
       icon: Package,
       color: 'amber',
@@ -60,7 +60,7 @@ export default function AdminActionRequired({ actionRequired = {} }) {
     pendingQuotesCount > 0 && {
       title: `${pendingQuotesCount} Quotes Awaiting Review`,
       description: 'User quote submissions waiting for moderation',
-      href: '/new-dashboard/admin/quotes/pending',
+      href: '/dashboard/admin/quotes/pending',
       btnText: 'Moderate Quotes',
       icon: Quote,
       color: 'purple',

@@ -1,6 +1,6 @@
 'use client';
 
-import { getCategoryIcon } from '@/components/category/categoryIcons';
+import { getCategoryIcon } from '@/components/public/quote/category/categoryIcons';
 
 // ============================================================
 // Dashboard normalization layer

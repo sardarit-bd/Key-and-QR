@@ -16,9 +16,9 @@ export default function AuthSuccess() {
     useEffect(() => {
         if (isInitialized && user) {
             if (user.role === "admin") {
-                router.push("/new-dashboard/admin");
+                router.push("/dashboard/admin");
             } else {
-                router.push("/new-dashboard/user");
+                router.push("/dashboard/user");
             }
         } else if (isInitialized && !user) {
             router.push("/login?error=auth_failed");

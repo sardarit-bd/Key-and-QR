@@ -410,7 +410,7 @@ function OrderStatusDonut({ ordersByStatus = [] }) {
           </div>
         </div>
         <Link
-          href="/new-dashboard/admin/orders"
+          href="/dashboard/admin/orders"
           className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 font-medium transition-colors"
         >
           Orders <ArrowRight size={13} />
@@ -450,7 +450,7 @@ function OrderStatusDonut({ ordersByStatus = [] }) {
               {activeItems.map((item, i) => (
                 <Link
                   key={i}
-                  href={`/new-dashboard/admin/orders?status=${item.name.toLowerCase()}`}
+                  href={`/dashboard/admin/orders?status=${item.name.toLowerCase()}`}
                   className="flex items-center justify-between p-1.5 rounded-lg hover:bg-muted/40 transition cursor-pointer text-xs"
                 >
                   <div className="flex items-center gap-2">
@@ -710,7 +710,7 @@ function InventoryHealthChart({ inventoryHealth = [] }) {
           </div>
         </div>
         <Link
-          href="/new-dashboard/admin/products"
+          href="/dashboard/admin/products"
           className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 font-medium transition-colors"
         >
           Manage <ArrowRight size={13} />
@@ -764,7 +764,7 @@ function TagStatusChart({ tagStatus = [] }) {
           </div>
         </div>
         <Link
-          href="/new-dashboard/admin/tags"
+          href="/dashboard/admin/tags"
           className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 font-medium transition-colors"
         >
           Tags <ArrowRight size={13} />
@@ -824,7 +824,7 @@ function QuoteModerationWidget({ quoteModeration = [] }) {
           </div>
         </div>
         <Link
-          href="/new-dashboard/admin/quotes/pending"
+          href="/dashboard/admin/quotes/pending"
           className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 font-medium transition-colors"
         >
           Review <ArrowRight size={13} />
@@ -842,7 +842,7 @@ function QuoteModerationWidget({ quoteModeration = [] }) {
               </div>
             </div>
             <Link
-              href="/new-dashboard/admin/quotes/pending"
+              href="/dashboard/admin/quotes/pending"
               className="px-3 py-1.5 rounded-lg bg-amber-500 text-black font-semibold text-xs hover:bg-amber-400 transition"
             >
               Review →
@@ -887,7 +887,7 @@ function SubscriptionPerformanceWidget({ subscriptionAnalytics = {} }) {
           </div>
         </div>
         <Link
-          href="/new-dashboard/admin/subscriptions"
+          href="/dashboard/admin/subscriptions"
           className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 font-medium transition-colors"
         >
           View <ArrowRight size={13} />

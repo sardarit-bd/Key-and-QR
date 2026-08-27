@@ -75,7 +75,7 @@ export default function AdminStatsGrid({ stats = {}, actionRequired = {} }) {
       alertText: pendingOrders > 0 ? 'Requires fulfillment' : 'All clear',
       icon: Clock,
       color: pendingOrders > 0 ? 'amber' : 'emerald',
-      href: '/new-dashboard/admin/orders',
+      href: '/dashboard/admin/orders',
     },
     {
       key: 'inventory_alerts',
@@ -85,7 +85,7 @@ export default function AdminStatsGrid({ stats = {}, actionRequired = {} }) {
       alertText: inventoryIssues > 0 ? 'Low / Out of stock' : 'Optimal stock',
       icon: AlertTriangle,
       color: inventoryIssues > 0 ? 'rose' : 'emerald',
-      href: '/new-dashboard/admin/products',
+      href: '/dashboard/admin/products',
     },
   ];
 

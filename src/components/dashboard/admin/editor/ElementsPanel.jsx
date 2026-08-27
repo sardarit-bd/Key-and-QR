@@ -6,7 +6,7 @@ import useEditorStore from './editorStore';
 import api from '@/lib/api';
 import toast from 'react-hot-toast';
 import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
-import { getCategoryLabel } from '@/components/category';
+import { getCategoryLabel } from '@/components/public/quote/category';
 import {
   Select,
   SelectContent,

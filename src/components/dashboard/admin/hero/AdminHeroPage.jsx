@@ -26,7 +26,7 @@ import {
   DEFAULT_HERO,
 } from '@/hooks/dashboard/useAdminHero';
 import CategoryIconPicker from '@/components/dashboard/admin/categories/CategoryIconPicker';
-import { getCategoryIcon } from '@/components/category';
+import { getCategoryIcon } from '@/components/public/quote/category';
 
 const INPUT_CLASS =
   'w-full h-10 px-3.5 rounded-xl border border-border/80 bg-background/90 text-sm text-foreground placeholder:text-foreground-tertiary focus:outline-none focus:ring-2 focus:ring-primary/30 transition-all';

@@ -60,8 +60,8 @@ export default function Header() {
 
   if (isScanPage) return null;
 
-  const dashboardHref = user?.role === "admin" ? "/new-dashboard/admin" : "/new-dashboard/user";
-  const profileHref = user?.role === "admin" ? "/new-dashboard/admin/profile" : "/new-dashboard/user/profile";
+  const dashboardHref = user?.role === "admin" ? "/dashboard/admin" : "/dashboard/user";
+  const profileHref = user?.role === "admin" ? "/dashboard/admin/profile" : "/dashboard/user/profile";
 
   // Navigation items
   const navItems = [
@@ -243,8 +243,8 @@ export default function Header() {
                   <DropdownMenuItem asChild className="cursor-pointer">
                     <Link
                       href={`${user?.role === "admin"
-                        ? "/new-dashboard/admin"
-                        : "/new-dashboard/user"
+                        ? "/dashboard/admin"
+                        : "/dashboard/user"
                         }`}
                       className="flex items-center gap-3 px-4 py-3"
                     >

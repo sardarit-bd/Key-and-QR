@@ -131,12 +131,12 @@ function resolveAudioTrack(design, editorData) {
 
   const scanRoute1 = isBottomTabBarVisible('/t/abc12345');
   const scanRoute2 = isBottomTabBarVisible('/tag/XYZ999');
-  const dashboardRoute = isBottomTabBarVisible('/new-dashboard/user');
+  const dashboardRoute = isBottomTabBarVisible('/dashboard/user');
 
   console.log('TEST 5 - BottomTabBar conditional display:');
   console.log('  /t/abc12345 visible:', scanRoute1, '(expected false)');
   console.log('  /tag/XYZ999 visible:', scanRoute2, '(expected false)');
-  console.log('  /new-dashboard/user visible:', dashboardRoute, '(expected true)');
+  console.log('  /dashboard/user visible:', dashboardRoute, '(expected true)');
 
   if (!scanRoute1 && !scanRoute2 && dashboardRoute) {
     console.log('  ✅ PASS: BottomTabBar successfully hidden on public scan pages.\n');

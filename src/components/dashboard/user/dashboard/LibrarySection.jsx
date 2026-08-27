@@ -17,14 +17,14 @@ export default function LibrarySection({
       label: 'Saved Collection',
       value: savedCount,
       icon: Heart,
-      href: '/new-dashboard/user/favorites',
+      href: '/dashboard/user/favorites',
     },
     {
       id: 'history',
       label: 'Scan History',
       value: recentCount,
       icon: Clock,
-      href: '/new-dashboard/user/scan-history',
+      href: '/dashboard/user/scan-history',
     },
   ];
 

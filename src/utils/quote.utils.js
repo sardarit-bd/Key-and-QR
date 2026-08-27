@@ -5,12 +5,12 @@ import {
   getPrettyCategoryLabel,
   getCategoryBadgeClass,
   resolveBackgroundImage,
-} from '@/components/category';
+} from '@/components/public/quote/category';
 
 /**
  * Quote Utility Functions
  *
- * Category labels/colors/images are centralized in @/components/category —
+ * Category labels/colors/images are centralized in @/components/public/quote/category —
  * these helpers keep the previous public API so existing callers don't change.
  */
 

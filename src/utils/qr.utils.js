@@ -3,7 +3,7 @@
 import {
   getPrettyCategoryLabel,
   resolveBackgroundImage,
-} from '@/components/category';
+} from '@/components/public/quote/category';
 
 /**
  * QR Utility Functions
