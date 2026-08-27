@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Sparkles, ShoppingBag, ArrowRight } from "lucide-react";
-import PublicQuoteView from "@/components/quote/PublicQuoteView";
+import PublicQuoteView from "@/components/public/quote/PublicQuoteView";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_URL ||

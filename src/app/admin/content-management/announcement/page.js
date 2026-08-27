@@ -8,7 +8,7 @@ export default function AdminContentManagementAnnouncementRoute() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/new-dashboard/admin/content/announcement');
+    router.replace('/dashboard/admin/content/announcement');
   }, [router]);
 
   return <AdminAnnouncementBannerPage />;

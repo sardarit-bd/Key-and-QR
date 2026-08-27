@@ -1,4 +1,4 @@
-import ShopGrid from "@/components/shop/Products";
+import ShopGrid from "@/components/public/shop/Products";
 import { HydrationBoundary, dehydrate, QueryClient } from "@tanstack/react-query";
 import { productKeys } from "@/hooks/product-service/useProducts";
 import productService from "@/services/product-service/product.service";

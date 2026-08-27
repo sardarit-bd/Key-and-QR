@@ -5,8 +5,8 @@ import { ArrowLeft, AlertCircle, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { useQuoteCategories, useExploreQuotes } from '@/hooks/category/useQuoteCategories';
-import { getCategoryIcon, getCategoryLabel } from '@/components/category';
-import InspirationQuoteGrid from '@/components/inspiration/InspirationQuoteGrid';
+import { getCategoryIcon, getCategoryLabel } from '@/components/public/quote/category';
+import InspirationQuoteGrid from '@/components/public/quote/inspiration/InspirationQuoteGrid';
 
 function getCategoryTheme(slug, customColor) {
   const s = (slug || '').toLowerCase();

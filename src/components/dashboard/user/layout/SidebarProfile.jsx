@@ -8,12 +8,12 @@ export default function SidebarProfile({ profile, isCollapsed, isCompact = false
   const pathname = usePathname();
   const isAdmin =
     profile?.plan === 'admin' ||
-    pathname?.startsWith('/new-dashboard/admin') ||
+    pathname?.startsWith('/dashboard/admin') ||
     pathname?.startsWith('/admin');
 
   const profileHref = isAdmin
-    ? '/new-dashboard/admin/profile'
-    : '/new-dashboard/user/profile';
+    ? '/dashboard/admin/profile'
+    : '/dashboard/user/profile';
 
   const hasAvatar = profile?.avatar;
 

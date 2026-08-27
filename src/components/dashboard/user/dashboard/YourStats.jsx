@@ -51,7 +51,7 @@ function YourStatsLocked() {
           Available with MyInspire+
         </p>
         <a
-          href="/new-dashboard/user/premium"
+          href="/dashboard/user/premium"
           className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/20 bg-rose-500/10 px-4 py-2 text-[13px] font-medium text-rose-400 hover:bg-rose-500/15 transition cursor-pointer"
         >
           Unlock MyInspire+

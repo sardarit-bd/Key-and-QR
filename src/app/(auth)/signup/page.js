@@ -23,7 +23,7 @@ export default function SignUpPage() {
 function SignUpPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = searchParams.get("redirect") || "/new-dashboard/user";
+  const redirectPath = searchParams.get("redirect") || "/dashboard/user";
   
   const { user } = useAuthStore();
   const registerMutation = useRegisterMutation();
@@ -60,10 +60,10 @@ function SignUpPageContent() {
   useEffect(() => {
     if (user) {
       if (user.role === "admin") {
-        router.push("/new-dashboard/admin");
+        router.push("/dashboard/admin");
       } else {
-        const safeRedirect = redirectPath.startsWith("/new-dashboard/admin") || redirectPath.startsWith("/admin")
-          ? "/new-dashboard/user"
+        const safeRedirect = redirectPath.startsWith("/dashboard/admin") || redirectPath.startsWith("/admin")
+          ? "/dashboard/user"
           : redirectPath;
         router.push(safeRedirect);
       }

@@ -33,7 +33,7 @@ import {
   useBulkAssignQuotes,
   useDeleteAssignment,
 } from '@/hooks/dashboard/useAdminQuoteAssignment';
-import { getCategoryBadgeClass, getCategoryLabel } from '@/components/category';
+import { getCategoryBadgeClass, getCategoryLabel } from '@/components/public/quote/category';
 
 function formatDate(iso) {
   if (!iso) return '—';

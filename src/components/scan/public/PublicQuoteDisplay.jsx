@@ -12,12 +12,12 @@ import { useAuthStore } from "@/store/authStore";
 import {
   getPrettyCategoryLabel,
   resolveBackgroundImage,
-} from "@/components/category";
+} from "@/components/public/quote/category";
 
-import VisualQuoteRenderer from "@/components/quote/VisualQuoteRenderer";
-import VisualQuoteAudioPlayer from "@/components/quote/VisualQuoteAudioPlayer";
+import VisualQuoteRenderer from "@/components/public/quote/VisualQuoteRenderer";
+import VisualQuoteAudioPlayer from "@/components/public/quote/VisualQuoteAudioPlayer";
 import useShareQuote from "@/hooks/useShareQuote";
-import ShareQuoteModal from "@/components/quote/ShareQuoteModal";
+import ShareQuoteModal from "@/components/public/quote/ShareQuoteModal";
 
 export default function PublicQuoteDisplay({ data, tagCode }) {
   const router = useRouter();
@@ -430,6 +430,16 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             </div>
           )}
 
+          {/* Repeat Scan Notice (Same Day) */}
+          {data?.isAlreadyUnlockedToday && data?.message && (
+            <div className="w-full mb-3 rounded-2xl border border-amber-400/25 bg-neutral-950/75 backdrop-blur-xl px-3.5 py-2 shadow-lg flex items-center justify-center gap-2 text-center animate-in fade-in duration-300">
+              <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+              <p className="text-[11.5px] text-amber-200/90 font-light">
+                {data.message}
+              </p>
+            </div>
+          )}
+
           {/* Liquid Glass Floating Action Card */}
           <div className="backdrop-blur-2xl bg-neutral-950/40 border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_12px_32px_rgba(0,0,0,0.7)] rounded-3xl p-3 flex justify-around items-center">
             {/* Save button */}
@@ -478,7 +488,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
             {/* Collection button */}
             <button
-              onClick={() => router.push(user ? "/new-dashboard/user/favorites" : "/login")}
+              onClick={() => router.push(user ? "/dashboard/user/favorites" : "/login")}
               className="flex flex-col items-center gap-1 text-[#e6b76f] hover:text-white transition-all active:scale-95 cursor-pointer group"
               aria-label="View collection"
             >
@@ -580,7 +590,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             </div>
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => router.push("/new-dashboard/user/premium")}
+                onClick={() => router.push("/dashboard/user/premium")}
                 className="h-11 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 hover:brightness-110 text-black font-bold text-sm shadow-md transition-all active:scale-[0.98] cursor-pointer"
               >
                 Upgrade Now

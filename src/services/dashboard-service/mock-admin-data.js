@@ -173,12 +173,12 @@ const SYSTEM_STATUS = {
 };
 
 const QUICK_ACTIONS = [
-  { id: 'add-product', label: 'Add Product', icon: 'Package', href: '/new-dashboard/admin/products' },
-  { id: 'create-tag', label: 'Create QR Tag', icon: 'Tag', href: '/new-dashboard/admin/tags' },
-  { id: 'view-orders', label: 'View Orders', icon: 'ShoppingBag', href: '/new-dashboard/admin/orders' },
-  { id: 'manage-users', label: 'Manage Users', icon: 'Users', href: '/new-dashboard/admin/users' },
-  { id: 'review-quotes', label: 'Review Quotes', icon: 'Quote', href: '/new-dashboard/admin/quotes' },
-  { id: 'analytics', label: 'View Analytics', icon: 'BarChart3', href: '/new-dashboard/admin/analytics' },
+  { id: 'add-product', label: 'Add Product', icon: 'Package', href: '/dashboard/admin/products' },
+  { id: 'create-tag', label: 'Create QR Tag', icon: 'Tag', href: '/dashboard/admin/tags' },
+  { id: 'view-orders', label: 'View Orders', icon: 'ShoppingBag', href: '/dashboard/admin/orders' },
+  { id: 'manage-users', label: 'Manage Users', icon: 'Users', href: '/dashboard/admin/users' },
+  { id: 'review-quotes', label: 'Review Quotes', icon: 'Quote', href: '/dashboard/admin/quotes' },
+  { id: 'analytics', label: 'View Analytics', icon: 'BarChart3', href: '/dashboard/admin/analytics' },
 ];
 
 export const MOCK_ADMIN_OVERVIEW = {

@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import { Sparkles, ArrowRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { resolveCategory } from "@/components/dashboard/admin/categories/categoryIconRegistry";
-import { getCategoryIcon } from "@/components/category";
+import { getCategoryIcon } from "@/components/public/quote/category";
 
 function hexToRgba(hex, alpha = 0.1) {
   if (!hex || typeof hex !== 'string') return `rgba(239, 68, 68, ${alpha})`;

@@ -1,5 +1,5 @@
-import Checkout from "@/components/Checkout";
-import ShopBreadcrumb from "@/components/shop/ShopBreadcrumb";
+import Checkout from "@/components/public/cart/Checkout";
+import ShopBreadcrumb from "@/components/public/shop/ShopBreadcrumb";
 import { Suspense } from "react";
 
 export default function Page() {

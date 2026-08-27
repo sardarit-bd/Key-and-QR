@@ -1,5 +1,5 @@
-import Cart from "@/components/cart/Cart";
-import ShopBreadcrumb from "@/components/shop/ShopBreadcrumb";
+import Cart from "@/components/public/cart/Cart";
+import ShopBreadcrumb from "@/components/public/shop/ShopBreadcrumb";
 
 export default function page() {
     return (

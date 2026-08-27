@@ -27,7 +27,7 @@ export const usePremium = () => {
   // Check authentication
   useEffect(() => {
     if (isInitialized && !user) {
-      router.push('/login?redirect=/new-dashboard/user/premium');
+      router.push('/login?redirect=/dashboard/user/premium');
     }
   }, [isInitialized, user, router]);
 

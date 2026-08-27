@@ -44,7 +44,7 @@ export async function middleware(request) {
         if (isGuestOnlyRoute(pathname) && accessToken) {
             const payload = await verifyAccessToken(accessToken);
             if (payload) {
-                const dashboard = payload.role === "admin" ? "/new-dashboard/admin" : "/new-dashboard/user";
+                const dashboard = payload.role === "admin" ? "/dashboard/admin" : "/dashboard/user";
                 return NextResponse.redirect(new URL(dashboard, request.url));
             }
         }
@@ -67,12 +67,12 @@ export async function middleware(request) {
             if (payload) {
                 // Admin route check - regular users cannot access admin routes
                 if (isAdminRoute(pathname) && payload.role !== "admin") {
-                    return NextResponse.redirect(new URL("/new-dashboard/user", request.url));
+                    return NextResponse.redirect(new URL("/dashboard/user", request.url));
                 }
 
                 // User dashboard route check - admins accessing user dashboard are routed to admin panel
-                if ((pathname.startsWith("/new-dashboard/user") || pathname.startsWith("/dashboard/user")) && payload.role === "admin") {
-                    return NextResponse.redirect(new URL("/new-dashboard/admin", request.url));
+                if (pathname.startsWith("/dashboard/user") && payload.role === "admin") {
+                    return NextResponse.redirect(new URL("/dashboard/admin", request.url));
                 }
 
                 return NextResponse.next();

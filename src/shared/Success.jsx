@@ -135,7 +135,7 @@ export default function SuccessPage() {
                     </Link>
                     {isSuccessful && (
                         <Link
-                            href="/new-dashboard/user/orders"
+                            href="/dashboard/user/orders"
                             className="border border-gray-300 text-gray-700 px-6 py-3 rounded-lg hover:bg-gray-50 transition"
                         >
                             View Orders

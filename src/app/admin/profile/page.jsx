@@ -7,7 +7,7 @@ export default function AdminProfileRedirect() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/new-dashboard/admin/profile');
+    router.replace('/dashboard/admin/profile');
   }, [router]);
 
   return null;

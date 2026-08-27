@@ -12,12 +12,12 @@ export default function SidebarFooter({ isCollapsed, isMobile = false }) {
 
   const isAdmin =
     user?.role === 'admin' ||
-    pathname?.startsWith('/new-dashboard/admin') ||
+    pathname?.startsWith('/dashboard/admin') ||
     pathname?.startsWith('/admin');
 
   const profileHref = isAdmin
-    ? '/new-dashboard/admin/profile'
-    : '/new-dashboard/user/profile';
+    ? '/dashboard/admin/profile'
+    : '/dashboard/user/profile';
 
   const handleLogout = async () => {
     await logout();

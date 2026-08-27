@@ -6,7 +6,7 @@ import Footer from "../shared/Footer";
 const isDashboardPath = (pathname) => {
   if (!pathname) return false;
 
-  return pathname.startsWith('/dashboard') || pathname.startsWith('/(dashboard)/new-dashboard');
+  return pathname.startsWith('/dashboard') || pathname.startsWith('/(dashboard)/dashboard');
 };
 
 export default function ConditionalFooter() {

@@ -39,13 +39,23 @@ const nextConfig = {
   async redirects() {
     return [
       {
-        source: "/new-dashboard/user/my-quotes",
-        destination: "/new-dashboard/user/favorites",
+        source: "/new-dashboard/:path*",
+        destination: "/dashboard/:path*",
+        permanent: true,
+      },
+      {
+        source: "/new-dashboard",
+        destination: "/dashboard",
+        permanent: true,
+      },
+      {
+        source: "/dashboard/user/my-quotes",
+        destination: "/dashboard/user/favorites",
         permanent: true,
       },
       {
         source: "/my-quotes",
-        destination: "/new-dashboard/user/favorites",
+        destination: "/dashboard/user/favorites",
         permanent: true,
       },
     ];

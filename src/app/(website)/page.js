@@ -1,8 +1,8 @@
-import Collection from "@/components/home/Collection";
-import Cta from "@/components/home/Cta";
-import Hero from "@/components/home/Hero";
-import HowItWorksSection from "@/components/home/HowItWorks";
-import Testimonials from "@/components/home/testimonials";
+import Collection from "@/components/public/home/Collection";
+import Cta from "@/components/public/home/Cta";
+import Hero from "@/components/public/home/Hero";
+import HowItWorksSection from "@/components/public/home/HowItWorks";
+import Testimonials from "@/components/public/home/testimonials";
 import { productKeys } from "@/hooks/product-service/useProducts";
 import productService from "@/services/product-service/product.service";
 import { HydrationBoundary, dehydrate, QueryClient } from "@tanstack/react-query";

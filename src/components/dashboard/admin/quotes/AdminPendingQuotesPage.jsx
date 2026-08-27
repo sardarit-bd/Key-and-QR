@@ -27,7 +27,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import toast from 'react-hot-toast';
-import { getCategoryBadgeClass, getCategoryLabel } from '@/components/category';
+import { getCategoryBadgeClass, getCategoryLabel } from '@/components/public/quote/category';
 
 const ITEMS_PER_PAGE = 10;
 

@@ -4,9 +4,9 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Sparkles, Heart, Share2, BookOpen, Play, Pause } from "lucide-react";
-import FavoriteButton from "@/components/favorite/FavoriteButton";
-import VisualQuoteRenderer from "@/components/quote/VisualQuoteRenderer";
-import VisualQuoteAudioPlayer from "@/components/quote/VisualQuoteAudioPlayer";
+import FavoriteButton from "@/components/ui/FavoriteButton";
+import VisualQuoteRenderer from "@/components/public/quote/VisualQuoteRenderer";
+import VisualQuoteAudioPlayer from "@/components/public/quote/VisualQuoteAudioPlayer";
 
 const SESSION_INTERACTION_KEY = "myinspire_user_interacted";
 

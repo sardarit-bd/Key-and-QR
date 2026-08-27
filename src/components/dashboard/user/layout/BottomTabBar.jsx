@@ -7,18 +7,18 @@ import { Home, Sparkles, BookOpen, User, LayoutDashboard, Users, ShoppingBag, Se
 import { useAuthStore } from '@/store/authStore';
 
 const USER_TABS = [
-  { id: 'home', label: 'Home', icon: Home, href: '/new-dashboard/user', exact: true },
-  { id: 'inspire', label: 'Inspire', icon: Sparkles, href: '/new-dashboard/user?action=inspire', exact: true },
-  { id: 'collection', label: 'Collection', icon: BookOpen, href: '/new-dashboard/user/favorites', exact: false },
+  { id: 'home', label: 'Home', icon: Home, href: '/dashboard/user', exact: true },
+  { id: 'inspire', label: 'Inspire', icon: Sparkles, href: '/dashboard/user?action=inspire', exact: true },
+  { id: 'collection', label: 'Collection', icon: BookOpen, href: '/dashboard/user/favorites', exact: false },
   { id: 'shop', label: 'Shop', icon: ShoppingBag, href: '/shop', exact: false },
-  { id: 'profile', label: 'Profile', icon: User, href: '/new-dashboard/user/profile', exact: false },
+  { id: 'profile', label: 'Profile', icon: User, href: '/dashboard/user/profile', exact: false },
 ];
 
 const ADMIN_TABS = [
-  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/new-dashboard/admin', exact: true },
-  { id: 'orders', label: 'Orders', icon: ShoppingBag, href: '/new-dashboard/admin/orders', exact: false },
-  { id: 'users', label: 'Users', icon: Users, href: '/new-dashboard/admin/users', exact: false },
-  { id: 'settings', label: 'Settings', icon: Settings, href: '/new-dashboard/admin/settings', exact: false },
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/admin', exact: true },
+  { id: 'orders', label: 'Orders', icon: ShoppingBag, href: '/dashboard/admin/orders', exact: false },
+  { id: 'users', label: 'Users', icon: Users, href: '/dashboard/admin/users', exact: false },
+  { id: 'settings', label: 'Settings', icon: Settings, href: '/dashboard/admin/settings', exact: false },
 ];
 
 /**
@@ -32,11 +32,11 @@ function TabBarInner() {
   const { user } = useAuthStore();
 
   const isAdmin = user?.role === 'admin';
-  const isAdminRoute = pathname?.startsWith('/new-dashboard/admin');
+  const isAdminRoute = pathname?.startsWith('/dashboard/admin');
   const TABS = isAdmin && isAdminRoute ? ADMIN_TABS : USER_TABS;
 
   const isActive = (tab) => {
-    const onDashboardHome = pathname === '/new-dashboard/user';
+    const onDashboardHome = pathname === '/dashboard/user';
     const hasInspireAction = searchParams?.get('action') === 'inspire';
 
     if (tab.id === 'home') {
@@ -51,10 +51,10 @@ function TabBarInner() {
       return pathname === '/shop' || pathname?.startsWith('/shop/') || pathname?.startsWith('/products/');
     }
     if (tab.id === 'collection') {
-      return pathname === '/new-dashboard/user/favorites' || pathname?.startsWith('/new-dashboard/user/favorites/');
+      return pathname === '/dashboard/user/favorites' || pathname?.startsWith('/dashboard/user/favorites/');
     }
     if (tab.id === 'profile') {
-      return pathname === '/new-dashboard/user/profile' || pathname?.startsWith('/new-dashboard/user/profile/');
+      return pathname === '/dashboard/user/profile' || pathname?.startsWith('/dashboard/user/profile/');
     }
     if (tab.exact) return pathname === tab.href;
     return pathname?.startsWith(tab.href);
