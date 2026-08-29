@@ -118,7 +118,12 @@ body {
     color-scheme: light;
   }
 
-  input, button, select, textarea, option, dialog {
+  input,
+  button,
+  select,
+  textarea,
+  option,
+  dialog {
     font-family: inherit;
   }
 }
@@ -143,17 +148,21 @@ body {
   scrollbar-width: thin;
   scrollbar-color: rgba(156, 163, 175, 0.4) transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 5px;
   height: 5px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-track {
   background: transparent;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(156, 163, 175, 0.35);
   border-radius: 9999px;
 }
+
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: rgba(156, 163, 175, 0.6);
 }
@@ -166,4 +175,16 @@ body {
 /* Prevent hydration flash - initial state before JS loads */
 html:not(.dark):not(.light) {
   color-scheme: light;
+}
+
+/* Force cursor pointer across all shadcn interactive elements */
+[data-slot="select-trigger"],
+[data-slot="select-item"],
+[data-slot="dropdown-menu-item"],
+[data-slot="dropdown-menu-trigger"],
+[role="menuitem"],
+[role="option"],
+select,
+button {
+  cursor: pointer !important;
 }

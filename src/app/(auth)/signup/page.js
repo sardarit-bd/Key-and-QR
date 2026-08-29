@@ -136,9 +136,6 @@ function SignUpPageContent() {
     >
       {/* ************* Dark Overlay ************* */}
       <div className="absolute inset-0 bg-white/40" />
-      
-      {/* ************* Toast Container ************* */}
-      <Toaster position="top-right" />
 
       {/* ************* Logo - Top Left ************* */}
       <motion.div

@@ -74,19 +74,19 @@ export function useLoginMutation() {
             // Update React Query cache
             queryClient.setQueryData(authKeys.user, data.user);
             
-            toast.success("Welcome back! 🎉");
+            toast.success("Welcome back! 🎉", { id: "auth-login-toast", duration: 3500 });
             
             if (data.user?.role === "admin") {
                 router.push("/dashboard/admin");
             } else {
                 if (data.guestClaimed) {
-                    toast.success(`Claimed ${data.guestOrders || 0} orders and ${data.guestTags || 0} tags! 🎉`);
+                    toast.success(`Claimed ${data.guestOrders || 0} orders and ${data.guestTags || 0} tags! 🎉`, { duration: 4000 });
                 }
                 router.push("/dashboard/user");
             }
         },
         onError: (error) => {
-            toast.error(error.message || "Login failed");
+            toast.error(error.message || "Login failed", { duration: 4000 });
         },
     });
 }
@@ -108,10 +108,10 @@ export function useRegisterMutation() {
         },
         onSuccess: (data) => {
             queryClient.setQueryData(authKeys.user, data.user);
-            toast.success("Account created successfully! 🎉");
+            toast.success("Account created successfully! 🎉", { id: "auth-register-toast", duration: 3500 });
             
             if (data.guestClaimed) {
-                toast.success("Your guest purchases have been claimed! 🎉");
+                toast.success("Your guest purchases have been claimed! 🎉", { duration: 4000 });
             }
             
             if (data.user?.role === "admin") {
@@ -121,7 +121,7 @@ export function useRegisterMutation() {
             }
         },
         onError: (error) => {
-            toast.error(error.message || "Registration failed");
+            toast.error(error.message || "Registration failed", { duration: 4000 });
         },
     });
 }
@@ -139,12 +139,13 @@ export function useLogoutMutation() {
         },
         onSuccess: () => {
             queryClient.clear();
-            toast.success("Logged out successfully");
+            toast.success("Logged out successfully", { id: "auth-logout-toast", duration: 3000 });
             router.push("/login");
         },
         onError: (error) => {
             console.error("Logout error:", error);
             useAuthStore.getState().logout();
+            toast.error(error.message || "Logout failed", { duration: 4000 });
         },
     });
 }

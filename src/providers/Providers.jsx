@@ -26,7 +26,32 @@ export function Providers({ children }) {
     return (
         <QueryClientProvider client={queryClient}>
             {children}
-            <Toaster position="top-right" />
+            <Toaster
+                position="top-right"
+                toastOptions={{
+                    duration: 3500,
+                    style: {
+                        borderRadius: '12px',
+                        background: '#18181b',
+                        color: '#f4f4f5',
+                        border: '1px solid rgba(255,255,255,0.15)',
+                    },
+                    success: {
+                        duration: 3500,
+                        iconTheme: {
+                            primary: '#22c55e',
+                            secondary: '#ffffff',
+                        },
+                    },
+                    error: {
+                        duration: 4500,
+                        iconTheme: {
+                            primary: '#ef4444',
+                            secondary: '#ffffff',
+                        },
+                    },
+                }}
+            />
             {/* <ReactQueryDevtools initialIsOpen={false} /> */}
         </QueryClientProvider>
     );
