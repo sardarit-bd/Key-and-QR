@@ -274,18 +274,45 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
   return (
     <div className="fixed inset-0 w-screen h-[100dvh] overflow-hidden bg-black select-none z-10 text-white flex flex-col justify-between">
-      {/* 100% Full-Screen Edge-to-Edge Background Artwork (Text-Only quotes only) */}
-      {!isVisualQuote && resolvedBgUrl && (
+      {/* 100% Full-Screen Edge-to-Edge Visual Quote Artwork (Fabric Canvas / Pre-rendered Image / Wallpaper) */}
+      {hasFabricCanvas ? (
+        <div className="absolute inset-0 w-full h-[100dvh] overflow-hidden pointer-events-none -z-10">
+          <VisualQuoteRenderer
+            editorData={editorData}
+            mode="auto"
+            showAudioPlayer={false}
+            fit="cover"
+            className="w-full h-full"
+          />
+        </div>
+      ) : hasRenderedImage ? (
+        <div className="absolute inset-0 w-full h-[100dvh] overflow-hidden pointer-events-none -z-10">
+          <picture className="w-full h-full">
+            {renderedMobileUrl && (
+              <source media="(max-width: 639px)" srcSet={renderedMobileUrl} />
+            )}
+            {renderedDesktopUrl && (
+              <source media="(min-width: 640px)" srcSet={renderedDesktopUrl} />
+            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={renderedMobileUrl || renderedDesktopUrl}
+              alt={quoteText || "Daily Inspiration"}
+              className="w-full h-full object-cover object-center"
+            />
+          </picture>
+        </div>
+      ) : resolvedBgUrl ? (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={resolvedBgUrl}
           alt="Background"
-          className="absolute inset-0 w-full h-full object-cover object-center -z-20 pointer-events-none"
+          className="absolute inset-0 w-full h-[100dvh] object-cover object-center -z-20 pointer-events-none"
         />
-      )}
+      ) : null}
 
       {/* Full-Screen Dark Vignette Overlay Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/25 to-black/80 -z-10 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/15 to-black/75 -z-10 pointer-events-none" />
 
       {/* Full-Screen Interaction Overlay for Autoplay Audio on Mobile */}
       <AnimatePresence>
@@ -406,36 +433,9 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
         </div>
       </header>
 
-      {/* Center Typography / Quote Content */}
+      {/* Center Typography (Rendered ONLY for text-only quotes) */}
       <main className="relative z-10 flex-1 w-full h-full flex flex-col justify-center items-center text-center px-4 sm:px-8 pt-20 pb-36 sm:pt-24 sm:pb-40 my-auto pointer-events-none">
-        {hasFabricCanvas ? (
-          <div className="w-full h-full flex items-center justify-center pointer-events-auto p-2 sm:p-4">
-            <VisualQuoteRenderer
-              editorData={editorData}
-              mode="auto"
-              showAudioPlayer={false}
-              fit="contain"
-              className="w-full h-full max-h-[75vh] sm:max-h-[82vh]"
-            />
-          </div>
-        ) : hasRenderedImage ? (
-          <div className="w-full h-full flex items-center justify-center pointer-events-auto p-2 sm:p-4">
-            <picture className="w-full h-full flex items-center justify-center">
-              {renderedMobileUrl && (
-                <source media="(max-width: 639px)" srcSet={renderedMobileUrl} />
-              )}
-              {renderedDesktopUrl && (
-                <source media="(min-width: 640px)" srcSet={renderedDesktopUrl} />
-              )}
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={renderedMobileUrl || renderedDesktopUrl}
-                alt={quoteText || "Daily Inspiration"}
-                className="w-full h-full max-h-[75vh] sm:max-h-[82vh] object-contain rounded-2xl shadow-2xl"
-              />
-            </picture>
-          </div>
-        ) : (
+        {!isVisualQuote && (
           <div className="flex flex-col justify-center items-center max-w-xl mx-auto w-full px-5 py-6 sm:px-8 sm:py-8 rounded-3xl bg-neutral-950/25 backdrop-blur-xs border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] pointer-events-auto">
             {/* Elegant Golden Heart Separator */}
             <div className="mb-3.5 sm:mb-5 flex items-center justify-center opacity-90">
