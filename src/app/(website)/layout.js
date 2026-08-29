@@ -8,14 +8,15 @@ import BottomTabBar from "@/components/dashboard/user/layout/BottomTabBar";
 
 export default function WebsiteLayout({ children }) {
   const pathname = usePathname();
-  const isScanPage =
+  const isIsolatedPage =
     pathname?.startsWith('/t/') ||
     pathname?.startsWith('/tag/') ||
+    pathname?.startsWith('/q/') ||
     pathname?.startsWith('/TAG-') ||
     pathname?.startsWith('/QR-');
 
-  // Completely bypass website layout chrome on scan routes so it fills the raw viewport
-  if (isScanPage) {
+  // Completely bypass website layout chrome on scan and public share routes
+  if (isIsolatedPage) {
     return <>{children}</>;
   }
 

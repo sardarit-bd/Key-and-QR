@@ -12,9 +12,14 @@ const isDashboardPath = (pathname) => {
 export default function ConditionalFooter() {
   const pathname = usePathname();
   const isDashboard = isDashboardPath(pathname);
-  const isTagPage = pathname?.startsWith('/t/');
+  const isExcludedPage =
+    pathname?.startsWith('/t/') ||
+    pathname?.startsWith('/tag/') ||
+    pathname?.startsWith('/q/') ||
+    pathname?.startsWith('/TAG-') ||
+    pathname?.startsWith('/QR-');
 
-  if (isDashboard || isTagPage) return null;
+  if (isDashboard || isExcludedPage) return null;
 
   return <Footer />;
 }
