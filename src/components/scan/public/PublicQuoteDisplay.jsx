@@ -87,6 +87,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     null;
 
   const hasRenderedImage = Boolean(renderedDesktopUrl || renderedMobileUrl);
+  const isVisualQuote = Boolean(hasFabricCanvas || hasRenderedImage);
 
   // Comprehensive image resolution
   const resolvedBgUrl = useMemo(() => {
@@ -273,8 +274,8 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
   return (
     <div className="fixed inset-0 w-screen h-[100dvh] overflow-hidden bg-black select-none z-10 text-white flex flex-col justify-between">
-      {/* 100% Full-Screen Edge-to-Edge Background Artwork */}
-      {resolvedBgUrl && (
+      {/* 100% Full-Screen Edge-to-Edge Background Artwork (Text-Only quotes only) */}
+      {!isVisualQuote && resolvedBgUrl && (
         // eslint-disable-next-line @next/next/no-img-element
         <img
           src={resolvedBgUrl}
@@ -503,8 +504,8 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             </div>
           )}
 
-          {/* Repeat Scan Notice (Same Day) */}
-          {data?.isAlreadyUnlockedToday && data?.message && (
+          {/* Repeat Scan Notice (Strictly for repeat scans on random daily rotation) */}
+          {Boolean(data?.isAlreadyUnlockedToday && data?.message && data?.sourceType === "random") && (
             <div className="w-full mb-2.5 rounded-2xl border border-amber-400/25 bg-neutral-950/80 backdrop-blur-xl px-3.5 py-1.5 shadow-lg flex items-center justify-center gap-2 text-center animate-in fade-in duration-300">
               <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0" />
               <p className="text-[11.5px] text-amber-200/90 font-light">
