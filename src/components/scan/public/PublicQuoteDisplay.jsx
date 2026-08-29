@@ -29,18 +29,36 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   const isPersonalMessage = !!data?.isPersonalMessage;
   const category = isPersonalMessage ? "personal" : data?.category || "faith";
 
-  const audioTrack =
-    data?.editorData?.mobile?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
-    data?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
-    data?.editorData?.mobile?.audio ||
-    data?.editorData?.desktop?.audio ||
-    data?.editorData?.audio ||
-    null;
+  const audioTrack = useMemo(() => {
+    const rawAudio =
+      data?.audioTrack ||
+      data?.backgroundMusic ||
+      data?.editorData?.mobile?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+      data?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+      data?.editorData?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+      data?.editorData?.mobile?.audio ||
+      data?.editorData?.desktop?.audio ||
+      data?.editorData?.audio ||
+      data?.audio ||
+      data?.audioUrl ||
+      null;
 
-  const hasAutoplayAudio = Boolean(audioTrack?.source && (audioTrack?.autoplay ?? true));
+    if (!rawAudio) return null;
+    if (typeof rawAudio === 'string') {
+      return { source: rawAudio, autoplay: true, loop: true };
+    }
+    if (rawAudio?.source) {
+      return rawAudio;
+    }
+    if (rawAudio?.url) {
+      return { ...rawAudio, source: rawAudio.url };
+    }
+    return null;
+  }, [data]);
 
-  // If there is NO audio or autoplay is false, default to revealed
-  const [isRevealed, setIsRevealed] = useState(!hasAutoplayAudio);
+  // Default to false so every scan presents the signature teaser experience.
+  // The user interaction unlocks audio playback across mobile and desktop browsers.
+  const [isRevealed, setIsRevealed] = useState(false);
   const audioPlayerRef = useRef(null);
 
   const handleReveal = async () => {
@@ -50,11 +68,31 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     setIsRevealed(true);
   };
 
+  const editorData = data?.editorData || data?.quote?.editorData;
+  const hasFabricCanvas = Boolean(
+    editorData &&
+      ((editorData.mobile?.elements && editorData.mobile.elements.length > 0) ||
+        (editorData.desktop?.elements && editorData.desktop.elements.length > 0) ||
+        (editorData.elements && editorData.elements.length > 0))
+  );
+
+  const renderedDesktopUrl =
+    data?.renderedImages?.desktop?.url ||
+    data?.quote?.renderedImages?.desktop?.url ||
+    null;
+
+  const renderedMobileUrl =
+    data?.renderedImages?.mobile?.url ||
+    data?.quote?.renderedImages?.mobile?.url ||
+    null;
+
+  const hasRenderedImage = Boolean(renderedDesktopUrl || renderedMobileUrl);
+
   // Comprehensive image resolution
   const resolvedBgUrl = useMemo(() => {
     const rawImage =
-      data?.renderedImages?.mobile?.url ||
-      data?.renderedImages?.desktop?.url ||
+      renderedMobileUrl ||
+      renderedDesktopUrl ||
       (data?.renderedImage && typeof data.renderedImage === "string" ? data.renderedImage : data?.renderedImage?.url) ||
       data?.imageUrl ||
       data?.image ||
@@ -65,7 +103,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     if (!rawImage) return null;
     if (typeof rawImage === "string") return rawImage;
     return rawImage?.src || null;
-  }, [data, category]);
+  }, [data, category, renderedMobileUrl, renderedDesktopUrl]);
 
   const categoryLabel = getPrettyCategoryLabel(category);
   const canFavorite = !isPersonalMessage;
@@ -354,16 +392,33 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
       </header>
 
       {/* Center Typography / Quote Content */}
-      <main className="relative z-10 flex-1 w-full h-full flex flex-col justify-center items-center text-center px-6 sm:px-12 my-auto pointer-events-none">
-        {data?.editorData && !quoteText && !resolvedBgUrl ? (
-          <div className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-auto -z-20">
+      <main className="relative z-10 flex-1 w-full h-full flex flex-col justify-center items-center text-center px-4 sm:px-12 my-auto pointer-events-none">
+        {hasFabricCanvas ? (
+          <div className="w-full h-full flex items-center justify-center pointer-events-auto py-16 sm:py-20 px-2 sm:px-6">
             <VisualQuoteRenderer
-              editorData={data.editorData}
+              editorData={editorData}
               mode="auto"
               showAudioPlayer={false}
-              fit="cover"
-              className="w-full h-full"
+              fit="contain"
+              className="w-full h-full max-h-[75vh] sm:max-h-[82vh]"
             />
+          </div>
+        ) : hasRenderedImage ? (
+          <div className="w-full h-full flex items-center justify-center pointer-events-auto py-16 sm:py-20 px-2 sm:px-6">
+            <picture className="w-full h-full flex items-center justify-center">
+              {renderedMobileUrl && (
+                <source media="(max-width: 639px)" srcSet={renderedMobileUrl} />
+              )}
+              {renderedDesktopUrl && (
+                <source media="(min-width: 640px)" srcSet={renderedDesktopUrl} />
+              )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={renderedMobileUrl || renderedDesktopUrl}
+                alt={quoteText || "Daily Inspiration"}
+                className="w-full h-full max-h-[75vh] sm:max-h-[82vh] object-contain rounded-2xl shadow-2xl"
+              />
+            </picture>
           </div>
         ) : (
           <div className="flex flex-col justify-center items-center max-w-xl mx-auto pointer-events-auto">

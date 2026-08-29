@@ -608,7 +608,15 @@ export async function elementToFabricObject(el) {
     }
 
     case 'image': {
-      if (!el.imageData?.source?.url) {
+      const imgUrl =
+        el.imageData?.source?.url ||
+        (typeof el.imageData?.source === 'string' ? el.imageData.source : null) ||
+        el.imageData?.url ||
+        el.url ||
+        el.src ||
+        null;
+
+      if (!imgUrl) {
         return null;
       }
       return new Promise(async (resolve) => {
@@ -620,7 +628,7 @@ export async function elementToFabricObject(el) {
             return;
           }
 
-          const img = await ImageClass.fromURL(el.imageData.source.url, {
+          const img = await ImageClass.fromURL(imgUrl, {
             crossOrigin: 'anonymous',
           });
 
@@ -629,7 +637,7 @@ export async function elementToFabricObject(el) {
             return;
           }
 
-          const fit = el.imageData.fit || 'cover';
+          const fit = el.imageData?.fit || 'cover';
           const { scaleX, scaleY } = calculateObjectFitScales(
             img.width,
             img.height,
@@ -650,7 +658,7 @@ export async function elementToFabricObject(el) {
           img.set('data', {
             elementId: el.id,
             locked: !!el.locked,
-            publicId: el.imageData.source.publicId || '',
+            publicId: el.imageData?.source?.publicId || el.imageData?.publicId || '',
             ...img.data,
           });
 

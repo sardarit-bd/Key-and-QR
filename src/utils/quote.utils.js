@@ -27,6 +27,7 @@ export const CATEGORY_LABELS = {
   strength: 'Strength',
   healing: 'Healing',
   faith: 'Faith',
+  bible: 'Bible',
   gratitude: 'Gratitude',
 };
 
