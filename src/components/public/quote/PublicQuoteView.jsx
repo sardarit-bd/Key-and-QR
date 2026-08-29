@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Share2, Sparkles, ShoppingBag } from "lucide-react";
+import { Share2, Sparkles, ShoppingBag, ArrowRight } from "lucide-react";
 import VisualQuoteRenderer from "@/components/public/quote/VisualQuoteRenderer";
 import VisualQuoteAudioPlayer from "@/components/public/quote/VisualQuoteAudioPlayer";
 import ShareQuoteModal from "@/components/public/quote/ShareQuoteModal";
@@ -114,6 +114,32 @@ export default function PublicQuoteView({ quote, quoteId }) {
             <span>Get My Tag</span>
           </Link>
         </div>
+      </div>
+
+      {/* Prominent CTA Card: "Get your own MyInspireTag" */}
+      <div className="w-full mt-5 rounded-3xl border border-amber-400/30 bg-gradient-to-b from-neutral-900/90 to-neutral-950/95 backdrop-blur-xl p-5 sm:p-6 shadow-2xl flex flex-col sm:flex-row items-center justify-between gap-4 text-center sm:text-left animate-in fade-in duration-300">
+        <div className="flex items-center gap-3.5">
+          <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-amber-400/20 to-amber-500/10 border border-amber-400/40 text-amber-300 shadow-[0_0_20px_rgba(245,158,11,0.2)]">
+            <Sparkles className="h-6 w-6" />
+          </div>
+          <div>
+            <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
+              Get your own MyInspireTag
+            </h3>
+            <p className="text-xs text-white/70 mt-0.5 leading-relaxed max-w-sm">
+              Touch or scan your physical tag anytime to unlock daily curated quotes, mood soundtracks & audio wisdom.
+            </p>
+          </div>
+        </div>
+
+        <Link
+          href="/shop"
+          className="w-full sm:w-auto shrink-0 inline-flex items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 hover:brightness-110 px-5 py-3 text-xs font-bold text-black shadow-[0_0_25px_rgba(245,158,11,0.35)] transition-all duration-150 active:scale-[0.98]"
+        >
+          <ShoppingBag className="h-4 w-4" />
+          <span>Get Your Own Tag</span>
+          <ArrowRight className="h-3.5 w-3.5" />
+        </Link>
       </div>
 
       {/* Unified Share Quote Modal */}

@@ -2,7 +2,9 @@
 
 import { useRef, useState, useEffect, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
+import { Tag, ShoppingBag, ArrowRight, Sparkles } from 'lucide-react';
 import GreetingSection from './GreetingSection';
 import WelcomeCard from './WelcomeCard';
 import LatestInspirationCard from './LatestInspirationCard';
@@ -266,6 +268,57 @@ export default function DashboardHome({
           onReceive={handleReceiveFirst}
           isReceiving={receiveQuote.isPending}
         />
+      )}
+
+      {/* No Physical Tag Assigned Onboarding Banner */}
+      {!statistics?.hasAssignedTags && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="relative overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-r from-amber-950/30 via-neutral-900/60 to-neutral-950/80 backdrop-blur-xl p-5 sm:p-6 shadow-xl"
+        >
+          {/* Ambient golden aura */}
+          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-amber-500/10 blur-3xl" />
+          
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6">
+            <div className="flex items-start sm:items-center gap-3.5">
+              <div className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-400/15 border border-amber-400/35 text-amber-300 shadow-inner">
+                <Tag className="h-5 w-5 sm:h-6 sm:w-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-sm sm:text-base font-bold text-foreground tracking-tight">
+                    No Tag Assigned Yet
+                  </h3>
+                  <span className="inline-flex items-center rounded-full bg-amber-400/15 border border-amber-400/30 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
+                    Get Started
+                  </span>
+                </div>
+                <p className="text-xs text-muted-foreground mt-1 max-w-xl leading-relaxed">
+                  You can browse quotes and save favorites right here! To experience daily tap-to-reveal on a physical NFC/QR medallion, order your MyInspireTag or link an existing tag code.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0">
+              <Link
+                href="/dashboard/user/my-qr"
+                className="flex-1 md:flex-initial inline-flex items-center justify-center gap-1.5 rounded-xl bg-secondary/80 hover:bg-secondary border border-border px-3.5 py-2.5 text-xs font-semibold text-foreground transition active:scale-95"
+              >
+                <span>Link a Tag</span>
+              </Link>
+              <Link
+                href="/shop"
+                className="flex-1 md:flex-initial inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 hover:brightness-110 px-4 py-2.5 text-xs font-bold text-black shadow-md transition active:scale-95"
+              >
+                <ShoppingBag className="h-3.5 w-3.5" />
+                <span>Order MyInspireTag</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
+        </motion.div>
       )}
 
       {/* 3. Explore Categories */}

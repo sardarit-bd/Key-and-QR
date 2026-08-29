@@ -114,6 +114,8 @@ export function mapStatistics(statistics, extra) {
   const source = statistics || {};
   const fallback = extra || {};
 
+  const assignedTagsCount = source.assignedTagsCount ?? source.tags ?? fallback.tags ?? 0;
+
   return {
     // Total quotes received (quote receive engine)
     totalQuotes: source.totalQuotesReceived ?? fallback.totalQuotes ?? 0,
@@ -121,8 +123,10 @@ export function mapStatistics(statistics, extra) {
     favorites: source.favoriteCount ?? fallback.favorites ?? 0,
     // QR & NFC scans
     scans: source.scans ?? fallback.scans ?? 0,
-    // Gifted messages (activated tags)
-    tags: source.tags ?? fallback.tags ?? 0,
+    // Physical / activated tags
+    tags: assignedTagsCount,
+    assignedTagsCount,
+    hasAssignedTags: typeof source.hasAssignedTags === 'boolean' ? source.hasAssignedTags : assignedTagsCount > 0,
   };
 }
 
