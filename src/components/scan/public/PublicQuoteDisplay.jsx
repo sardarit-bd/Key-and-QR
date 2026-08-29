@@ -29,18 +29,36 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   const isPersonalMessage = !!data?.isPersonalMessage;
   const category = isPersonalMessage ? "personal" : data?.category || "faith";
 
-  const audioTrack =
-    data?.editorData?.mobile?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
-    data?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
-    data?.editorData?.mobile?.audio ||
-    data?.editorData?.desktop?.audio ||
-    data?.editorData?.audio ||
-    null;
+  const audioTrack = useMemo(() => {
+    const rawAudio =
+      data?.audioTrack ||
+      data?.backgroundMusic ||
+      data?.editorData?.mobile?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+      data?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+      data?.editorData?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+      data?.editorData?.mobile?.audio ||
+      data?.editorData?.desktop?.audio ||
+      data?.editorData?.audio ||
+      data?.audio ||
+      data?.audioUrl ||
+      null;
 
-  const hasAutoplayAudio = Boolean(audioTrack?.source && (audioTrack?.autoplay ?? true));
+    if (!rawAudio) return null;
+    if (typeof rawAudio === 'string') {
+      return { source: rawAudio, autoplay: true, loop: true };
+    }
+    if (rawAudio?.source) {
+      return rawAudio;
+    }
+    if (rawAudio?.url) {
+      return { ...rawAudio, source: rawAudio.url };
+    }
+    return null;
+  }, [data]);
 
-  // If there is NO audio or autoplay is false, default to revealed
-  const [isRevealed, setIsRevealed] = useState(!hasAutoplayAudio);
+  // Default to false so every scan presents the signature teaser experience.
+  // The user interaction unlocks audio playback across mobile and desktop browsers.
+  const [isRevealed, setIsRevealed] = useState(false);
   const audioPlayerRef = useRef(null);
 
   const handleReveal = async () => {
@@ -50,11 +68,31 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     setIsRevealed(true);
   };
 
+  const editorData = data?.editorData || data?.quote?.editorData;
+  const hasFabricCanvas = Boolean(
+    editorData &&
+      ((editorData.mobile?.elements && editorData.mobile.elements.length > 0) ||
+        (editorData.desktop?.elements && editorData.desktop.elements.length > 0) ||
+        (editorData.elements && editorData.elements.length > 0))
+  );
+
+  const renderedDesktopUrl =
+    data?.renderedImages?.desktop?.url ||
+    data?.quote?.renderedImages?.desktop?.url ||
+    null;
+
+  const renderedMobileUrl =
+    data?.renderedImages?.mobile?.url ||
+    data?.quote?.renderedImages?.mobile?.url ||
+    null;
+
+  const hasRenderedImage = Boolean(renderedDesktopUrl || renderedMobileUrl);
+
   // Comprehensive image resolution
   const resolvedBgUrl = useMemo(() => {
     const rawImage =
-      data?.renderedImages?.mobile?.url ||
-      data?.renderedImages?.desktop?.url ||
+      renderedMobileUrl ||
+      renderedDesktopUrl ||
       (data?.renderedImage && typeof data.renderedImage === "string" ? data.renderedImage : data?.renderedImage?.url) ||
       data?.imageUrl ||
       data?.image ||
@@ -65,7 +103,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     if (!rawImage) return null;
     if (typeof rawImage === "string") return rawImage;
     return rawImage?.src || null;
-  }, [data, category]);
+  }, [data, category, renderedMobileUrl, renderedDesktopUrl]);
 
   const categoryLabel = getPrettyCategoryLabel(category);
   const canFavorite = !isPersonalMessage;
@@ -326,77 +364,112 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
         )}
       </AnimatePresence>
 
-      {/* Top Header Bar: Brand Mark, Category Pill, & Audio Control */}
-      <header className="absolute top-0 inset-x-0 z-20 flex items-center justify-between px-5 pt-4 sm:pt-6 pointer-events-auto">
-        <div className="flex items-center gap-2">
-          <span className="font-serif italic text-white/90 text-sm sm:text-base tracking-wide font-medium drop-shadow-md">
-            MyInspireTag
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2.5">
-          {categoryLabel && (
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-neutral-950/45 backdrop-blur-xl saturate-150 px-3.5 py-1 text-[11px] sm:text-xs font-semibold uppercase tracking-wider text-[#f3d6a0] shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_8px_24px_rgba(0,0,0,0.5)]">
-              <Sparkles size={11} className="text-amber-400 fill-current" />
-              <span>{categoryLabel}</span>
-            </div>
-          )}
-
-          {audioTrack?.source && (
+      {/* Top Header Bar: Centered Brand Mark, Category Pill, & Audio Control */}
+      <header className="absolute top-0 inset-x-0 z-20 flex items-center justify-between px-4 sm:px-6 pt-3 sm:pt-4 pointer-events-auto">
+        {/* Left: Audio Control (or balanced spacer) */}
+        <div className="flex items-center justify-start min-w-[70px] sm:min-w-[90px]">
+          {audioTrack?.source ? (
             <VisualQuoteAudioPlayer
               ref={audioPlayerRef}
               track={audioTrack}
               disableAutoplay={!isRevealed}
               compact
             />
+          ) : (
+            <div className="w-8" />
+          )}
+        </div>
+
+        {/* Center: MyInspireTag Brand & Category */}
+        <div className="flex flex-col items-center justify-center gap-1">
+          <span className="font-serif italic text-white/95 text-xs sm:text-sm tracking-widest font-semibold drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] uppercase">
+            MyInspireTag
+          </span>
+          {categoryLabel && (
+            <div className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-neutral-950/60 backdrop-blur-xl saturate-150 px-3 py-0.5 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#f3d6a0] shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_4px_16px_rgba(0,0,0,0.6)]">
+              <Sparkles size={10} className="text-amber-400 fill-current" />
+              <span>{categoryLabel}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Right: Tag Code Badge (or balanced spacer) */}
+        <div className="flex items-center justify-end min-w-[70px] sm:min-w-[90px]">
+          {tagCode ? (
+            <span className="text-[10px] text-white/70 font-mono tracking-wider bg-black/40 backdrop-blur-md border border-white/15 px-2 py-0.5 rounded-full">
+              {tagCode.slice(-8)}
+            </span>
+          ) : (
+            <div className="w-8" />
           )}
         </div>
       </header>
 
       {/* Center Typography / Quote Content */}
-      <main className="relative z-10 flex-1 w-full h-full flex flex-col justify-center items-center text-center px-6 sm:px-12 my-auto pointer-events-none">
-        {data?.editorData && !quoteText && !resolvedBgUrl ? (
-          <div className="absolute inset-0 w-full h-full flex items-center justify-center pointer-events-auto -z-20">
+      <main className="relative z-10 flex-1 w-full h-full flex flex-col justify-center items-center text-center px-4 sm:px-8 pt-20 pb-36 sm:pt-24 sm:pb-40 my-auto pointer-events-none">
+        {hasFabricCanvas ? (
+          <div className="w-full h-full flex items-center justify-center pointer-events-auto p-2 sm:p-4">
             <VisualQuoteRenderer
-              editorData={data.editorData}
+              editorData={editorData}
               mode="auto"
               showAudioPlayer={false}
-              fit="cover"
-              className="w-full h-full"
+              fit="contain"
+              className="w-full h-full max-h-[75vh] sm:max-h-[82vh]"
             />
           </div>
+        ) : hasRenderedImage ? (
+          <div className="w-full h-full flex items-center justify-center pointer-events-auto p-2 sm:p-4">
+            <picture className="w-full h-full flex items-center justify-center">
+              {renderedMobileUrl && (
+                <source media="(max-width: 639px)" srcSet={renderedMobileUrl} />
+              )}
+              {renderedDesktopUrl && (
+                <source media="(min-width: 640px)" srcSet={renderedDesktopUrl} />
+              )}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={renderedMobileUrl || renderedDesktopUrl}
+                alt={quoteText || "Daily Inspiration"}
+                className="w-full h-full max-h-[75vh] sm:max-h-[82vh] object-contain rounded-2xl shadow-2xl"
+              />
+            </picture>
+          </div>
         ) : (
-          <div className="flex flex-col justify-center items-center max-w-xl mx-auto pointer-events-auto">
+          <div className="flex flex-col justify-center items-center max-w-xl mx-auto w-full px-5 py-6 sm:px-8 sm:py-8 rounded-3xl bg-neutral-950/25 backdrop-blur-xs border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] pointer-events-auto">
             {/* Elegant Golden Heart Separator */}
-            <div className="mb-4 sm:mb-6 flex items-center justify-center opacity-85">
-              <div className="h-px w-8 sm:w-12 bg-gradient-to-r from-transparent to-amber-400/70" />
-              <Heart size={15} className="mx-2.5 text-amber-400 fill-amber-400/40 drop-shadow-[0_0_8px_rgba(245,158,11,0.5)]" />
-              <div className="h-px w-8 sm:w-12 bg-gradient-to-l from-transparent to-amber-400/70" />
+            <div className="mb-3.5 sm:mb-5 flex items-center justify-center opacity-90">
+              <div className="h-px w-8 sm:w-12 bg-gradient-to-r from-transparent to-amber-400/80" />
+              <Heart size={14} className="mx-2 text-amber-400 fill-amber-400/50 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
+              <div className="h-px w-8 sm:w-12 bg-gradient-to-l from-transparent to-amber-400/80" />
             </div>
 
             {/* Quote Body Text */}
             {quoteText && (
-              <h1 className="text-white text-[22px] sm:text-[28px] md:text-[34px] leading-[1.3] sm:leading-[1.35] font-serif font-normal drop-shadow-[0_4px_24px_rgba(0,0,0,0.9)] tracking-tight sm:tracking-normal">
+              <h1 className="text-white text-[20px] sm:text-[25px] md:text-[30px] leading-[1.35] sm:leading-[1.4] font-serif font-normal drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)] tracking-tight sm:tracking-normal max-w-lg">
                 &ldquo;{quoteText}&rdquo;
               </h1>
             )}
 
-            {/* Author Credit */}
+            {/* Author Credit — Anchored directly below quote */}
             {quoteAuthor && (
-              <p className="mt-4 sm:mt-5 text-[#e7b96f] text-sm sm:text-base font-light tracking-wider drop-shadow-md">
-                — {quoteAuthor} —
-              </p>
+              <div className="mt-4 sm:mt-5 flex items-center justify-center gap-2">
+                <div className="h-px w-4 sm:w-6 bg-amber-400/40" />
+                <p className="text-[#f3d6a0] text-xs sm:text-sm font-medium tracking-widest uppercase drop-shadow-md">
+                  {quoteAuthor}
+                </p>
+                <div className="h-px w-4 sm:w-6 bg-amber-400/40" />
+              </div>
             )}
           </div>
         )}
       </main>
 
       {/* Floating Bottom Section: Gift Banners, Liquid Glass Action Bar, & Sign-in status */}
-      <footer className="absolute bottom-0 inset-x-0 z-20 pb-safe px-4 pb-4 sm:pb-6 flex flex-col items-center pointer-events-auto">
+      <footer className="absolute bottom-0 inset-x-0 z-20 pb-safe px-4 pb-3 sm:pb-5 flex flex-col items-center pointer-events-auto">
         <div className="w-full max-w-md mx-auto">
           {/* Gift Claim Banner */}
           {isGiftClaimable && (
-            <div className="w-full mb-3 rounded-2xl border border-amber-400/30 bg-neutral-950/60 backdrop-blur-xl saturate-150 p-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_12px_32px_rgba(0,0,0,0.6)] animate-in fade-in duration-300">
+            <div className="w-full mb-2.5 rounded-2xl border border-amber-400/30 bg-neutral-950/70 backdrop-blur-xl saturate-150 p-3 shadow-[inset_0_1px_1px_rgba(255,255,255,0.3),0_12px_32px_rgba(0,0,0,0.6)] animate-in fade-in duration-300">
               <div className="flex items-center gap-2.5">
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/40 shadow-inner">
                   <Gift className="h-4 w-4" />
@@ -405,7 +478,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                   <h4 className="text-xs font-semibold text-white tracking-tight leading-snug">
                     Gifted MyInspireTag
                   </h4>
-                  <p className="text-[10.5px] text-white/70 truncate">
+                  <p className="text-[10.5px] text-white/80 truncate">
                     {user ? "Add this tag to your account" : "Sign in to claim this tag"}
                   </p>
                 </div>
@@ -422,7 +495,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
           {/* Gift Claimed Status */}
           {isGift && (isClaimed || data?.gift?.giftStatus === "claimed") && !isGiftClaimable && (
-            <div className="w-full mb-3 rounded-xl border border-emerald-400/30 bg-emerald-950/70 backdrop-blur-xl px-3.5 py-2 shadow-xl flex items-center justify-center gap-2 animate-in fade-in duration-300">
+            <div className="w-full mb-2.5 rounded-xl border border-emerald-400/30 bg-emerald-950/80 backdrop-blur-xl px-3.5 py-1.5 shadow-xl flex items-center justify-center gap-2 animate-in fade-in duration-300">
               <Check className="h-4 w-4 text-emerald-400 shrink-0" />
               <p className="text-xs font-medium text-emerald-200">
                 {isClaimed ? "This MyInspireTag is registered to your account!" : "Gift Claimed · MyInspireTag"}
@@ -432,7 +505,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
           {/* Repeat Scan Notice (Same Day) */}
           {data?.isAlreadyUnlockedToday && data?.message && (
-            <div className="w-full mb-3 rounded-2xl border border-amber-400/25 bg-neutral-950/75 backdrop-blur-xl px-3.5 py-2 shadow-lg flex items-center justify-center gap-2 text-center animate-in fade-in duration-300">
+            <div className="w-full mb-2.5 rounded-2xl border border-amber-400/25 bg-neutral-950/80 backdrop-blur-xl px-3.5 py-1.5 shadow-lg flex items-center justify-center gap-2 text-center animate-in fade-in duration-300">
               <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0" />
               <p className="text-[11.5px] text-amber-200/90 font-light">
                 {data.message}
@@ -440,24 +513,24 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             </div>
           )}
 
-          {/* Liquid Glass Floating Action Card */}
-          <div className="backdrop-blur-2xl bg-neutral-950/40 border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_12px_32px_rgba(0,0,0,0.7)] rounded-3xl p-3 flex justify-around items-center">
+          {/* Liquid Glass Floating Action Card (Compact & Optimized) */}
+          <div className="backdrop-blur-2xl bg-neutral-950/50 border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_12px_32px_rgba(0,0,0,0.7)] rounded-2xl py-2 px-3 sm:py-2.5 sm:px-4 max-w-[340px] sm:max-w-sm mx-auto flex justify-around items-center">
             {/* Save button */}
             <button
               onClick={handleFavoriteClick}
               disabled={favoriteLoading || !canFavorite}
-              className="flex flex-col items-center gap-1 text-[#e6b76f] hover:text-white transition-all active:scale-95 disabled:opacity-40 cursor-pointer group"
+              className="flex flex-col items-center gap-0.5 text-[#e6b76f] hover:text-white transition-all active:scale-95 disabled:opacity-40 cursor-pointer group"
               aria-label={saved ? "Saved to favorites" : "Save quote"}
             >
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center border transition-all duration-200 ${saved
-                    ? "bg-amber-400/25 border-amber-400 text-amber-300 shadow-[0_0_15px_rgba(245,158,11,0.4)]"
+                className={`w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border transition-all duration-200 ${saved
+                    ? "bg-amber-400/25 border-amber-400 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.4)]"
                     : "border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10 group-hover:scale-105"
                   }`}
               >
-                <Heart size={17} className={saved ? "fill-current text-amber-400" : ""} />
+                <Heart size={15} className={saved ? "fill-current text-amber-400" : ""} />
               </div>
-              <span className="text-[10px] font-medium tracking-tight">
+              <span className="text-[9.5px] sm:text-[10px] font-medium tracking-tight">
                 {saved ? "Saved" : "Save"}
               </span>
             </button>
@@ -465,52 +538,56 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             {/* Share button */}
             <button
               onClick={handleShare}
-              className="flex flex-col items-center gap-1 text-[#e6b76f] hover:text-white transition-all active:scale-95 cursor-pointer group"
+              className="flex flex-col items-center gap-0.5 text-[#e6b76f] hover:text-white transition-all active:scale-95 cursor-pointer group"
               aria-label="Share quote"
             >
-              <div className="w-10 h-10 rounded-full flex items-center justify-center border border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10 group-hover:scale-105 transition-all duration-200">
-                <Share2 size={17} />
+              <div className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10 group-hover:scale-105 transition-all duration-200">
+                <Share2 size={15} />
               </div>
-              <span className="text-[10px] font-medium tracking-tight">Share</span>
+              <span className="text-[9.5px] sm:text-[10px] font-medium tracking-tight">Share</span>
             </button>
 
             {/* Reflect button */}
             <button
               onClick={handleReflect}
-              className="flex flex-col items-center gap-1 text-[#e6b76f] hover:text-white transition-all active:scale-95 cursor-pointer group"
+              className="flex flex-col items-center gap-0.5 text-[#e6b76f] hover:text-white transition-all active:scale-95 cursor-pointer group"
               aria-label="Write a reflection"
             >
-              <div className="w-10 h-10 rounded-full flex items-center justify-center border border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10 group-hover:scale-105 transition-all duration-200">
-                <BookOpen size={17} />
+              <div className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10 group-hover:scale-105 transition-all duration-200">
+                <BookOpen size={15} />
               </div>
-              <span className="text-[10px] font-medium tracking-tight">Reflect</span>
+              <span className="text-[9.5px] sm:text-[10px] font-medium tracking-tight">Reflect</span>
             </button>
 
             {/* Collection button */}
             <button
               onClick={() => router.push(user ? "/dashboard/user/favorites" : "/login")}
-              className="flex flex-col items-center gap-1 text-[#e6b76f] hover:text-white transition-all active:scale-95 cursor-pointer group"
+              className="flex flex-col items-center gap-0.5 text-[#e6b76f] hover:text-white transition-all active:scale-95 cursor-pointer group"
               aria-label="View collection"
             >
-              <div className="w-10 h-10 rounded-full flex items-center justify-center border border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10 group-hover:scale-105 transition-all duration-200">
-                <Sparkles size={17} />
+              <div className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10 group-hover:scale-105 transition-all duration-200">
+                <Sparkles size={15} />
               </div>
-              <span className="text-[10px] font-medium tracking-tight">Collection</span>
+              <span className="text-[9.5px] sm:text-[10px] font-medium tracking-tight">Collection</span>
             </button>
           </div>
 
-          {/* User sign-in status */}
-          <div className="mt-2 text-center">
+          {/* User sign-in status (High Contrast Pill) */}
+          <div className="mt-2.5 text-center">
             {user ? (
-              <p className="text-xs text-neutral-400 tracking-normal font-light">
-                Signed in as <span className="text-amber-200/90 font-medium">{user.name || user.email?.split('@')[0]}</span>
-              </p>
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md border border-white/20 shadow-sm">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <p className="text-xs text-white font-normal tracking-normal">
+                  Signed in as <span className="text-amber-300 font-semibold">{user.name || user.email?.split('@')[0]}</span>
+                </p>
+              </div>
             ) : (
               <button
                 onClick={() => goToAuth("login")}
-                className="text-xs text-neutral-400 hover:text-amber-200/90 transition-colors tracking-normal font-light cursor-pointer underline underline-offset-2"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-black/60 hover:bg-black/80 backdrop-blur-md border border-white/25 hover:border-amber-400/50 text-xs text-white hover:text-amber-300 transition-all font-medium cursor-pointer shadow-sm"
               >
-                Sign in to save quotes to your collection
+                <Sparkles size={11} className="text-amber-400" />
+                <span>Sign in to save quotes to your collection</span>
               </button>
             )}
           </div>

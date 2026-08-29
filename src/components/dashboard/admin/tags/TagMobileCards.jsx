@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { QrCode } from 'lucide-react';
 import Card from '@/components/dashboard/user/dashboard/Card';
 import ActionMenu from '../shared/ActionMenu';
+import { getCategoryBadgeClass, getPrettyCategoryLabel } from '@/components/public/quote/category';
 
 const STATUS_STYLES = {
   active_activated: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
@@ -47,6 +48,9 @@ function TagCard({ tag, onShowQR, onToggleStatus, onDelete }) {
     );
   }
 
+  const assignedQuote = tag.assignedQuote;
+  const quoteCategory = assignedQuote?.category;
+
   return (
     <div className="flex items-start gap-3 py-3 px-1 hover:bg-muted/30 rounded-lg transition-colors">
       <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -54,9 +58,35 @@ function TagCard({ tag, onShowQR, onToggleStatus, onDelete }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">
- <p className="text-sm font-medium text-foreground truncate">{tag.tagCode}</p>
+          <div>
+            <p className="text-sm font-medium text-foreground truncate">{tag.tagCode}</p>
+            <p className="text-[10px] text-foreground-tertiary">ID: {tag._id?.slice(-6).toUpperCase()}</p>
+          </div>
           <ActionMenu actions={actions} />
         </div>
+
+        {/* Assigned Quote Information */}
+        {assignedQuote ? (
+          <div className="mt-2 p-2 rounded-lg bg-card border border-border/60">
+            <div className="flex items-center gap-1.5 mb-1">
+              <span className={`text-[9px] px-1.5 py-0.2 rounded font-medium border ${getCategoryBadgeClass(quoteCategory)}`}>
+                {getPrettyCategoryLabel(quoteCategory)}
+              </span>
+              <span className="text-[9px] text-indigo-400">
+                {tag.assignmentType === 'user' ? '• User Quote' : '• Direct Tag Quote'}
+              </span>
+            </div>
+            <p className="text-xs text-foreground line-clamp-1">
+              "{assignedQuote.text || assignedQuote.title || 'Visual Quote'}"
+            </p>
+          </div>
+        ) : tag.personalMessage ? (
+          <div className="mt-2 p-2 rounded-lg bg-amber-500/5 border border-amber-500/20">
+            <span className="text-[9px] text-amber-400 font-medium">Personal Message:</span>
+            <p className="text-xs text-foreground-secondary line-clamp-1">"{tag.personalMessage}"</p>
+          </div>
+        ) : null}
+
         <div className="flex items-center gap-2 mt-2 flex-wrap">
           <span className={`text-[10px] px-2 py-0.5 rounded-full border ${style}`}>{label}</span>
           <span className="text-[10px] text-foreground-tertiary capitalize">{tag.subscriptionType || 'free'}</span>

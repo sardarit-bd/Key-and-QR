@@ -16,6 +16,7 @@ export const CATEGORY_LABELS = {
   strength: 'Strength',
   healing: 'Healing',
   faith: 'Faith',
+  bible: 'Bible',
   gratitude: 'Gratitude',
   inspire: 'Inspire',
   motivation: 'Motivation',
@@ -48,6 +49,7 @@ export const PRETTY_CATEGORY_LABELS = {
   strength: 'Strength ◐',
   healing: 'Healing ✦',
   faith: 'Faith ☾',
+  bible: 'Bible ✝',
   gratitude: 'Gratitude ☀',
   personal: 'Personal ♥',
 };

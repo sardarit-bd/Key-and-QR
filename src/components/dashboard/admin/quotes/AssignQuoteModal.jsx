@@ -504,6 +504,7 @@ export default function AssignQuoteModal({ open, onOpenChange, quote, onSuccess 
                         const isAssigned = alreadyAssignedTagIds.has(tagId);
                         const isSelected = selectedItems.has(tagId);
                         const orderSummary = getOrderAndCustomerSummary(tag);
+                        const currentQuote = tag.assignedQuote;
 
                         return (
                           <div
@@ -534,6 +535,11 @@ export default function AssignQuoteModal({ open, onOpenChange, quote, onSuccess 
                                 <p className="text-xs text-foreground-secondary truncate mt-0.5">
                                   {orderSummary}
                                 </p>
+                                {currentQuote && !isAssigned ? (
+                                  <p className="text-[11px] text-amber-500/90 truncate mt-0.5">
+                                    Current: "{currentQuote.text || 'Visual Quote'}" ({currentQuote.category || 'Inspire'})
+                                  </p>
+                                ) : null}
                               </div>
                             </div>
 
@@ -544,7 +550,7 @@ export default function AssignQuoteModal({ open, onOpenChange, quote, onSuccess 
                                   : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                               }`}
                             >
-                              {isAssigned ? 'Assigned' : 'Available'}
+                              {isAssigned ? 'Assigned' : currentQuote ? 'Override' : 'Available'}
                             </span>
                           </div>
                         );
