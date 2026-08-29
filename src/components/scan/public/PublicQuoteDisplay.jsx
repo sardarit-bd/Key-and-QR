@@ -515,7 +515,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
           )}
 
           {/* Liquid Glass Floating Action Card (Compact & Optimized) */}
-          <div className="mx-auto flex max-w-[340px] items-center justify-around rounded-[22px]  bg-white/[0.02] px-3 py-2.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_8px_25px_rgba(0,0,0,0.2)] sm:max-w-sm sm:px-4 sm:py-3">
+          <div className="mx-auto flex max-w-[340px] items-center justify-around rounded-[22px] bg-white/[0.02] px-3 py-2.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_8px_25px_rgba(0,0,0,0.2)] sm:max-w-sm sm:px-4 sm:py-3">
             {/* Save button */}
             <button
               onClick={handleFavoriteClick}
