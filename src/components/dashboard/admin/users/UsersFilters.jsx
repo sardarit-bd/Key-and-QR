@@ -64,7 +64,7 @@ export default function UsersFilters({
 
         {/* Role filter */}
         <Select value={role} onValueChange={onRoleChange}>
-          <SelectTrigger className="w-full sm:w-36 h-9">
+          <SelectTrigger className="w-full sm:w-36 h-9 cursor-pointer">
             <SelectValue placeholder="All Roles" />
           </SelectTrigger>
           <SelectContent>
@@ -78,7 +78,7 @@ export default function UsersFilters({
 
         {/* Status filter */}
         <Select value={status} onValueChange={onStatusChange}>
-          <SelectTrigger className="w-full sm:w-36 h-9">
+          <SelectTrigger className="w-full sm:w-36 h-9 cursor-pointer">
             <SelectValue placeholder="All Statuses" />
           </SelectTrigger>
           <SelectContent>
@@ -92,7 +92,7 @@ export default function UsersFilters({
 
         {/* Sort */}
         <Select value={sort} onValueChange={onSortChange}>
-          <SelectTrigger className="w-full sm:w-40 h-9">
+          <SelectTrigger className="w-full sm:w-40 h-9 cursor-pointer">
             <ArrowUpDown size={14} className="text-foreground-tertiary" />
             <SelectValue placeholder="Newest First" />
           </SelectTrigger>

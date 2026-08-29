@@ -166,9 +166,6 @@ function LoginPageContent() {
       {/* ************* Dark Overlay ************* */}
       <div className="absolute inset-0 bg-white/40" />
 
-      {/* ************* Toaster - Positioned above everything ************* */}
-      <Toaster position="top-right" />
-
       {/* ************* Logo - Top Left ************* */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
