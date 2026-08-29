@@ -71,9 +71,9 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   const editorData = data?.editorData || data?.quote?.editorData;
   const hasFabricCanvas = Boolean(
     editorData &&
-      ((editorData.mobile?.elements && editorData.mobile.elements.length > 0) ||
-        (editorData.desktop?.elements && editorData.desktop.elements.length > 0) ||
-        (editorData.elements && editorData.elements.length > 0))
+    ((editorData.mobile?.elements && editorData.mobile.elements.length > 0) ||
+      (editorData.desktop?.elements && editorData.desktop.elements.length > 0) ||
+      (editorData.elements && editorData.elements.length > 0))
   );
 
   const renderedDesktopUrl =
@@ -515,7 +515,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
           )}
 
           {/* Liquid Glass Floating Action Card (Compact & Optimized) */}
-          <div className="backdrop-blur-2xl bg-neutral-950/50 border border-white/20 shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_12px_32px_rgba(0,0,0,0.7)] rounded-2xl py-2 px-3 sm:py-2.5 sm:px-4 max-w-[340px] sm:max-w-sm mx-auto flex justify-around items-center">
+          <div className="mx-auto flex max-w-[340px] items-center justify-around rounded-[22px]  bg-white/[0.02] px-3 py-2.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_8px_25px_rgba(0,0,0,0.2)] sm:max-w-sm sm:px-4 sm:py-3">
             {/* Save button */}
             <button
               onClick={handleFavoriteClick}
@@ -525,8 +525,8 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             >
               <div
                 className={`w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border transition-all duration-200 ${saved
-                    ? "bg-amber-400/25 border-amber-400 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.4)]"
-                    : "border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10 group-hover:scale-105"
+                  ? "bg-amber-400/25 border-amber-400 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.4)]"
+                  : "border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10 group-hover:scale-105"
                   }`}
               >
                 <Heart size={15} className={saved ? "fill-current text-amber-400" : ""} />
