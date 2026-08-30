@@ -125,7 +125,7 @@ function LoginPageContent() {
     setIsSubmitting(true);
 
     try {
-      const result = await loginMutation.mutateAsync({ email, password });
+      const result = await loginMutation.mutateAsync({ email, password, redirectPath });
 
       if (result?.success) {
         if (result.guestClaimed) {

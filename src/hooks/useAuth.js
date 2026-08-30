@@ -70,7 +70,7 @@ export function useLoginMutation() {
             }
             return result;
         },
-        onSuccess: (data) => {
+        onSuccess: (data, variables) => {
             // Update React Query cache
             queryClient.setQueryData(authKeys.user, data.user);
             
@@ -82,7 +82,11 @@ export function useLoginMutation() {
                 if (data.guestClaimed) {
                     toast.success(`Claimed ${data.guestOrders || 0} orders and ${data.guestTags || 0} tags! 🎉`, { duration: 4000 });
                 }
-                router.push("/dashboard/user");
+                const target = variables?.redirectPath || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null) || "/dashboard/user";
+                const safeTarget = target.startsWith("/dashboard/admin") || target.startsWith("/admin")
+                    ? "/dashboard/user"
+                    : target;
+                router.push(safeTarget);
             }
         },
         onError: (error) => {
@@ -106,7 +110,7 @@ export function useRegisterMutation() {
             }
             return result;
         },
-        onSuccess: (data) => {
+        onSuccess: (data, variables) => {
             queryClient.setQueryData(authKeys.user, data.user);
             toast.success("Account created successfully! 🎉", { id: "auth-register-toast", duration: 3500 });
             
@@ -117,7 +121,11 @@ export function useRegisterMutation() {
             if (data.user?.role === "admin") {
                 router.push("/dashboard/admin");
             } else {
-                router.push("/dashboard/user");
+                const target = variables?.redirectPath || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null) || "/dashboard/user";
+                const safeTarget = target.startsWith("/dashboard/admin") || target.startsWith("/admin")
+                    ? "/dashboard/user"
+                    : target;
+                router.push(safeTarget);
             }
         },
         onError: (error) => {
