@@ -101,8 +101,36 @@ function SignUpPageContent() {
 
     setIsSubmitting(true);
 
+    // Extract tagCode from URL, redirect path, or local storage
+    let tagCodeToClaim = searchParams.get("tagCode");
+    if (!tagCodeToClaim && redirectPath) {
+      const tagMatch = redirectPath.match(/^\/(?:t|tag)\/([^/?#]+)/);
+      if (tagMatch) {
+        tagCodeToClaim = tagMatch[1];
+      }
+    }
+    if (!tagCodeToClaim && typeof window !== "undefined") {
+      try {
+        const pendingStr = localStorage.getItem("pending_dashboard_quote");
+        if (pendingStr) {
+          const parsed = JSON.parse(pendingStr);
+          if (parsed?.tagCode) {
+            tagCodeToClaim = parsed.tagCode;
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
     try {
-      const result = await registerMutation.mutateAsync({ name: name.trim(), email: email.trim(), password });
+      const result = await registerMutation.mutateAsync({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        tagCode: tagCodeToClaim || undefined,
+        redirectPath,
+      });
 
       if (result?.success) {
         if (result.guestClaimed) {
