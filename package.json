@@ -37,6 +37,7 @@
   },
   "devDependencies": {
     "babel-plugin-react-compiler": "1.0.0",
-    "baseline-browser-mapping": "^2.10.12"
+    "baseline-browser-mapping": "^2.10.12",
+    "playwright": "^1.62.1"
   }
 }

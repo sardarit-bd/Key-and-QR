@@ -17,30 +17,15 @@ const LOADING_MESSAGES = [
  * Strictly preserves the 800×450 (16:9) quote artwork aspect ratio on both desktop and mobile.
  */
 export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose }) {
-  // Mobile & Desktop Scroll Lock with exact position restoration
+  // Clean body scroll lock — sets overflow: hidden while modal is open and resets on unmount/close
   useEffect(() => {
     if (!isOpen) return;
 
-    const scrollY = window.scrollY || document.documentElement.scrollTop || 0;
     const originalOverflow = document.body.style.overflow;
-    const originalTouchAction = document.body.style.touchAction;
-    const originalPosition = document.body.style.position;
-    const originalTop = document.body.style.top;
-    const originalWidth = document.body.style.width;
-
     document.body.style.overflow = 'hidden';
-    document.body.style.touchAction = 'none';
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
 
     return () => {
-      document.body.style.overflow = originalOverflow;
-      document.body.style.touchAction = originalTouchAction;
-      document.body.style.position = originalPosition;
-      document.body.style.top = originalTop;
-      document.body.style.width = originalWidth;
-      window.scrollTo(0, scrollY);
+      document.body.style.overflow = originalOverflow || '';
     };
   }, [isOpen]);
 

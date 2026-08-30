@@ -17,6 +17,8 @@ export default function LatestInspirationCard({
   onReadAgain,
   onFavoriteChange,
   isReceiving,
+  isMuted = false,
+  disableAutoplay = false,
 }) {
   const reduceMotion = useReducedMotion();
   const quote = inspiration?.text || "";
@@ -53,7 +55,7 @@ export default function LatestInspirationCard({
     null;
 
   // Dynamic Quote Media Configuration (from Admin Quote Editor / Schema)
-  const shouldAutoplay = Boolean(
+  const shouldAutoplay = !disableAutoplay && !isMuted && Boolean(
     inspiration?.autoplay ??
     inspiration?.quote?.autoplay ??
     audioTrack?.autoplay ??
@@ -133,7 +135,7 @@ export default function LatestInspirationCard({
     const video = videoRef.current;
     video.loop = shouldLoop;
 
-    if (!shouldAutoplay) {
+    if (isMuted || !shouldAutoplay) {
       video.pause();
       setIsVideoPlaying(false);
       return;
@@ -166,7 +168,7 @@ export default function LatestInspirationCard({
         video.pause();
       }
     };
-  }, [videoUrl, shouldAutoplay, shouldLoop, hasInteracted]);
+  }, [videoUrl, shouldAutoplay, shouldLoop, hasInteracted, isMuted]);
 
   const toggleVideoPlay = useCallback(() => {
     if (!videoRef.current) return;
@@ -307,8 +309,8 @@ export default function LatestInspirationCard({
                   <Play size={15} className="fill-current text-white translate-x-0.5" />
                 )}
               </button>
-            ) : audioTrack?.source ? (
-              <VisualQuoteAudioPlayer track={audioTrack} compact />
+            ) : audioTrack?.source && !isMuted ? (
+              <VisualQuoteAudioPlayer track={audioTrack} compact disableAutoplay={disableAutoplay || isMuted} />
             ) : null}
           </div>
         </div>
@@ -361,13 +363,11 @@ export default function LatestInspirationCard({
               disabled={isReceiving || isLimitReached}
               aria-disabled={isLimitReached}
               title={isLimitReached ? "Daily limit reached — come back tomorrow" : undefined}
-              className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-4 sm:px-4.5 py-2 text-[12px] sm:text-[13px] font-semibold transition-all duration-150 active:scale-[0.97] ${
-                isLimitReached
-                  ? "bg-white/10 border border-white/15 text-white/40 cursor-not-allowed opacity-60 backdrop-blur-md"
-                  : `bg-accent text-accent-foreground shadow-md shadow-accent/20 hover:brightness-105 disabled:opacity-60 disabled:cursor-not-allowed ${
-                      usedToday === 0 ? "ring-2 ring-accent/60 shadow-lg shadow-accent/30" : ""
-                    }`
-              }`}
+              className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-4 sm:px-4.5 py-2 text-[12px] sm:text-[13px] font-semibold transition-all duration-150 active:scale-[0.97] ${isLimitReached
+                ? "bg-white/10 border border-white/15 text-white/40 cursor-not-allowed opacity-60 backdrop-blur-md"
+                : `bg-accent text-accent-foreground shadow-md shadow-accent/20 hover:brightness-105 disabled:opacity-60 disabled:cursor-not-allowed ${usedToday === 0 ? "ring-2 ring-accent/60 shadow-lg shadow-accent/30" : ""
+                }`
+                }`}
             >
               <Sparkles size={14} fill={isLimitReached ? "none" : "currentColor"} />
               <span>
