@@ -108,9 +108,9 @@ export default function DashboardHome({
   const currentInspiration = activeInspiration || latestInspiration;
   const hasReceivedQuote = Boolean(
     currentInspiration?.hasReceivedQuote ||
-      currentInspiration?.text ||
-      currentInspiration?.renderedImages ||
-      currentInspiration?.editorData
+    currentInspiration?.text ||
+    currentInspiration?.renderedImages ||
+    currentInspiration?.editorData
   );
 
   const flattenQuotePayload = useCallback((payload) => {
@@ -261,6 +261,8 @@ export default function DashboardHome({
           onShare={handleShare}
           onReadAgain={() => currentInspiration?.id && handleReadAgain(currentInspiration.id)}
           isReceiving={receiveQuote.isPending}
+          isMuted={isOverlayOpen}
+          disableAutoplay={isOverlayOpen}
         />
       ) : (
         <WelcomeCard
@@ -280,7 +282,7 @@ export default function DashboardHome({
         >
           {/* Ambient golden aura */}
           <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-amber-500/10 blur-3xl" />
-          
+
           <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6">
             <div className="flex items-start sm:items-center gap-3.5">
               <div className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-400/15 border border-amber-400/35 text-amber-300 shadow-inner">
