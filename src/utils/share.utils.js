@@ -108,15 +108,13 @@ export function getPublicShareUrl(data) {
     origin = "https://myinspiretag.com";
   }
 
-  if (data.type === "tag" && data.tagCode) {
-    return `${origin}/t/${data.tagCode}`;
-  }
-
+  // 1. When quoteId exists, always generate the public read-only quote URL /q/:id
   const quoteId = data.quoteId || data._id || data.id;
   if (quoteId) {
     return `${origin}/q/${quoteId}`;
   }
 
+  // 2. Physical tag URL /t/:tagCode is only used if no quote ID exists (e.g. MyQR link)
   if (data.tagCode) {
     return `${origin}/t/${data.tagCode}`;
   }
