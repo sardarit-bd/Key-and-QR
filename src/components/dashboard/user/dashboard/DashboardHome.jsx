@@ -278,48 +278,35 @@ export default function DashboardHome({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="relative overflow-hidden rounded-3xl border border-amber-400/25 bg-gradient-to-r from-amber-950/30 via-neutral-900/60 to-neutral-950/80 backdrop-blur-xl p-5 sm:p-6 shadow-xl"
+          className="w-full bg-white dark:bg-[#0c121e]/80 border border-neutral-100 dark:border-neutral-800/80 shadow-sm rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-colors"
         >
-          {/* Ambient golden aura */}
-          <div className="pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full bg-amber-500/10 blur-3xl" />
-
-          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6">
-            <div className="flex items-start sm:items-center gap-3.5">
-              <div className="flex h-11 w-11 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl bg-amber-400/15 border border-amber-400/35 text-amber-300 shadow-inner">
-                <Tag className="h-5 w-5 sm:h-6 sm:w-6" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm sm:text-base font-bold text-foreground tracking-tight">
-                    No Tag Assigned Yet
-                  </h3>
-                  <span className="inline-flex items-center rounded-full bg-amber-400/15 border border-amber-400/30 px-2 py-0.5 text-[10px] font-semibold text-amber-300">
-                    Get Started
-                  </span>
-                </div>
-                <p className="text-xs text-muted-foreground mt-1 max-w-xl leading-relaxed">
-                  You can browse quotes and save favorites right here! To experience daily tap-to-reveal on a physical NFC/QR medallion, order your MyInspireTag or link an existing tag code.
-                </p>
-              </div>
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+              <Tag className="w-6 h-6" />
             </div>
-
-            <div className="flex items-center gap-2.5 w-full md:w-auto shrink-0">
-              <Link
-                href="/dashboard/user/my-qr"
-                className="flex-1 md:flex-initial inline-flex items-center justify-center gap-1.5 rounded-xl bg-secondary/80 hover:bg-secondary border border-border px-3.5 py-2.5 text-xs font-semibold text-foreground transition active:scale-95"
-              >
-                <span>Link a Tag</span>
-              </Link>
-              <Link
-                href="/shop"
-                className="flex-1 md:flex-initial inline-flex items-center justify-center gap-1.5 rounded-xl bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 hover:brightness-110 px-4 py-2.5 text-xs font-bold text-black shadow-md transition active:scale-95"
-              >
-                <ShoppingBag className="h-3.5 w-3.5" />
-                <span>Order MyInspireTag</span>
-                <ArrowRight className="h-3.5 w-3.5" />
-              </Link>
+            <div className="space-y-1">
+              <div className="flex items-center gap-2.5">
+                <h3 className="text-lg md:text-xl font-bold text-neutral-900 dark:text-neutral-100">
+                  No Tag Assigned Yet
+                </h3>
+                <span className="text-[11px] font-semibold tracking-wide uppercase px-2.5 py-0.5 rounded-full bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/30">
+                  Get Started
+                </span>
+              </div>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-2xl">
+                You can browse quotes and save favorites right here! To experience daily tap-to-reveal on a physical NFC/QR medallion, order your MyInspireTag.
+              </p>
             </div>
           </div>
+
+          <Link
+            href="/shop"
+            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[13px] font-semibold text-accent-foreground transition-all duration-200 hover:brightness-105 active:scale-[0.97] shrink-0 w-full md:w-auto shadow-sm"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            <span>Order MyInspireTag</span>
+            <ArrowRight className="w-4 h-4 ml-0.5" />
+          </Link>
         </motion.div>
       )}
 
