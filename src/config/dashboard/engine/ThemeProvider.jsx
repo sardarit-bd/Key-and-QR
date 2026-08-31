@@ -1,6 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+import { flushSync } from 'react-dom';
 import { THEME_IDS } from '@/config/dashboard/themes';
 
 const ThemeContext = createContext(null);
@@ -29,6 +30,16 @@ function setStoredThemeMode(mode) {
   }
 }
 
+function applyThemeToDom(mode) {
+  if (typeof document === 'undefined') return;
+  const root = document.documentElement;
+  root.classList.remove('light', 'dark');
+  root.classList.add(mode);
+  root.style.colorScheme = mode;
+  root.setAttribute('data-theme-mode', mode);
+  setStoredThemeMode(mode);
+}
+
 export function ThemeProvider({
   children,
   themeId = THEME_IDS.WEBSITE,
@@ -45,45 +56,23 @@ export function ThemeProvider({
   useEffect(() => {
     setIsMounted(true);
     const stored = getStoredThemeMode();
-    if (stored) {
-      setThemeMode(stored);
-    } else {
-      setThemeMode(getSystemTheme());
-    }
+    const initialMode = stored || getSystemTheme();
+    setThemeMode(initialMode);
+    applyThemeToDom(initialMode);
     setIsReady(true);
   }, []);
-
-  // Apply theme to DOM
-  useEffect(() => {
-    if (!isReady) return;
-
-    const root = document.documentElement;
-    
-    // Remove existing theme classes
-    root.classList.remove('light', 'dark');
-    
-    // Add the current theme mode class
-    root.classList.add(themeMode);
-    
-    // Set color scheme for native elements
-    root.style.colorScheme = themeMode;
-    
-    // Set data attribute for CSS selectors
-    root.setAttribute('data-theme-mode', themeMode);
-    
-    // Store the preference
-    setStoredThemeMode(themeMode);
-  }, [themeMode, isReady]);
 
   // Restore the public light theme when leaving a dashboard.
   // The public website is always light; only dashboards toggle dark/light.
   useEffect(() => {
     return () => {
-      const root = document.documentElement;
-      root.classList.remove('light', 'dark');
-      root.classList.add('light');
-      root.style.colorScheme = 'light';
-      root.setAttribute('data-theme-mode', 'light');
+      if (typeof document !== 'undefined') {
+        const root = document.documentElement;
+        root.classList.remove('light', 'dark');
+        root.classList.add('light');
+        root.style.colorScheme = 'light';
+        root.setAttribute('data-theme-mode', 'light');
+      }
     };
   }, []);
 
@@ -93,7 +82,9 @@ export function ThemeProvider({
     const handleChange = (e) => {
       const stored = getStoredThemeMode();
       if (!stored) {
-        setThemeMode(e.matches ? 'dark' : 'light');
+        const newMode = e.matches ? 'dark' : 'light';
+        setThemeMode(newMode);
+        applyThemeToDom(newMode);
       }
     };
 
@@ -101,15 +92,93 @@ export function ThemeProvider({
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  const toggleTheme = useCallback(() => {
-    setThemeMode(prev => prev === 'dark' ? 'light' : 'dark');
-  }, []);
+  const changeThemeWithTransition = useCallback((nextMode, coords) => {
+    if (typeof window === 'undefined' || typeof document === 'undefined') {
+      setThemeMode(nextMode);
+      return;
+    }
 
-  const setTheme = useCallback((mode) => {
-    if (mode === 'dark' || mode === 'light') {
-      setThemeMode(mode);
+    const isReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const supportsViewTransitions = typeof document.startViewTransition === 'function';
+
+    if (!supportsViewTransitions || isReducedMotion) {
+      setThemeMode(nextMode);
+      applyThemeToDom(nextMode);
+      return;
+    }
+
+    // Resolve click/origin coordinates
+    let x = window.innerWidth / 2;
+    let y = window.innerHeight / 2;
+
+    if (coords) {
+      if (typeof coords.x === 'number' && typeof coords.y === 'number' && coords.x >= 0 && coords.y >= 0) {
+        x = coords.x;
+        y = coords.y;
+      } else if (typeof coords.clientX === 'number' && typeof coords.clientY === 'number' && (coords.clientX > 0 || coords.clientY > 0)) {
+        x = coords.clientX;
+        y = coords.clientY;
+      } else if (coords.currentTarget && typeof coords.currentTarget.getBoundingClientRect === 'function') {
+        const rect = coords.currentTarget.getBoundingClientRect();
+        x = rect.left + rect.width / 2;
+        y = rect.top + rect.height / 2;
+      } else if (coords.target && typeof coords.target.getBoundingClientRect === 'function') {
+        const rect = coords.target.getBoundingClientRect();
+        x = rect.left + rect.width / 2;
+        y = rect.top + rect.height / 2;
+      }
+    }
+
+    const endRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );
+
+    const root = document.documentElement;
+
+    try {
+      const transition = document.startViewTransition(() => {
+        flushSync(() => {
+          setThemeMode(nextMode);
+          applyThemeToDom(nextMode);
+        });
+      });
+
+      transition.ready
+        .then(() => {
+          root.animate(
+            {
+              clipPath: [
+                `circle(0px at ${x}px ${y}px)`,
+                `circle(${endRadius}px at ${x}px ${y}px)`,
+              ],
+            },
+            {
+              duration: 480,
+              easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+              pseudoElement: '::view-transition-new(root)',
+            }
+          );
+        })
+        .catch(() => {
+          // Safe fallback if transition is aborted or fails
+        });
+    } catch {
+      setThemeMode(nextMode);
+      applyThemeToDom(nextMode);
     }
   }, []);
+
+  const toggleTheme = useCallback((coordsOrEvent) => {
+    const nextMode = themeMode === 'dark' ? 'light' : 'dark';
+    changeThemeWithTransition(nextMode, coordsOrEvent);
+  }, [themeMode, changeThemeWithTransition]);
+
+  const setTheme = useCallback((mode, coordsOrEvent) => {
+    if ((mode === 'dark' || mode === 'light') && mode !== themeMode) {
+      changeThemeWithTransition(mode, coordsOrEvent);
+    }
+  }, [themeMode, changeThemeWithTransition]);
 
   const isDark = useMemo(() => themeMode === 'dark', [themeMode]);
 
