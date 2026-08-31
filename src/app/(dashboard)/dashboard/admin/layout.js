@@ -89,7 +89,7 @@ export default function AdminDashboardLayout({ children }) {
           onMobileClose={() => setIsMobileMenuOpen(false)}
         />
 
-        <main className={`flex-1 w-full ${marginLeftClass} transition-all duration-300`}>
+        <main className={`flex-1 w-full ${marginLeftClass} transition-[margin] duration-300`}>
           <div className="min-h-screen">
             {children}
           </div>

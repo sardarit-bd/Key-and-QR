@@ -16,7 +16,7 @@ export default function MobileTopNavbar({ onMenuClick }) {
   const { themeMode } = useTheme();
 
   return (
-    <header className="sticky top-0 z-30 flex lg:hidden items-center justify-between px-4 sm:px-6 h-16 w-full bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-border/50 shadow-xs transition-colors">
+    <header className="sticky top-0 z-30 flex lg:hidden items-center justify-between px-4 sm:px-6 h-16 w-full bg-white/80 dark:bg-gray-950/80 backdrop-blur-md border-b border-border/50 shadow-xs">
       {/* Left: Brand Logo */}
       <Link href="/" className="flex items-center gap-2 group">
         <Image

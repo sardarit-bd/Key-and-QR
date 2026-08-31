@@ -132,7 +132,7 @@ export default function Sidebar({
       <aside
         className={`hidden lg:flex fixed top-0 left-0 z-40 h-screen ${
           isDesktopCollapsed ? COLLAPSED_WIDTH : SIDEBAR_WIDTH
-        } bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out flex-col`}
+        } bg-sidebar border-r border-sidebar-border transition-[width] duration-300 ease-in-out flex-col`}
         aria-label="Desktop navigation"
       >
         {/* SECTION 1: Fixed Header + Profile */}
