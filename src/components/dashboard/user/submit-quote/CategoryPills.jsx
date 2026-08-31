@@ -15,10 +15,10 @@ export default function CategoryPills({ value, onChange, categories }) {
   return (
     <div className="space-y-2.5">
       <div className="flex items-center gap-2">
-        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-accent/25 bg-accent/10 shadow-[0_0_16px_rgba(253,182,92,0.12)]">
-          <Sparkles size={13} className="text-accent" />
+        <span className="inline-flex h-7 w-7 items-center justify-center rounded-xl border border-amber-500/20 bg-amber-500/10 text-amber-600 dark:text-amber-400">
+          <Sparkles size={13} />
         </span>
-        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-accent">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-amber-700 dark:text-amber-400">
           Category
         </span>
       </div>
@@ -29,7 +29,7 @@ export default function CategoryPills({ value, onChange, categories }) {
             <div
               key={i}
               style={{ width: `${w}px` }}
-              className="h-8 rounded-full border border-white/6 bg-white/5 animate-pulse light:border-[#E8DFCE]/80 light:bg-black/5 shrink-0"
+              className="h-8 rounded-full border border-neutral-200/60 dark:border-neutral-800 bg-neutral-100 dark:bg-neutral-800/50 animate-pulse shrink-0"
             />
           ))}
         </div>
@@ -46,30 +46,23 @@ export default function CategoryPills({ value, onChange, categories }) {
                 type="button"
                 onClick={() => onChange(cat.id)}
                 aria-pressed={isSelected}
-                className={`group relative inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 sm:px-3.5 py-1.5 text-[11px] sm:text-[12px] font-medium transition-all duration-300 active:scale-95 whitespace-nowrap ${
+                className={`group relative inline-flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3 sm:px-3.5 py-1.5 text-[11px] sm:text-[12px] font-medium transition-all duration-200 active:scale-95 whitespace-nowrap shadow-sm ${
                   isSelected
-                    ? 'border-accent/50 bg-gradient-to-r from-accent/20 to-accent/10 text-accent shadow-[0_0_20px_-4px_rgba(253,182,92,0.45)] dark:text-amber-200'
-                    : 'border-white/8 bg-background-secondary/40 text-foreground-secondary hover:-translate-y-0.5 hover:border-accent/30 hover:text-foreground hover:shadow-[0_8px_20px_-8px_rgb(0_0_0/0.4)] light:border-[#E8DFCE]/70 light:bg-white/60'
+                    ? 'border-amber-500/50 bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300'
+                    : 'border-neutral-200/80 dark:border-neutral-800 bg-white dark:bg-neutral-900 text-neutral-600 dark:text-neutral-400 hover:border-amber-500/40 hover:text-neutral-900 dark:hover:text-neutral-200'
                 }`}
               >
-                {/* Selection glow ring */}
-                {isSelected && (
-                  <>
-                    <span className="pointer-events-none absolute -inset-px rounded-full bg-accent/15 blur-[6px]" />
-                    <span className="pointer-events-none absolute inset-0 rounded-full border border-accent/30" />
-                  </>
-                )}
                 {CategoryIcon && (
                   <CategoryIcon
                     size={14}
                     className={`relative z-10 shrink-0 transition-colors ${
-                      isSelected ? 'text-accent' : 'text-foreground-tertiary group-hover:text-foreground-secondary'
+                      isSelected ? 'text-amber-600 dark:text-amber-400' : 'text-neutral-400 dark:text-neutral-500 group-hover:text-neutral-600 dark:group-hover:text-neutral-300'
                     }`}
                   />
                 )}
                 <span className="relative z-10">{cat.label}</span>
                 {isSelected && (
-                  <span className="relative z-10 h-1.5 w-1.5 rounded-full bg-accent shadow-[0_0_8px_rgba(253,182,92,0.8)]" />
+                  <span className="relative z-10 h-1.5 w-1.5 rounded-full bg-amber-500 dark:bg-amber-400" />
                 )}
               </button>
             );
