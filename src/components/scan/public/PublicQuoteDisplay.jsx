@@ -254,9 +254,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
   const handleShare = () => {
     shareQuote({
-      type: "tag",
-      tagCode,
-      quoteId: data?._id,
+      quoteId: data?._id || data?.id,
       text: quoteText,
       author: quoteAuthor,
       category,
