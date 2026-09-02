@@ -204,7 +204,7 @@ export default function LatestInspirationCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={reduceMotion ? undefined : { scale: 1.008 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="group relative w-full sm:max-w-[800px] mx-auto overflow-hidden rounded-[24px] sm:rounded-[28px] md:rounded-[32px] bg-card border border-white/10 shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-black/35 aspect-[375/667] sm:aspect-[16/9] max-h-[75vh] sm:max-h-none min-h-[460px] sm:min-h-0"
+      className="group relative w-full sm:max-w-[800px] mx-auto overflow-hidden md:rounded-[32px]  transition-all duration-300 hover:shadow-2xl hover:shadow-black/35 aspect-[375/667] sm:aspect-[16/9] max-h-[75vh] sm:max-h-none min-h-[460px] sm:min-h-0"
     >
       {/* ===== Full Visual Quote Stage (Visual Quotes) ===== */}
       {hasVisualDesign ? (
