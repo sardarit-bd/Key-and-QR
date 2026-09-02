@@ -50,11 +50,18 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
         (editorData.elements && editorData.elements.length > 0)))
   );
 
+  const displayedCategoryName =
+    quote?.category?.name ||
+    quote?.quote?.category?.name ||
+    quote?.quote?.category ||
+    categoryName ||
+    'Inspiration';
+
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-6 touch-none overscroll-none select-none"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-6 overscroll-none"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -65,7 +72,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
             /* ---------- Reveal Modal Card ---------- */
             <motion.div
               key="reveal"
-              className="relative w-full max-w-[420px] sm:max-w-[860px] max-h-[calc(100dvh-24px)] sm:max-h-[calc(100dvh-48px)] overflow-y-auto overscroll-contain touch-auto rounded-[24px] sm:rounded-[32px] border border-white/15 bg-card text-card-foreground p-4 sm:p-6 shadow-2xl"
+              className="relative w-full max-w-[420px] sm:max-w-[860px] max-h-[calc(100dvh-24px)] sm:max-h-[calc(100dvh-48px)] overflow-y-auto overscroll-contain touch-auto [-webkit-overflow-scrolling:touch] rounded-[24px] sm:rounded-[32px] border border-white/15 bg-card text-card-foreground p-4 sm:p-6 shadow-2xl"
               initial={{ scale: 0.94, opacity: 0, y: 14 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.96, opacity: 0, y: 10 }}
@@ -76,7 +83,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
               <div className="flex items-center justify-between pb-3 sm:pb-4 border-b border-border/60">
                 <div className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/10 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-wider text-accent">
                   <Sparkles size={12} className="text-accent fill-current" />
-                  <span>{categoryName || 'Inspiration'}</span>
+                  <span>{displayedCategoryName}</span>
                 </div>
 
                 {onClose && (
