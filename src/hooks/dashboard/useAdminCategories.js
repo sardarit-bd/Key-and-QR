@@ -45,17 +45,21 @@ export function useAdminCategoryQuoteCounts() {
 
       await Promise.all(
         categories.map(async (cat) => {
+          const fallbackCount = cat.quoteCount ?? cat.quotesCount ?? 0;
           try {
             const qRes = await adminQuotesService.getQuotes({ category: cat.slug, limit: 1 });
             // getQuotes returns the envelope { success, meta, data } → meta.total is the count.
-            counts[cat.slug] = qRes?.meta?.total || 0;
+            const total = qRes?.meta?.total ?? fallbackCount;
+            counts[cat.slug] = total;
+            if (cat._id) counts[cat._id] = total;
           } catch {
-            counts[cat.slug] = 0;
+            counts[cat.slug] = fallbackCount;
+            if (cat._id) counts[cat._id] = fallbackCount;
           }
         })
       );
 
-      return { categories, counts };
+      return { categories, counts, data: counts };
     },
     staleTime: 60 * 1000,
     gcTime: 5 * 60 * 1000,

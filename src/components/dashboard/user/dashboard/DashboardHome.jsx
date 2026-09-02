@@ -278,30 +278,43 @@ export default function DashboardHome({
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="w-full bg-white dark:bg-[#0c121e]/80 border border-neutral-100 dark:border-neutral-800/80 shadow-sm rounded-3xl p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6 transition-colors"
+          className="w-full bg-white dark:bg-[#0c121e]/80 border border-neutral-100 dark:border-neutral-800/80 shadow-sm rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 sm:gap-6 transition-colors"
         >
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
-              <Tag className="w-6 h-6" />
-            </div>
-            <div className="space-y-1">
-              <div className="flex items-center gap-2.5">
-                <h3 className="text-lg md:text-xl font-bold text-neutral-900 dark:text-neutral-100">
-                  No Tag Assigned Yet
-                </h3>
-                <span className="text-[11px] font-semibold tracking-wide uppercase px-2.5 py-0.5 rounded-full bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/30">
-                  Get Started
-                </span>
+          <div className="w-full flex-1 min-w-0">
+            {/* Header: Icon, Title & Badge */}
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/60 dark:border-amber-800/40 flex items-center justify-center text-amber-600 dark:text-amber-400 shrink-0">
+                  <Tag className="w-5 h-5 sm:w-6 sm:h-6" />
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2.5">
+                    <h3 className="text-base sm:text-lg md:text-xl font-bold text-neutral-900 dark:text-neutral-100 leading-snug">
+                      No Tag Assigned Yet
+                    </h3>
+                    <span className="hidden sm:inline-flex shrink-0 text-[11px] font-semibold tracking-wide uppercase px-2.5 py-0.5 rounded-full bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/30">
+                      Get Started
+                    </span>
+                  </div>
+                  <p className="hidden sm:block text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed mt-1 max-w-2xl">
+                    You can browse quotes and save favorites right here! To experience daily tap-to-reveal on a physical NFC/QR medallion, order your MyInspireTag.
+                  </p>
+                </div>
               </div>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed max-w-2xl">
-                You can browse quotes and save favorites right here! To experience daily tap-to-reveal on a physical NFC/QR medallion, order your MyInspireTag.
-              </p>
+              <span className="sm:hidden shrink-0 text-[10.5px] font-semibold tracking-wide uppercase px-2.5 py-0.5 rounded-full bg-amber-100/80 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200/50 dark:border-amber-800/30">
+                Get Started
+              </span>
             </div>
+
+            {/* Mobile description */}
+            <p className="block sm:hidden text-xs sm:text-sm text-neutral-500 dark:text-neutral-400 leading-relaxed mt-2.5">
+              You can browse quotes and save favorites right here! To experience daily tap-to-reveal on a physical NFC/QR medallion, order your MyInspireTag.
+            </p>
           </div>
 
           <Link
             href="/shop"
-            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-accent px-5 py-2.5 text-[13px] font-semibold text-accent-foreground transition-all duration-200 hover:brightness-105 active:scale-[0.97] shrink-0 w-full md:w-auto shadow-sm"
+            className="inline-flex cursor-pointer items-center justify-center gap-2 rounded-full bg-accent px-5 py-2.5 sm:py-3 text-xs sm:text-[13px] font-semibold text-accent-foreground transition-all duration-200 hover:brightness-105 active:scale-[0.97] shrink-0 w-full md:w-auto shadow-sm"
           >
             <ShoppingBag className="w-4 h-4" />
             <span>Order MyInspireTag</span>

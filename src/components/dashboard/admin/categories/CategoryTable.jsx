@@ -15,9 +15,15 @@ const STATUS_STYLES = {
 // Category | Description | Sort Order | Quotes | Status | Actions
 const COLUMNS = 'minmax(0,2fr) minmax(0,2fr) 72px 72px 90px 44px';
 
-function CategoryRow({ category, count = 0, onEdit, onToggle, onDelete }) {
+function CategoryRow({ category, count, onEdit, onToggle, onDelete }) {
   const isActive = category.isActive;
   const iconColor = category.color || '#6366f1';
+  const quoteCount =
+    count ??
+    category?.quotesCount ??
+    category?._count?.quotes ??
+    category?.quoteCount ??
+    (Array.isArray(category?.quotes) ? category.quotes.length : 0);
 
   const actions = [
     { label: 'Edit Category', onClick: () => onEdit(category) },
@@ -61,7 +67,7 @@ function CategoryRow({ category, count = 0, onEdit, onToggle, onDelete }) {
 
       {/* Quote count */}
       <span className="text-xs text-foreground-secondary text-center tabular-nums">
-        {count ?? 0}
+        {quoteCount ?? 0}
       </span>
 
       {/* Status */}
@@ -104,17 +110,26 @@ export default function CategoryTable({ categories = [], counts = {}, onEdit, on
 
           {/* Body */}
           <div className="divide-y divide-border/50">
-            {categories.map((category, i) => (
-              <motion.div key={category._id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
-                <CategoryRow
-                  category={category}
-                  count={counts[category.slug] || 0}
-                  onEdit={onEdit}
-                  onToggle={onToggle}
-                  onDelete={onDelete}
-                />
-              </motion.div>
-            ))}
+            {categories.map((category, i) => {
+              const count =
+                counts[category.slug] ??
+                counts[category._id] ??
+                category?.quotesCount ??
+                category?._count?.quotes ??
+                category?.quoteCount ??
+                0;
+              return (
+                <motion.div key={category._id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
+                  <CategoryRow
+                    category={category}
+                    count={count}
+                    onEdit={onEdit}
+                    onToggle={onToggle}
+                    onDelete={onDelete}
+                  />
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </Card>

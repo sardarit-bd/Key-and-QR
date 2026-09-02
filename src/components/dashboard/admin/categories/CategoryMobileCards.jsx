@@ -11,9 +11,15 @@ function formatDate(iso) {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
-function CategoryCard({ category, count = 0, onEdit, onToggle, onDelete }) {
+function CategoryCard({ category, count, onEdit, onToggle, onDelete }) {
   const isActive = category.isActive;
   const iconColor = category.color || '#6366f1';
+  const quoteCount =
+    count ??
+    category?.quotesCount ??
+    category?._count?.quotes ??
+    category?.quoteCount ??
+    (Array.isArray(category?.quotes) ? category.quotes.length : 0);
 
   const actions = [
     { label: 'Edit Category', onClick: () => onEdit(category) },
@@ -47,7 +53,7 @@ function CategoryCard({ category, count = 0, onEdit, onToggle, onDelete }) {
               Premium
             </span>
           )}
-          <span className="text-[10px] text-foreground-tertiary">{count || 0} quotes</span>
+          <span className="text-[10px] text-foreground-tertiary">{quoteCount || 0} quotes</span>
           <span className="text-[10px] text-foreground-tertiary">Sort {category.sortOrder ?? 0}</span>
           <span className="text-[10px] text-foreground-tertiary ml-auto">{formatDate(category.createdAt)}</span>
         </div>
@@ -69,17 +75,26 @@ export default function CategoryMobileCards({ categories = [], counts = {}, onEd
           </h2>
         </div>
         <div className="divide-y divide-border/50">
-          {categories.map((category, i) => (
-            <motion.div key={category._id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
-              <CategoryCard
-                category={category}
-                count={counts[category.slug] || 0}
-                onEdit={onEdit}
-                onToggle={onToggle}
-                onDelete={onDelete}
-              />
-            </motion.div>
-          ))}
+          {categories.map((category, i) => {
+            const count =
+              counts[category.slug] ??
+              counts[category._id] ??
+              category?.quotesCount ??
+              category?._count?.quotes ??
+              category?.quoteCount ??
+              0;
+            return (
+              <motion.div key={category._id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
+                <CategoryCard
+                  category={category}
+                  count={count}
+                  onEdit={onEdit}
+                  onToggle={onToggle}
+                  onDelete={onDelete}
+                />
+              </motion.div>
+            );
+          })}
         </div>
       </Card>
     </motion.div>

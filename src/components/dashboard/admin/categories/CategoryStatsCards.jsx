@@ -21,7 +21,18 @@ export default function CategoryStatsCards({ categories = [], total = 0, counts 
   const active = categories.filter((c) => c.isActive).length;
   const inactive = categories.filter((c) => !c.isActive).length;
   const premium = categories.filter((c) => c.isPremium).length;
-  const totalQuotes = Object.values(counts || {}).reduce((sum, n) => sum + (Number(n) || 0), 0);
+
+  // Calculate total quotes across all categories with robust fallbacks
+  const totalQuotes = categories.reduce((sum, c) => {
+    const count =
+      counts[c.slug] ??
+      counts[c._id] ??
+      c?.quotesCount ??
+      c?._count?.quotes ??
+      c?.quoteCount ??
+      (Array.isArray(c?.quotes) ? c.quotes.length : 0);
+    return sum + (Number(count) || 0);
+  }, 0);
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">

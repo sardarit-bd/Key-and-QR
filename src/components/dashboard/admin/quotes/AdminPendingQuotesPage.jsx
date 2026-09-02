@@ -188,7 +188,7 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
         <>
           <div className="hidden lg:block">
             <Card className="p-4 sm:p-5 md:p-6">
-              <div className="hidden lg:grid grid-cols-[minmax(0,3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,100px)_minmax(0,120px)] items-center gap-2 px-2 pb-2 text-[10px] text-foreground-tertiary font-medium uppercase tracking-wider border-b border-border/50 mb-1">
+              <div className="hidden lg:grid grid-cols-[minmax(0,40%)_minmax(0,20%)_minmax(0,14%)_minmax(0,10%)_minmax(0,16%)] items-center gap-3 px-3 pb-3 text-[11px] text-foreground-tertiary font-medium uppercase tracking-wider border-b border-border/50 mb-1">
                 <span>Quote</span>
                 <span>Submitted By</span>
                 <span>Category</span>
@@ -204,27 +204,31 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.05 * i }}
-                      className="grid grid-cols-[minmax(0,3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,100px)_minmax(0,120px)] items-center gap-2 py-3 px-2 hover:bg-muted/30 rounded-lg transition-colors"
+                      className="grid grid-cols-[minmax(0,40%)_minmax(0,20%)_minmax(0,14%)_minmax(0,10%)_minmax(0,16%)] items-center gap-3 py-3 px-3 hover:bg-muted/30 rounded-lg transition-colors"
                     >
-                      <div className="min-w-0">
-                        <p className="text-sm text-foreground truncate">{getExcerpt(quote.text)}</p>
+                      <div className="min-w-0 pr-2">
+                        <p className="text-sm text-foreground line-clamp-2 break-words" title={quote.text}>
+                          &ldquo;{quote.text}&rdquo;
+                        </p>
                       </div>
-                      <div className="text-xs text-foreground-secondary truncate">{quote.user?.name || 'Unknown'}</div>
+                      <div className="text-xs text-foreground-secondary truncate font-medium">
+                        {quote.user?.name || quote.user?.email || 'Unknown'}
+                      </div>
                       <div>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full border capitalize ${getCategoryBadgeClass(quote.category)}`}>
+                        <span className={`text-[10px] font-medium px-2.5 py-0.5 rounded-full border capitalize inline-flex items-center ${getCategoryBadgeClass(quote.category)}`}>
                           {getCategoryLabel(quote.category)}
                         </span>
                       </div>
                       <div>
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full border capitalize ${statusStyle}`}>
+                        <span className={`text-[10px] font-medium px-2.5 py-0.5 rounded-full border capitalize inline-flex items-center ${statusStyle}`}>
                           {quote.status}
                         </span>
                       </div>
-                      <div className="flex items-center justify-end gap-1.5">
+                      <div className="flex items-center justify-end gap-1.5 sm:gap-2">
                         <button
                           type="button"
                           onClick={() => setViewQuote(quote)}
-                          className="h-8 w-8 rounded-lg text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/70 border border-transparent hover:border-neutral-700/50 flex items-center justify-center transition-all duration-150 cursor-pointer"
+                          className="h-8 w-8 rounded-lg text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/70 border border-transparent hover:border-neutral-700/50 flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0"
                           title="View"
                         >
                           <Eye size={15} />
@@ -234,7 +238,7 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
                             <button
                               type="button"
                               onClick={() => { setReviewQuote(quote); setAdminNote(''); }}
-                              className="h-8 w-8 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/50 flex items-center justify-center transition-all duration-150 cursor-pointer"
+                              className="h-8 w-8 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/50 flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0"
                               title="Approve"
                             >
                               <CheckCircle size={15} />
@@ -242,7 +246,7 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
                             <button
                               type="button"
                               onClick={() => { setReviewQuote(quote); setAdminNote(''); }}
-                              className="h-8 w-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 hover:border-red-500/50 flex items-center justify-center transition-all duration-150 cursor-pointer"
+                              className="h-8 w-8 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:border-amber-500/50 flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0"
                               title="Reject"
                             >
                               <XCircle size={15} />
@@ -252,7 +256,7 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
                         <button
                           type="button"
                           onClick={() => handleDelete(quote)}
-                          className="h-8 w-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 hover:border-red-500/50 flex items-center justify-center transition-all duration-150 cursor-pointer"
+                          className="h-8 w-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 hover:border-red-500/50 flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0"
                           title="Delete"
                         >
                           <Trash2 size={15} />
@@ -270,17 +274,50 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
             {quotes.map((quote) => {
               const statusStyle = STATUS_STYLES[quote.status] || STATUS_STYLES.pending;
               return (
-                <Card key={quote._id} className="p-4">
-                  <p className="text-sm text-foreground mb-2">&ldquo;{getExcerpt(quote.text, 100)}&rdquo;</p>
-                  <p className="text-xs text-foreground-tertiary mb-2">by {quote.user?.name || 'Unknown'}</p>
-                  <div className="flex items-center justify-between">
+                <Card key={quote._id} className="p-4 space-y-3">
+                  <p className="text-sm text-foreground font-medium italic">&ldquo;{getExcerpt(quote.text, 100)}&rdquo;</p>
+                  <p className="text-xs text-foreground-tertiary">by {quote.user?.name || 'Unknown'}</p>
+                  <div className="flex items-center justify-between pt-1 border-t border-border/40">
                     <div className="flex items-center gap-2">
                       <span className={`text-[10px] px-2 py-0.5 rounded-full border capitalize ${getCategoryBadgeClass(quote.category)}`}>{getCategoryLabel(quote.category)}</span>
                       <span className={`text-[10px] px-2 py-0.5 rounded-full border capitalize ${statusStyle}`}>{quote.status}</span>
                     </div>
-                    <div className="flex items-center gap-1">
-                      <button onClick={() => setViewQuote(quote)} className="w-7 h-7 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center hover:bg-primary/20 transition-colors cursor-pointer">
-                        <Eye size={13} className="text-primary" />
+                    <div className="flex items-center justify-end gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setViewQuote(quote)}
+                        className="h-8 w-8 rounded-lg text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/70 border border-transparent hover:border-neutral-700/50 flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0"
+                        title="View"
+                      >
+                        <Eye size={14} />
+                      </button>
+                      {quote.status === 'pending' && (
+                        <>
+                          <button
+                            type="button"
+                            onClick={() => { setReviewQuote(quote); setAdminNote(''); }}
+                            className="h-8 w-8 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0"
+                            title="Approve"
+                          >
+                            <CheckCircle size={14} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => { setReviewQuote(quote); setAdminNote(''); }}
+                            className="h-8 w-8 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0"
+                            title="Reject"
+                          >
+                            <XCircle size={14} />
+                          </button>
+                        </>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(quote)}
+                        className="h-8 w-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0"
+                        title="Delete"
+                      >
+                        <Trash2 size={14} />
                       </button>
                     </div>
                   </div>

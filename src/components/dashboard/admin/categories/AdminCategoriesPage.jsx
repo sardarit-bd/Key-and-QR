@@ -53,7 +53,7 @@ export default function AdminCategoriesPage() {
 
   const categories = data?.data || [];
   const meta = data?.meta || { page: 1, totalPage: 0, total: 0 };
-  const counts = countsData?.data || {};
+  const counts = countsData?.counts || countsData?.data || (typeof countsData === 'object' && !Array.isArray(countsData) ? countsData : {});
 
   const handleSearchChange = useCallback((v) => { setSearch(v); setPage(1); }, []);
   const handleStatusChange = useCallback((v) => { setIsActive(v); setPage(1); }, []);

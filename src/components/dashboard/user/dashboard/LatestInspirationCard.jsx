@@ -204,7 +204,7 @@ export default function LatestInspirationCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={reduceMotion ? undefined : { scale: 1.008 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="group relative w-full sm:max-w-[800px] mx-auto overflow-hidden rounded-[24px] sm:rounded-[28px] md:rounded-[32px] bg-card border border-white/10 shadow-lg transition-all duration-300 hover:shadow-2xl hover:shadow-black/35 aspect-[375/667] sm:aspect-[16/9] max-h-[75vh] sm:max-h-none min-h-[460px] sm:min-h-0"
+      className="group relative w-full sm:max-w-[800px] mx-auto overflow-hidden md:rounded-[32px]  transition-all duration-300 hover:shadow-2xl hover:shadow-black/35 aspect-[375/667] sm:aspect-[16/9] max-h-[75vh] sm:max-h-none min-h-[460px] sm:min-h-0"
     >
       {/* ===== Full Visual Quote Stage (Visual Quotes) ===== */}
       {hasVisualDesign ? (
@@ -351,37 +351,87 @@ export default function LatestInspirationCard({
           </div>
         )}
 
-        {/* Bottom row: Action Buttons (left) & Usage Status Pill (right) */}
+        {/* Bottom controls: 2 Compact Rows on mobile, 1 Row on desktop */}
         {/* On desktop (sm: >= 640px), hidden by default and reveals smoothly on hover/focus */}
         {/* On mobile (< 640px), permanently visible and touch-accessible */}
-        <div className="flex items-center justify-between flex-wrap gap-2 sm:gap-3 opacity-100 translate-y-0 pointer-events-auto sm:opacity-0 sm:translate-y-2 sm:pointer-events-none sm:group-hover:opacity-100 sm:group-hover:translate-y-0 sm:group-hover:pointer-events-auto sm:group-focus-within:opacity-100 sm:group-focus-within:translate-y-0 sm:group-focus-within:pointer-events-auto transition-all duration-300 ease-out z-20">
-          {/* Left Actions: Inspire + Favorite + Share + Read Again */}
-          <div className="flex items-center flex-wrap gap-1.5 sm:gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3 opacity-100 translate-y-0 pointer-events-auto sm:opacity-0 sm:translate-y-2 sm:pointer-events-none sm:group-hover:opacity-100 sm:group-hover:translate-y-0 sm:group-hover:pointer-events-auto sm:group-focus-within:opacity-100 sm:group-focus-within:translate-y-0 sm:group-focus-within:pointer-events-auto transition-all duration-300 ease-out z-20 w-full">
+          {/* Row 1 on mobile / Left group on desktop */}
+          <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-2 w-full sm:w-auto">
             {/* Primary Action: Inspire */}
             <button
               onClick={isLimitReached ? undefined : onInspire}
               disabled={isReceiving || isLimitReached}
               aria-disabled={isLimitReached}
               title={isLimitReached ? "Daily limit reached — come back tomorrow" : undefined}
-              className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full px-4 sm:px-4.5 py-2 text-[12px] sm:text-[13px] font-semibold transition-all duration-150 active:scale-[0.97] ${isLimitReached
+              className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full px-4 sm:px-4.5 py-2 text-[12px] sm:text-[13px] font-semibold transition-all duration-150 active:scale-[0.97] flex-1 sm:flex-initial ${isLimitReached
                 ? "bg-white/10 border border-white/15 text-white/40 cursor-not-allowed opacity-60 backdrop-blur-md"
-                : `bg-accent text-accent-foreground shadow-md shadow-accent/20 hover:brightness-105 disabled:opacity-60 disabled:cursor-not-allowed ${usedToday === 0 ? "ring-2 ring-accent/60 shadow-lg shadow-accent/30" : ""
-                }`
+                : `bg-accent text-accent-foreground shadow-md shadow-accent/20 hover:brightness-105 disabled:opacity-60 disabled:cursor-not-allowed ${usedToday === 0 ? "ring-2 ring-accent/60 shadow-lg shadow-accent/30" : ""}`
                 }`}
             >
               <Sparkles size={14} fill={isLimitReached ? "none" : "currentColor"} />
-              <span>
+              <span className="truncate">
                 {isReceiving
                   ? "Inspiring..."
                   : isLimitReached
-                    ? "Today's limit reached"
+                    ? "Limit reached"
                     : usedToday === 0
-                      ? "Receive Today's Inspiration"
+                      ? "Receive Inspiration"
                       : "Inspire"}
               </span>
             </button>
 
-            {/* Favorite */}
+            {/* Mobile Usage Status Pill (Row 1 right) */}
+            <div className="sm:hidden inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 backdrop-blur-md px-3 py-2 text-[11px] font-medium text-white/85 select-none shrink-0">
+              <Sparkles size={12} className="text-accent shrink-0" />
+              <span>
+                {dailyLimit === 0
+                  ? "Unlimited"
+                  : `${usedToday}/${dailyLimit}`}
+              </span>
+            </div>
+
+            {/* Desktop Secondary Actions (Favorite + Share + Read Again) */}
+            <div className="hidden sm:flex items-center gap-2">
+              {quoteId ? (
+                <FavoriteButton
+                  id={quoteId}
+                  type="quote"
+                  showText
+                  activeText="Favorited"
+                  inactiveText="Favorite"
+                  size="sm"
+                  onToggle={(res) => onFavoriteChange && onFavoriteChange(res)}
+                  className={actionButtonClass}
+                />
+              ) : (
+                <span className={`${actionButtonClass} !text-white/40 !cursor-not-allowed`}>
+                  <Heart size={14} />
+                  <span>Favorite</span>
+                </span>
+              )}
+
+              <button
+                onClick={onShare}
+                aria-label="Share quote"
+                className={actionButtonClass}
+              >
+                <Share2 size={14} />
+                <span>Share</span>
+              </button>
+
+              <button
+                onClick={onReadAgain}
+                aria-label="Read quote again"
+                className={actionButtonClass}
+              >
+                <BookOpen size={14} />
+                <span>Read Again</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Row 2 on mobile: Secondary Action Buttons (Favorite + Share + Read Again) */}
+          <div className="flex sm:hidden items-center justify-between gap-1.5 w-full">
             {quoteId ? (
               <FavoriteButton
                 id={quoteId}
@@ -391,39 +441,36 @@ export default function LatestInspirationCard({
                 inactiveText="Favorite"
                 size="sm"
                 onToggle={(res) => onFavoriteChange && onFavoriteChange(res)}
-                className={actionButtonClass}
+                className={`${actionButtonClass} flex-1 justify-center`}
               />
             ) : (
-              <span className={`${actionButtonClass} !text-white/40 !cursor-not-allowed`}>
+              <span className={`${actionButtonClass} flex-1 justify-center !text-white/40 !cursor-not-allowed`}>
                 <Heart size={14} />
                 <span>Favorite</span>
               </span>
             )}
 
-            {/* Share */}
             <button
               onClick={onShare}
               aria-label="Share quote"
-              className={actionButtonClass}
+              className={`${actionButtonClass} flex-1 justify-center`}
             >
               <Share2 size={14} />
               <span>Share</span>
             </button>
 
-            {/* Read Again */}
             <button
               onClick={onReadAgain}
               aria-label="Read quote again"
-              className={actionButtonClass}
+              className={`${actionButtonClass} flex-1 justify-center`}
             >
               <BookOpen size={14} />
-              <span className="hidden sm:inline">Read Again</span>
-              <span className="sm:hidden">Read</span>
+              <span>Read</span>
             </button>
           </div>
 
-          {/* Right: Usage Status Pill */}
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 backdrop-blur-md px-3 sm:px-3.5 py-1.5 sm:py-2 text-[11px] sm:text-[12px] font-medium text-white/85 select-none">
+          {/* Desktop Usage Status Pill */}
+          <div className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 backdrop-blur-md px-3.5 py-2 text-[12px] font-medium text-white/85 select-none shrink-0">
             <Sparkles size={13} className="text-accent shrink-0" />
             <span>
               {dailyLimit === 0
