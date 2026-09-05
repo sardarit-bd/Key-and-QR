@@ -201,7 +201,7 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
                   </thead>
                   <tbody className="divide-y divide-border/50">
                     {quotes.map((quote, i) => {
-                      const statusStyle = STATUS_STYLES[quote.status] || STATUS_STYLES.pendinyg;
+                      const statusStyle = STATUS_STYLES[quote.status] || STATUS_STYLES.pending;
                       return (
                         <tr
                           key={quote._id || `pending-quote-${i}`}
