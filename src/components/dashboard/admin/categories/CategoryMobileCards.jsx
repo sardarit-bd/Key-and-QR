@@ -15,10 +15,10 @@ function CategoryCard({ category, count, onEdit, onToggle, onDelete }) {
   const isActive = category.isActive;
   const iconColor = category.color || '#6366f1';
   const quoteCount =
-    count ??
     category?.quotesCount ??
-    category?._count?.quotes ??
     category?.quoteCount ??
+    count ??
+    category?._count?.quotes ??
     (Array.isArray(category?.quotes) ? category.quotes.length : 0);
 
   const actions = [
@@ -77,11 +77,11 @@ export default function CategoryMobileCards({ categories = [], counts = {}, onEd
         <div className="divide-y divide-border/50">
           {categories.map((category, i) => {
             const count =
+              category?.quotesCount ??
+              category?.quoteCount ??
               counts[category.slug] ??
               counts[category._id] ??
-              category?.quotesCount ??
               category?._count?.quotes ??
-              category?.quoteCount ??
               0;
             return (
               <motion.div key={category._id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>

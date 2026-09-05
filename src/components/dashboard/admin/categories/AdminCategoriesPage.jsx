@@ -181,7 +181,12 @@ export default function AdminCategoriesPage() {
       </motion.div>
 
       {/* Stats */}
-      <CategoryStatsCards categories={categories} total={meta.total} counts={counts} />
+      <CategoryStatsCards
+        categories={categories}
+        total={meta.total}
+        totalQuotes={meta.totalQuotes}
+        counts={counts}
+      />
 
       {/* Filters */}
       <CategoryFilters

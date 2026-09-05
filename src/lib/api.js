@@ -50,6 +50,17 @@ api.interceptors.request.use(
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }
+        if (typeof window !== "undefined") {
+            try {
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                if (tz) {
+                    config.headers["x-timezone"] = tz;
+                }
+                config.headers["x-timezone-offset"] = new Date().getTimezoneOffset().toString();
+            } catch {
+                // Ignore if Intl or Date fails
+            }
+        }
         return config;
     },
     (error) => Promise.reject(error)

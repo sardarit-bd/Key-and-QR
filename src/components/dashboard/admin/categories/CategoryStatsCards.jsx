@@ -17,29 +17,34 @@ function StatCard({ icon: Icon, label, value, iconClass = 'text-primary', bgClas
   );
 }
 
-export default function CategoryStatsCards({ categories = [], total = 0, counts = {} }) {
+export default function CategoryStatsCards({ categories = [], total = 0, totalQuotes: metaTotalQuotes, counts = {} }) {
   const active = categories.filter((c) => c.isActive).length;
   const inactive = categories.filter((c) => !c.isActive).length;
   const premium = categories.filter((c) => c.isPremium).length;
 
   // Calculate total quotes across all categories with robust fallbacks
-  const totalQuotes = categories.reduce((sum, c) => {
+  const calculatedTotalQuotes = categories.reduce((sum, c) => {
     const count =
+      c?.quotesCount ??
+      c?.quoteCount ??
       counts[c.slug] ??
       counts[c._id] ??
-      c?.quotesCount ??
       c?._count?.quotes ??
-      c?.quoteCount ??
       (Array.isArray(c?.quotes) ? c.quotes.length : 0);
     return sum + (Number(count) || 0);
   }, 0);
+
+  const displayTotalQuotes =
+    typeof metaTotalQuotes === 'number' && metaTotalQuotes >= 0
+      ? metaTotalQuotes
+      : calculatedTotalQuotes;
 
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
       <StatCard icon={Layers} label="Total Categories" value={total} />
       <StatCard icon={CheckCircle2} label="Active" value={active} iconClass="text-emerald-400" bgClass="bg-emerald-500/10 border-emerald-500/20" />
       <StatCard icon={XCircle} label="Inactive" value={inactive} iconClass="text-amber-400" bgClass="bg-amber-500/10 border-amber-500/20" />
-      <StatCard icon={Star} label="Quotes Across Categories" value={totalQuotes} iconClass="text-indigo-400" bgClass="bg-indigo-500/10 border-indigo-500/20" />
+      <StatCard icon={Star} label="Quotes Across Categories" value={displayTotalQuotes} iconClass="text-indigo-400" bgClass="bg-indigo-500/10 border-indigo-500/20" />
     </div>
   );
 }

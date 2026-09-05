@@ -43,25 +43,20 @@ export function useAdminCategoryQuoteCounts() {
       const categories = res?.data || [];
       const counts = {};
 
-      await Promise.all(
-        categories.map(async (cat) => {
-          const fallbackCount = cat.quoteCount ?? cat.quotesCount ?? 0;
-          try {
-            const qRes = await adminQuotesService.getQuotes({ category: cat.slug, limit: 1 });
-            // getQuotes returns the envelope { success, meta, data } → meta.total is the count.
-            const total = qRes?.meta?.total ?? fallbackCount;
-            counts[cat.slug] = total;
-            if (cat._id) counts[cat._id] = total;
-          } catch {
-            counts[cat.slug] = fallbackCount;
-            if (cat._id) counts[cat._id] = fallbackCount;
-          }
-        })
-      );
+      categories.forEach((cat) => {
+        const count = cat.quotesCount ?? cat.quoteCount ?? 0;
+        if (cat.slug) counts[cat.slug] = count;
+        if (cat._id) counts[cat._id] = count;
+      });
 
-      return { categories, counts, data: counts };
+      return {
+        categories,
+        counts,
+        data: counts,
+        totalQuotes: res?.meta?.totalQuotes ?? 0,
+      };
     },
-    staleTime: 60 * 1000,
+    staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,
   });
 }

@@ -39,7 +39,7 @@ const STATUS_OPTIONS = [
 ];
 
 const STATUS_STYLES = {
-  pending:  'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  pending: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
   approved: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
   rejected: 'bg-red-500/10 text-red-400 border-red-500/20',
 };
@@ -84,7 +84,7 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
       await approveQuote.mutateAsync({ id: reviewQuote._id, adminNote });
       setReviewQuote(null);
       setAdminNote('');
-    } catch {}
+    } catch { }
     setReviewLoading(false);
   }, [reviewQuote, adminNote, approveQuote]);
 
@@ -95,7 +95,7 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
       await rejectQuote.mutateAsync({ id: reviewQuote._id, adminNote });
       setReviewQuote(null);
       setAdminNote('');
-    } catch {}
+    } catch { }
     setReviewLoading(false);
   }, [reviewQuote, adminNote, rejectQuote]);
 
@@ -108,7 +108,7 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
     if (!deleteId) return;
     try {
       await deletePendingQuote.mutateAsync(deleteId);
-    } catch {}
+    } catch { }
     setDeleteOpen(false);
     setDeleteId(null);
   }, [deleteId, deletePendingQuote]);
@@ -143,7 +143,7 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
   return (
     <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
+        <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
           <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20">
             <Clock size={20} className="text-amber-400" />
           </span>
@@ -187,84 +187,94 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
       {quotes.length > 0 && (
         <>
           <div className="hidden lg:block">
-            <Card className="p-4 sm:p-5 md:p-6">
-              <div className="hidden lg:grid grid-cols-[minmax(0,40%)_minmax(0,20%)_minmax(0,14%)_minmax(0,10%)_minmax(0,16%)] items-center gap-3 px-3 pb-3 text-[11px] text-foreground-tertiary font-medium uppercase tracking-wider border-b border-border/50 mb-1">
-                <span>Quote</span>
-                <span>Submitted By</span>
-                <span>Category</span>
-                <span>Status</span>
-                <span className="text-right">Actions</span>
-              </div>
-              <div className="divide-y divide-border/50">
-                {quotes.map((quote, i) => {
-                  const statusStyle = STATUS_STYLES[quote.status] || STATUS_STYLES.pending;
-                  return (
-                    <motion.div
-                      key={quote._id || `pending-quote-${i}`}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.05 * i }}
-                      className="grid grid-cols-[minmax(0,40%)_minmax(0,20%)_minmax(0,14%)_minmax(0,10%)_minmax(0,16%)] items-center gap-3 py-3 px-3 hover:bg-muted/30 rounded-lg transition-colors"
-                    >
-                      <div className="min-w-0 pr-2">
-                        <p className="text-sm text-foreground line-clamp-2 break-words" title={quote.text}>
-                          &ldquo;{quote.text}&rdquo;
-                        </p>
-                      </div>
-                      <div className="text-xs text-foreground-secondary truncate font-medium">
-                        {quote.user?.name || quote.user?.email || 'Unknown'}
-                      </div>
-                      <div>
-                        <span className={`text-[10px] font-medium px-2.5 py-0.5 rounded-full border capitalize inline-flex items-center ${getCategoryBadgeClass(quote.category)}`}>
-                          {getCategoryLabel(quote.category)}
-                        </span>
-                      </div>
-                      <div>
-                        <span className={`text-[10px] font-medium px-2.5 py-0.5 rounded-full border capitalize inline-flex items-center ${statusStyle}`}>
-                          {quote.status}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-end gap-1.5 sm:gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setViewQuote(quote)}
-                          className="h-8 w-8 rounded-lg text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/70 border border-transparent hover:border-neutral-700/50 flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0"
-                          title="View"
+            <Card className="p-4 sm:p-5 md:p-6 overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full table-fixed border-collapse">
+                  <thead>
+                    <tr className="border-b border-border/50 text-[11px] text-foreground-tertiary font-medium uppercase tracking-wider">
+                      <th className="w-[42%] text-left px-3 pb-3 font-medium">Quote</th>
+                      <th className="w-[20%] text-left px-3 pb-3 font-medium">Submitted By</th>
+                      <th className="w-[14%] text-left px-3 pb-3 font-medium">Category</th>
+                      <th className="w-[10%] text-left px-3 pb-3 font-medium">Status</th>
+                      <th className="w-[14%] text-right px-3 pb-3 font-medium">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/50">
+                    {quotes.map((quote, i) => {
+                      const statusStyle = STATUS_STYLES[quote.status] || STATUS_STYLES.pending;
+                      return (
+                        <tr
+                          key={quote._id || `pending-quote-${i}`}
+                          className="hover:bg-muted/30 transition-colors"
                         >
-                          <Eye size={15} />
-                        </button>
-                        {quote.status === 'pending' && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => { setReviewQuote(quote); setAdminNote(''); }}
-                              className="h-8 w-8 rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/50 flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0"
-                              title="Approve"
-                            >
-                              <CheckCircle size={15} />
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => { setReviewQuote(quote); setAdminNote(''); }}
-                              className="h-8 w-8 rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:border-amber-500/50 flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0"
-                              title="Reject"
-                            >
-                              <XCircle size={15} />
-                            </button>
-                          </>
-                        )}
-                        <button
-                          type="button"
-                          onClick={() => handleDelete(quote)}
-                          className="h-8 w-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 hover:border-red-500/50 flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0"
-                          title="Delete"
-                        >
-                          <Trash2 size={15} />
-                        </button>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+                          <td className="w-[42%] max-w-xs md:max-w-md break-words px-3 py-3 align-middle">
+                            <p className="text-sm text-foreground line-clamp-2" title={quote.text}>
+                              &ldquo;{quote.text}&rdquo;
+                            </p>
+                          </td>
+                          <td className="w-[20%] px-3 py-3 align-middle text-xs text-foreground-secondary truncate font-medium">
+                            {quote.user?.name || quote.user?.email || 'Unknown'}
+                          </td>
+                          <td className="w-[14%] px-3 py-3 align-middle">
+                            <span className={`text-[10px] font-medium px-2.5 py-0.5 rounded-full border capitalize inline-flex items-center ${getCategoryBadgeClass(quote.category)}`}>
+                              {getCategoryLabel(quote.category)}
+                            </span>
+                          </td>
+                          <td className="w-[10%] px-3 py-3 align-middle">
+                            <span className={`text-[10px] font-medium px-2.5 py-0.5 rounded-full border capitalize inline-flex items-center ${statusStyle}`}>
+                              {quote.status}
+                            </span>
+                          </td>
+                          <td className="w-[14%] px-3 py-3 align-middle text-right">
+                            <div className="flex items-center justify-end gap-1.5 sm:gap-2">
+                              <button
+                                type="button"
+                                onClick={() => setViewQuote(quote)}
+                                className="h-8 w-8 min-w-[32px] rounded-lg text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/70 border border-transparent hover:border-neutral-700/50 flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0"
+                                title="View"
+                              >
+                                <Eye size={15} />
+                              </button>
+                              {quote.status === 'pending' ? (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => { setReviewQuote(quote); setAdminNote(''); }}
+                                    className="h-8 w-8 min-w-[32px] rounded-lg bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 hover:border-emerald-500/50 flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0"
+                                    title="Approve"
+                                  >
+                                    <CheckCircle size={15} />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => { setReviewQuote(quote); setAdminNote(''); }}
+                                    className="h-8 w-8 min-w-[32px] rounded-lg bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/30 hover:border-amber-500/50 flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0"
+                                    title="Reject"
+                                  >
+                                    <XCircle size={15} />
+                                  </button>
+                                </>
+                              ) : (
+                                <>
+                                  <div className="h-8 w-8 min-w-[32px] shrink-0" aria-hidden="true" />
+                                  <div className="h-8 w-8 min-w-[32px] shrink-0" aria-hidden="true" />
+                                </>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(quote)}
+                                className="h-8 w-8 min-w-[32px] rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/30 hover:border-red-500/50 flex items-center justify-center transition-all duration-150 cursor-pointer shrink-0"
+                                title="Delete"
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
             </Card>
           </div>

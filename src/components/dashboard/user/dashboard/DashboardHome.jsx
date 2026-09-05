@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -105,7 +105,14 @@ export default function DashboardHome({
     }
   }, [latestInspiration]);
 
-  const currentInspiration = activeInspiration || latestInspiration;
+  const currentInspiration = useMemo(() => {
+    const base = activeInspiration || latestInspiration;
+    if (!base) return null;
+    return {
+      ...base,
+      dailyUsage: dailyUsage || base.dailyUsage,
+    };
+  }, [activeInspiration, latestInspiration, dailyUsage]);
   const hasReceivedQuote = Boolean(
     currentInspiration?.hasReceivedQuote ||
     currentInspiration?.text ||
