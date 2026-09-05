@@ -81,6 +81,9 @@ export function useLatestReceivedQuote(enabled = true) {
     queryFn: () => receivedQuoteService.getLatest(),
     enabled,
     retry: 1,
+    staleTime: 30 * 1000,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   });
 }
 

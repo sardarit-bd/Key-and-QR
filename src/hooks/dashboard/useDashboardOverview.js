@@ -15,10 +15,11 @@ export function useDashboardOverview() {
             const res = await dashboardService.getOverview();
             return res.data;
         },
-        staleTime: 2 * 60 * 1000, // 2 minutes
+        staleTime: 30 * 1000, // 30 seconds
         gcTime: 10 * 60 * 1000, // 10 minutes
         retry: 2,
-        refetchOnWindowFocus: false,
+        refetchOnWindowFocus: true,
+        refetchOnReconnect: true,
     });
 }
 
