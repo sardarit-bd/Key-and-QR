@@ -16,10 +16,12 @@ export default function CallbackContent() {
         const refreshToken = searchParams.get("refreshToken");
         const userParam = searchParams.get("user");
         const error = searchParams.get("error");
+        const redirect = searchParams.get("redirect");
 
         if (error) {
             console.error("Auth error:", error);
-            router.push("/login?error=" + error);
+            const errRedirect = redirect ? `&redirect=${encodeURIComponent(redirect)}` : "";
+            router.push(`/login?error=${encodeURIComponent(error)}${errRedirect}`);
             return;
         }
 
@@ -44,9 +46,15 @@ export default function CallbackContent() {
 
                 console.log("Auth successful, store updated");
 
-                // Redirect based on role
+                // Redirect based on target redirect parameter or user role
                 setTimeout(() => {
-                    if (user.role === "admin") {
+                    if (redirect && redirect.startsWith("/")) {
+                        if ((redirect.startsWith("/dashboard/admin") || redirect.startsWith("/admin")) && user.role !== "admin") {
+                            router.push("/dashboard/user");
+                        } else {
+                            router.push(redirect);
+                        }
+                    } else if (user.role === "admin") {
                         router.push("/dashboard/admin");
                     } else {
                         router.push("/dashboard/user");
@@ -55,11 +63,13 @@ export default function CallbackContent() {
 
             } catch (err) {
                 console.error("Callback processing error:", err);
-                router.push("/login?error=callback_processing_failed");
+                const errRedirect = redirect ? `&redirect=${encodeURIComponent(redirect)}` : "";
+                router.push(`/login?error=callback_processing_failed${errRedirect}`);
             }
         } else {
             console.error("Invalid callback data");
-            router.push("/login?error=invalid_callback");
+            const errRedirect = redirect ? `&redirect=${encodeURIComponent(redirect)}` : "";
+            router.push(`/login?error=invalid_callback${errRedirect}`);
         }
     }, [searchParams, router, setStoreUser, setIsInitialized]);
 

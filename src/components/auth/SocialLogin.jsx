@@ -2,16 +2,20 @@
 
 import { useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
-export default function SocialLogin() {
+export default function SocialLogin({ redirect = null }) {
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectParam = redirect || searchParams?.get("redirect") || "";
 
   const handleGoogleLogin = () => {
     setIsLoading(true);
-    // Redirect to backend Google OAuth
-    window.location.href = "/api/auth/google";
+    // Redirect to backend Google OAuth with optional redirect target
+    const targetUrl = redirectParam
+      ? `/api/auth/google?redirect=${encodeURIComponent(redirectParam)}`
+      : "/api/auth/google";
+    window.location.href = targetUrl;
   };
 
   return (

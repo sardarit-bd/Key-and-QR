@@ -76,16 +76,22 @@ export function useLoginMutation() {
             
             toast.success("Welcome back! 🎉", { id: "auth-login-toast", duration: 3500 });
             
+            const target = variables?.redirectPath || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null);
             if (data.user?.role === "admin") {
-                router.push("/dashboard/admin");
+                if (target && target.startsWith("/t/")) {
+                    router.push(target);
+                } else {
+                    router.push("/dashboard/admin");
+                }
             } else {
                 if (data.guestClaimed) {
                     toast.success(`Claimed ${data.guestOrders || 0} orders and ${data.guestTags || 0} tags! 🎉`, { duration: 4000 });
                 }
-                const target = variables?.redirectPath || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null) || "/dashboard/user";
-                const safeTarget = target.startsWith("/dashboard/admin") || target.startsWith("/admin")
-                    ? "/dashboard/user"
-                    : target;
+                const defaultTarget = "/dashboard/user";
+                const desired = target || defaultTarget;
+                const safeTarget = (desired.startsWith("/dashboard/admin") || desired.startsWith("/admin"))
+                    ? defaultTarget
+                    : desired;
                 router.push(safeTarget);
             }
         },
@@ -118,13 +124,19 @@ export function useRegisterMutation() {
                 toast.success("Your guest purchases have been claimed! 🎉", { duration: 4000 });
             }
             
+            const target = variables?.redirectPath || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null);
             if (data.user?.role === "admin") {
-                router.push("/dashboard/admin");
+                if (target && target.startsWith("/t/")) {
+                    router.push(target);
+                } else {
+                    router.push("/dashboard/admin");
+                }
             } else {
-                const target = variables?.redirectPath || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null) || "/dashboard/user";
-                const safeTarget = target.startsWith("/dashboard/admin") || target.startsWith("/admin")
-                    ? "/dashboard/user"
-                    : target;
+                const defaultTarget = "/dashboard/user";
+                const desired = target || defaultTarget;
+                const safeTarget = (desired.startsWith("/dashboard/admin") || desired.startsWith("/admin"))
+                    ? defaultTarget
+                    : desired;
                 router.push(safeTarget);
             }
         },

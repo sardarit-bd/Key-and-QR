@@ -255,7 +255,7 @@ export default function DashboardHome({
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
-      className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10 space-y-6 sm:space-y-8 md:space-y-10"
+      className="mx-auto w-full max-w-[1400px] px-4 sm:px-6 md:px-8 lg:px-10 py-6 sm:py-8 md:py-10 space-y-6 sm:space-y-8 md:space-y-10 overflow-y-auto overflow-x-hidden"
     >
       {/* 1. Greeting */}
       <GreetingSection greeting={greeting} user={user} subscription={subscription} />

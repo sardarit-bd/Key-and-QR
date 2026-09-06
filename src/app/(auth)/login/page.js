@@ -24,7 +24,8 @@ export default function LoginPage() {
 function LoginPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectPath = searchParams.get("redirect") || "/dashboard/user";
+  const rawRedirect = searchParams.get("redirect");
+  const redirectPath = rawRedirect || "/dashboard/user";
 
   const { user, isInitialized } = useAuthStore();
   const loginMutation = useLoginMutation();
@@ -274,7 +275,7 @@ function LoginPageContent() {
 
             {/* ************* Social Login ************* */}
             <div className="mt-2">
-              <SocialLogin />
+              <SocialLogin redirect={rawRedirect || ""} />
             </div>
 
             {/* ************* Register Link ************* */}
@@ -282,7 +283,7 @@ function LoginPageContent() {
               Don't have an account?{" "}
               <Link
                 className="text-gray-900 font-medium hover:underline transition-colors duration-200"
-                href={`/signup${redirectPath ? `?redirect=${redirectPath}` : ''}`}
+                href={`/signup${rawRedirect ? `?redirect=${encodeURIComponent(rawRedirect)}` : ''}`}
               >
                 Sign Up
               </Link>

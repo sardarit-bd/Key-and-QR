@@ -204,7 +204,7 @@ export default function LatestInspirationCard({
       animate={{ opacity: 1, y: 0 }}
       whileHover={reduceMotion ? undefined : { scale: 1.008 }}
       transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="group relative w-full sm:max-w-[800px] mx-auto overflow-hidden md:rounded-[32px]  transition-all duration-300 hover:shadow-2xl hover:shadow-black/35 aspect-[375/667] sm:aspect-[16/9] max-h-[75vh] sm:max-h-none min-h-[460px] sm:min-h-0"
+      className="group relative w-full sm:max-w-[800px] mx-auto overflow-hidden rounded-2xl md:rounded-[32px] transition-all duration-300 hover:shadow-2xl hover:shadow-black/35 aspect-[375/667] sm:aspect-[16/9]"
     >
       {/* ===== Full Visual Quote Stage (Visual Quotes) ===== */}
       {hasVisualDesign ? (
@@ -214,6 +214,7 @@ export default function LatestInspirationCard({
               editorData={editorData}
               mode="auto"
               showAudioPlayer={false}
+              fit="cover"
               className="w-full h-full"
             />
           ) : hasRenderedImage ? (
@@ -228,7 +229,7 @@ export default function LatestInspirationCard({
                 <img
                   src={renderedMobileUrl || renderedDesktopUrl}
                   alt={quote || "Daily Inspiration"}
-                  className="w-full h-full object-cover sm:object-contain"
+                  className="w-full h-full object-cover object-center select-none"
                 />
               </picture>
             </div>
@@ -317,7 +318,7 @@ export default function LatestInspirationCard({
 
         {/* Middle: Legacy Quote Block (only shown if not a visual design) */}
         {!hasVisualDesign && (
-          <div className="flex-1 flex flex-col justify-center items-center my-auto w-full min-h-0 overflow-hidden pointer-events-auto px-2 sm:px-4 text-center">
+          <div className="flex-1 flex flex-col justify-center items-center my-auto w-full min-h-0 overflow-y-auto hide-scrollbar pointer-events-auto px-2 sm:px-4 text-center">
             <AnimatePresence mode="wait">
               <motion.blockquote
                 key={quote}
@@ -327,7 +328,7 @@ export default function LatestInspirationCard({
                 transition={{ duration: 0.45, ease: "easeOut" }}
                 className="max-w-[340px] sm:max-w-[720px] mx-auto"
               >
-                <p className="text-[20px] sm:text-[28px] md:text-[36px] lg:text-[44px] leading-[1.28] sm:leading-[1.2] tracking-tight text-white font-medium sm:font-light text-pretty drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
+                <p className="text-[20px] sm:text-[28px] md:text-[36px] lg:text-[44px] leading-[1.28] sm:leading-[1.2] tracking-tight text-white font-medium sm:font-light text-pretty break-words drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
                   {quote}
                 </p>
 
