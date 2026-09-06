@@ -73,8 +73,9 @@ export default function DashboardHome({
 
           const preservedInspiration = {
             hasReceivedQuote: true,
-            id: parsed._id || null,
-            quoteId: parsed._id || null,
+            id: parsed.receivedQuoteId || parsed._id || null,
+            quoteId: parsed.quoteId || parsed._id || null,
+            receivedQuoteId: parsed.receivedQuoteId || null,
             text: parsed.text || parsed.quote || "",
             previewText: parsed.text || parsed.quote || "",
             author: parsed.author || "MyInspireTag",
@@ -158,7 +159,7 @@ export default function DashboardHome({
         const flattened = flattenQuotePayload(quote);
         const formattedInspiration = {
           hasReceivedQuote: true,
-          id: flattened._id || flattened.receivedQuoteId,
+          id: flattened.receivedQuoteId || flattened._id,
           quoteId: flattened._id,
           receivedQuoteId: flattened.receivedQuoteId || flattened._id,
           text: flattened.text || '',
@@ -212,7 +213,7 @@ export default function DashboardHome({
         overlayCategoryRef.current = data?.category?.name || 'Inspiration';
         const formattedInspiration = {
           hasReceivedQuote: true,
-          id: flattened._id || flattened.receivedQuoteId,
+          id: flattened.receivedQuoteId || flattened._id,
           quoteId: flattened._id,
           receivedQuoteId: flattened.receivedQuoteId || flattened._id,
           text: flattened.text || '',
@@ -266,7 +267,10 @@ export default function DashboardHome({
           inspiration={currentInspiration}
           onInspire={handleReceiveFirst}
           onShare={handleShare}
-          onReadAgain={() => currentInspiration?.id && handleReadAgain(currentInspiration.id)}
+          onReadAgain={() => {
+            const targetId = currentInspiration?.receivedQuoteId || currentInspiration?.id;
+            if (targetId) handleReadAgain(targetId);
+          }}
           isReceiving={receiveQuote.isPending}
           isMuted={isOverlayOpen}
           disableAutoplay={isOverlayOpen}

@@ -168,11 +168,18 @@ export function mapCategories(categories) {
  */
 export function mapLatestInspiration(latestInspiration, dailyUsage) {
   const quote = latestInspiration?.latestQuote || null;
+  const receivedQuoteId =
+    quote?.id ||
+    latestInspiration?.receivedQuoteId ||
+    latestInspiration?._id ||
+    quote?.receivedQuoteId ||
+    null;
 
   return {
     hasReceivedQuote: !!latestInspiration?.hasReceivedQuote,
-    id: quote?.id || quote?.quoteId || quote?._id || null,
+    id: receivedQuoteId || quote?.quoteId || quote?._id || null,
     quoteId: quote?.quoteId || quote?._id || quote?.id || null,
+    receivedQuoteId,
     text: quote?.fullText || quote?.previewText || quote?.text || '',
     previewText: quote?.previewText || quote?.text || '',
     author: quote?.author || 'MyInspireTag',
