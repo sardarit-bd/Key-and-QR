@@ -143,8 +143,11 @@ export const authService = {
     /**
      * Google OAuth - Redirect to backend
      */
-    googleLogin: () => {
-        window.location.href = "/api/auth/google";
+    googleLogin: (redirect = null) => {
+        const targetUrl = redirect
+            ? `/api/auth/google?redirect=${encodeURIComponent(redirect)}`
+            : "/api/auth/google";
+        window.location.href = targetUrl;
     },
 };
 

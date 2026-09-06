@@ -622,7 +622,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
             {/* Collection button */}
             <button
-              onClick={() => router.push(user ? "/dashboard/user/favorites" : "/login")}
+              onClick={() => (user ? router.push("/dashboard/user/favorites") : goToAuth("login"))}
               className="flex flex-col items-center gap-0.5 text-[#e6b76f] hover:text-white transition-all active:scale-95 cursor-pointer group"
               aria-label="View collection"
             >
