@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, Share2, Sparkles, BookOpen, X, Gift, Check, Music } from "lucide-react";
 import { toast } from "react-hot-toast";
+import api from "@/lib/api";
 import favoriteService from "@/services/favorite-service/favorite.service";
 import premiumService from "@/services/premium-service/premium.service";
 import orderService from "@/services/order.service";
@@ -24,23 +25,59 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   const pathname = usePathname();
   const { user, isInitialized } = useAuthStore();
 
-  const quoteText = data?.quote || data?.text || "";
-  const quoteAuthor = data?.author;
-  const isPersonalMessage = !!data?.isPersonalMessage;
-  const category = isPersonalMessage ? "personal" : data?.category || "faith";
+  const [quoteData, setQuoteData] = useState(data);
+
+  // Sync quoteData if parent passes updated data prop
+  useEffect(() => {
+    if (data) {
+      setQuoteData(data);
+    }
+  }, [data]);
+
+  // If quoteData already has a revealed quote today and quota is exhausted, reveal immediately.
+  const isAlreadyRevealedAndExhausted = Boolean(
+    quoteData?.latestQuote && !quoteData?.canReveal
+  );
+  const isPersonalMessage = Boolean(
+    quoteData?.isPersonalMessage || quoteData?.latestQuote?.isPersonalMessage
+  );
+
+  const [isRevealed, setIsRevealed] = useState(
+    isAlreadyRevealedAndExhausted || isPersonalMessage
+  );
+  const [isRevealing, setIsRevealing] = useState(false);
+
+  useEffect(() => {
+    if (quoteData) {
+      if (quoteData.latestQuote && !quoteData.canReveal) {
+        setIsRevealed(true);
+      } else if (quoteData.isPersonalMessage) {
+        setIsRevealed(true);
+      }
+    }
+  }, [quoteData]);
+
+  // Active quote data for display (either latestQuote or root quote payload)
+  const activeQuote = quoteData?.latestQuote || (quoteData?.quote || quoteData?.text ? quoteData : null);
+
+  const quoteText = activeQuote?.quote || activeQuote?.text || "";
+  const quoteAuthor = activeQuote?.author;
+  const category = isPersonalMessage ? "personal" : (activeQuote?.category || quoteData?.category || "inspire");
 
   const audioTrack = useMemo(() => {
     const rawAudio =
-      data?.audioTrack ||
-      data?.backgroundMusic ||
-      data?.editorData?.mobile?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
-      data?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
-      data?.editorData?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
-      data?.editorData?.mobile?.audio ||
-      data?.editorData?.desktop?.audio ||
-      data?.editorData?.audio ||
-      data?.audio ||
-      data?.audioUrl ||
+      activeQuote?.audioTrack ||
+      activeQuote?.backgroundMusic ||
+      quoteData?.audioTrack ||
+      quoteData?.backgroundMusic ||
+      activeQuote?.editorData?.mobile?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+      activeQuote?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+      activeQuote?.editorData?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+      activeQuote?.editorData?.mobile?.audio ||
+      activeQuote?.editorData?.desktop?.audio ||
+      activeQuote?.editorData?.audio ||
+      activeQuote?.audio ||
+      activeQuote?.audioUrl ||
       null;
 
     if (!rawAudio) return null;
@@ -54,21 +91,36 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
       return { ...rawAudio, source: rawAudio.url };
     }
     return null;
-  }, [data]);
+  }, [activeQuote, quoteData]);
 
-  // Default to false so every scan presents the signature teaser experience.
-  // The user interaction unlocks audio playback across mobile and desktop browsers.
-  const [isRevealed, setIsRevealed] = useState(false);
   const audioPlayerRef = useRef(null);
 
   const handleReveal = async () => {
-    if (audioPlayerRef.current) {
-      await audioPlayerRef.current.play();
+    if (isRevealing || isRevealed) return;
+    setIsRevealing(true);
+    try {
+      const response = await api.post(`/scan/reveal/${tagCode}`);
+      const unlockedData = response.data?.data;
+      if (unlockedData) {
+        setQuoteData(unlockedData);
+      }
+      if (audioPlayerRef.current) {
+        try {
+          await audioPlayerRef.current.play();
+        } catch (audioErr) {
+          console.warn("Audio autoplay blocked:", audioErr);
+        }
+      }
+      setIsRevealed(true);
+    } catch (err) {
+      const msg = err.response?.data?.message || "Failed to reveal today's quote. Please try again.";
+      toast.error(msg);
+    } finally {
+      setIsRevealing(false);
     }
-    setIsRevealed(true);
   };
 
-  const editorData = data?.editorData || data?.quote?.editorData;
+  const editorData = activeQuote?.editorData || quoteData?.editorData;
   const hasFabricCanvas = Boolean(
     editorData &&
     ((editorData.mobile?.elements && editorData.mobile.elements.length > 0) ||
@@ -77,13 +129,13 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   );
 
   const renderedDesktopUrl =
-    data?.renderedImages?.desktop?.url ||
-    data?.quote?.renderedImages?.desktop?.url ||
+    activeQuote?.renderedImages?.desktop?.url ||
+    quoteData?.renderedImages?.desktop?.url ||
     null;
 
   const renderedMobileUrl =
-    data?.renderedImages?.mobile?.url ||
-    data?.quote?.renderedImages?.mobile?.url ||
+    activeQuote?.renderedImages?.mobile?.url ||
+    quoteData?.renderedImages?.mobile?.url ||
     null;
 
   const hasRenderedImage = Boolean(renderedDesktopUrl || renderedMobileUrl);
@@ -94,17 +146,19 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     const rawImage =
       renderedMobileUrl ||
       renderedDesktopUrl ||
-      (data?.renderedImage && typeof data.renderedImage === "string" ? data.renderedImage : data?.renderedImage?.url) ||
-      data?.imageUrl ||
-      data?.image ||
-      data?.editorData?.background?.url ||
+      (activeQuote?.renderedImage && typeof activeQuote.renderedImage === "string" ? activeQuote.renderedImage : activeQuote?.renderedImage?.url) ||
+      activeQuote?.imageUrl ||
+      activeQuote?.image ||
+      activeQuote?.editorData?.background?.url ||
+      quoteData?.imageUrl ||
+      quoteData?.image ||
       resolveBackgroundImage(category) ||
       null;
 
     if (!rawImage) return null;
     if (typeof rawImage === "string") return rawImage;
     return rawImage?.src || null;
-  }, [data, category, renderedMobileUrl, renderedDesktopUrl]);
+  }, [activeQuote, quoteData, category, renderedMobileUrl, renderedDesktopUrl]);
 
   const categoryLabel = getPrettyCategoryLabel(category);
   const canFavorite = !isPersonalMessage;
@@ -150,7 +204,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   };
 
   const checkFavoriteStatus = async () => {
-    const id = data?._id;
+    const id = activeQuote?._id || quoteData?._id;
     if (!id) return;
     try {
       const response = await favoriteService.checkFavorite({ quoteId: id });
@@ -166,20 +220,20 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     if (isInitialized && user && canFavorite) {
       checkFavoriteStatus();
     }
-  }, [isInitialized, user, tagCode, canFavorite]);
+  }, [isInitialized, user, tagCode, canFavorite, activeQuote?._id]);
 
   const goToAuth = (type = "register") => {
-    if (typeof window !== "undefined" && data) {
+    if (typeof window !== "undefined" && (activeQuote || quoteData)) {
       try {
         const quoteToPreserve = {
-          _id: data?._id || null,
-          quote: quoteText || data?.quote || data?.text || "",
-          text: quoteText || data?.quote || data?.text || "",
-          author: quoteAuthor || data?.author || "",
-          category: category || data?.category || "faith",
+          _id: activeQuote?._id || quoteData?._id || null,
+          quote: quoteText || activeQuote?.quote || activeQuote?.text || "",
+          text: quoteText || activeQuote?.quote || activeQuote?.text || "",
+          author: quoteAuthor || activeQuote?.author || "",
+          category: category || activeQuote?.category || "faith",
           isPersonalMessage: !!isPersonalMessage,
-          renderedImages: data?.renderedImages || null,
-          editorData: data?.editorData || null,
+          renderedImages: activeQuote?.renderedImages || quoteData?.renderedImages || null,
+          editorData: activeQuote?.editorData || quoteData?.editorData || null,
           image: resolvedBgUrl || null,
           audioTrack: audioTrack || null,
           tagCode: tagCode || null,
@@ -202,7 +256,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
       return;
     }
 
-    const id = data?._id;
+    const id = activeQuote?._id || quoteData?._id;
     if (!id) {
       toast.error("This quote can't be saved right now");
       return;
@@ -355,22 +409,30 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
               </div>
 
               <h2 className="text-2xl sm:text-3xl font-light tracking-tight text-white drop-shadow-md mb-2">
-                Your Inspiration Awaits
+                Your inspiration is ready
               </h2>
               <p className="text-xs sm:text-sm text-white/70 font-light leading-relaxed mb-6 max-w-[280px]">
-                A personalized quote and soundtrack have been prepared for you.
+                Reveal today&apos;s quote
+                {quoteData?.remainingQuotesToday ? ` (${quoteData.remainingQuotesToday} available today)` : ""}
               </p>
 
               {/* Primary Reveal Button */}
               <motion.button
                 type="button"
-                whileHover={{ scale: 1.03 }}
-                whileTap={{ scale: 0.96 }}
+                disabled={isRevealing}
+                whileHover={!isRevealing ? { scale: 1.03 } : {}}
+                whileTap={!isRevealing ? { scale: 0.96 } : {}}
                 onClick={handleReveal}
-                className="cursor-pointer group relative inline-flex items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 px-7 py-3 text-xs sm:text-sm font-bold text-black shadow-[0_0_35px_rgba(245,158,11,0.5)] hover:shadow-[0_0_45px_rgba(245,158,11,0.7)] hover:brightness-105 transition-all duration-200"
+                className="cursor-pointer group relative inline-flex items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 px-7 py-3 text-xs sm:text-sm font-bold text-black shadow-[0_0_35px_rgba(245,158,11,0.5)] hover:shadow-[0_0_45px_rgba(245,158,11,0.7)] hover:brightness-105 transition-all duration-200 disabled:opacity-75 disabled:cursor-not-allowed"
               >
-                <Sparkles size={15} className="fill-current text-black" />
-                <span className="tracking-wide font-bold">Reveal Your Inspiration</span>
+                {isRevealing ? (
+                  <div className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Sparkles size={15} className="fill-current text-black" />
+                )}
+                <span className="tracking-wide font-bold">
+                  {isRevealing ? "Revealing Today's Quote..." : "Reveal Today's Quote"}
+                </span>
                 <Music size={15} className="text-black/80" />
               </motion.button>
 
@@ -502,12 +564,12 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             </div>
           )}
 
-          {/* Repeat Scan Notice (Strictly for repeat scans on random daily rotation) */}
-          {Boolean(data?.isAlreadyUnlockedToday && data?.message && data?.sourceType === "random") && (
+          {/* Repeat Scan Notice (Shown when quote was already unlocked today and quota is exhausted) */}
+          {Boolean(!quoteData?.canReveal && (quoteData?.isAlreadyUnlockedToday || quoteData?.latestQuote?.isAlreadyUnlockedToday || quoteData?.message || quoteData?.latestQuote?.message)) && (
             <div className="w-full mb-2.5 rounded-2xl border border-amber-400/25 bg-neutral-950/80 backdrop-blur-xl px-3.5 py-1.5 shadow-lg flex items-center justify-center gap-2 text-center animate-in fade-in duration-300">
               <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0" />
               <p className="text-[11.5px] text-amber-200/90 font-light">
-                {data.message}
+                {quoteData?.message || quoteData?.latestQuote?.message || "Today's quote has already been unlocked. Come back tomorrow!"}
               </p>
             </div>
           )}
