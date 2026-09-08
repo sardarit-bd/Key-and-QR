@@ -28,8 +28,6 @@ export default function LatestInspirationCard({
   const usedToday = inspiration?.dailyUsage?.usedToday ?? 0;
   const dailyLimit = inspiration?.dailyUsage?.dailyLimit ?? 0;
   const quoteId = inspiration?.quoteId || inspiration?.id || null;
-  // 0 dailyLimit means unlimited (premium); only block when limit > 0 and reached.
-  const isLimitReached = dailyLimit > 0 && usedToday >= dailyLimit;
 
   // Video and Media Detection
   const videoUrl =
@@ -356,33 +354,12 @@ export default function LatestInspirationCard({
         {/* On desktop (sm: >= 640px), hidden by default and reveals smoothly on hover/focus */}
         {/* On mobile (< 640px), permanently visible and touch-accessible */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3 opacity-100 translate-y-0 pointer-events-auto sm:opacity-0 sm:translate-y-2 sm:pointer-events-none sm:group-hover:opacity-100 sm:group-hover:translate-y-0 sm:group-hover:pointer-events-auto sm:group-focus-within:opacity-100 sm:group-focus-within:translate-y-0 sm:group-focus-within:pointer-events-auto transition-all duration-300 ease-out z-20 w-full">
-          {/* Row 1 on mobile / Left group on desktop */}
-          <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-2 w-full sm:w-auto">
-            {/* Primary Action: Inspire */}
-            <button
-              onClick={isLimitReached ? undefined : onInspire}
-              disabled={isReceiving || isLimitReached}
-              aria-disabled={isLimitReached}
-              title={isLimitReached ? "Daily limit reached — come back tomorrow" : undefined}
-              className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full px-4 sm:px-4.5 py-2 text-[12px] sm:text-[13px] font-semibold transition-all duration-150 active:scale-[0.97] flex-1 sm:flex-initial ${isLimitReached
-                ? "bg-white/10 border border-white/15 text-white/40 cursor-not-allowed opacity-60 backdrop-blur-md"
-                : `bg-accent text-accent-foreground shadow-md shadow-accent/20 hover:brightness-105 disabled:opacity-60 disabled:cursor-not-allowed ${usedToday === 0 ? "ring-2 ring-accent/60 shadow-lg shadow-accent/30" : ""}`
-                }`}
-            >
-              <Sparkles size={14} fill={isLimitReached ? "none" : "currentColor"} />
-              <span className="truncate">
-                {isReceiving
-                  ? "Inspiring..."
-                  : isLimitReached
-                    ? "Limit reached"
-                    : usedToday === 0
-                      ? "Receive Inspiration"
-                      : "Inspire"}
-              </span>
-            </button>
+          {/* Mobile Row 1 (Usage Status & Future Reflect Slot) / Desktop Left Action Group */}
+          <div className="flex items-center justify-end sm:justify-start gap-2 w-full sm:w-auto">
+            {/* Space reserved for future Reflect / Diary action */}
 
             {/* Mobile Usage Status Pill (Row 1 right) */}
-            <div className="sm:hidden inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 backdrop-blur-md px-3 py-2 text-[11px] font-medium text-white/85 select-none shrink-0">
+            <div className="sm:hidden inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 backdrop-blur-md px-3 py-1.5 text-[11px] font-medium text-white/85 select-none shrink-0">
               <Sparkles size={12} className="text-accent shrink-0" />
               <span>
                 {dailyLimit === 0

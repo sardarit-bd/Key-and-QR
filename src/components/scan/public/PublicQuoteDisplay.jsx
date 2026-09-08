@@ -46,9 +46,14 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     isAlreadyRevealedAndExhausted || isPersonalMessage
   );
   const [isRevealing, setIsRevealing] = useState(false);
+  const [isLimitReached, setIsLimitReached] = useState(quoteData?.canReveal === false);
+  const lastClickTimeRef = useRef(0);
 
   useEffect(() => {
     if (quoteData) {
+      if (quoteData.canReveal === false) {
+        setIsLimitReached(true);
+      }
       if (quoteData.latestQuote && !quoteData.canReveal) {
         setIsRevealed(true);
       } else if (quoteData.isPersonalMessage) {
@@ -96,7 +101,22 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   const audioPlayerRef = useRef(null);
 
   const handleReveal = async () => {
+    const now = Date.now();
+    // Throttle rapid repeated clicks (400ms debounce/throttle)
+    if (now - lastClickTimeRef.current < 400) {
+      return;
+    }
+    lastClickTimeRef.current = now;
+
     if (isRevealing || isRevealed) return;
+
+    if (isLimitReached) {
+      toast.error("Daily limit reached. Free users can reveal 1 quote per day. Scan again tomorrow!", {
+        id: "daily-limit-reached-toast",
+      });
+      return;
+    }
+
     setIsRevealing(true);
     try {
       const response = await api.post(`/scan/reveal/${tagCode}`);
@@ -113,8 +133,22 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
       }
       setIsRevealed(true);
     } catch (err) {
-      const msg = err.response?.data?.message || "Failed to reveal today's quote. Please try again.";
-      toast.error(msg);
+      const isLimit =
+        err.response?.status === 429 ||
+        err.response?.data?.code === "DAILY_LIMIT_REACHED" ||
+        err.response?.data?.message?.toLowerCase().includes("limit");
+
+      if (isLimit) {
+        setIsLimitReached(true);
+        toast.error("Daily limit reached. Free users can reveal 1 quote per day. Scan again tomorrow!", {
+          id: "daily-limit-reached-toast",
+        });
+      } else {
+        const msg = err.response?.data?.message || "Failed to reveal today's quote. Please try again.";
+        toast.error(msg, {
+          id: "reveal-quote-error-toast",
+        });
+      }
     } finally {
       setIsRevealing(false);
     }
