@@ -46,9 +46,25 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     isAlreadyRevealedAndExhausted || isPersonalMessage
   );
   const [isRevealing, setIsRevealing] = useState(false);
+  const [isLimitReached, setIsLimitReached] = useState(quoteData?.canReveal === false);
+  const lastClickTimeRef = useRef(0);
+
+  useEffect(() => {
+    const originalBg = document.body.style.backgroundColor;
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.backgroundColor = '#000000';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.backgroundColor = originalBg;
+      document.body.style.overflow = originalOverflow;
+    };
+  }, []);
 
   useEffect(() => {
     if (quoteData) {
+      if (quoteData.canReveal === false) {
+        setIsLimitReached(true);
+      }
       if (quoteData.latestQuote && !quoteData.canReveal) {
         setIsRevealed(true);
       } else if (quoteData.isPersonalMessage) {
@@ -96,7 +112,22 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   const audioPlayerRef = useRef(null);
 
   const handleReveal = async () => {
+    const now = Date.now();
+    // Throttle rapid repeated clicks (400ms debounce/throttle)
+    if (now - lastClickTimeRef.current < 400) {
+      return;
+    }
+    lastClickTimeRef.current = now;
+
     if (isRevealing || isRevealed) return;
+
+    if (isLimitReached) {
+      toast.error("Daily limit reached. Free users can reveal 1 quote per day. Scan again tomorrow!", {
+        id: "daily-limit-reached-toast",
+      });
+      return;
+    }
+
     setIsRevealing(true);
     try {
       const response = await api.post(`/scan/reveal/${tagCode}`);
@@ -113,8 +144,22 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
       }
       setIsRevealed(true);
     } catch (err) {
-      const msg = err.response?.data?.message || "Failed to reveal today's quote. Please try again.";
-      toast.error(msg);
+      const isLimit =
+        err.response?.status === 429 ||
+        err.response?.data?.code === "DAILY_LIMIT_REACHED" ||
+        err.response?.data?.message?.toLowerCase().includes("limit");
+
+      if (isLimit) {
+        setIsLimitReached(true);
+        toast.error("Daily limit reached. Free users can reveal 1 quote per day. Scan again tomorrow!", {
+          id: "daily-limit-reached-toast",
+        });
+      } else {
+        const msg = err.response?.data?.message || "Failed to reveal today's quote. Please try again.";
+        toast.error(msg, {
+          id: "reveal-quote-error-toast",
+        });
+      }
     } finally {
       setIsRevealing(false);
     }
@@ -325,10 +370,10 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   };
 
   return (
-    <div className="fixed inset-0 w-screen h-[100dvh] overflow-hidden bg-black select-none z-10 text-white flex flex-col justify-between">
-      {/* 100% Full-Screen Edge-to-Edge Visual Quote Artwork (Fabric Canvas / Pre-rendered Image / Wallpaper) */}
-      {hasFabricCanvas ? (
-        <div className="absolute inset-0 w-full h-[100dvh] overflow-hidden pointer-events-none -z-10">
+    <div className="fixed inset-0 w-full h-full bg-black overflow-hidden overscroll-none select-none z-10 text-white flex flex-col justify-between">
+      {/* 100% Full-Screen Edge-to-Edge Visual Quote Artwork Stage (Fabric Canvas / Pre-rendered Image / Wallpaper) */}
+      <div className="absolute inset-0 w-full h-full bg-black overflow-hidden pointer-events-none -z-10">
+        {hasFabricCanvas ? (
           <VisualQuoteRenderer
             editorData={editorData}
             mode="auto"
@@ -336,10 +381,8 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             fit="cover"
             className="w-full h-full"
           />
-        </div>
-      ) : hasRenderedImage ? (
-        <div className="absolute inset-0 w-full h-[100dvh] overflow-hidden pointer-events-none -z-10">
-          <picture className="w-full h-full">
+        ) : hasRenderedImage ? (
+          <picture className="w-full h-full flex items-center justify-center">
             {renderedMobileUrl && (
               <source media="(max-width: 639px)" srcSet={renderedMobileUrl} />
             )}
@@ -353,18 +396,18 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
               className="w-full h-full object-cover object-center"
             />
           </picture>
-        </div>
-      ) : resolvedBgUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={resolvedBgUrl}
-          alt="Background"
-          className="absolute inset-0 w-full h-[100dvh] object-cover object-center -z-20 pointer-events-none"
-        />
-      ) : null}
+        ) : resolvedBgUrl ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={resolvedBgUrl}
+            alt="Background"
+            className="absolute inset-0 w-full h-full object-cover object-center -z-20 pointer-events-none"
+          />
+        ) : null}
 
-      {/* Full-Screen Dark Vignette Overlay Gradient */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/15 to-black/75 -z-10 pointer-events-none" />
+        {/* Keep top & center 100% clean and clear; only subtle bottom scrim for floating actions */}
+        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 to-transparent -z-10 pointer-events-none" />
+      </div>
 
       {/* Full-Screen Interaction Overlay for Autoplay Audio on Mobile */}
       <AnimatePresence>

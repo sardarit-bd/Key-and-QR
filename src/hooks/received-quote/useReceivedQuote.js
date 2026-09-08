@@ -37,9 +37,13 @@ export function useReceiveQuoteMutation() {
     onError: (error) => {
       const msg = error?.message || 'Failed to receive quote';
       if (msg.includes('No available quotes')) {
-        toast.error('No inspiration is available in this category yet.');
+        toast.error('No inspiration is available in this category yet.', { id: 'no-quotes-toast' });
+      } else if (msg.toLowerCase().includes('limit')) {
+        toast.error('Daily limit reached. Free users can reveal 1 quote per day. Scan again tomorrow!', {
+          id: 'daily-limit-reached-toast',
+        });
       } else {
-        toast.error(msg);
+        toast.error(msg, { id: 'receive-quote-error' });
       }
     },
   });

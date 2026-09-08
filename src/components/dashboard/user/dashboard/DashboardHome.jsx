@@ -145,6 +145,7 @@ export default function DashboardHome({
     // to flash-close instantly when the backend returns 429.
     if (dailyUsage?.isLimitReached) {
       toast('Come back tomorrow for more inspiration ✨', {
+        id: 'daily-limit-reached-toast',
         icon: '✨',
         style: { background: '#1e1e2e', color: '#e2e8f0', border: '1px solid rgba(255,255,255,0.1)' },
       });

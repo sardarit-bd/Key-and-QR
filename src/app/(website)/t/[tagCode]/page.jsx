@@ -62,21 +62,52 @@ export default function PublicScanPage() {
         }
     }, [tagCode, fetchQuote]);
 
+    useEffect(() => {
+        const originalBg = document.body.style.backgroundColor;
+        const originalOverflow = document.body.style.overflow;
+        document.body.style.backgroundColor = '#000000';
+        document.body.style.overflow = 'hidden';
+        return () => {
+            document.body.style.backgroundColor = originalBg;
+            document.body.style.overflow = originalOverflow;
+        };
+    }, []);
+
     if (status === "loading") {
-        return <ScanLoadingScreen message="Awakening your inspiration..." />;
+        return (
+            <div className="min-h-screen w-full bg-black overscroll-none select-none">
+                <ScanLoadingScreen message="Awakening your inspiration..." />
+            </div>
+        );
     }
 
     if (status === "invalid") {
-        return <InvalidQrScreen tagCode={tagCode} />;
+        return (
+            <div className="min-h-screen w-full bg-black overscroll-none select-none">
+                <InvalidQrScreen tagCode={tagCode} />
+            </div>
+        );
     }
 
     if (status === "inactive") {
-        return <InactiveQrScreen tagCode={tagCode} />;
+        return (
+            <div className="min-h-screen w-full bg-black overscroll-none select-none">
+                <InactiveQrScreen tagCode={tagCode} />
+            </div>
+        );
     }
 
     if (status === "error") {
-        return <ScanErrorScreen message={errorMessage} onRetry={fetchQuote} />;
+        return (
+            <div className="min-h-screen w-full bg-black overscroll-none select-none">
+                <ScanErrorScreen message={errorMessage} onRetry={fetchQuote} />
+            </div>
+        );
     }
 
-    return <PublicQuoteDisplay data={quoteData} tagCode={tagCode} />;
+    return (
+        <div className="min-h-screen w-full bg-black overscroll-none select-none">
+            <PublicQuoteDisplay data={quoteData} tagCode={tagCode} />
+        </div>
+    );
 }
