@@ -270,10 +270,10 @@ export default function LatestInspirationCard({
         </>
       )}
 
-      {/* Subtle bottom gradient scrim revealed on desktop hover/focus for readability */}
+      {/* Subtle bottom gradient scrim softened on mobile to preserve natural artwork clarity */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-black/80 via-black/40 to-transparent opacity-100 sm:opacity-0 transition-opacity duration-300 ease-out sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 z-[5]"
+        className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/50 via-black/20 to-transparent opacity-90 sm:opacity-0 transition-opacity duration-300 ease-out sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 z-[5]"
       />
 
       {/* ===== Controls & Legacy Text Overlay ===== */}
