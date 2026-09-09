@@ -409,7 +409,7 @@ export default function LatestInspirationCard({
           </div>
 
           {/* Row 2 on mobile: Secondary Action Buttons (Favorite + Share + Read Again) */}
-          <div className="flex sm:hidden items-center justify-between gap-1.5 w-full">
+          <div className="flex sm:hidden items-center justify-between gap-1.5 w-full pb-2.5">
             {quoteId ? (
               <FavoriteButton
                 id={quoteId}
