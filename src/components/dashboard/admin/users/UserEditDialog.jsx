@@ -74,8 +74,8 @@ export default function UserEditDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-2">
-            <span className="text-sm font-semibold text-primary">{initials}</span>
+          <div className="w-12 h-12 rounded-2xl bg-[#24272D] border border-[#2A2D35] flex items-center justify-center mb-2">
+            <span className="text-sm font-semibold text-foreground">{initials}</span>
           </div>
           <DialogTitle>Edit User</DialogTitle>
           <DialogDescription>
@@ -143,7 +143,7 @@ export default function UserEditDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
-            className="h-10 px-4 rounded-xl bg-neutral-800/80 hover:bg-neutral-700 text-neutral-200 border border-neutral-700/80 font-medium transition-all cursor-pointer select-none"
+            className="h-10 px-4 rounded-lg border border-[#2A2D35] bg-transparent text-[#9BA1AD] hover:bg-[#24272D] hover:text-white font-medium transition-colors cursor-pointer select-none"
           >
             Cancel
           </Button>
@@ -151,7 +151,7 @@ export default function UserEditDialog({
             type="button"
             onClick={handleSave}
             disabled={isLoading}
-            className="h-10 px-5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all cursor-pointer select-none flex items-center gap-1.5"
+            className="h-10 px-5 rounded-lg bg-[#1E2025] hover:bg-[#282B32] text-white border border-[#323640] font-medium shadow-sm transition-all cursor-pointer select-none flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20"
           >
             {isLoading ? (
               'Saving...'

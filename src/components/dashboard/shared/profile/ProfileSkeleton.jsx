@@ -8,7 +8,7 @@
 export default function ProfileSkeleton() {
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 py-6 pb-24 space-y-5 animate-pulse">
+      <div className="w-full max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6 animate-pulse">
         {/* Page header */}
         <div className="flex items-center justify-between">
           <div className="space-y-2">

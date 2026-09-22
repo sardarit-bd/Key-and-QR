@@ -17,8 +17,8 @@ export default function AdminWelcomeHeader({ selectedRange = '30d', onRangeChang
     >
       <div>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
-          <span className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-primary/10 border border-primary/20 shadow-sm">
-            <Shield size={20} className="text-primary" />
+          <span className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-[#24272D] border border-[#2A2D35] shadow-sm">
+            <Shield size={20} className="text-[#9BA1AD]" />
           </span>
           Welcome back, {firstName}
         </h1>

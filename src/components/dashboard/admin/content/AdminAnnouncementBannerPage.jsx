@@ -415,7 +415,7 @@ export default function AdminAnnouncementBannerPage() {
   const PreviewIcon = resolveIcon(currentPreviewMessage?.icon);
 
   return (
-    <div className="min-h-screen p-3 sm:p-5 md:p-8 max-w-4xl mx-auto space-y-6">
+    <div className="w-full p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Top Header */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
@@ -424,7 +424,7 @@ export default function AdminAnnouncementBannerPage() {
       >
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#24272D] text-muted-foreground border border-[#2A2D35]">
               <Megaphone size={18} />
             </span>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">

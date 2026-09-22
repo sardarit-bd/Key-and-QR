@@ -14,7 +14,7 @@ import { AlertTriangle, Trash2, Ban } from 'lucide-react';
 const CONFIG = {
   delete: {
     icon: Trash2,
-    iconClass: 'text-red-400',
+    iconClass: 'text-red-600 dark:text-red-400',
     bgClass: 'bg-red-500/10 border-red-500/20',
     title: 'Delete',
     description: 'This action is permanent and cannot be undone. All associated data will be removed.',
@@ -23,7 +23,7 @@ const CONFIG = {
   },
   suspend: {
     icon: Ban,
-    iconClass: 'text-amber-400',
+    iconClass: 'text-amber-600 dark:text-amber-400',
     bgClass: 'bg-amber-500/10 border-amber-500/20',
     title: 'Suspend User',
     description: 'This user will lose access to their account until reactivated. Their data will be preserved.',
@@ -32,7 +32,7 @@ const CONFIG = {
   },
   activate: {
     icon: AlertTriangle,
-    iconClass: 'text-emerald-400',
+    iconClass: 'text-emerald-600 dark:text-emerald-400',
     bgClass: 'bg-emerald-500/10 border-emerald-500/20',
     title: 'Activate User',
     description: 'This will restore full access to the user account.',
@@ -84,7 +84,7 @@ export default function ConfirmDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
-            className="h-10 px-4 rounded-xl bg-neutral-800/80 hover:bg-neutral-700 text-neutral-200 border border-neutral-700/80 font-medium transition-all cursor-pointer select-none"
+            className="h-10 px-4 rounded-lg border border-[#2A2D35] bg-transparent text-[#9BA1AD] hover:bg-[#24272D] hover:text-white font-medium transition-colors cursor-pointer select-none"
           >
             Cancel
           </Button>
@@ -95,8 +95,8 @@ export default function ConfirmDialog({
             disabled={isLoading}
             className={
               config.confirmVariant === 'destructive'
-                ? "h-10 px-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-medium shadow-[0_0_15px_rgba(239,68,68,0.3)] transition-all cursor-pointer select-none"
-                : "h-10 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all cursor-pointer select-none"
+                ? "h-10 px-4 rounded-lg bg-destructive text-destructive-foreground hover:bg-destructive/90 font-medium shadow-sm transition-all cursor-pointer select-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-destructive"
+                : "h-10 px-4 rounded-lg bg-[#1E2025] hover:bg-[#282B32] text-white border border-[#323640] font-medium shadow-sm transition-all cursor-pointer select-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20"
             }
           >
             {isLoading ? 'Processing...' : config.confirmLabel}

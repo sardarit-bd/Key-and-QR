@@ -1,30 +1,20 @@
-import productService from "@/services/product-service/product.service";
-import { useQuery } from "@tanstack/react-query";
-
-// ============================================================
-// QUERY KEYS
-// ============================================================
-
-export const productCategoryKeys = {
-    all: ['product-categories'],
-    lists: () => [...productCategoryKeys.all, 'list'],
-};
+import {
+  useProductCategories,
+  productCategoryKeys,
+} from "@/hooks/product-category/useProductCategories";
 
 // Backwards compatibility alias
 export const categoryKeys = productCategoryKeys;
+export { productCategoryKeys };
 
 /**
- * Get product categories (from GET /products/categories).
- * NOTE: this is the PRODUCT category list — not the quote category list.
+ * Get product categories from /product-categories.
+ * NOTE: this is the physical PRODUCT category list — not the quote category list.
  * Quote categories come from useQuoteCategories() (GET /categories).
  */
-export function useCategories() {
-    return useQuery({
-        queryKey: productCategoryKeys.lists(),
-        queryFn: () => productService.getCategories(),
-        staleTime: 10 * 60 * 1000, // 10 minutes
-        gcTime: 30 * 60 * 1000, // 30 minutes
-        retry: 2,
-    });
+export function useCategories(params = {}) {
+  return useProductCategories(params);
 }
+
+export default useCategories;
 

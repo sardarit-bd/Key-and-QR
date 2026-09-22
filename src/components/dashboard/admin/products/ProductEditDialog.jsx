@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/select';
 import { Upload, X, Save, Package } from 'lucide-react';
 import QuantityInput from '@/components/ui/QuantityInput';
-import { useCategories } from '@/hooks/dynamic-categories/useCategories';
+import { useProductCategories } from '@/hooks/product-category/useProductCategories';
 
 const STATUS_OPTIONS = [
   { value: 'true', label: 'Active' },
@@ -36,6 +36,22 @@ function validateImageSize(file, maxBytes = 5 * 1024 * 1024) {
   return file.size <= maxBytes;
 }
 
+function isValidObjectId(val) {
+  return typeof val === 'string' && /^[0-9a-fA-F]{24}$/.test(val.trim());
+}
+
+function getCategoryObjectId(cat) {
+  if (!cat) return '';
+  if (typeof cat === 'string') {
+    return isValidObjectId(cat) ? cat.trim() : '';
+  }
+  if (typeof cat === 'object') {
+    if (cat._id && isValidObjectId(String(cat._id))) return String(cat._id);
+    if (cat.id && isValidObjectId(String(cat.id))) return String(cat.id);
+  }
+  return '';
+}
+
 export default function ProductEditDialog({
   open,
   onOpenChange,
@@ -48,7 +64,7 @@ export default function ProductEditDialog({
     data: categoriesData,
     isLoading: isCategoriesLoading,
     isError: isCategoriesError,
-  } = useCategories();
+  } = useProductCategories();
 
   const categories = Array.isArray(categoriesData)
     ? categoriesData
@@ -75,14 +91,10 @@ export default function ProductEditDialog({
         setName(product.name || '');
         setPrice(String(product.price ?? ''));
         const initialCatId =
-          (typeof product.categoryId === 'object' && product.categoryId !== null
-            ? (product.categoryId._id || product.categoryId.id)
-            : product.categoryId) ||
-          (typeof product.category === 'object' && product.category !== null
-            ? (product.category._id || product.category.id)
-            : product.category) ||
+          getCategoryObjectId(product.categoryId) ||
+          getCategoryObjectId(product.category) ||
           '';
-        setCategoryId(initialCatId ? String(initialCatId) : '');
+        setCategoryId(initialCatId);
         setBrand(product.brand || '');
         setStock(String(product.stock ?? '0'));
         setDescription(product.description || '');
@@ -222,7 +234,9 @@ export default function ProductEditDialog({
   const handleSave = () => {
     const newErrors = {};
     if (!name.trim()) newErrors.name = 'Product name required';
-    if (!categoryId || !categoryId.trim()) newErrors.categoryId = 'Category required';
+    if (!categoryId || !categoryId.trim() || !isValidObjectId(categoryId.trim())) {
+      newErrors.categoryId = 'Valid category selection required';
+    }
     if (!price || isNaN(Number(price)) || Number(price) < 0) newErrors.price = 'Valid price required';
     if (stock === '' || isNaN(Number(stock)) || Number(stock) < 0) newErrors.stock = 'Valid stock quantity required';
     if (mode === 'create' && !imageFile && !product?.image?.url) newErrors.image = 'Product image required';
@@ -232,11 +246,13 @@ export default function ProductEditDialog({
       return;
     }
 
+    const selectedCategoryId = categoryId.trim();
+
     const formData = new FormData();
     formData.append('name', name.trim());
     formData.append('price', Number(price));
-    formData.append('categoryId', categoryId.trim());
-    formData.append('category', categoryId.trim());
+    formData.append('categoryId', selectedCategoryId);
+    formData.append('category', selectedCategoryId);
     formData.append('brand', brand.trim());
     formData.append('stock', Number(stock));
     formData.append('description', description.trim());
@@ -250,7 +266,7 @@ export default function ProductEditDialog({
       formData.append('gallery', file);
     });
 
-    onSave({ formData, id: product?._id });
+    onSave(formData, product?._id);
   };
 
   return (
@@ -430,7 +446,8 @@ export default function ProductEditDialog({
                     ) : (
                       <>
                         {categories.map((c) => {
-                          const id = String(c.id || c._id || '');
+                          const id = getCategoryObjectId(c);
+                          if (!id) return null;
                           const label = c.name || c.label || c.title || id;
                           return (
                             <SelectItem key={id} value={id}>
@@ -439,12 +456,12 @@ export default function ProductEditDialog({
                           );
                         })}
                         {categoryId &&
-                          !categories.some((c) => String(c.id || c._id) === categoryId) && (
+                          isValidObjectId(categoryId) &&
+                          !categories.some((c) => getCategoryObjectId(c) === categoryId) && (
                             <SelectItem key={categoryId} value={categoryId}>
                               {product?.categoryId?.name ||
                                 product?.category?.name ||
-                                product?.category ||
-                                categoryId}
+                                'Selected Category'}
                             </SelectItem>
                           )}
                       </>
@@ -530,7 +547,7 @@ export default function ProductEditDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
-            className="h-10 px-4 rounded-xl bg-neutral-800/80 hover:bg-neutral-700 text-neutral-200 border border-neutral-700/80 font-medium transition-all cursor-pointer select-none"
+            className="h-10 px-4 rounded-lg border border-[#2A2D35] bg-transparent text-[#9BA1AD] hover:bg-[#24272D] hover:text-white font-medium transition-colors cursor-pointer select-none"
           >
             Cancel
           </Button>
@@ -538,7 +555,7 @@ export default function ProductEditDialog({
             type="button"
             onClick={handleSave}
             disabled={isLoading}
-            className="h-10 px-5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all cursor-pointer select-none flex items-center gap-1.5"
+            className="h-10 px-5 rounded-lg bg-[#1E2025] hover:bg-[#282B32] text-white border border-[#323640] font-medium shadow-sm transition-all cursor-pointer select-none flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20"
           >
             {isLoading ? 'Saving...' : (
               <><Save size={15} /> {mode === 'create' ? 'Create Product' : 'Save Changes'}</>

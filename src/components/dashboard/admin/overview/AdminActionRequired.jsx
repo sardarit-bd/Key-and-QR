@@ -68,9 +68,9 @@ export default function AdminActionRequired({ actionRequired = {} }) {
   ].filter(Boolean);
 
   const COLOR_MAP = {
-    amber:  { bg: 'bg-amber-500/10', border: 'border-amber-500/25', icon: 'text-amber-400', btn: 'bg-amber-500 text-black hover:bg-amber-400' },
-    rose:   { bg: 'bg-rose-500/10',  border: 'border-rose-500/25',  icon: 'text-rose-400',  btn: 'bg-rose-500 text-white hover:bg-rose-600' },
-    purple: { bg: 'bg-purple-500/10',border: 'border-purple-500/25',icon: 'text-purple-400',btn: 'bg-purple-500 text-white hover:bg-purple-600' },
+    amber:  { bg: 'bg-amber-500/10', border: 'border-amber-500/25', icon: 'text-amber-600 dark:text-amber-400', btn: 'bg-amber-500 text-black hover:bg-amber-400' },
+    rose:   { bg: 'bg-rose-500/10',  border: 'border-rose-500/25',  icon: 'text-rose-600 dark:text-rose-400',  btn: 'bg-destructive text-destructive-foreground hover:bg-destructive/90' },
+    purple: { bg: 'bg-card', border: 'border-border', icon: 'text-foreground', btn: 'bg-[#1E2025] hover:bg-[#282B32] text-white border border-[#323640] shadow-sm' },
   };
 
   return (

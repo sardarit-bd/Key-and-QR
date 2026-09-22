@@ -72,8 +72,8 @@ const SECTION_LINKS = [
 function Row({ label, value, icon: Icon, children }) {
   return (
     <div className="flex items-start justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
-      <div className="flex items-center gap-2.5 text-foreground-tertiary">
-        {Icon && <Icon size={16} className="w-4 h-4 shrink-0" />}
+      <div className="flex items-center gap-2.5 text-foreground-secondary">
+        {Icon && <Icon size={16} className="w-4 h-4 shrink-0 text-muted-foreground" />}
         <span className="text-[13px] font-medium">{label}</span>
       </div>
       <div className="text-right text-foreground text-[13px] font-medium flex items-center gap-2">

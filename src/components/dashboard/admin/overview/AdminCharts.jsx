@@ -569,7 +569,7 @@ function TopProductsChart({ topProducts = [] }) {
     <Card className="p-4 sm:p-5 flex flex-col justify-between">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-3 border-b border-border/50">
         <div className="flex items-center gap-2">
-          <span className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center text-purple-400">
+          <span className="w-8 h-8 rounded-xl bg-card border border-border flex items-center justify-center text-foreground">
             <Package size={17} />
           </span>
           <div>
@@ -815,7 +815,7 @@ function QuoteModerationWidget({ quoteModeration = [] }) {
     <Card className="p-4 sm:p-5 flex flex-col justify-between">
       <div className="flex items-center justify-between pb-3 border-b border-border/50">
         <div className="flex items-center gap-2">
-          <span className="w-8 h-8 rounded-xl bg-purple-500/10 border border-purple-500/25 flex items-center justify-center text-purple-400">
+          <span className="w-8 h-8 rounded-xl bg-card border border-border flex items-center justify-center text-foreground">
             <Quote size={17} />
           </span>
           <div>

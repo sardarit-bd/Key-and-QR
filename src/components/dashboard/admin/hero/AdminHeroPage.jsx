@@ -334,7 +334,7 @@ export default function AdminHeroPage() {
   const visibleFeatures = form.features.filter((f) => f.enabled !== false);
 
   return (
-    <div className="min-h-screen p-3 sm:p-5 md:p-8 max-w-7xl mx-auto space-y-6">
+    <div className="w-full p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Top Header */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
@@ -343,7 +343,7 @@ export default function AdminHeroPage() {
       >
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#24272D] text-muted-foreground border border-[#2A2D35]">
               <Sparkles size={18} />
             </span>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
@@ -657,10 +657,10 @@ export default function AdminHeroPage() {
                   </p>
 
                   <div className="flex flex-wrap gap-2 pt-1">
-                    <span className="px-3 py-1.5 bg-gray-900 dark:bg-white text-white dark:text-black rounded-lg text-[10px] font-semibold">
+                    <span className="px-3 py-1.5 bg-primary text-primary-foreground rounded-lg text-[10px] font-semibold">
                       {form.primaryCta?.label || 'Shop Collection'}
                     </span>
-                    <span className="px-3 py-1.5 border border-gray-300 dark:border-zinc-700 text-gray-800 dark:text-white rounded-lg text-[10px] font-semibold">
+                    <span className="px-3 py-1.5 border border-border text-foreground rounded-lg text-[10px] font-semibold">
                       {form.secondaryCta?.label || 'How It Works'}
                     </span>
                   </div>
@@ -672,8 +672,8 @@ export default function AdminHeroPage() {
                     const IconComp = getCategoryIcon(feat.icon);
                     return (
                       <div key={idx} className="flex flex-col items-center text-center gap-1">
-                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-white dark:bg-zinc-800 shadow-xs">
-                          <IconComp size={12} className="text-black dark:text-white" />
+                        <div className="flex h-6 w-6 items-center justify-center rounded-full bg-card shadow-xs border border-border/60">
+                          <IconComp size={12} className="text-foreground" />
                         </div>
                         <span className="text-[9px] font-medium text-gray-900 dark:text-white line-clamp-1">
                           {feat.title || `Feature ${idx + 1}`}

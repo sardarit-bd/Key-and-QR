@@ -11,20 +11,20 @@ import { ShoppingBag, User, MapPin, CreditCard, Package, Clock, Calendar } from 
 import { Skeleton } from '@/components/ui/skeleton';
 
 const FULFILLMENT_STYLES = {
-  pending:    'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  assigned:   'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  shipped:    'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-  delivered:  'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  cancelled:  'bg-red-500/10 text-red-400 border-red-500/20',
-  returned:   'bg-purple-500/10 text-purple-400 border-purple-500/20',
+  pending:    'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+  assigned:   'bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20',
+  shipped:    'bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20',
+  delivered:  'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+  cancelled:  'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
+  returned:   'bg-slate-500/10 text-slate-400 border-slate-500/20',
 };
 
 const PAYMENT_STYLES = {
-  paid:      'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  pending:   'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  refunded:  'bg-red-500/10 text-red-400 border-red-500/20',
-  failed:    'bg-red-500/10 text-red-400 border-red-500/20',
-  cancelled: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+  paid:      'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+  pending:   'bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20',
+  refunded:  'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
+  failed:    'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
+  cancelled: 'bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/20',
 };
 
 function formatDate(iso) {

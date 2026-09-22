@@ -99,6 +99,16 @@ body {
   @apply bg-background text-foreground;
 }
 
+::selection {
+  background-color: rgba(255, 255, 255, 0.2); /* soft matte highlight */
+  color: #ffffff;
+}
+
+::-moz-selection {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -127,6 +137,30 @@ body {
     font-family: inherit;
   }
 }
+
+/* Global accessible text selection */
+::selection {
+  background-color: #24272D;
+  color: #ffffff;
+}
+
+::-moz-selection {
+  background-color: #24272D;
+  color: #ffffff;
+}
+
+.dark ::selection,
+.dark::selection {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+.dark ::-moz-selection,
+.dark::-moz-selection {
+  background-color: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
 
 /* Hide Scrollbar (Chrome, Edge, Safari) */
 .hide-scrollbar::-webkit-scrollbar {

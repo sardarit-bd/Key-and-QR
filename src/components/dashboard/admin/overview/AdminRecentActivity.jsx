@@ -5,13 +5,13 @@ import { Activity, ShoppingBag, UserPlus, Quote, QrCode, CreditCard, DollarSign,
 import Card from '@/components/dashboard/user/dashboard/Card';
 
 const ACTIVITY_ICONS = {
-  order_created:        { icon: ShoppingBag, color: 'text-blue-400',   bg: 'bg-blue-500/10 border border-blue-500/20' },
-  user_registered:      { icon: UserPlus,     color: 'text-green-400',  bg: 'bg-green-500/10 border border-green-500/20' },
-  quote_submitted:      { icon: Quote,        color: 'text-purple-400', bg: 'bg-purple-500/10 border border-purple-500/20' },
-  tag_activated:        { icon: QrCode,       color: 'text-amber-400',  bg: 'bg-amber-500/10 border border-amber-500/20' },
-  subscription_upgraded:{ icon: CreditCard,   color: 'text-teal-400',   bg: 'bg-teal-500/10 border border-teal-500/20' },
-  order_paid:           { icon: DollarSign,   color: 'text-emerald-400',bg: 'bg-emerald-500/10 border border-emerald-500/20' },
-  refund_processed:     { icon: RotateCcw,    color: 'text-red-400',    bg: 'bg-red-500/10 border border-red-500/20' },
+  order_created:        { icon: ShoppingBag, color: 'text-blue-600 dark:text-blue-400',   bg: 'bg-blue-500/10 border border-blue-500/20' },
+  user_registered:      { icon: UserPlus,     color: 'text-emerald-600 dark:text-emerald-400',  bg: 'bg-emerald-500/10 border border-emerald-500/20' },
+  quote_submitted:      { icon: Quote,        color: 'text-primary', bg: 'bg-primary/10 border border-primary/20' },
+  tag_activated:        { icon: QrCode,       color: 'text-amber-600 dark:text-amber-400',  bg: 'bg-amber-500/10 border border-amber-500/20' },
+  subscription_upgraded:{ icon: CreditCard,   color: 'text-teal-600 dark:text-teal-400',   bg: 'bg-teal-500/10 border border-teal-500/20' },
+  order_paid:           { icon: DollarSign,   color: 'text-emerald-600 dark:text-emerald-400',bg: 'bg-emerald-500/10 border border-emerald-500/20' },
+  refund_processed:     { icon: RotateCcw,    color: 'text-red-600 dark:text-red-400',    bg: 'bg-red-500/10 border border-red-500/20' },
 };
 
 function timeAgo(dateString) {
@@ -54,7 +54,7 @@ export default function AdminRecentActivity({ activity = [] }) {
     >
       <Card className="p-4 sm:p-5 md:p-6">
         <h2 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-4">
-          <Activity size={18} className="text-purple-400" />
+          <Activity size={18} className="text-primary" />
           Recent Activity
         </h2>
 

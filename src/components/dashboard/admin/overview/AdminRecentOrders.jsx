@@ -69,7 +69,7 @@ export default function AdminRecentOrders({ orders = [] }) {
           </h2>
           <Link
             href="/dashboard/admin/orders"
-            className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
+            className="text-muted-foreground hover:text-white text-xs font-medium inline-flex items-center gap-1 transition-colors"
           >
             View All <Eye size={13} />
           </Link>

@@ -204,34 +204,34 @@ export default function Header() {
                     </Avatar>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80 mt-2">
-                  <DropdownMenuLabel className="p-0">
-                    <div className="px-4 py-4 bg-gradient-to-r from-gray-50 to-white rounded-t-lg">
+                <DropdownMenuContent align="end" className="w-80 mt-2 p-2 bg-popover text-popover-foreground border border-border rounded-xl shadow-lg">
+                  <DropdownMenuLabel className="p-0 font-normal">
+                    <div className="px-3.5 py-3 bg-muted/60 rounded-lg mb-1.5 border border-border/50">
                       <div className="flex items-center gap-3">
-                        <Avatar className="w-12 h-12">
+                        <Avatar className="w-11 h-11 border border-border">
                           <AvatarImage
                             src={getProfileImageUrl() || ""}
                             alt={user?.name || "User"}
                           />
-                          <AvatarFallback className="bg-gray-200 text-gray-700 text-base font-semibold">
+                          <AvatarFallback className="bg-muted text-foreground text-sm font-semibold">
                             {getUserInitials()}
                           </AvatarFallback>
                         </Avatar>
-                        <div className="flex-1">
+                        <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <p className="text-sm font-semibold text-gray-800 capitalize">
+                            <p className="text-sm font-semibold text-foreground capitalize truncate">
                               {user?.name || "User"}
                             </p>
-                            <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                            <span className="text-[11px] font-medium bg-muted text-foreground-secondary border border-border px-2 py-0.5 rounded-full">
                               {user?.role === "admin" ? "Admin" : "Member"}
                             </span>
                           </div>
-                          <p className="text-xs text-gray-500 mt-0.5">
+                          <p className="text-xs text-muted-foreground mt-0.5 truncate">
                             {user?.email}
                           </p>
-                          <div className="flex items-center gap-1 mt-1">
+                          <div className="flex items-center gap-1.5 mt-1">
                             {getProviderIcon()}
-                            <span className="text-xs text-gray-400">
+                            <span className="text-[11px] text-muted-foreground">
                               {getProviderText()} account
                             </span>
                           </div>
@@ -239,27 +239,27 @@ export default function Header() {
                       </div>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild className="cursor-pointer">
-                    <Link
-                      href={`${user?.role === "admin"
-                        ? "/dashboard/admin"
-                        : "/dashboard/user"
-                        }`}
-                      className="flex items-center gap-3 px-4 py-3"
+                  <DropdownMenuSeparator className="my-1 bg-border/60" />
+                  <div className="space-y-1">
+                    <DropdownMenuItem asChild className="p-0">
+                      <Link
+                        href={dashboardHref}
+                        className="bg-transparent text-foreground flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-muted hover:text-foreground focus:bg-muted focus:text-foreground cursor-pointer outline-none"
+                      >
+                        <LayoutDashboard size={16} className="text-muted-foreground shrink-0" />
+                        <span>Dashboard</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={handleLogout}
+                      disabled={loading}
+                      className="bg-transparent text-destructive flex items-center gap-2.5 w-full px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-destructive/10 hover:text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer outline-none"
                     >
-                      <LayoutDashboard size={18} className="text-gray-400" />
-                      <span className="text-sm font-medium">Dashboard</span>
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={handleLogout}
-                    disabled={loading}
-                    className="flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition cursor-pointer"
-                  >
-                    <LogOut size={18} />
-                    <span>{loading ? "Logging out..." : "Logout"}</span>
-                  </DropdownMenuItem>
+                      <LogOut size={16} className="shrink-0" />
+                      <span>{loading ? "Logging out..." : "Logout"}</span>
+                    </DropdownMenuItem>
+                  </div>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
@@ -420,36 +420,36 @@ export default function Header() {
                     )}
 
                     {isAuth && user && (
-                      <div className="pt-4 border-t border-gray-100">
+                      <div className="pt-4 border-t border-border space-y-2">
                         <Link
                           href={dashboardHref}
                           onClick={() => setSheetOpen(false)}
-                          className="flex items-center gap-3 mb-4 p-2.5 rounded-2xl bg-gray-50/80 hover:bg-gray-100 transition-colors"
+                          className="bg-transparent text-foreground flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:bg-muted hover:text-foreground transition-colors"
                         >
-                          <Avatar className="w-10 h-10">
+                          <Avatar className="w-10 h-10 border border-border">
                             <AvatarImage
                               src={getProfileImageUrl() || ""}
                               alt={user?.name || "User"}
                             />
-                            <AvatarFallback className="bg-gray-200 text-gray-700 text-sm font-semibold">
+                            <AvatarFallback className="bg-muted text-foreground text-sm font-semibold">
                               {getUserInitials()}
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-gray-800 capitalize truncate">
+                            <p className="text-sm font-semibold text-foreground capitalize truncate">
                               {user?.name || "User"}
                             </p>
-                            <p className="text-xs text-gray-500 truncate">
+                            <p className="text-xs text-muted-foreground truncate">
                               {user?.email}
                             </p>
                           </div>
-                          <LayoutDashboard size={16} className="text-gray-400 shrink-0" />
+                          <LayoutDashboard size={18} className="text-muted-foreground shrink-0" />
                         </Link>
                         <Button
                           onClick={handleLogout}
                           disabled={loading}
-                          variant="outline"
-                          className="w-full rounded-full border-red-200 text-red-600 hover:bg-red-50 hover:text-red-600"
+                          variant="ghost"
+                          className="bg-transparent text-destructive flex items-center justify-center gap-2 w-full px-3 py-2 rounded-xl text-sm font-medium transition-colors hover:bg-destructive/10 hover:text-destructive border border-destructive/20 cursor-pointer"
                         >
                           <LogOut size={16} className="mr-2" />
                           {loading ? "Logging out..." : "Logout"}

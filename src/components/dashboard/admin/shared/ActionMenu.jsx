@@ -19,7 +19,7 @@ export default function ActionMenu({ actions = [] }) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-8 w-8 rounded-lg text-neutral-400 hover:text-neutral-100 hover:bg-neutral-800/70 border border-transparent hover:border-neutral-700/50 transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50"
+          className="h-8 w-8 rounded-lg text-foreground-tertiary hover:text-foreground hover:bg-muted border border-transparent hover:border-border transition-all duration-150 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
           aria-label="Actions"
         >
           <MoreHorizontal size={16} />

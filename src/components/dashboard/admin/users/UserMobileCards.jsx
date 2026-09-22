@@ -43,8 +43,8 @@ function UserCard({ user, onView, onEdit, onSuspend, onActivate, onDelete }) {
 
   return (
     <div className="flex items-start gap-3 py-3 px-1 hover:bg-muted/30 rounded-lg transition-colors">
-      <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0 mt-0.5">
-        <span className="text-xs font-semibold text-primary">{getInitials(user.name)}</span>
+      <div className="bg-muted text-foreground border border-border flex items-center justify-center font-semibold rounded-full w-8 h-8 text-xs flex-shrink-0 mt-0.5">
+        <span className="text-xs font-semibold text-foreground">{getInitials(user.name)}</span>
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between gap-2">

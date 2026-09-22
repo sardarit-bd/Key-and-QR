@@ -44,8 +44,8 @@ function UserRow({ user, onView, onEdit, onSuspend, onActivate, onDelete }) {
   return (
     <div className="grid grid-cols-[minmax(0,3fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,120px)_minmax(0,36px)] items-center gap-2 py-3 px-2 hover:bg-muted/30 rounded-lg transition-colors">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
-          <span className="text-xs font-semibold text-primary">{getInitials(user.name)}</span>
+        <div className="bg-muted text-foreground border border-border flex items-center justify-center font-semibold rounded-full w-8 h-8 text-xs flex-shrink-0">
+          <span className="text-xs font-semibold text-foreground">{getInitials(user.name)}</span>
         </div>
         <div className="min-w-0">
           <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
