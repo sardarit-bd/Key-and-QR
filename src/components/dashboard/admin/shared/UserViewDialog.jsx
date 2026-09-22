@@ -39,8 +39,8 @@ export default function UserViewDialog({ open, onOpenChange, user }) {
         {user ? (
           <div className="py-2 space-y-1">
             <div className="flex items-center gap-4 pb-4 border-b border-border/50">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-semibold text-primary">
+              <div className="w-12 h-12 rounded-xl bg-[#24272D] border border-[#2A2D35] flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-semibold text-foreground">
                   {user.name?.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2) || 'U'}
                 </span>
               </div>

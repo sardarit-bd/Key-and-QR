@@ -315,7 +315,7 @@ export default function AdminQuotesPage() {
   };
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto font-sans">
+    <div className="w-full p-4 sm:p-6 lg:p-8 space-y-6 font-sans">
       {/* 1. Header Section */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -329,7 +329,7 @@ export default function AdminQuotesPage() {
 
         <Link
           href="/dashboard/admin/quotes/create-visual"
-          className="inline-flex items-center justify-center gap-2 px-4.5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-600 text-white font-medium text-sm shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] transition-all duration-200 active:scale-95 shrink-0 select-none cursor-pointer"
+          className="inline-flex items-center justify-center gap-2 px-4.5 py-2.5 rounded-lg bg-[#1E2025] hover:bg-[#282B32] text-white border border-[#323640] font-medium text-sm shadow-sm transition-all duration-200 active:scale-95 shrink-0 select-none cursor-pointer focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20"
         >
           <Plus size={16} />
           <span>Create Quote</span>
@@ -437,7 +437,7 @@ export default function AdminQuotesPage() {
           </div>
         ) : quotes.length === 0 ? (
           <div className="p-12 text-center border border-dashed border-border rounded-2xl bg-card shadow-2xs">
-            <QuoteIcon className="w-10 h-10 mx-auto mb-3 text-foreground-secondary/40" />
+            <QuoteIcon className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
             <h3 className="text-base font-bold text-foreground">No quotes found</h3>
             <p className="text-xs text-foreground-secondary mt-1 max-w-sm mx-auto">
               No quotes match your current filter criteria. Try adjusting your search or filters.

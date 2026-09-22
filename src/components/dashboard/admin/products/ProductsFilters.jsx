@@ -12,8 +12,9 @@ import {
 import { motion } from 'framer-motion';
 
 const STATUS_OPTIONS = [
+  { value: 'all', label: 'All Status' },
   { value: 'active', label: 'Active' },
-  { value: 'inactive', label: 'Trash' },
+  { value: 'inactive', label: 'Draft / Inactive' },
 ];
 
 const SORT_OPTIONS = [
@@ -32,6 +33,7 @@ export default function ProductsFilters({
   sort,
   onSortChange,
   totalItems = 0,
+  viewTrash = false,
 }) {
   return (
     <motion.div
@@ -49,7 +51,7 @@ export default function ProductsFilters({
           <Input
             value={search}
             onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search by name, category, or brand..."
+            placeholder={viewTrash ? "Search deleted products..." : "Search by name, category, or brand..."}
             className="pl-9 h-9 text-sm"
           />
         </div>
@@ -62,24 +64,26 @@ export default function ProductsFilters({
           <SelectContent>
             <SelectItem value="all">All Categories</SelectItem>
             {categories.map((cat) => (
-              <SelectItem key={cat.id || cat} value={cat.id || cat}>
+              <SelectItem key={cat.id || cat._id || cat} value={cat.id || cat._id || cat}>
                 {cat.name || cat}
               </SelectItem>
             ))}
           </SelectContent>
         </Select>
 
-        {/* Status filter */}
-        <Select value={status} onValueChange={onStatusChange}>
-          <SelectTrigger className="w-full sm:w-32 h-9">
-            <SelectValue placeholder="Active" />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        {/* Status filter (only lifecycle statuses, hidden when viewing trash) */}
+        {!viewTrash && (
+          <Select value={status} onValueChange={onStatusChange}>
+            <SelectTrigger className="w-full sm:w-36 h-9">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              {STATUS_OPTIONS.map((opt) => (
+                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
 
         {/* Sort */}
         <Select value={sort} onValueChange={onSortChange}>
@@ -96,7 +100,7 @@ export default function ProductsFilters({
 
       <p className="text-xs text-foreground-tertiary">
         {totalItems} {totalItems === 1 ? 'product' : 'products'} found
-        {status === 'inactive' && ' (trash)'}
+        {viewTrash ? ' in trash' : ''}
       </p>
     </motion.div>
   );

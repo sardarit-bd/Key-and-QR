@@ -4,13 +4,14 @@ import { useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { Package, Plus } from 'lucide-react';
+import { Package, Plus, Trash2, ArrowLeft } from 'lucide-react';
 import Card from '@/components/dashboard/user/dashboard/Card';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import {
   useAdminProducts,
   useAdminProductCategories,
   useAdminProductActions,
+  useAdminTrashProductCount,
 } from '@/hooks/dashboard/useAdminProducts';
 import ProductsFilters from './ProductsFilters';
 import ProductsTable from './ProductsTable';
@@ -25,9 +26,10 @@ const ITEMS_PER_PAGE = 10;
 export default function AdminProductsPage() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
-  const [status, setStatus] = useState('active');
+  const [status, setStatus] = useState('all');
   const [sort, setSort] = useState('newest');
   const [page, setPage] = useState(1);
+  const [isTrashView, setIsTrashView] = useState(false);
   const debouncedSearch = useDebounce(search, 300);
 
   const [selectedProduct, setSelectedProduct] = useState(null);
@@ -41,12 +43,15 @@ export default function AdminProductsPage() {
   const [selectedProductId, setSelectedProductId] = useState(null);
   const [pDeleteOpen, setPDeleteOpen] = useState(false);
 
+  const { data: trashCount = 0 } = useAdminTrashProductCount();
+
   const { data, isLoading, isError, error, refetch } = useAdminProducts({
     page,
     limit: ITEMS_PER_PAGE,
     search: debouncedSearch,
     category: category !== 'all' ? category : undefined,
-    status,
+    status: isTrashView ? 'trash' : status,
+    isTrash: isTrashView,
     sort,
   });
   const { data: categories = [] } = useAdminProductCategories();
@@ -68,7 +73,7 @@ export default function AdminProductsPage() {
   const handleStatusChange = useCallback((v) => { setStatus(v); setPage(1); }, []);
   const handleSortChange = useCallback((v) => { setSort(v); setPage(1); }, []);
 
-  const viewTrash = status === 'inactive';
+  const viewTrash = isTrashView;
 
   const handleView = useCallback((product) => {
     setSelectedProduct(product);
@@ -83,7 +88,8 @@ export default function AdminProductsPage() {
   const handleCreateSave = useCallback(async (formData) => {
     setFormLoading(true);
     try {
-      await createProduct.mutateAsync(formData);
+      const dataToSend = formData instanceof FormData ? formData : formData?.formData || formData;
+      await createProduct.mutateAsync(dataToSend);
       toast.success('Product created successfully');
       setCreateOpen(false);
     } catch (err) {
@@ -94,11 +100,13 @@ export default function AdminProductsPage() {
     }
   }, [createProduct]);
 
-  const handleEditSave = useCallback(async (formData) => {
-    if (!selectedProduct) return;
+  const handleEditSave = useCallback(async (formData, id) => {
+    const targetId = id || selectedProduct?._id;
+    if (!targetId) return;
     setFormLoading(true);
     try {
-      await updateProduct.mutateAsync({ id: selectedProduct._id, formData });
+      const dataToSend = formData instanceof FormData ? formData : formData?.formData || formData;
+      await updateProduct.mutateAsync({ id: targetId, formData: dataToSend });
       toast.success('Product updated successfully');
       setEditOpen(false);
       setSelectedProduct(null);
@@ -182,13 +190,13 @@ export default function AdminProductsPage() {
   }
 
   return (
-    <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6">
+    <div className="w-full p-4 sm:p-6 lg:p-8 space-y-6">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
-              <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 border border-primary/20">
-                <Package size={20} className="text-primary" />
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#24272D] border border-[#2A2D35]">
+                <Package size={20} className="text-muted-foreground" />
               </span>
               Products Management
             </h1>
@@ -196,16 +204,82 @@ export default function AdminProductsPage() {
               Manage your product catalog and inventory.
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setCreateOpen(true)}
-            className="px-4.5 py-2.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-indigo-700 hover:from-purple-500 hover:to-indigo-600 text-white font-medium rounded-xl shadow-[0_0_20px_rgba(99,102,241,0.3)] hover:shadow-[0_0_25px_rgba(99,102,241,0.5)] transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 cursor-pointer select-none text-sm shrink-0 ml-[52px] sm:ml-0"
-          >
-            <Plus size={16} />
-            Add Product
-          </button>
+          <div className="flex items-center gap-2.5 flex-wrap sm:flex-nowrap ml-[52px] sm:ml-0">
+            {/* Dedicated Trash Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsTrashView((prev) => !prev);
+                setPage(1);
+              }}
+              className={`inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium rounded-lg border transition-colors cursor-pointer shadow-sm select-none shrink-0 ${
+                isTrashView
+                  ? 'border-destructive/40 bg-destructive/10 text-destructive'
+                  : 'border-border bg-card hover:bg-muted text-foreground-secondary hover:text-destructive'
+              }`}
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>Trash</span>
+              {trashCount > 0 && (
+                <span className="px-1.5 py-0.5 text-xs font-semibold rounded-full bg-destructive/15 text-destructive">
+                  {trashCount}
+                </span>
+              )}
+            </button>
+
+            {/* Add Product Button (hidden when in Trash view) */}
+            {!isTrashView && (
+              <button
+                type="button"
+                onClick={() => setCreateOpen(true)}
+                className="px-4.5 py-2.5 bg-[#1E2025] hover:bg-[#282B32] text-white border border-[#323640] font-medium rounded-lg shadow-sm transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 cursor-pointer select-none text-sm shrink-0 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20"
+              >
+                <Plus size={16} />
+                Add Product
+              </button>
+            )}
+          </div>
         </div>
       </motion.div>
+
+      {/* Trash View Banner */}
+      {isTrashView && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-4 rounded-xl border border-destructive/25 bg-destructive/5 text-foreground"
+        >
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-lg bg-destructive/10 text-destructive shrink-0">
+              <Trash2 className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+                Trash / Deleted Products
+                {trashCount > 0 && (
+                  <span className="px-2 py-0.5 text-xs font-medium rounded-full bg-destructive/10 text-destructive border border-destructive/20">
+                    {trashCount} {trashCount === 1 ? 'item' : 'items'}
+                  </span>
+                )}
+              </p>
+              <p className="text-xs text-foreground-tertiary mt-0.5">
+                Soft-deleted products remain in trash until restored to catalog or permanently deleted.
+              </p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              setIsTrashView(false);
+              setPage(1);
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-card hover:bg-muted text-foreground transition-colors cursor-pointer shadow-sm shrink-0"
+          >
+            <ArrowLeft className="w-3.5 h-3.5" />
+            Return to Active Products
+          </button>
+        </motion.div>
+      )}
 
       <ProductsFilters
         search={search}
@@ -218,6 +292,7 @@ export default function AdminProductsPage() {
         sort={sort}
         onSortChange={handleSortChange}
         totalItems={meta.total}
+        viewTrash={isTrashView}
       />
 
       {/* No results */}

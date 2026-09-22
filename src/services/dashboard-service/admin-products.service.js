@@ -15,7 +15,7 @@ import api from '@/lib/api';
  */
 export const adminProductsService = {
   /** Fetch paginated products */
-  getProducts: async ({ page = 1, limit = 10, search = '', category = '', status = 'active' } = {}) => {
+  getProducts: async ({ page = 1, limit = 10, search = '', category = '', status = 'all', isTrash = false } = {}) => {
     const params = { page, limit };
 
     // Backend GET /products only knows `search` (text regex) and `trash` (boolean).
@@ -33,8 +33,8 @@ export const adminProductsService = {
       params.search = terms.join(' ');
     }
 
-    // Status handling: 'active' (default, isActive:true), 'inactive' (trash:true)
-    if (status === 'inactive') {
+    // Status handling: when isTrash is true or status === 'trash', fetch soft-deleted items
+    if (isTrash || status === 'trash') {
       params.trash = true;
     }
 
@@ -42,9 +42,9 @@ export const adminProductsService = {
     return response.data;
   },
 
-  /** Fetch available categories */
+  /** Fetch available product categories */
   getCategories: async () => {
-    const response = await api.get('/products/categories');
+    const response = await api.get('/product-categories');
     return response.data;
   },
 

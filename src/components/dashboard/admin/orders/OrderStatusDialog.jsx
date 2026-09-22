@@ -102,7 +102,7 @@ export default function OrderStatusDialog({
           {/* Current status */}
           <div className="flex items-center gap-2 text-sm">
             <span className="text-foreground-tertiary">Current:</span>
-            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 text-[10px]">
+            <span className="px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px]">
               {STATUS_LABELS[order.fulfillmentStatus]}
             </span>
           </div>
@@ -150,11 +150,23 @@ export default function OrderStatusDialog({
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Cancel</Button>
-          <Button onClick={handleSave} disabled={!status || isLoading}>
+        <DialogFooter className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+            className="h-10 px-4 rounded-lg border border-[#2A2D35] bg-transparent text-[#9BA1AD] hover:bg-[#24272D] hover:text-white font-medium text-sm transition-colors cursor-pointer select-none disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleSave}
+            disabled={!status || isLoading}
+            className="h-10 px-5 rounded-lg bg-[#1E2025] hover:bg-[#282B32] text-white border border-[#323640] font-medium text-sm shadow-sm transition-all cursor-pointer select-none flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20 disabled:opacity-50"
+          >
             {isLoading ? 'Updating...' : 'Update Status'}
-          </Button>
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

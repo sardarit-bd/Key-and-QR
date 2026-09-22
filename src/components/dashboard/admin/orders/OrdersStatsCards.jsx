@@ -8,25 +8,25 @@ import {
 import Card from '@/components/dashboard/user/dashboard/Card';
 
 const STATS_DEFS = [
-  { key: 'total', label: 'Total Orders', icon: ShoppingBag, color: 'indigo' },
+  { key: 'total', label: 'Total Orders', icon: ShoppingBag, color: 'neutral' },
   { key: 'pending', label: 'Pending', icon: Clock, color: 'amber' },
   { key: 'assigned', label: 'Assigned', icon: Tag, color: 'blue' },
   { key: 'shipped', label: 'Shipped', icon: Truck, color: 'teal' },
   { key: 'delivered', label: 'Delivered', icon: PackageCheck, color: 'emerald' },
   { key: 'cancelled', label: 'Cancelled', icon: Ban, color: 'red' },
-  { key: 'returned', label: 'Returned', icon: RotateCcw, color: 'purple' },
+  { key: 'returned', label: 'Returned', icon: RotateCcw, color: 'slate' },
   { key: 'paid', label: 'Paid', icon: CreditCard, color: 'emerald' },
   { key: 'refunded', label: 'Refunded', icon: DollarSign, color: 'red' },
 ];
 
 const COLOR_MAP = {
-  indigo:  { border: 'border-indigo-500/30', bg: 'bg-indigo-500/10', icon: 'text-indigo-400', glow: 'shadow-[0_0_15px_rgba(99,102,241,0.15)]' },
-  emerald: { border: 'border-emerald-500/30', bg: 'bg-emerald-500/10', icon: 'text-emerald-400', glow: 'shadow-[0_0_15px_rgba(16,185,129,0.15)]' },
-  red:     { border: 'border-red-500/30', bg: 'bg-red-500/10', icon: 'text-red-400', glow: 'shadow-[0_0_15px_rgba(239,68,68,0.15)]' },
-  blue:    { border: 'border-blue-500/30', bg: 'bg-blue-500/10', icon: 'text-blue-400', glow: 'shadow-[0_0_15px_rgba(59,130,246,0.15)]' },
-  amber:   { border: 'border-amber-500/30', bg: 'bg-amber-500/10', icon: 'text-amber-400', glow: 'shadow-[0_0_15px_rgba(245,158,11,0.15)]' },
-  purple:  { border: 'border-purple-500/30', bg: 'bg-purple-500/10', icon: 'text-purple-400', glow: 'shadow-[0_0_15px_rgba(168,85,247,0.15)]' },
-  teal:    { border: 'border-teal-500/30', bg: 'bg-teal-500/10', icon: 'text-teal-400', glow: 'shadow-[0_0_15px_rgba(20,184,166,0.15)]' },
+  neutral: { border: 'border-border', bg: 'bg-card', icon: 'text-foreground' },
+  emerald: { border: 'border-emerald-500/30', bg: 'bg-emerald-500/10', icon: 'text-emerald-400' },
+  red:     { border: 'border-red-500/30', bg: 'bg-red-500/10', icon: 'text-red-400' },
+  blue:    { border: 'border-blue-500/30', bg: 'bg-blue-500/10', icon: 'text-blue-400' },
+  amber:   { border: 'border-amber-500/30', bg: 'bg-amber-500/10', icon: 'text-amber-400' },
+  slate:   { border: 'border-border', bg: 'bg-muted', icon: 'text-muted-foreground' },
+  teal:    { border: 'border-teal-500/30', bg: 'bg-teal-500/10', icon: 'text-teal-400' },
 };
 
 export default function OrdersStatsCards({ stats = {} }) {

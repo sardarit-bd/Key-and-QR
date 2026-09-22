@@ -79,8 +79,8 @@ export default function UserViewDialog({ open, onOpenChange, user, isLoading = f
           <div className="py-2">
             {/* User identity header */}
             <div className="flex items-center gap-4 pb-4 border-b border-border/50 mb-2">
-              <div className="w-12 h-12 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
-                <span className="text-sm font-semibold text-primary">{initials}</span>
+              <div className="w-12 h-12 rounded-xl bg-[#24272D] border border-[#2A2D35] flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-semibold text-foreground">{initials}</span>
               </div>
               <div className="min-w-0">
                 <p className="text-base font-semibold text-foreground truncate">{user.name}</p>

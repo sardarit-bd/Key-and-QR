@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { Package } from 'lucide-react';
+import { Package, Trash2 } from 'lucide-react';
 import Card from '@/components/dashboard/user/dashboard/Card';
 import ActionMenu from '../shared/ActionMenu';
 
@@ -80,8 +80,12 @@ export default function ProductMobileCards({ products = [], viewTrash = false, o
       <Card className="p-4 sm:p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <Package size={18} className="text-indigo-400" />
-            {viewTrash ? 'Trash' : 'All Products'}
+            {viewTrash ? (
+              <Trash2 size={18} className="text-destructive" />
+            ) : (
+              <Package size={18} className="text-muted-foreground" />
+            )}
+            {viewTrash ? 'Trash / Deleted Products' : 'All Products'}
           </h2>
         </div>
         <div className="divide-y divide-border/50">

@@ -15,12 +15,12 @@ const ACTION_ICONS = {
 };
 
 const ACTION_COLORS = [
-  'text-indigo-400  bg-indigo-500/10  border-indigo-500/20',
-  'text-blue-400    bg-blue-500/10    border-blue-500/20',
-  'text-teal-400    bg-teal-500/10    border-teal-500/20',
-  'text-amber-400   bg-amber-500/10   border-amber-500/20',
-  'text-purple-400  bg-purple-500/10  border-purple-500/20',
-  'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+  'text-foreground bg-card hover:bg-muted border-border hover:border-foreground-secondary/40',
+  'text-foreground bg-card hover:bg-muted border-border hover:border-foreground-secondary/40',
+  'text-foreground bg-card hover:bg-muted border-border hover:border-foreground-secondary/40',
+  'text-foreground bg-card hover:bg-muted border-border hover:border-foreground-secondary/40',
+  'text-foreground bg-card hover:bg-muted border-border hover:border-foreground-secondary/40',
+  'text-foreground bg-card hover:bg-muted border-border hover:border-foreground-secondary/40',
 ];
 
 export default function AdminQuickActions({ actions = [] }) {

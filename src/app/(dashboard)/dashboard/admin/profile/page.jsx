@@ -41,8 +41,8 @@ const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function Row({ label, value, icon: Icon, children }) {
   return (
     <div className="flex items-start justify-between gap-4 py-3.5 first:pt-0 last:pb-0">
-      <div className="flex items-center gap-2.5 text-foreground-tertiary">
-        {Icon && <Icon size={16} className="w-4 h-4 shrink-0" />}
+      <div className="flex items-center gap-2.5 text-foreground-secondary">
+        {Icon && <Icon className="w-4 h-4 shrink-0 text-muted-foreground hover:text-foreground transition-colors" />}
         <span className="text-[13px] font-medium">{label}</span>
       </div>
       <div className="text-right text-foreground text-[13px] font-medium flex items-center gap-2">
@@ -308,18 +308,14 @@ export default function AdminProfilePage() {
       transition={{ duration: 0.3 }}
       className="min-h-screen bg-background"
     >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 py-6 pb-24 space-y-6">
+      <div className="w-full max-w-4xl mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
         {/* ---------- Page header ---------- */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border/60 pb-5">
           <div>
-            <div className="flex items-center gap-2.5">
-              <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary border border-primary/20">
-                <Shield size={18} />
-              </span>
-              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">
-                Admin Profile
-              </h1>
-            </div>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground flex items-center">
+              <ShieldCheck className="w-6 h-6 text-foreground-secondary dark:text-muted-foreground mr-2.5 inline-block shrink-0" />
+              Admin Profile
+            </h1>
             <p className="text-xs sm:text-sm text-foreground-secondary mt-1">
               Manage your administrator account information and security settings.
             </p>
@@ -339,7 +335,7 @@ export default function AdminProfilePage() {
                   type="button"
                   onClick={handleSave}
                   disabled={saving || avatarUploading || name.trim().length < 2 || !email.trim()}
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground shadow-sm hover:bg-primary/90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
                 >
                   {saving ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -352,7 +348,7 @@ export default function AdminProfilePage() {
                   type="button"
                   onClick={handleCancel}
                   disabled={saving || avatarUploading}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-4 py-2 text-sm font-medium text-foreground-secondary hover:bg-muted hover:text-foreground active:scale-95 disabled:opacity-50 cursor-pointer transition-all"
+                  className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-border bg-card hover:bg-muted text-foreground active:scale-95 disabled:opacity-50 cursor-pointer transition-all shadow-sm"
                 >
                   <X className="w-4 h-4" /> Cancel
                 </button>
@@ -365,7 +361,7 @@ export default function AdminProfilePage() {
                 exit={{ opacity: 0, y: 6 }}
                 type="button"
                 onClick={handleEnterEdit}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-primary/30 bg-primary/10 px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/20 active:scale-95 cursor-pointer transition-all"
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium rounded-lg border border-border bg-card hover:bg-muted text-foreground transition-colors shadow-sm active:scale-95 cursor-pointer"
               >
                 <PencilLine className="w-4 h-4" />
                 Edit Profile
@@ -462,8 +458,8 @@ export default function AdminProfilePage() {
 
               {/* Badges */}
               <div className="mt-3.5 flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-purple-500/30 bg-purple-500/10 px-3 py-1 text-xs font-semibold text-purple-600 dark:text-purple-400">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Administrator
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted/60 px-3 py-1 text-xs font-semibold text-foreground">
+                  <ShieldCheck className="w-3.5 h-3.5 text-muted-foreground" /> Administrator
                 </span>
                 <ProviderBadge provider={user.provider} />
                 <span className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
@@ -527,7 +523,7 @@ export default function AdminProfilePage() {
             </Row>
             <Divider />
             <Row label="Role" icon={Shield}>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20">
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-muted text-foreground border border-border">
                 Administrator
               </span>
             </Row>
@@ -543,7 +539,7 @@ export default function AdminProfilePage() {
             </Row>
             <Divider />
             <Row label="Member Since" icon={Calendar}>
-              <span className="text-foreground-secondary">
+              <span className="text-foreground font-medium">
                 {formatMemberSince(user.createdAt) || '—'}
               </span>
             </Row>
@@ -582,7 +578,7 @@ export default function AdminProfilePage() {
                   <button
                     type="button"
                     onClick={handleOpenPassword}
-                    className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-card px-3.5 py-1.5 text-xs font-medium text-foreground hover:bg-muted hover:text-primary transition-all cursor-pointer shadow-xs"
+                    className="inline-flex items-center gap-2 px-3.5 py-1.5 text-xs font-medium rounded-lg border border-border bg-card hover:bg-muted text-foreground transition-colors shadow-sm cursor-pointer"
                   >
                     <PencilLine className="w-3.5 h-3.5" /> Update Password
                   </button>
@@ -591,7 +587,7 @@ export default function AdminProfilePage() {
                 <Row label="Reset Password via Email" icon={RefreshCcw}>
                   <Link
                     href="/forgot-password"
-                    className="inline-flex items-center gap-1 rounded-xl border border-border bg-card px-3 py-1.5 text-xs font-medium text-foreground-secondary hover:text-foreground transition-all"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg border border-border bg-card hover:bg-muted text-foreground transition-colors shadow-sm"
                   >
                     Send Reset Link <ChevronRight className="w-3 h-3" />
                   </Link>
@@ -600,7 +596,7 @@ export default function AdminProfilePage() {
             ) : (
               <Row label="Sign-in Method" icon={Globe}>
                 <div className="flex items-center gap-2 text-right">
-                  <span className="text-xs text-foreground-tertiary">
+                  <span className="text-xs text-foreground-secondary">
                     This admin account signs in securely using Google OAuth
                   </span>
                   <ProviderBadge provider={user.provider} />
@@ -652,7 +648,7 @@ export default function AdminProfilePage() {
             >
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <div className="flex items-center gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#24272D] text-muted-foreground border border-[#2A2D35]">
                     <Lock size={16} />
                   </span>
                   <h3 className="text-base font-bold text-foreground">Change Password</h3>

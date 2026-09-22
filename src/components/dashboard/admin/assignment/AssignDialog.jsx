@@ -50,11 +50,11 @@ export default function AssignDialog({
         <div className="space-y-3 py-2">
           {/* Tag info */}
           {selectedTag ? (
-            <div className="bg-indigo-500/5 rounded-xl p-3 border border-indigo-500/10">
+            <div className="bg-primary/5 rounded-xl p-3 border border-primary/15">
               <p className="text-[10px] text-foreground-tertiary uppercase tracking-wider mb-2 flex items-center gap-1.5">
                 <QrCode size={12} /> Tag
               </p>
- <p className="text-base font-bold text-foreground">{selectedTag.tagCode}</p>
+              <p className="text-base font-bold text-foreground">{selectedTag.tagCode}</p>
               <p className="text-xs text-foreground-tertiary">ID: {selectedTag._id}</p>
             </div>
           ) : (
@@ -65,7 +65,7 @@ export default function AssignDialog({
 
           {/* Order info */}
           {selectedOrder ? (
-            <div className="bg-emerald-500/5 rounded-xl p-3 border border-emerald-500/10">
+            <div className="bg-card rounded-xl p-3 border border-border">
               <p className="text-[10px] text-foreground-tertiary uppercase tracking-wider mb-2 flex items-center gap-1.5">
                 <ShoppingBag size={12} /> Order
               </p>
@@ -87,13 +87,29 @@ export default function AssignDialog({
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>Cancel</Button>
-          <Button onClick={() => onAssign(selectedTag, selectedOrder)} disabled={!canAssign || isLoading}>
-            {isLoading ? 'Assigning...' : (
-              <><CheckCircle size={15} className="mr-1.5" /> Assign Tag</>
+        <DialogFooter className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            disabled={isLoading}
+            className="h-10 px-4 rounded-lg border border-[#2A2D35] bg-transparent text-[#9BA1AD] hover:bg-[#24272D] hover:text-white font-medium text-sm transition-colors cursor-pointer select-none disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={() => onAssign(selectedTag, selectedOrder)}
+            disabled={!canAssign || isLoading}
+            className="h-10 px-5 rounded-lg bg-[#1E2025] hover:bg-[#282B32] text-white border border-[#323640] font-medium text-sm shadow-sm transition-all cursor-pointer select-none flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20 disabled:opacity-50"
+          >
+            {isLoading ? (
+              'Assigning...'
+            ) : (
+              <>
+                <CheckCircle size={15} /> Assign Tag
+              </>
             )}
-          </Button>
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

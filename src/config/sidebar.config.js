@@ -187,8 +187,21 @@ export const SIDEBAR_CONFIG = {
       id: "admin-products",
       title: "Products",
       icon: Package,
-      href: "/dashboard/admin/products",
       visibility: MENU_VISIBILITY.ADMIN,
+      children: [
+        {
+          id: "admin-products-all",
+          title: "All Products",
+          href: "/dashboard/admin/products",
+          visibility: MENU_VISIBILITY.ADMIN,
+        },
+        {
+          id: "admin-product-categories",
+          title: "Product Categories",
+          href: "/dashboard/admin/product-categories",
+          visibility: MENU_VISIBILITY.ADMIN,
+        },
+      ],
     },
     {
       id: "admin-orders",

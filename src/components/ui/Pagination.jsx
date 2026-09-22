@@ -12,8 +12,10 @@ export default function Pagination({
   totalPages,
   onPageChange,
   className = '',
+  showSinglePage = false,
 }) {
-  if (totalPages <= 1) return null;
+  if (totalPages <= 0) return null;
+  if (totalPages === 1 && !showSinglePage) return null;
 
   const handlePrevious = () => {
     if (currentPage > 1) {

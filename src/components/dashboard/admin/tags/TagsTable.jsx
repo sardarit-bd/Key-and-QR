@@ -108,8 +108,8 @@ function TagRow({ tag, onShowQR, onDownload, onAssign, onToggleStatus, onDelete 
             </p>
           </div>
         ) : (
-          <div className="flex items-center gap-1 text-foreground-tertiary text-xs">
-            <Sparkles size={12} className="text-foreground-tertiary/70" />
+          <div className="flex items-center gap-1 text-foreground-secondary text-xs">
+            <Sparkles size={12} className="text-foreground-secondary" />
             <span className="text-[11px]">Random Pool Fallback</span>
           </div>
         )}

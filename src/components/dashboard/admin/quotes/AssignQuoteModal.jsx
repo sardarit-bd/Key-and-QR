@@ -394,7 +394,7 @@ export default function AssignQuoteModal({ open, onOpenChange, quote, onSuccess 
               onClick={() => setActiveTab('assign')}
               className={`py-2.5 px-4 text-xs sm:text-sm font-semibold rounded-xl transition-all border ${
                 activeTab === 'assign'
-                  ? 'bg-primary text-white border-primary shadow-xs'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-xs'
                   : 'bg-card text-foreground-secondary hover:text-foreground border-border hover:bg-muted/50'
               }`}
             >
@@ -405,7 +405,7 @@ export default function AssignQuoteModal({ open, onOpenChange, quote, onSuccess 
               onClick={() => setActiveTab('current')}
               className={`py-2.5 px-4 text-xs sm:text-sm font-semibold rounded-xl transition-all border flex items-center justify-center gap-2 ${
                 activeTab === 'current'
-                  ? 'bg-primary text-white border-primary shadow-xs'
+                  ? 'bg-primary text-primary-foreground border-primary shadow-xs'
                   : 'bg-card text-foreground-secondary hover:text-foreground border-border hover:bg-muted/50'
               }`}
             >
@@ -413,7 +413,7 @@ export default function AssignQuoteModal({ open, onOpenChange, quote, onSuccess 
               <span
                 className={`text-xs px-2 py-0.5 rounded-full font-bold ${
                   activeTab === 'current'
-                    ? 'bg-white/20 text-white'
+                    ? 'bg-primary-foreground/20 text-primary-foreground'
                     : 'bg-muted text-foreground-secondary'
                 }`}
               >
@@ -546,7 +546,7 @@ export default function AssignQuoteModal({ open, onOpenChange, quote, onSuccess 
                             <span
                               className={`text-xs px-2.5 py-0.5 rounded-md font-medium shrink-0 border ${
                                 isAssigned
-                                  ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+                                  ? 'bg-primary/10 text-primary border-primary/20'
                                   : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                               }`}
                             >
@@ -667,7 +667,7 @@ export default function AssignQuoteModal({ open, onOpenChange, quote, onSuccess 
                             <span
                               className={`text-xs px-2.5 py-0.5 rounded-md font-medium shrink-0 border ${
                                 isAssigned
-                                  ? 'bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/20'
+                                  ? 'bg-primary/10 text-primary border-primary/20'
                                   : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20'
                               }`}
                             >
@@ -873,7 +873,7 @@ export default function AssignQuoteModal({ open, onOpenChange, quote, onSuccess 
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="px-4 py-2.5 text-xs sm:text-sm font-medium rounded-xl border border-border bg-card hover:bg-muted text-foreground-secondary hover:text-foreground transition-colors"
+            className="px-4 py-2.5 text-xs sm:text-sm font-medium rounded-lg border border-[#2A2D35] bg-transparent text-[#9BA1AD] hover:bg-[#24272D] hover:text-white transition-colors cursor-pointer select-none"
           >
             {activeTab === 'assign' ? 'Cancel' : 'Close'}
           </button>
@@ -883,7 +883,7 @@ export default function AssignQuoteModal({ open, onOpenChange, quote, onSuccess 
               type="button"
               disabled={selectedList.length === 0 || isSubmitting}
               onClick={handleAssignSubmit}
-              className="px-5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl bg-primary text-white hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all flex items-center gap-2"
+              className="px-5 py-2.5 text-xs sm:text-sm font-semibold rounded-lg bg-[#1E2025] hover:bg-[#282B32] text-white border border-[#323640] disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-all flex items-center gap-2 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20"
             >
               {isSubmitting ? (
                 <>

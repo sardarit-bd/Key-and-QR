@@ -228,14 +228,14 @@ export default function AdminTagsPage() {
   }
 
   return (
-    <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6">
+    <div className="w-full p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
-              <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 border border-primary/20">
-                <QrCode size={20} className="text-primary" />
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#24272D] border border-[#2A2D35]">
+                <QrCode size={20} className="text-muted-foreground" />
               </span>
               QR Tags Management
             </h1>
@@ -247,15 +247,15 @@ export default function AdminTagsPage() {
             <button
               type="button"
               onClick={() => setBatchOpen(true)}
-              className="px-4 py-2.5 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-200 border border-neutral-700/80 rounded-xl font-medium transition-all shadow-sm active:scale-95 flex items-center gap-2 text-sm cursor-pointer"
+              className="px-4 py-2.5 bg-card hover:bg-muted text-foreground-secondary hover:text-foreground border border-border rounded-xl font-medium transition-all shadow-sm active:scale-95 flex items-center gap-2 text-sm cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
             >
-              <Layers size={16} className="text-neutral-300" />
+              <Layers size={16} className="text-foreground-secondary" />
               Batch Generate
             </button>
             <button
               type="button"
               onClick={() => setCreateOpen(true)}
-              className="px-4.5 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-xl font-medium shadow-[0_0_20px_rgba(99,102,241,0.35)] transition-all active:scale-95 flex items-center gap-2 text-sm cursor-pointer"
+              className="px-4.5 py-2.5 bg-[#1E2025] hover:bg-[#282B32] text-white border border-[#323640] rounded-lg font-medium shadow-sm transition-all active:scale-95 flex items-center gap-2 text-sm cursor-pointer select-none focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20"
             >
               <Plus size={16} />
               Create Tag

@@ -36,6 +36,19 @@ export function useAdminProductCategories() {
   });
 }
 
+/** Fetch count of soft-deleted products in Trash */
+export function useAdminTrashProductCount() {
+  return useQuery({
+    queryKey: ['admin-products', 'trash-count'],
+    queryFn: async () => {
+      const res = await adminProductsService.getProducts({ page: 1, limit: 1, isTrash: true });
+      return res?.meta?.total ?? 0;
+    },
+    staleTime: 30 * 1000,
+    gcTime: 5 * 60 * 1000,
+  });
+}
+
 /** Fetch a single product by ID */
 export function useAdminProductDetail(id, options = {}) {
   return useQuery({

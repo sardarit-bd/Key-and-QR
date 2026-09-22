@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import api from "@/lib/api";
-import { useCategories } from "@/hooks/dynamic-categories/useCategories";
+import { useProductCategories } from "@/hooks/product-category/useProductCategories";
 import { useProducts } from "@/hooks/product-service/useProducts";
 import { useDebounce } from "@/hooks/search-with-debounce/useDebounce";
 
@@ -215,7 +215,7 @@ export default function ShopGrid() {
     setPage(1);
   }, [debouncedSearch, category, sort, priceBucket, availability]);
 
-  const { data: categoriesData, isLoading: categoriesLoading } = useCategories();
+  const { data: categoriesData, isLoading: categoriesLoading } = useProductCategories();
   const categories = categoriesData?.data || [];
 
   const {

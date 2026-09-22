@@ -79,12 +79,12 @@ export default function AdminAssignmentPage() {
   }, [assignTag]);
 
   return (
-    <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-4 sm:space-y-5 md:space-y-6">
+    <div className="w-full p-4 sm:p-6 lg:p-8 space-y-6">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
-          <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-primary/10 border border-primary/20">
-            <Link2 size={20} className="text-primary" />
+          <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#24272D] border border-[#2A2D35]">
+            <Link2 size={20} className="text-muted-foreground" />
           </span>
           QR Tag Assignment
         </h1>

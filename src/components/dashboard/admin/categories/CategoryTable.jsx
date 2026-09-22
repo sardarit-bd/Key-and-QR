@@ -7,8 +7,8 @@ import ActionMenu from '../shared/ActionMenu';
 import { CategoryIcon } from './categoryIconRegistry';
 
 const STATUS_STYLES = {
-  active: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  inactive: 'bg-red-500/10 text-red-400 border-red-500/20',
+  active: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20',
+  inactive: 'bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/20',
 };
 
 // SINGLE column template used by both header and body

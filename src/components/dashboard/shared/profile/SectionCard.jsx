@@ -34,8 +34,8 @@ export default function SectionCard({
           <div className="mb-5 flex items-start justify-between gap-3">
             <div className="flex items-center gap-2.5">
               {Icon && (
-                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-accent/25 bg-accent/10 shadow-[0_0_16px_rgba(253,182,92,0.12)]">
-                  <Icon size={14} className="text-accent" />
+                <span className="p-2 rounded-lg bg-muted text-foreground border border-border flex items-center justify-center shrink-0">
+                  <Icon size={16} className="text-foreground" />
                 </span>
               )}
               <div>

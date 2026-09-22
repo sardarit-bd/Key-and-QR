@@ -23,7 +23,7 @@ export default function AdminDashboardHome({ data, selectedRange, onRangeChange 
   } = data || {};
 
   return (
-    <div className="min-h-screen p-3 sm:p-4 md:p-6 lg:p-8 space-y-5 sm:space-y-6">
+    <div className="w-full p-4 sm:p-6 lg:p-8 space-y-6">
       {/* 1. Welcome Header + Date Range Selector + System Status */}
       <AdminWelcomeHeader selectedRange={selectedRange} onRangeChange={onRangeChange} />
 

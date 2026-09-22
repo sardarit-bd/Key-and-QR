@@ -59,13 +59,13 @@ export default function InspirationPage() {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 sm:pb-8">
             <div className="flex items-center gap-3 sm:gap-4">
               {/* Category Icon Container */}
-              <div className="flex h-11 w-11 sm:h-14 sm:w-14 shrink-0 items-center justify-center rounded-2xl bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-300 shadow-2xs">
+              <div className="p-2 rounded-lg bg-muted text-foreground border border-border flex items-center justify-center shrink-0 shadow-2xs">
                 <LayoutGrid size={22} className="sm:w-6 sm:h-6" strokeWidth={2} />
               </div>
 
               {/* Title and Subtitle */}
               <div>
-                <h2 className="bg-gradient-to-r from-violet-600 via-fuchsia-500 to-amber-500 bg-clip-text text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-transparent">
+                <h2 className="text-2xl font-bold tracking-tight text-foreground">
                   Browse Categories
                 </h2>
                 <p className="text-xs sm:text-sm text-foreground-secondary mt-0.5">
@@ -76,8 +76,8 @@ export default function InspirationPage() {
 
             {/* Dynamic Category Count Pill */}
             {categories.length > 0 && (
-              <div className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-purple-50 dark:bg-purple-950/40 border border-purple-200/60 dark:border-purple-800/40 text-purple-700 dark:text-purple-300 text-xs sm:text-sm font-semibold shadow-2xs whitespace-nowrap">
-                <Sparkles size={13} className="text-purple-500 shrink-0" />
+              <div className="self-start sm:self-auto inline-flex items-center gap-1.5 px-3 py-1 sm:px-3.5 sm:py-1.5 rounded-full bg-muted border border-border text-foreground text-xs sm:text-sm font-medium shadow-2xs whitespace-nowrap">
+                <Sparkles size={13} className="text-muted-foreground shrink-0" />
                 <span>
                   {categories.length} {categories.length === 1 ? 'Category' : 'Categories'}
                 </span>

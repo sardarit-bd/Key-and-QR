@@ -24,8 +24,8 @@ function UserRow({ user }) {
   return (
     <div className="flex items-center justify-between py-3 px-1 hover:bg-muted/30 rounded-lg transition-colors">
       <div className="flex items-center gap-3 min-w-0">
-        <div className="w-9 h-9 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
-          <span className="text-xs font-semibold text-primary">{initials}</span>
+        <div className="bg-muted text-foreground border border-border flex items-center justify-center font-semibold rounded-full w-8 h-8 text-xs flex-shrink-0">
+          <span className="text-xs font-semibold text-foreground">{initials}</span>
         </div>
         <div className="min-w-0">
           <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
@@ -61,7 +61,7 @@ export default function AdminRecentUsers({ users = [] }) {
           </h2>
           <Link
             href="/dashboard/admin/users"
-            className="text-xs text-primary hover:text-primary/80 flex items-center gap-1 transition-colors"
+            className="text-muted-foreground hover:text-white text-xs font-medium inline-flex items-center gap-1 transition-colors"
           >
             View All <UserPlus size={13} />
           </Link>

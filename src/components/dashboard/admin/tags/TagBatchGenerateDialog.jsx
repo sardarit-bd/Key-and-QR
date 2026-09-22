@@ -91,7 +91,7 @@ export default function TagBatchGenerateDialog({ open, onOpenChange, onSave, isL
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
-            className="h-10 px-4 rounded-xl bg-neutral-800/80 hover:bg-neutral-700 text-neutral-200 border border-neutral-700/80 font-medium transition-all cursor-pointer select-none"
+            className="h-10 px-4 rounded-lg border border-[#2A2D35] bg-transparent text-[#9BA1AD] hover:bg-[#24272D] hover:text-white font-medium transition-colors cursor-pointer select-none"
           >
             Cancel
           </Button>
@@ -99,7 +99,7 @@ export default function TagBatchGenerateDialog({ open, onOpenChange, onSave, isL
             type="button"
             onClick={handleSave}
             disabled={isLoading}
-            className="h-10 px-5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium shadow-[0_0_15px_rgba(99,102,241,0.3)] transition-all cursor-pointer select-none min-w-[110px] flex items-center justify-center gap-2"
+            className="h-10 px-5 rounded-lg bg-[#1E2025] hover:bg-[#282B32] text-white border border-[#323640] font-medium shadow-sm transition-all cursor-pointer select-none min-w-[110px] flex items-center justify-center gap-2 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20"
           >
             {isLoading ? (
               <>

@@ -141,11 +141,23 @@ export default function AssignOrderModal({ open, onOpenChange, onAssign }) {
           )}
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={assigning}>Cancel</Button>
-          <Button onClick={handleAssign} disabled={!selectedOrderId || assigning}>
+        <DialogFooter className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+          <button
+            type="button"
+            onClick={handleClose}
+            disabled={assigning}
+            className="h-10 px-4 rounded-lg border border-[#2A2D35] bg-transparent text-[#9BA1AD] hover:bg-[#24272D] hover:text-white font-medium text-sm transition-colors cursor-pointer select-none disabled:opacity-50"
+          >
+            Cancel
+          </button>
+          <button
+            type="button"
+            onClick={handleAssign}
+            disabled={!selectedOrderId || assigning}
+            className="h-10 px-5 rounded-lg bg-[#1E2025] hover:bg-[#282B32] text-white border border-[#323640] font-medium text-sm shadow-sm transition-all cursor-pointer select-none flex items-center justify-center gap-1.5 focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20 disabled:opacity-50"
+          >
             {assigning ? 'Assigning...' : 'Assign to Order'}
-          </Button>
+          </button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

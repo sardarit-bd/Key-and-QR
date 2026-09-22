@@ -5,24 +5,24 @@ import { QrCode, CheckCircle, Clock, Ban, Users, UserX, Tag } from 'lucide-react
 import Card from '@/components/dashboard/user/dashboard/Card';
 
 const STATS_DEFS = [
-  { key: 'total', label: 'Total', icon: QrCode, color: 'indigo' },
+  { key: 'total', label: 'Total', icon: QrCode, color: 'neutral' },
   { key: 'activated', label: 'Activated', icon: CheckCircle, color: 'emerald' },
   { key: 'pending', label: 'Pending', icon: Clock, color: 'amber' },
   { key: 'disabled', label: 'Disabled', icon: Ban, color: 'red' },
   { key: 'assigned', label: 'Assigned', icon: Users, color: 'blue' },
   { key: 'unassigned', label: 'Unassigned', icon: UserX, color: 'teal' },
-  { key: 'free', label: 'Free Plan', icon: Tag, color: 'purple' },
+  { key: 'free', label: 'Free Plan', icon: Tag, color: 'slate' },
   { key: 'subscriber', label: 'Subscriber', icon: Tag, color: 'amber' },
 ];
 
 const C = {
-  indigo:  { border: 'border-indigo-500/30', bg: 'bg-indigo-500/10', icon: 'text-indigo-400' },
+  neutral: { border: 'border-border', bg: 'bg-card', icon: 'text-foreground' },
   emerald: { border: 'border-emerald-500/30', bg: 'bg-emerald-500/10', icon: 'text-emerald-400' },
   amber:   { border: 'border-amber-500/30', bg: 'bg-amber-500/10', icon: 'text-amber-400' },
   red:     { border: 'border-red-500/30', bg: 'bg-red-500/10', icon: 'text-red-400' },
   blue:    { border: 'border-blue-500/30', bg: 'bg-blue-500/10', icon: 'text-blue-400' },
   teal:    { border: 'border-teal-500/30', bg: 'bg-teal-500/10', icon: 'text-teal-400' },
-  purple:  { border: 'border-purple-500/30', bg: 'bg-purple-500/10', icon: 'text-purple-400' },
+  slate:   { border: 'border-border', bg: 'bg-muted', icon: 'text-muted-foreground' },
 };
 
 export default function TagsStatsCards({ stats = {} }) {

@@ -30,7 +30,7 @@ export default function SidebarMenuItem({
     >
       {/* Active indicator */}
       {isActive && !isCollapsed && (
-        <span className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-gradient-to-b from-primary to-accent" />
+        <span className="absolute left-0 top-1/2 h-6 w-[3px] -translate-y-1/2 rounded-r-full bg-sidebar-primary" />
       )}
 
       <Icon

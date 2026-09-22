@@ -32,21 +32,21 @@ const STATUS_OPTIONS = [
 
 const STATUS_STYLES = {
   active:
-    "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 dark:text-emerald-300",
+    "border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   trialing:
-    "border-blue-500/30 bg-blue-500/10 text-blue-400 dark:text-blue-300",
+    "border-blue-500/30 bg-blue-500/10 text-blue-600 dark:text-blue-400",
   past_due:
-    "border-amber-500/30 bg-amber-500/10 text-amber-400 dark:text-amber-300",
+    "border-amber-500/30 bg-amber-500/10 text-amber-600 dark:text-amber-400",
   canceled:
-    "border-red-500/25 bg-red-500/10 text-red-400 dark:text-red-300",
+    "border-red-500/25 bg-red-500/10 text-red-600 dark:text-red-400",
   unpaid:
-    "border-orange-500/25 bg-orange-500/10 text-orange-400 dark:text-orange-300",
+    "border-orange-500/25 bg-orange-500/10 text-orange-600 dark:text-orange-400",
   incomplete:
-    "border-zinc-500/20 bg-zinc-500/10 text-zinc-400 dark:text-zinc-300",
+    "border-zinc-500/20 bg-zinc-500/10 text-zinc-600 dark:text-zinc-400",
   checkout_pending:
-    "border-zinc-500/20 bg-zinc-500/10 text-zinc-400 dark:text-zinc-300",
+    "border-zinc-500/20 bg-zinc-500/10 text-zinc-600 dark:text-zinc-400",
   inactive:
-    "border-zinc-500/20 bg-zinc-500/10 text-zinc-400 dark:text-zinc-300",
+    "border-zinc-500/20 bg-zinc-500/10 text-zinc-600 dark:text-zinc-400",
 };
 
 function StatCard({ label, value, icon: Icon, suffix }) {
@@ -56,7 +56,7 @@ function StatCard({ label, value, icon: Icon, suffix }) {
         <span className="text-[11px] font-medium uppercase tracking-wider text-foreground-tertiary">
           {label}
         </span>
-        <Icon size={15} className="text-foreground-tertiary/50" />
+        <Icon size={15} className="text-muted-foreground" />
       </div>
       <p className="text-2xl font-bold tracking-tight text-foreground tabular-nums">
         {typeof value === "number" ? value.toLocaleString() : value}
@@ -186,29 +186,26 @@ export default function AdminSubscriptionsPage() {
 
   if (loading && subscriptions.length === 0) {
     return (
-      <div className="min-h-screen bg-background">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
-          <div className="h-10 w-64 rounded bg-foreground/10 animate-pulse" />
-          <div className="h-4 w-96 rounded bg-foreground/10 animate-pulse" />
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
-            {[...Array(7)].map((_, i) => (
-              <div
-                key={i}
-                className="h-28 rounded-2xl bg-card animate-pulse border border-white/6"
-              />
-            ))}
-          </div>
-          {[...Array(5)].map((_, i) => (
-            <SkeletonRow key={i} />
+      <div className="w-full p-4 sm:p-6 lg:p-8 space-y-6">
+        <div className="h-10 w-64 rounded bg-foreground/10 animate-pulse" />
+        <div className="h-4 w-96 rounded bg-foreground/10 animate-pulse" />
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4">
+          {[...Array(7)].map((_, i) => (
+            <div
+              key={i}
+              className="h-28 rounded-2xl bg-card animate-pulse border border-white/6"
+            />
           ))}
         </div>
+        {[...Array(5)].map((_, i) => (
+          <SkeletonRow key={i} />
+        ))}
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24 space-y-6">
+    <div className="w-full p-4 sm:p-6 lg:p-8 space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
@@ -228,7 +225,7 @@ export default function AdminSubscriptionsPage() {
             type="button"
             onClick={handleSyncWithStripe}
             disabled={loading}
-            className="px-4 py-2.5 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-200 border border-neutral-700/80 hover:border-neutral-600 rounded-xl font-medium shadow-sm transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 cursor-pointer select-none text-sm disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500/50"
+            className="px-4 py-2.5 border border-[#323640] bg-[#1E2025] hover:bg-[#282B32] text-white rounded-lg font-medium shadow-sm transition-all duration-200 active:scale-95 flex items-center justify-center gap-2 cursor-pointer select-none text-sm disabled:opacity-60 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-white/20"
           >
             <RefreshCw size={15} className={loading ? "animate-spin" : ""} />
             Sync with Stripe
@@ -259,13 +256,13 @@ export default function AdminSubscriptionsPage() {
         {/* Filters */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
           <div className="relative flex-1 max-w-sm">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary/50" />
+            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search by tag, email, name..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-foreground-tertiary/40 focus:outline-none focus:ring-1 focus:ring-accent/40 transition"
+              className="w-full h-10 pl-9 pr-4 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-foreground-tertiary/40 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition"
             />
           </div>
           <div className="flex flex-wrap gap-2">
@@ -275,8 +272,8 @@ export default function AdminSubscriptionsPage() {
                 onClick={() => setFilterStatus(opt.value)}
                 className={`inline-flex cursor-pointer items-center rounded-full border px-3 py-1.5 text-[12px] font-medium transition ${
                   filterStatus === opt.value
-                    ? "border-accent/30 bg-accent/10 text-accent"
-                    : "border-border bg-transparent text-foreground-tertiary hover:border-foreground-tertiary/30"
+                    ? "border-primary/30 bg-primary/10 text-primary"
+                    : "border-border bg-transparent text-foreground-tertiary hover:border-foreground-tertiary/30 hover:text-foreground"
                 }`}
               >
                 {opt.label}
@@ -303,7 +300,7 @@ export default function AdminSubscriptionsPage() {
                 {subscriptions.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="p-12 text-center">
-                      <Crown size={40} className="mx-auto mb-3 text-foreground-tertiary/30" />
+                      <Crown size={40} className="mx-auto mb-3 text-muted-foreground" />
                       <p className="text-sm text-foreground-tertiary">No subscriptions found</p>
                     </td>
                   </tr>
@@ -322,8 +319,8 @@ export default function AdminSubscriptionsPage() {
                         <td className="p-4">
                           <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold capitalize ${
                             sub.subscriptionType === 'subscriber'
-                              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-400'
-                              : 'border-zinc-500/20 bg-zinc-500/10 text-zinc-400'
+                              ? 'border-emerald-500/30 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400'
+                              : 'border-zinc-500/20 bg-zinc-500/10 text-zinc-600 dark:text-zinc-400'
                           }`}>
                             {sub.subscriptionType || 'free'}
                           </span>
@@ -385,6 +382,6 @@ export default function AdminSubscriptionsPage() {
           )}
         </div>
       </div>
-    </div>
   );
 }
+
