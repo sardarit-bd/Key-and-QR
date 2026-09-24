@@ -244,6 +244,49 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
         err.response?.data?.code === "DAILY_LIMIT_REACHED" ||
         err.response?.data?.message?.toLowerCase().includes("limit");
 
+      const isNetworkError =
+        !err.response ||
+        err.code === "ERR_NETWORK" ||
+        err.code === "ECONNABORTED" ||
+        err.message?.toLowerCase().includes("network") ||
+        err.message?.toLowerCase().includes("timeout") ||
+        (typeof navigator !== "undefined" && !navigator.onLine);
+
+      // 1. Check if the error response payload itself contains latestQuote
+      const payloadQuote = err.response?.data?.data?.latestQuote || err.response?.data?.latestQuote;
+      if (payloadQuote) {
+        setQuoteData((prev) => ({
+          ...prev,
+          ...err.response?.data?.data,
+          latestQuote: payloadQuote,
+          canReveal: false,
+        }));
+        setIsRevealed(true);
+        if (audioPlayerRef.current) {
+          audioPlayerRef.current.play().catch(() => {});
+        }
+        return;
+      }
+
+      // 2. If network drop or 429 occurs, attempt a quick re-verification with GET /scan/public/${tagCode}
+      // in case the server processed the reveal but network dropped during response
+      if (isNetworkError || isLimit) {
+        try {
+          const verifyRes = await api.get(`/scan/public/${tagCode}`, { timeout: 4000 });
+          const verifiedData = verifyRes.data?.data;
+          if (verifiedData?.latestQuote) {
+            setQuoteData(verifiedData);
+            setIsRevealed(true);
+            if (audioPlayerRef.current) {
+              audioPlayerRef.current.play().catch(() => {});
+            }
+            return;
+          }
+        } catch {
+          // If re-verification fails (e.g. still offline), continue with error handling
+        }
+      }
+
       if (isLimit) {
         setIsLimitReached(true);
         const resetTime = err.response?.data?.nextResetTime || err.response?.data?.nextAvailableAt;
@@ -267,6 +310,10 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             id: "daily-limit-reached-toast",
           });
         }
+      } else if (isNetworkError) {
+        toast.error("Connection lost. Please check your internet and tap to reveal.", {
+          id: "reveal-quote-network-error-toast",
+        });
       } else {
         const msg = err.response?.data?.message || "Failed to reveal today's quote. Please try again.";
         toast.error(msg, {

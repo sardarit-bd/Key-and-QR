@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useEffect, useRef, useState } from 'react';
+import { memo, useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Calendar, Tag, Share2, Copy, Quote as QuoteIcon } from 'lucide-react';
 import { createPortal } from 'react-dom';
@@ -15,6 +15,8 @@ import {
 } from '@/components/public/quote/category';
 import useShareQuote from '@/hooks/useShareQuote';
 import ShareQuoteModal from '@/components/public/quote/ShareQuoteModal';
+import VisualQuoteAudioPlayer from '@/components/public/quote/VisualQuoteAudioPlayer';
+import { stopAllAudio } from '@/lib/audioCoordinator';
 
 // Light, cheap entrance — no spring physics, no layout thrash.
 const BACKDROP_VARIANTS = {
@@ -53,24 +55,32 @@ function ScanHistoryDetailModal({ isOpen, onClose, data }) {
     setMounted(true);
   }, []);
 
-  // Handle escape key + body scroll lock
+  // Synchronously stop all playing audio on modal close
+  const handleClose = useCallback(() => {
+    stopAllAudio();
+    if (onClose) onClose();
+  }, [onClose]);
+
+  // Handle escape key + body scroll lock and silence audio on state flip
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape' && isOpen) {
-        onClose();
+        handleClose();
       }
     };
 
     if (isOpen) {
+      stopAllAudio();
       document.addEventListener('keydown', handleEscape);
       document.body.style.overflow = 'hidden';
     }
 
     return () => {
+      stopAllAudio();
       document.removeEventListener('keydown', handleEscape);
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, handleClose]);
 
   // Focus trap
   useEffect(() => {
@@ -78,8 +88,6 @@ function ScanHistoryDetailModal({ isOpen, onClose, data }) {
       modalRef.current.focus();
     }
   }, [isOpen]);
-
-  if (!isOpen || !data || !mounted) return null;
 
   const quote = data?.quote;
   const tag = data?.tag;
@@ -96,12 +104,34 @@ function ScanHistoryDetailModal({ isOpen, onClose, data }) {
     (typeof quote?.image === 'string' ? quote.image : null) ||
     resolveBackgroundImage(category);
 
-  const formattedDate = data.createdAt
+  // Extract optional audio track from historical quote payload
+  const audioTrack = useMemo(() => {
+    const rawAudio =
+      quote?.audioTrack ||
+      quote?.backgroundMusic ||
+      quote?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+      quote?.editorData?.mobile?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+      quote?.editorData?.desktop?.audio ||
+      quote?.editorData?.mobile?.audio ||
+      quote?.audio ||
+      quote?.audioUrl ||
+      null;
+
+    if (!rawAudio) return null;
+    if (typeof rawAudio === 'string') return { source: rawAudio, loop: true };
+    if (rawAudio?.source) return rawAudio;
+    if (rawAudio?.url) return { ...rawAudio, source: rawAudio.url };
+    return null;
+  }, [quote]);
+
+  const formattedDate = data?.createdAt
     ? format(new Date(data.createdAt), 'MMMM d, yyyy')
     : '';
-  const formattedTime = data.createdAt
+  const formattedTime = data?.createdAt
     ? format(new Date(data.createdAt), 'h:mm a')
     : '';
+
+  if (!isOpen || !data || !mounted) return null;
 
   const handleShare = () => {
     shareQuote({
@@ -127,7 +157,7 @@ function ScanHistoryDetailModal({ isOpen, onClose, data }) {
         animate="visible"
         exit="exit"
         className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm light:bg-black/30"
-        onClick={onClose}
+        onClick={handleClose}
       >
         <motion.div
           ref={modalRef}
@@ -148,9 +178,16 @@ function ScanHistoryDetailModal({ isOpen, onClose, data }) {
           {/* Top sheen */}
           <div className="pointer-events-none absolute inset-x-0 top-0 z-10 h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
+          {/* Optional Audio Player */}
+          {audioTrack?.source && (
+            <div className="absolute right-15 top-4 z-20">
+              <VisualQuoteAudioPlayer track={audioTrack} compact />
+            </div>
+          )}
+
           {/* Close button */}
           <button
-            onClick={onClose}
+            onClick={handleClose}
             className="absolute right-4 top-4 z-20 flex h-9 w-9 cursor-pointer items-center justify-center rounded-full border border-white/15 bg-black/30 text-white/90 backdrop-blur-md transition-all duration-300 hover:rotate-90 hover:bg-black/50 hover:text-white light:border-[#E8DFCE]/80 light:bg-white/80 light:text-[#4A3C2D] light:hover:bg-white"
             aria-label="Close modal"
           >

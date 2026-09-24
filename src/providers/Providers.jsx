@@ -5,11 +5,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Toaster } from "react-hot-toast";
+import { stopAllAudio } from "@/lib/audioCoordinator";
 
 function RouteScrollCleanup() {
     const pathname = usePathname();
 
     useEffect(() => {
+        // Immediately silence any active audio/video threads on route transitions
+        stopAllAudio();
         document.body.style.overflow = 'unset';
         document.body.style.pointerEvents = 'auto';
         document.body.removeAttribute('data-scroll-locked');
