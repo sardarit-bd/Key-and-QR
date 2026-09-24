@@ -14,7 +14,7 @@ function getCategoryTheme(slug, customColor) {
   if (customColor && customColor.startsWith('#')) {
     return {
       accentColor: customColor,
-      bgTint: 'bg-card/75 dark:bg-slate-900/60',
+      bgTint: 'bg-card/75 dark:bg-neutral-900/60',
       iconBg: `${customColor}18`,
       pillBg: 'bg-muted/80 text-foreground-secondary',
     };
