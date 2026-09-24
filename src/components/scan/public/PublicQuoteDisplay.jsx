@@ -554,24 +554,19 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
           />
         </div>
 
-        {/* Center: MyInspireTag Brand & Category */}
-        <div className="flex flex-col items-center justify-center gap-1">
+        {/* Center: MyInspireTag Brand */}
+        <div className="flex flex-col items-center justify-center">
           <span className="font-serif italic text-white/95 text-xs sm:text-sm tracking-widest font-semibold drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] uppercase">
             MyInspireTag
           </span>
-          {categoryLabel && (
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-neutral-950/60 backdrop-blur-xl saturate-150 px-3 py-0.5 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#f3d6a0] shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_4px_16px_rgba(0,0,0,0.6)]">
-              <Sparkles size={10} className="text-amber-400 fill-current" />
-              <span>{categoryLabel}</span>
-            </div>
-          )}
         </div>
 
-        {/* Right: Tag Code Badge (or balanced spacer) */}
+        {/* Right: Category Badge (or balanced spacer) */}
         <div className="flex items-center justify-end min-w-[70px] sm:min-w-[90px]">
-          {tagCode ? (
-            <span className="text-[10px] text-white/70 font-mono tracking-wider bg-black/40 backdrop-blur-md border border-white/15 px-2 py-0.5 rounded-full">
-              {tagCode.slice(-8)}
+          {categoryLabel ? (
+            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-200/90 tracking-wide bg-black/40 backdrop-blur-md border border-white/15 px-2.5 py-1 rounded-full shadow-sm">
+              <Sparkles size={10} className="text-amber-400 fill-current" />
+              <span>{categoryLabel}</span>
             </span>
           ) : (
             <div className="w-8" />
