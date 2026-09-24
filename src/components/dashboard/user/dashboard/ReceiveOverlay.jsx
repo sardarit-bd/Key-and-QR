@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Sparkles, Loader2, X } from 'lucide-react';
 import VisualQuoteRenderer from '@/components/public/quote/VisualQuoteRenderer';
+import { stopAllAudio } from '@/lib/audioCoordinator';
 
 const LOADING_MESSAGES = [
   'Finding today\'s message...',
@@ -17,13 +18,23 @@ const LOADING_MESSAGES = [
  * Strictly preserves the 800×450 (16:9) quote artwork aspect ratio on both desktop and mobile.
  */
 export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose }) {
-  // Clean body scroll lock — sets overflow: hidden while modal is open and resets on unmount/close
+  // Synchronously stop all playing audio on modal close
+  const handleClose = useCallback(() => {
+    stopAllAudio();
+    if (onClose) onClose();
+  }, [onClose]);
+
+  // Clean body scroll lock and silence audio on state flip
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen) {
+      stopAllAudio();
+      return;
+    }
 
     document.body.style.overflow = 'hidden';
 
     return () => {
+      stopAllAudio();
       document.body.style.overflow = 'unset';
       document.body.style.pointerEvents = 'auto';
     };
@@ -66,7 +77,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          onClick={onClose ? onClose : undefined}
+          onClick={handleClose}
         >
           {quote ? (
             /* ---------- Reveal Modal Card ---------- */
@@ -86,15 +97,13 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
                   <span>{displayedCategoryName}</span>
                 </div>
 
-                {onClose && (
-                  <button
-                    onClick={onClose}
-                    aria-label="Close modal"
-                    className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-background/80 text-foreground-secondary hover:text-foreground hover:bg-muted transition-colors active:scale-95"
-                  >
-                    <X size={16} />
-                  </button>
-                )}
+                <button
+                  onClick={handleClose}
+                  aria-label="Close modal"
+                  className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-background/80 text-foreground-secondary hover:text-foreground hover:bg-muted transition-colors active:scale-95"
+                >
+                  <X size={16} />
+                </button>
               </div>
 
               {/* Responsive Artwork Canvas / Preview Stage (Portrait on mobile, 16:9 on sm+) */}

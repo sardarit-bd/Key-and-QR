@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Share2, Sparkles, BookOpen, X, Gift, Check, Music } from "lucide-react";
+import { Heart, Share2, Sparkles, BookOpen, X, Gift, Check, Music, Clock } from "lucide-react";
 import { toast } from "react-hot-toast";
 import api from "@/lib/api";
 import favoriteService from "@/services/favorite-service/favorite.service";
@@ -27,22 +27,33 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
   const [quoteData, setQuoteData] = useState(data);
 
-  // Sync quoteData if parent passes updated data prop
-  useEffect(() => {
-    if (data) {
-      setQuoteData(data);
-    }
-  }, [data]);
-
   const isPersonalMessage = Boolean(
     quoteData?.isPersonalMessage || quoteData?.latestQuote?.isPersonalMessage
   );
 
-  // Always default to unrevealed so every scan presents the signature teaser experience
-  const [isRevealed, setIsRevealed] = useState(isPersonalMessage);
+  // Initialize isRevealed dynamically: if already unlocked today or personal message, show quote immediately
+  const [isRevealed, setIsRevealed] = useState(() => {
+    if (isPersonalMessage) return true;
+    return Boolean(quoteData?.latestQuote && !quoteData?.canReveal);
+  });
   const [isRevealing, setIsRevealing] = useState(false);
-  const [isLimitReached, setIsLimitReached] = useState(quoteData?.canReveal === false && !quoteData?.latestQuote);
+  const [isLimitReached, setIsLimitReached] = useState(
+    () => Boolean(quoteData?.canReveal === false && (!quoteData?.latestQuote || quoteData?.dailyLimitReached))
+  );
   const lastClickTimeRef = useRef(0);
+
+  // Sync quoteData if parent passes updated data prop
+  useEffect(() => {
+    if (data) {
+      setQuoteData(data);
+      if (data.latestQuote && !data.canReveal) {
+        setIsRevealed(true);
+      }
+      if (data.canReveal === false && (!data.latestQuote || data.dailyLimitReached)) {
+        setIsLimitReached(true);
+      }
+    }
+  }, [data]);
 
   useEffect(() => {
     document.body.style.backgroundColor = '#000000';
@@ -56,14 +67,47 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
   useEffect(() => {
     if (quoteData) {
-      if (quoteData.canReveal === false && !quoteData.latestQuote) {
+      if (quoteData.canReveal === false && (!quoteData.latestQuote || quoteData.dailyLimitReached)) {
         setIsLimitReached(true);
       }
-      if (quoteData.isPersonalMessage) {
+      if (quoteData.isPersonalMessage || (quoteData.latestQuote && !quoteData.canReveal)) {
         setIsRevealed(true);
       }
     }
   }, [quoteData]);
+
+  // Next reset timestamp calculation and live countdown
+  const resetTimestamp = useMemo(() => {
+    const raw = quoteData?.nextResetTime || quoteData?.nextAvailableAt;
+    if (!raw) return null;
+    const t = new Date(raw).getTime();
+    return Number.isFinite(t) ? t : null;
+  }, [quoteData]);
+
+  const [timeRemainingMs, setTimeRemainingMs] = useState(() => {
+    if (!resetTimestamp) return quoteData?.timeUntilResetMs || 0;
+    return Math.max(0, resetTimestamp - Date.now());
+  });
+
+  useEffect(() => {
+    if (!resetTimestamp) return;
+    const updateCountdown = () => {
+      const remaining = Math.max(0, resetTimestamp - Date.now());
+      setTimeRemainingMs(remaining);
+    };
+    updateCountdown();
+    const interval = setInterval(updateCountdown, 1000);
+    return () => clearInterval(interval);
+  }, [resetTimestamp]);
+
+  const formattedCountdown = useMemo(() => {
+    if (timeRemainingMs <= 0) return null;
+    const totalSeconds = Math.floor(timeRemainingMs / 1000);
+    const hours = Math.floor(totalSeconds / 3600);
+    const minutes = Math.floor((totalSeconds % 3600) / 60);
+    const seconds = totalSeconds % 60;
+    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+  }, [timeRemainingMs]);
 
   // Active quote data for display (either latestQuote or root quote payload)
   const activeQuote = quoteData?.latestQuote || (quoteData?.quote || quoteData?.text ? quoteData : null);
@@ -73,19 +117,30 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   const category = isPersonalMessage ? "personal" : (activeQuote?.category || quoteData?.category || "inspire");
 
   const audioTrack = useMemo(() => {
+    const findAudioEl = (elements) =>
+      elements?.find((e) => e.type === 'audio' && (e.audioData?.source || e.audioData?.url))?.audioData;
+
     const rawAudio =
       activeQuote?.audioTrack ||
       activeQuote?.backgroundMusic ||
       quoteData?.audioTrack ||
       quoteData?.backgroundMusic ||
-      activeQuote?.editorData?.mobile?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
-      activeQuote?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
-      activeQuote?.editorData?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+      findAudioEl(activeQuote?.editorData?.mobile?.elements) ||
+      findAudioEl(activeQuote?.editorData?.desktop?.elements) ||
+      findAudioEl(activeQuote?.editorData?.elements) ||
+      findAudioEl(quoteData?.editorData?.mobile?.elements) ||
+      findAudioEl(quoteData?.editorData?.desktop?.elements) ||
+      findAudioEl(quoteData?.editorData?.elements) ||
       activeQuote?.editorData?.mobile?.audio ||
       activeQuote?.editorData?.desktop?.audio ||
       activeQuote?.editorData?.audio ||
+      quoteData?.editorData?.mobile?.audio ||
+      quoteData?.editorData?.desktop?.audio ||
+      quoteData?.editorData?.audio ||
       activeQuote?.audio ||
       activeQuote?.audioUrl ||
+      quoteData?.audio ||
+      quoteData?.audioUrl ||
       null;
 
     if (!rawAudio) return null;
@@ -120,14 +175,12 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
     // If today's quote has already been unlocked, simply reveal the existing latestQuote and play audio on user gesture
     if (!quoteData?.canReveal) {
-      if (audioPlayerRef.current) {
-        try {
-          await audioPlayerRef.current.play();
-        } catch (audioErr) {
-          console.warn("Audio autoplay blocked:", audioErr);
-        }
-      }
       setIsRevealed(true);
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.play().catch((audioErr) => {
+          console.warn("Audio autoplay blocked:", audioErr);
+        });
+      }
       return;
     }
 
@@ -136,23 +189,32 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
       const response = await api.post(`/scan/reveal/${tagCode}`);
       const unlockedData = response.data?.data;
       if (unlockedData) {
-        setQuoteData(unlockedData);
-
         // Resolve incoming audio track from unlocked quote payload
         const activeUnlocked = unlockedData.latestQuote || unlockedData.quote || unlockedData;
+        const findAudioEl = (elements) =>
+          elements?.find((e) => e.type === 'audio' && (e.audioData?.source || e.audioData?.url))?.audioData;
+
         const incomingAudio =
           activeUnlocked?.audioTrack ||
           activeUnlocked?.backgroundMusic ||
           unlockedData?.audioTrack ||
           unlockedData?.backgroundMusic ||
-          activeUnlocked?.editorData?.mobile?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
-          activeUnlocked?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
-          activeUnlocked?.editorData?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+          findAudioEl(activeUnlocked?.editorData?.mobile?.elements) ||
+          findAudioEl(activeUnlocked?.editorData?.desktop?.elements) ||
+          findAudioEl(activeUnlocked?.editorData?.elements) ||
+          findAudioEl(unlockedData?.editorData?.mobile?.elements) ||
+          findAudioEl(unlockedData?.editorData?.desktop?.elements) ||
+          findAudioEl(unlockedData?.editorData?.elements) ||
           activeUnlocked?.editorData?.mobile?.audio ||
           activeUnlocked?.editorData?.desktop?.audio ||
           activeUnlocked?.editorData?.audio ||
+          unlockedData?.editorData?.mobile?.audio ||
+          unlockedData?.editorData?.desktop?.audio ||
+          unlockedData?.editorData?.audio ||
           activeUnlocked?.audio ||
           activeUnlocked?.audioUrl ||
+          unlockedData?.audio ||
+          unlockedData?.audioUrl ||
           null;
 
         const resolvedTrack =
@@ -164,37 +226,94 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             ? { ...incomingAudio, source: incomingAudio.url }
             : null;
 
-        // Transition pre-warmed audio element seamlessly to the unlocked track
+        setQuoteData(unlockedData);
+        setIsRevealed(true); // Trigger visual card entrance immediately with data
+
+        // Fire audio playback concurrently without blocking visual flow
         if (audioPlayerRef.current && resolvedTrack?.source) {
-          try {
-            await audioPlayerRef.current.play(resolvedTrack);
-          } catch (audioErr) {
-            console.warn("Audio playback after reveal blocked:", audioErr);
-          }
+          audioPlayerRef.current.play(resolvedTrack).catch((err) => {
+            console.warn("Reveal audio play unhandled rejection:", err);
+          });
         }
+      } else {
+        setIsRevealed(true);
       }
-      setIsRevealed(true);
     } catch (err) {
       const isLimit =
         err.response?.status === 429 ||
         err.response?.data?.code === "DAILY_LIMIT_REACHED" ||
         err.response?.data?.message?.toLowerCase().includes("limit");
 
+      const isNetworkError =
+        !err.response ||
+        err.code === "ERR_NETWORK" ||
+        err.code === "ECONNABORTED" ||
+        err.message?.toLowerCase().includes("network") ||
+        err.message?.toLowerCase().includes("timeout") ||
+        (typeof navigator !== "undefined" && !navigator.onLine);
+
+      // 1. Check if the error response payload itself contains latestQuote
+      const payloadQuote = err.response?.data?.data?.latestQuote || err.response?.data?.latestQuote;
+      if (payloadQuote) {
+        setQuoteData((prev) => ({
+          ...prev,
+          ...err.response?.data?.data,
+          latestQuote: payloadQuote,
+          canReveal: false,
+        }));
+        setIsRevealed(true);
+        if (audioPlayerRef.current) {
+          audioPlayerRef.current.play().catch(() => {});
+        }
+        return;
+      }
+
+      // 2. If network drop or 429 occurs, attempt a quick re-verification with GET /scan/public/${tagCode}
+      // in case the server processed the reveal but network dropped during response
+      if (isNetworkError || isLimit) {
+        try {
+          const verifyRes = await api.get(`/scan/public/${tagCode}`, { timeout: 4000 });
+          const verifiedData = verifyRes.data?.data;
+          if (verifiedData?.latestQuote) {
+            setQuoteData(verifiedData);
+            setIsRevealed(true);
+            if (audioPlayerRef.current) {
+              audioPlayerRef.current.play().catch(() => {});
+            }
+            return;
+          }
+        } catch {
+          // If re-verification fails (e.g. still offline), continue with error handling
+        }
+      }
+
       if (isLimit) {
         setIsLimitReached(true);
+        const resetTime = err.response?.data?.nextResetTime || err.response?.data?.nextAvailableAt;
+        if (resetTime) {
+          setQuoteData((prev) => ({
+            ...prev,
+            nextResetTime: resetTime,
+            timeUntilResetMs: err.response?.data?.timeUntilResetMs,
+            canReveal: false,
+            dailyLimitReached: true,
+          }));
+        }
         // If quote is already present, reveal it gracefully
         if (quoteData?.latestQuote) {
-          if (audioPlayerRef.current) {
-            try {
-              await audioPlayerRef.current.play();
-            } catch (audioErr) {}
-          }
           setIsRevealed(true);
+          if (audioPlayerRef.current) {
+            audioPlayerRef.current.play().catch(() => {});
+          }
         } else {
           toast.error("Daily limit reached. Free users can reveal 1 quote per day. Scan again tomorrow!", {
             id: "daily-limit-reached-toast",
           });
         }
+      } else if (isNetworkError) {
+        toast.error("Connection lost. Please check your internet and tap to reveal.", {
+          id: "reveal-quote-network-error-toast",
+        });
       } else {
         const msg = err.response?.data?.message || "Failed to reveal today's quote. Please try again.";
         toast.error(msg, {
@@ -419,7 +538,12 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   return (
     <div className="fixed inset-0 w-full h-full bg-black overflow-hidden overscroll-none select-none z-10 text-white flex flex-col justify-between">
       {/* 100% Full-Screen Edge-to-Edge Visual Quote Artwork Stage (Fabric Canvas / Pre-rendered Image / Wallpaper) */}
-      <div className="absolute inset-0 w-full h-full bg-black overflow-hidden pointer-events-none -z-10">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={isRevealed ? { opacity: 1, scale: 1 } : { opacity: 0.3, scale: 0.98 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="absolute inset-0 w-full h-full bg-black overflow-hidden pointer-events-none -z-10"
+      >
         {hasFabricCanvas ? (
           <VisualQuoteRenderer
             editorData={editorData}
@@ -454,7 +578,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
         {/* Keep top & center 100% clean and clear; only subtle bottom scrim for floating actions */}
         <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 to-transparent -z-10 pointer-events-none" />
-      </div>
+      </motion.div>
 
       {/* Full-Screen Interaction Overlay for Autoplay Audio on Mobile */}
       <AnimatePresence>
@@ -463,8 +587,8 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             key="reveal-overlay"
             initial={{ opacity: 1 }}
             exit={{ opacity: 0, scale: 0.98 }}
-            transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-            className="absolute inset-0 z-50 h-full w-full flex flex-col justify-between items-center px-4 py-6 bg-black/90 backdrop-blur-2xl text-center select-none overflow-hidden"
+            transition={{ duration: 0.45, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute inset-0 z-50 h-full w-full flex flex-col justify-between items-center px-4 py-6 bg-black/90 backdrop-blur-2xl text-center select-none overflow-y-auto overscroll-contain"
             style={
               resolvedBgUrl
                 ? {
@@ -490,46 +614,95 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
             {/* Center: Hero Teaser & Reveal Button */}
             <div className="relative z-10 flex-1 min-h-0 flex flex-col items-center justify-center my-auto px-4 max-w-sm">
-              {/* Glowing Aura Icon */}
-              <div className="relative mb-5 flex h-16 w-16 items-center justify-center">
-                <div className="absolute inset-0 rounded-full bg-amber-400/30 blur-xl animate-pulse" />
-                <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-amber-400/40 bg-neutral-950/80 backdrop-blur-md shadow-[0_0_30px_rgba(245,158,11,0.4)]">
-                  <Sparkles size={22} className="text-amber-300 fill-amber-300/30" />
+              {isLimitReached && !quoteData?.latestQuote ? (
+                <div className="flex flex-col items-center">
+                  <div className="relative mb-5 flex h-16 w-16 items-center justify-center">
+                    <div className="absolute inset-0 rounded-full bg-amber-500/20 blur-xl animate-pulse" />
+                    <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-amber-500/40 bg-neutral-950/80 backdrop-blur-md shadow-[0_0_30px_rgba(245,158,11,0.3)]">
+                      <Clock size={24} className="text-amber-400" />
+                    </div>
+                  </div>
+
+                  <h2 className="text-2xl sm:text-3xl font-light tracking-tight text-white drop-shadow-md mb-2">
+                    Daily Limit Reached
+                  </h2>
+                  <p className="text-xs sm:text-sm text-white/70 font-light leading-relaxed mb-6 max-w-[280px]">
+                    You have unlocked today&apos;s quote allocation. Your next quote resets in:
+                  </p>
+
+                  {/* Countdown Timer Display */}
+                  <div className="inline-flex items-center gap-2.5 rounded-2xl border border-amber-500/30 bg-black/60 px-5 py-3 shadow-[0_0_25px_rgba(245,158,11,0.15)] mb-4 backdrop-blur-xl">
+                    <Clock size={16} className="text-amber-400 animate-pulse" />
+                    <span className="font-mono text-xl sm:text-2xl font-bold tracking-widest text-amber-300 drop-shadow-[0_0_12px_rgba(245,158,11,0.5)]">
+                      {formattedCountdown || "00:00:00"}
+                    </span>
+                  </div>
+
+                  <p className="text-[11px] text-white/45 font-light">
+                    Resets at midnight in your local timezone
+                  </p>
                 </div>
-              </div>
+              ) : (
+                <>
+                  {/* Glowing Aura Icon */}
+                  <div className="relative mb-5 flex h-16 w-16 items-center justify-center">
+                    <div className="absolute inset-0 rounded-full bg-amber-400/30 blur-xl animate-pulse" />
+                    <div className="relative flex h-14 w-14 items-center justify-center rounded-full border border-amber-400/40 bg-neutral-950/80 backdrop-blur-md shadow-[0_0_30px_rgba(245,158,11,0.4)]">
+                      <Sparkles size={22} className="text-amber-300 fill-amber-300/30" />
+                    </div>
+                  </div>
 
-              <h2 className="text-2xl sm:text-3xl font-light tracking-tight text-white drop-shadow-md mb-2">
-                Your inspiration is ready
-              </h2>
-              <p className="text-xs sm:text-sm text-white/70 font-light leading-relaxed mb-6 max-w-[280px]">
-                Reveal today&apos;s quote
-                {quoteData?.remainingQuotesToday ? ` (${quoteData.remainingQuotesToday} available today)` : ""}
-              </p>
+                  <h2 className="text-2xl sm:text-3xl font-light tracking-tight text-white drop-shadow-md mb-2">
+                    Your inspiration is ready
+                  </h2>
+                  <p className="text-xs sm:text-sm text-white/70 font-light leading-relaxed mb-6 max-w-[280px]">
+                    Reveal today&apos;s quote
+                    {quoteData?.remainingQuotesToday ? ` (${quoteData.remainingQuotesToday} available today)` : ""}
+                  </p>
 
-              {/* Primary Reveal Button */}
-              <motion.button
-                type="button"
-                disabled={isRevealing}
-                whileHover={!isRevealing ? { scale: 1.03 } : {}}
-                whileTap={!isRevealing ? { scale: 0.96 } : {}}
-                onClick={handleReveal}
-                className="cursor-pointer group relative inline-flex items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 px-7 py-3 text-xs sm:text-sm font-bold text-black shadow-[0_0_35px_rgba(245,158,11,0.5)] hover:shadow-[0_0_45px_rgba(245,158,11,0.7)] hover:brightness-105 transition-all duration-200 disabled:opacity-75 disabled:cursor-not-allowed"
-              >
-                {isRevealing ? (
-                  <div className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
-                ) : (
-                  <Sparkles size={15} className="fill-current text-black" />
-                )}
-                <span className="tracking-wide font-bold">
-                  {isRevealing ? "Revealing Today's Quote..." : "Reveal Today's Quote"}
-                </span>
-                <Music size={15} className="text-black/80" />
-              </motion.button>
+                  {/* Primary Reveal Button with Interactive Expanding Pulse */}
+                  <motion.button
+                    type="button"
+                    disabled={isRevealing}
+                    whileHover={!isRevealing ? { scale: 1.03 } : {}}
+                    whileTap={!isRevealing ? { scale: 0.96 } : {}}
+                    animate={
+                      isRevealing
+                        ? {
+                            scale: [1, 1.05, 1],
+                            boxShadow: [
+                              "0 0 25px rgba(245,158,11,0.5)",
+                              "0 0 50px rgba(245,158,11,0.9)",
+                              "0 0 25px rgba(245,158,11,0.5)",
+                            ],
+                          }
+                        : { scale: 1 }
+                    }
+                    transition={
+                      isRevealing
+                        ? { repeat: Infinity, duration: 1.1, ease: "easeInOut" }
+                        : { duration: 0.2 }
+                    }
+                    onClick={handleReveal}
+                    className="cursor-pointer group relative inline-flex items-center justify-center gap-2.5 rounded-full bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 px-7 py-3 text-xs sm:text-sm font-bold text-black shadow-[0_0_35px_rgba(245,158,11,0.5)] hover:shadow-[0_0_45px_rgba(245,158,11,0.7)] hover:brightness-105 transition-all duration-200 disabled:opacity-90 disabled:cursor-not-allowed"
+                  >
+                    {isRevealing ? (
+                      <div className="h-4 w-4 border-2 border-black border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Sparkles size={15} className="fill-current text-black" />
+                    )}
+                    <span className="tracking-wide font-bold">
+                      {isRevealing ? "Revealing Today's Quote..." : "Reveal Today's Quote"}
+                    </span>
+                    <Music size={15} className="text-black/80" />
+                  </motion.button>
 
-              <div className="mt-3.5 inline-flex items-center gap-1.5 text-[11px] text-white/50 font-medium">
-                <Music size={11} className="text-amber-400/80" />
-                <span>Includes audio experience</span>
-              </div>
+                  <div className="mt-3.5 inline-flex items-center gap-1.5 text-[11px] text-white/50 font-medium">
+                    <Music size={11} className="text-amber-400/80" />
+                    <span>Includes audio experience</span>
+                  </div>
+                </>
+              )}
             </div>
 
             {/* Bottom branding */}
@@ -554,24 +727,19 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
           />
         </div>
 
-        {/* Center: MyInspireTag Brand & Category */}
-        <div className="flex flex-col items-center justify-center gap-1">
+        {/* Center: MyInspireTag Brand */}
+        <div className="flex flex-col items-center justify-center">
           <span className="font-serif italic text-white/95 text-xs sm:text-sm tracking-widest font-semibold drop-shadow-[0_2px_12px_rgba(0,0,0,0.9)] uppercase">
             MyInspireTag
           </span>
-          {categoryLabel && (
-            <div className="inline-flex items-center gap-1.5 rounded-full border border-white/25 bg-neutral-950/60 backdrop-blur-xl saturate-150 px-3 py-0.5 text-[10px] sm:text-[11px] font-semibold uppercase tracking-wider text-[#f3d6a0] shadow-[inset_0_1px_1px_rgba(255,255,255,0.4),0_4px_16px_rgba(0,0,0,0.6)]">
-              <Sparkles size={10} className="text-amber-400 fill-current" />
-              <span>{categoryLabel}</span>
-            </div>
-          )}
         </div>
 
-        {/* Right: Tag Code Badge (or balanced spacer) */}
+        {/* Right: Category Badge (or balanced spacer) */}
         <div className="flex items-center justify-end min-w-[70px] sm:min-w-[90px]">
-          {tagCode ? (
-            <span className="text-[10px] text-white/70 font-mono tracking-wider bg-black/40 backdrop-blur-md border border-white/15 px-2 py-0.5 rounded-full">
-              {tagCode.slice(-8)}
+          {categoryLabel ? (
+            <span className="inline-flex items-center gap-1 text-[11px] font-medium text-amber-200/90 tracking-wide bg-black/40 backdrop-blur-md border border-white/15 px-2.5 py-1 rounded-full shadow-sm">
+              <Sparkles size={10} className="text-amber-400 fill-current" />
+              <span>{categoryLabel}</span>
             </span>
           ) : (
             <div className="w-8" />
@@ -582,7 +750,12 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
       {/* Center Typography (Rendered ONLY for text-only quotes) */}
       <main className="relative z-10 flex-1 w-full h-full flex flex-col justify-center items-center text-center px-4 sm:px-8 pt-20 pb-36 sm:pt-24 sm:pb-40 my-auto pointer-events-none">
         {!isVisualQuote && (
-          <div className="flex flex-col justify-center items-center max-w-xl mx-auto w-full px-5 py-6 sm:px-8 sm:py-8 rounded-3xl bg-neutral-950/25 backdrop-blur-xs border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] pointer-events-auto">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={isRevealed ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="flex flex-col justify-center items-center max-w-xl mx-auto w-full px-5 py-6 sm:px-8 sm:py-8 rounded-3xl bg-neutral-950/25 backdrop-blur-xs border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] pointer-events-auto"
+          >
             {/* Elegant Golden Heart Separator */}
             <div className="mb-3.5 sm:mb-5 flex items-center justify-center opacity-90">
               <div className="h-px w-8 sm:w-12 bg-gradient-to-r from-transparent to-amber-400/80" />
@@ -607,7 +780,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                 <div className="h-px w-4 sm:w-6 bg-amber-400/40" />
               </div>
             )}
-          </div>
+          </motion.div>
         )}
       </main>
 

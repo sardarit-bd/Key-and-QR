@@ -269,7 +269,7 @@ function QuotePreviewContent() {
   return (
     <div className="w-full h-full flex flex-col items-center justify-between relative select-none">
       {/* Top Bar with Mode Switcher and Close button */}
-      <div className="w-full h-14 bg-slate-900/90 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-6 z-20 shrink-0">
+      <div className="w-full h-14 bg-neutral-900/90 backdrop-blur-md border-b border-white/10 flex items-center justify-between px-6 z-20 shrink-0">
         <div className="flex items-center gap-3">
           <span className="text-white text-xs font-semibold uppercase tracking-wider">
             Quote Preview
@@ -323,7 +323,7 @@ function QuotePreviewContent() {
         className="w-full flex-1 flex flex-col items-center justify-center relative p-6 overflow-hidden"
       >
         {loading && (
-          <div className="absolute inset-0 bg-slate-900/80 backdrop-blur-sm flex flex-col items-center justify-center z-30">
+          <div className="absolute inset-0 bg-neutral-900/80 backdrop-blur-sm flex flex-col items-center justify-center z-30">
             <Loader2 className="animate-spin text-primary mb-3" size={32} />
             <p className="text-white/70 text-xs font-medium">Rendering design...</p>
           </div>

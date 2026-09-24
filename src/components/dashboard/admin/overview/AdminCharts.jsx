@@ -78,8 +78,8 @@ function SalesPerformanceTooltip({ active, payload, label }) {
   const data = payload[0]?.payload || {};
 
   return (
-    <div className="bg-popover/95 backdrop-blur-md border border-border rounded-2xl p-3.5 shadow-2xl text-xs space-y-1.5 min-w-[170px]">
-      <p className="text-foreground font-bold border-b border-border/60 pb-1 text-xs">
+    <div className="bg-neutral-900 border border-neutral-800 text-white backdrop-blur-md rounded-2xl p-3.5 shadow-2xl text-xs space-y-1.5 min-w-[170px]">
+      <p className="text-white font-bold border-b border-neutral-800 pb-1 text-xs">
         {data.label || label}
       </p>
       {data.revenue !== undefined && (
@@ -87,7 +87,7 @@ function SalesPerformanceTooltip({ active, payload, label }) {
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-emerald-400" /> Revenue:
           </span>
-          <span className="font-semibold text-foreground">{formatCurrency(data.revenue)}</span>
+          <span className="font-semibold text-white">{formatCurrency(data.revenue)}</span>
         </div>
       )}
       {data.orders !== undefined && (
@@ -95,7 +95,7 @@ function SalesPerformanceTooltip({ active, payload, label }) {
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-blue-400" /> Orders:
           </span>
-          <span className="font-semibold text-foreground">{data.orders}</span>
+          <span className="font-semibold text-white">{data.orders}</span>
         </div>
       )}
       {data.aov > 0 && (
@@ -103,13 +103,13 @@ function SalesPerformanceTooltip({ active, payload, label }) {
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full bg-indigo-400" /> AOV:
           </span>
-          <span className="font-semibold text-foreground">{formatCurrency(data.aov)}</span>
+          <span className="font-semibold text-white">{formatCurrency(data.aov)}</span>
         </div>
       )}
       {data.prevRevenue > 0 && (
-        <div className="flex items-center justify-between gap-3 text-foreground-tertiary border-t border-border/40 pt-1 text-[11px]">
+        <div className="flex items-center justify-between gap-3 text-neutral-400 border-t border-neutral-800 pt-1 text-[11px]">
           <span>Prev. Revenue:</span>
-          <span className="font-medium text-foreground-secondary">{formatCurrency(data.prevRevenue)}</span>
+          <span className="font-medium text-neutral-300">{formatCurrency(data.prevRevenue)}</span>
         </div>
       )}
     </div>
@@ -119,15 +119,15 @@ function SalesPerformanceTooltip({ active, payload, label }) {
 function GenericChartTooltip({ active, payload, label, unit = '' }) {
   if (!active || !payload || !payload.length) return null;
   return (
-    <div className="bg-popover/95 backdrop-blur-md border border-border rounded-xl px-3 py-2 shadow-xl text-xs space-y-1">
-      <p className="text-foreground font-semibold mb-0.5">{label || payload[0]?.name}</p>
+    <div className="bg-neutral-900 border border-neutral-800 text-white backdrop-blur-md rounded-xl px-3 py-2 shadow-xl text-xs space-y-1">
+      <p className="text-white font-semibold mb-0.5">{label || payload[0]?.name}</p>
       {payload.map((entry, i) => (
         <div key={i} className="flex items-center justify-between gap-3" style={{ color: entry.color }}>
           <span className="flex items-center gap-1">
             <span className="w-2 h-2 rounded-full" style={{ backgroundColor: entry.color }} />
             {entry.name}:
           </span>
-          <span className="font-bold text-foreground">
+          <span className="font-bold text-white">
             {unit === '$' ? formatCurrency(entry.value) : `${entry.value} ${unit}`}
           </span>
         </div>
@@ -219,7 +219,7 @@ function PrimarySalesChart({ salesTrend = [] }) {
                 </linearGradient>
               </defs>
 
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" strokeOpacity={0.4} vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
               <XAxis
                 dataKey="label"
                 tick={{ fontSize: 11, fill: 'var(--foreground-tertiary)' }}
@@ -325,7 +325,7 @@ function OrdersTrendChart({ ordersTrend = [] }) {
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={ordersTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" strokeOpacity={0.4} vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
               <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--foreground-tertiary)' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: 'var(--foreground-tertiary)' }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip content={<GenericChartTooltip unit="orders" />} />
@@ -369,7 +369,7 @@ function CustomerGrowthChart({ customerGrowth = [] }) {
                   <stop offset="95%" stopColor={COLORS.teal} stopOpacity={0.0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" strokeOpacity={0.4} vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
               <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--foreground-tertiary)' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: 'var(--foreground-tertiary)' }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip content={<GenericChartTooltip unit="users" />} />
@@ -604,7 +604,7 @@ function TopProductsChart({ topProducts = [] }) {
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart layout="vertical" data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" strokeOpacity={0.4} horizontal={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#262626" horizontal={false} />
               <XAxis
                 type="number"
                 tick={{ fontSize: 10, fill: 'var(--foreground-tertiary)' }}
@@ -660,7 +660,7 @@ function CategorySalesChart({ categorySales = [] }) {
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart layout="vertical" data={chartData} margin={{ top: 5, right: 20, left: 15, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" strokeOpacity={0.4} horizontal={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="#262626" horizontal={false} />
               <XAxis
                 type="number"
                 tick={{ fontSize: 10, fill: 'var(--foreground-tertiary)' }}

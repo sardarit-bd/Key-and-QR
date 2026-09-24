@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, forwardRef, useImperativeHandle, useCallback } from 'react';
 import { Play, Pause } from 'lucide-react';
+import { stopAllAudio, STOP_ALL_AUDIO_EVENT } from '@/lib/audioCoordinator';
 
 // Standard 44-byte silent PCM WAV data URI used to pre-warm and unlock mobile audio contexts on user gesture
 const SILENT_AUDIO_URI = 'data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA';
@@ -11,11 +12,14 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
   compact = false,
   className = '',
   disableAutoplay = false,
+  paused = false,
 }, ref) {
   // Initialize to false by default to prevent UI desync if browser blocks autoplay
   const [isPlaying, setIsPlaying] = useState(false);
   const mediaRef = useRef(null);
   const prevSourceRef = useRef(track?.source);
+  const instanceIdRef = useRef(`audio_${Math.random().toString(36).substring(2, 9)}_${Date.now()}`);
+  const rafIdRef = useRef(null);
 
   const isVideoSource = Boolean(
     track?.source &&
@@ -27,71 +31,165 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
 
   const isLooping = Boolean(track?.loop ?? true);
 
+  // Cancel any active requestAnimationFrame volume ramp
+  const cancelFade = useCallback(() => {
+    if (rafIdRef.current) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+  }, []);
+
+  // Smooth 200ms audio gain / volume ramp-up to eliminate pops and harsh starts
+  const fadeAudioIn = useCallback((media, targetVolume = 1, durationMs = 200) => {
+    if (!media) return;
+    cancelFade();
+    try {
+      media.volume = 0;
+      const startTime = performance.now();
+      const step = (now) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / durationMs, 1);
+        media.volume = Math.min(progress * targetVolume, 1);
+        if (progress < 1 && !media.paused) {
+          rafIdRef.current = requestAnimationFrame(step);
+        } else {
+          rafIdRef.current = null;
+          if (!media.paused) {
+            media.volume = targetVolume;
+          }
+        }
+      };
+      rafIdRef.current = requestAnimationFrame(step);
+    } catch {
+      media.volume = targetVolume;
+    }
+  }, [cancelFade]);
+
+  // Global Audio Coordinator Listener: pause if another audio player started
+  useEffect(() => {
+    const handleStopAll = (e) => {
+      if (e.detail?.exceptId !== instanceIdRef.current) {
+        cancelFade();
+        if (mediaRef.current && !mediaRef.current.paused) {
+          try {
+            mediaRef.current.pause();
+          } catch {
+            // Silently catch pause errors
+          }
+        }
+        setIsPlaying(false);
+      }
+    };
+
+    window.addEventListener(STOP_ALL_AUDIO_EVENT, handleStopAll);
+    return () => {
+      window.removeEventListener(STOP_ALL_AUDIO_EVENT, handleStopAll);
+    };
+  }, [cancelFade]);
+
+  // Synchronous pause when controlled paused prop becomes true
+  useEffect(() => {
+    if (paused) {
+      cancelFade();
+      if (mediaRef.current && !mediaRef.current.paused) {
+        try {
+          mediaRef.current.pause();
+        } catch {
+          // Silently catch pause errors
+        }
+      }
+      setIsPlaying(false);
+    }
+  }, [paused, cancelFade]);
+
   // Pre-warm the media element synchronously on direct user gesture before async operations
   const prime = useCallback(async () => {
     const media = mediaRef.current;
     if (!media) return false;
     try {
-      if (!media.src || media.src === window.location.href) {
+      // If we already have a real track loaded or preloaded, prime directly without resetting the buffer
+      const hasRealSource = media.src && media.src !== SILENT_AUDIO_URI && media.src !== window.location.href;
+      if (!hasRealSource) {
         media.src = SILENT_AUDIO_URI;
       }
       media.muted = false;
       await media.play();
       return true;
     } catch (e) {
+      if (e?.name === 'AbortError') return false;
       console.warn('[AudioPlayer] Prime attempt warning:', e?.message || e);
       return false;
     }
   }, []);
 
-  // Attempt unmuted playback; accurately records state without deceptive muted illusions
+  // Attempt unmuted playback with smooth audio gain ramp-up and zero buffer flushing on same source
   const attemptPlay = useCallback(async (customTrack) => {
     const media = mediaRef.current;
     if (!media) return false;
     try {
       const source = customTrack?.source || (typeof customTrack === 'string' ? customTrack : track?.source);
-      if (source && media.src !== source) {
-        media.src = source;
-        media.loop = isLooping;
-        media.volume = customTrack?.volume ?? track?.volume ?? 1;
+      const targetVolume = customTrack?.volume ?? track?.volume ?? 1;
+
+      if (source) {
+        const currentSrc = media.src || '';
+        const isSameSource = currentSrc === source || currentSrc.endsWith(source);
+        if (!isSameSource) {
+          media.src = source;
+          media.loop = isLooping;
+        }
       }
       if (!media.src || media.src === SILENT_AUDIO_URI || media.src === window.location.href) {
         return false;
       }
+
+      // Silence all other playing instances before starting playback
+      stopAllAudio(instanceIdRef.current);
+
       media.muted = false;
+      fadeAudioIn(media, targetVolume, 200);
       await media.play();
       setIsPlaying(true);
       return true;
     } catch (err) {
+      if (err?.name === 'AbortError') {
+        // Ignored: interrupted by a subsequent play or pause request
+        return false;
+      }
       console.warn('[AudioPlayer] Play attempt warning:', err?.message || err);
       setIsPlaying(false);
       return false;
     }
-  }, [track?.source, track?.volume, isLooping]);
+  }, [track?.source, track?.volume, isLooping, fadeAudioIn]);
 
   const togglePlay = useCallback(() => {
     const media = mediaRef.current;
     if (!media || !track?.source) return;
 
     if (isPlaying) {
+      cancelFade();
       media.pause();
       setIsPlaying(false);
     } else {
+      // Silence all other playing instances before starting playback
+      stopAllAudio(instanceIdRef.current);
+
       media.muted = false;
       if (media.src !== track.source) {
         media.src = track.source;
       }
+      fadeAudioIn(media, track?.volume ?? 1, 200);
       media
         .play()
         .then(() => {
           setIsPlaying(true);
         })
         .catch((err) => {
+          if (err?.name === 'AbortError') return;
           console.warn('[AudioPlayer] User play trigger prevented:', err?.message || err);
           setIsPlaying(false);
         });
     }
-  }, [isPlaying, track?.source]);
+  }, [isPlaying, track?.source, track?.volume, cancelFade, fadeAudioIn]);
 
   const handleEnded = useCallback(() => {
     const media = mediaRef.current;
@@ -100,7 +198,10 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
       media
         .play()
         .then(() => setIsPlaying(true))
-        .catch(() => setIsPlaying(false));
+        .catch((err) => {
+          if (err?.name === 'AbortError') return;
+          setIsPlaying(false);
+        });
     } else {
       setIsPlaying(false);
     }
@@ -116,8 +217,13 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
         return prime();
       },
       pause: () => {
+        cancelFade();
         if (mediaRef.current) {
-          mediaRef.current.pause();
+          try {
+            mediaRef.current.pause();
+          } catch {
+            // Silently catch pause errors
+          }
           setIsPlaying(false);
         }
       },
@@ -131,7 +237,7 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
         return mediaRef.current;
       },
     }),
-    [attemptPlay, prime, togglePlay, isPlaying]
+    [attemptPlay, prime, togglePlay, isPlaying, cancelFade]
   );
 
   // 1. Manage media source and volume; clean up ONLY when track source actually changes or unmounts
@@ -150,36 +256,47 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
     }
   }, [track?.source, isLooping, track?.volume]);
 
-  // Teardown when component unmounts
+  // Teardown when component unmounts: cancel volume animation frame and silence media
   useEffect(() => {
     return () => {
+      cancelFade();
       if (mediaRef.current) {
-        mediaRef.current.pause();
-        mediaRef.current.src = '';
+        try {
+          mediaRef.current.pause();
+          mediaRef.current.src = '';
+        } catch {
+          // Silently catch errors on teardown
+        }
       }
     };
-  }, []);
+  }, [cancelFade]);
 
-  // 2. Handle autoplay trigger when conditions are met WITHOUT tearing down media on prop changes
+  const autoplayFiredRef = useRef(false);
+
+  // 2. Handle initial autoplay trigger once when conditions are met
   useEffect(() => {
     const media = mediaRef.current;
-    if (!media || !track?.source) return;
+    if (!media || !track?.source || paused || disableAutoplay) return;
 
-    const shouldAutoplay = !disableAutoplay && Boolean(track?.autoplay);
+    const shouldAutoplay = Boolean(track?.autoplay);
 
-    if (shouldAutoplay && !isPlaying) {
+    if (shouldAutoplay && !autoplayFiredRef.current && !isPlaying) {
+      autoplayFiredRef.current = true;
+      stopAllAudio(instanceIdRef.current);
       media.muted = false;
+      fadeAudioIn(media, track?.volume ?? 1, 200);
       media
         .play()
         .then(() => {
           setIsPlaying(true);
         })
         .catch((err) => {
+          if (err?.name === 'AbortError') return;
           console.warn('[AudioPlayer] Autoplay blocked by browser policy:', err?.message || err);
           setIsPlaying(false);
         });
     }
-  }, [track?.source, track?.autoplay, disableAutoplay, isPlaying]);
+  }, [track?.source, track?.autoplay, disableAutoplay, isPlaying, paused, fadeAudioIn]);
 
   const hasTrack = Boolean(track?.source);
 
@@ -188,6 +305,7 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
       {isVideoSource ? (
         <video
           ref={mediaRef}
+          data-audio-id={instanceIdRef.current}
           src={track?.source || ''}
           loop={isLooping}
           playsInline={true}
@@ -208,8 +326,10 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
       ) : (
         <audio
           ref={mediaRef}
+          data-audio-id={instanceIdRef.current}
           src={track?.source || ''}
           loop={isLooping}
+          playsInline={true}
           crossOrigin="anonymous"
           preload="auto"
           onPlay={() => setIsPlaying(true)}

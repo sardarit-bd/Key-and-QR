@@ -50,38 +50,11 @@ export function useShareQuote() {
         typeof navigator.share === "function"
       ) {
         try {
-          let fileToShare = null;
-
-          if (artworkUrl && typeof navigator.canShare === "function") {
-            try {
-              const res = await fetch(artworkUrl);
-              if (res.ok) {
-                const blob = await res.blob();
-                const ext = blob.type.split("/")[1] || "webp";
-                const file = new File([blob], `myinspiretag-quote.${ext}`, {
-                  type: blob.type,
-                });
-
-                if (navigator.canShare({ files: [file] })) {
-                  fileToShare = file;
-                }
-              }
-            } catch (fileErr) {
-              console.warn("Could not fetch image for native share:", fileErr);
-            }
-          }
-
-          const sharePayload = {
+          await navigator.share({
             title: "MyInspireTag Daily Inspiration",
             text: `${shareText}\n\n${publicUrl}`,
             url: publicUrl,
-          };
-
-          if (fileToShare) {
-            sharePayload.files = [fileToShare];
-          }
-
-          await navigator.share(sharePayload);
+          });
           return; // Handled by mobile OS share sheet
         } catch (err) {
           if (err.name === "AbortError") {

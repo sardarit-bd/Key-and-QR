@@ -120,7 +120,7 @@ export default function ShareQuoteModal({ isOpen, onClose, quoteData, quote }) {
   return createPortal(
     <AnimatePresence>
       <div 
-        className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto cursor-pointer p-4 pb-[max(16px,env(safe-area-inset-bottom))] pt-[max(16px,env(safe-area-inset-top))] bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       >
         <motion.div
@@ -128,21 +128,21 @@ export default function ShareQuoteModal({ isOpen, onClose, quoteData, quote }) {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.95, y: 12 }}
           transition={{ duration: 0.25 }}
-          className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/15 bg-neutral-900 text-white shadow-2xl"
+          className="relative w-full max-w-md max-h-[calc(100dvh-32px)] overflow-y-auto overscroll-contain flex flex-col rounded-3xl border border-white/15 bg-neutral-900 text-white shadow-2xl cursor-default my-auto"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between border-b border-white/10 px-6 py-4">
+          <div className="sticky top-0 z-20 flex items-center justify-between border-b border-white/10 bg-neutral-900/95 backdrop-blur-md px-6 py-3.5 shrink-0">
             <div className="flex items-center gap-2">
               <Sparkles className="h-4 w-4 text-amber-400" />
               <h3 className="text-base font-semibold">Share Inspiration</h3>
             </div>
             <button
               onClick={onClose}
-              className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition cursor-pointer"
+              className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition cursor-pointer active:scale-95"
               aria-label="Close modal"
             >
-              <X className="h-4 w-4" />
+              <X className="h-5 w-5" />
             </button>
           </div>
 

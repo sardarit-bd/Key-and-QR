@@ -308,8 +308,13 @@ export default function LatestInspirationCard({
                   <Play size={15} className="fill-current text-white translate-x-0.5" />
                 )}
               </button>
-            ) : audioTrack?.source && !isMuted ? (
-              <VisualQuoteAudioPlayer track={audioTrack} compact disableAutoplay={disableAutoplay || isMuted} />
+            ) : audioTrack?.source ? (
+              <VisualQuoteAudioPlayer
+                track={audioTrack}
+                compact
+                disableAutoplay={disableAutoplay}
+                paused={isMuted}
+              />
             ) : null}
           </div>
         </div>
