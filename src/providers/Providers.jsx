@@ -2,8 +2,21 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import { Toaster } from "react-hot-toast";
+
+function RouteScrollCleanup() {
+    const pathname = usePathname();
+
+    useEffect(() => {
+        document.body.style.overflow = 'unset';
+        document.body.style.pointerEvents = 'auto';
+        document.body.removeAttribute('data-scroll-locked');
+    }, [pathname]);
+
+    return null;
+}
 
 export function Providers({ children }) {
     const [queryClient] = useState(
@@ -25,6 +38,7 @@ export function Providers({ children }) {
 
     return (
         <QueryClientProvider client={queryClient}>
+            <RouteScrollCleanup />
             {children}
             <Toaster
                 position="top-right"

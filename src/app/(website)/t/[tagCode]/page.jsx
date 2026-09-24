@@ -64,12 +64,9 @@ export default function PublicScanPage() {
 
     useEffect(() => {
         const originalBg = document.body.style.backgroundColor;
-        const originalOverflow = document.body.style.overflow;
         document.body.style.backgroundColor = '#000000';
-        document.body.style.overflow = 'hidden';
         return () => {
-            document.body.style.backgroundColor = originalBg;
-            document.body.style.overflow = originalOverflow;
+            document.body.style.backgroundColor = originalBg || '';
         };
     }, []);
 

@@ -21,11 +21,11 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
   useEffect(() => {
     if (!isOpen) return;
 
-    const originalOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
 
     return () => {
-      document.body.style.overflow = originalOverflow || '';
+      document.body.style.overflow = 'unset';
+      document.body.style.pointerEvents = 'auto';
     };
   }, [isOpen]);
 
@@ -66,7 +66,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.25 }}
-          onClick={quote && onClose ? onClose : undefined}
+          onClick={onClose ? onClose : undefined}
         >
           {quote ? (
             /* ---------- Reveal Modal Card ---------- */

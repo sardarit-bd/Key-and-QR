@@ -63,7 +63,8 @@ function SignUpPageContent() {
       if (user.role === "admin") {
         router.push("/dashboard/admin");
       } else {
-        const safeRedirect = redirectPath.startsWith("/dashboard/admin") || redirectPath.startsWith("/admin")
+        const isScanRedirect = redirectPath.startsWith("/t/") || redirectPath.startsWith("/tag/");
+        const safeRedirect = redirectPath.startsWith("/dashboard/admin") || redirectPath.startsWith("/admin") || isScanRedirect
           ? "/dashboard/user"
           : redirectPath;
         router.push(safeRedirect);
