@@ -113,6 +113,11 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
     if (isRevealing || isRevealed) return;
 
+    // Pre-warm the audio element synchronously on the direct user gesture
+    if (audioPlayerRef.current) {
+      audioPlayerRef.current.prime();
+    }
+
     // If today's quote has already been unlocked, simply reveal the existing latestQuote and play audio on user gesture
     if (!quoteData?.canReveal) {
       if (audioPlayerRef.current) {
@@ -132,12 +137,40 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
       const unlockedData = response.data?.data;
       if (unlockedData) {
         setQuoteData(unlockedData);
-      }
-      if (audioPlayerRef.current) {
-        try {
-          await audioPlayerRef.current.play();
-        } catch (audioErr) {
-          console.warn("Audio autoplay blocked:", audioErr);
+
+        // Resolve incoming audio track from unlocked quote payload
+        const activeUnlocked = unlockedData.latestQuote || unlockedData.quote || unlockedData;
+        const incomingAudio =
+          activeUnlocked?.audioTrack ||
+          activeUnlocked?.backgroundMusic ||
+          unlockedData?.audioTrack ||
+          unlockedData?.backgroundMusic ||
+          activeUnlocked?.editorData?.mobile?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+          activeUnlocked?.editorData?.desktop?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+          activeUnlocked?.editorData?.elements?.find((e) => e.type === 'audio' && e.audioData?.source)?.audioData ||
+          activeUnlocked?.editorData?.mobile?.audio ||
+          activeUnlocked?.editorData?.desktop?.audio ||
+          activeUnlocked?.editorData?.audio ||
+          activeUnlocked?.audio ||
+          activeUnlocked?.audioUrl ||
+          null;
+
+        const resolvedTrack =
+          typeof incomingAudio === 'string'
+            ? { source: incomingAudio, autoplay: true, loop: true }
+            : incomingAudio?.source
+            ? incomingAudio
+            : incomingAudio?.url
+            ? { ...incomingAudio, source: incomingAudio.url }
+            : null;
+
+        // Transition pre-warmed audio element seamlessly to the unlocked track
+        if (audioPlayerRef.current && resolvedTrack?.source) {
+          try {
+            await audioPlayerRef.current.play(resolvedTrack);
+          } catch (audioErr) {
+            console.warn("Audio playback after reveal blocked:", audioErr);
+          }
         }
       }
       setIsRevealed(true);
@@ -513,16 +546,12 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
       <header className="absolute top-0 inset-x-0 z-20 flex items-center justify-between px-4 sm:px-6 pt-3 sm:pt-4 pointer-events-auto">
         {/* Left: Audio Control (or balanced spacer) */}
         <div className="flex items-center justify-start min-w-[70px] sm:min-w-[90px]">
-          {audioTrack?.source ? (
-            <VisualQuoteAudioPlayer
-              ref={audioPlayerRef}
-              track={audioTrack}
-              disableAutoplay={!isRevealed}
-              compact
-            />
-          ) : (
-            <div className="w-8" />
-          )}
+          <VisualQuoteAudioPlayer
+            ref={audioPlayerRef}
+            track={audioTrack}
+            disableAutoplay={!isRevealed}
+            compact
+          />
         </div>
 
         {/* Center: MyInspireTag Brand & Category */}
