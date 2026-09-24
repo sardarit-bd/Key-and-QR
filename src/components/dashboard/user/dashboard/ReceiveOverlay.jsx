@@ -61,7 +61,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-3 sm:p-6 overscroll-none"
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overscroll-contain bg-black/80 backdrop-blur-md p-3 sm:p-6 pb-[max(16px,env(safe-area-inset-bottom))] pt-[max(16px,env(safe-area-inset-top))]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -72,7 +72,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
             /* ---------- Reveal Modal Card ---------- */
             <motion.div
               key="reveal"
-              className="relative w-full max-w-[420px] sm:max-w-[860px] max-h-[calc(100dvh-24px)] sm:max-h-[calc(100dvh-48px)] overflow-y-auto overscroll-contain touch-auto [-webkit-overflow-scrolling:touch] rounded-[24px] sm:rounded-[32px] border border-white/15 bg-card text-card-foreground p-4 sm:p-6 shadow-2xl"
+              className="relative w-full max-w-[420px] sm:max-w-[860px] flex flex-col max-h-[calc(100dvh-32px)] sm:max-h-[calc(100dvh-48px)] overflow-y-auto overscroll-contain touch-pan-y [-webkit-overflow-scrolling:touch] rounded-[24px] sm:rounded-[32px] border border-white/15 bg-card text-card-foreground p-4 sm:p-6 shadow-2xl"
               initial={{ scale: 0.94, opacity: 0, y: 14 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.96, opacity: 0, y: 10 }}
@@ -100,7 +100,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
               {/* Responsive Artwork Canvas / Preview Stage (Portrait on mobile, 16:9 on sm+) */}
               <div className="mt-3.5 sm:mt-4 w-full">
                 {hasVisualDesign ? (
-                  <div className="w-full aspect-[375/667] sm:aspect-[16/9] max-h-[70vh] sm:max-h-none relative rounded-2xl overflow-hidden bg-black/80 border border-white/10 shadow-xl flex items-center justify-center">
+                  <div className="w-full aspect-[375/667] sm:aspect-[16/9] max-h-[58dvh] sm:max-h-[68dvh] shrink-1 relative rounded-2xl overflow-hidden bg-black/80 border border-white/10 shadow-xl flex items-center justify-center">
                     {editorData ? (
                       <VisualQuoteRenderer
                         editorData={editorData}
@@ -127,7 +127,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
                   </div>
                 ) : (
                   /* Legacy non-canvas Quote text styled in responsive canvas stage */
-                  <div className="w-full aspect-[375/667] sm:aspect-[16/9] flex flex-col justify-center items-center p-6 sm:p-10 relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] text-center border border-white/10 shadow-xl">
+                  <div className="w-full aspect-[375/667] sm:aspect-[16/9] max-h-[58dvh] sm:max-h-[68dvh] shrink-1 flex flex-col justify-center items-center p-6 sm:p-10 relative rounded-2xl overflow-hidden bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460] text-center border border-white/10 shadow-xl">
                     <motion.blockquote
                       className="text-[20px] sm:text-[28px] md:text-[34px] leading-[1.25] italic text-white font-light max-w-[680px]"
                       initial={{ opacity: 0, y: 10 }}

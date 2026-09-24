@@ -13,8 +13,6 @@ export const publicRoutePatterns = [
     "/shop",
     "/shop/:path*",
     "/how-it-works",
-    "/inspiration",
-    "/inspiration/:path*",
 
     // Auth pages
     "/login",
@@ -64,6 +62,10 @@ export const protectedPatterns = [
     // Dashboard
     "/dashboard",
     "/dashboard/:path*",
+
+    // Inspiration (authenticated only)
+    "/inspiration",
+    "/inspiration/:path*",
 
     // Profile
     "/profile",

@@ -184,6 +184,9 @@ export default function VisualQuoteRenderer({
           return;
         }
         activeCanvasRef.current = instance;
+        if (instance?.upperCanvasEl) instance.upperCanvasEl.style.touchAction = 'pan-y';
+        if (instance?.lowerCanvasEl) instance.lowerCanvasEl.style.touchAction = 'pan-y';
+        if (canvasEl) canvasEl.style.touchAction = 'pan-y';
         setLoading(false);
         updateScaling();
         if (onRenderComplete) onRenderComplete();
@@ -233,7 +236,7 @@ export default function VisualQuoteRenderer({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full h-full flex items-center justify-center overflow-hidden ${className}`}
+      className={`relative w-full h-full flex items-center justify-center overflow-hidden touch-pan-y ${className}`}
     >
       {/* Loading Indicator */}
       {loading && (
@@ -244,7 +247,7 @@ export default function VisualQuoteRenderer({
 
       {/* Proportional Scaled Canvas Container (Accurately Sized Layout Box) */}
       <div
-        className="relative overflow-hidden shrink-0 transition-all duration-150 ease-out"
+        className="relative overflow-hidden shrink-0 transition-all duration-150 ease-out touch-pan-y"
         style={{
           width: `${displayWidth}px`,
           height: `${displayHeight}px`,
@@ -252,7 +255,7 @@ export default function VisualQuoteRenderer({
       >
         <div
           ref={canvasWrapperRef}
-          className="absolute top-0 left-0 overflow-hidden shrink-0"
+          className="absolute top-0 left-0 overflow-hidden shrink-0 touch-pan-y"
           style={{
             width: `${canvasWidth}px`,
             height: `${canvasHeight}px`,

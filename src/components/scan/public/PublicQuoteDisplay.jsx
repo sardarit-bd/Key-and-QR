@@ -34,19 +34,14 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     }
   }, [data]);
 
-  // If quoteData already has a revealed quote today and quota is exhausted, reveal immediately.
-  const isAlreadyRevealedAndExhausted = Boolean(
-    quoteData?.latestQuote && !quoteData?.canReveal
-  );
   const isPersonalMessage = Boolean(
     quoteData?.isPersonalMessage || quoteData?.latestQuote?.isPersonalMessage
   );
 
-  const [isRevealed, setIsRevealed] = useState(
-    isAlreadyRevealedAndExhausted || isPersonalMessage
-  );
+  // Always default to unrevealed so every scan presents the signature teaser experience
+  const [isRevealed, setIsRevealed] = useState(isPersonalMessage);
   const [isRevealing, setIsRevealing] = useState(false);
-  const [isLimitReached, setIsLimitReached] = useState(quoteData?.canReveal === false);
+  const [isLimitReached, setIsLimitReached] = useState(quoteData?.canReveal === false && !quoteData?.latestQuote);
   const lastClickTimeRef = useRef(0);
 
   useEffect(() => {
@@ -61,12 +56,10 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
   useEffect(() => {
     if (quoteData) {
-      if (quoteData.canReveal === false) {
+      if (quoteData.canReveal === false && !quoteData.latestQuote) {
         setIsLimitReached(true);
       }
-      if (quoteData.latestQuote && !quoteData.canReveal) {
-        setIsRevealed(true);
-      } else if (quoteData.isPersonalMessage) {
+      if (quoteData.isPersonalMessage) {
         setIsRevealed(true);
       }
     }
@@ -120,10 +113,16 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
     if (isRevealing || isRevealed) return;
 
-    if (isLimitReached) {
-      toast.error("Daily limit reached. Free users can reveal 1 quote per day. Scan again tomorrow!", {
-        id: "daily-limit-reached-toast",
-      });
+    // If today's quote has already been unlocked, simply reveal the existing latestQuote and play audio on user gesture
+    if (!quoteData?.canReveal) {
+      if (audioPlayerRef.current) {
+        try {
+          await audioPlayerRef.current.play();
+        } catch (audioErr) {
+          console.warn("Audio autoplay blocked:", audioErr);
+        }
+      }
+      setIsRevealed(true);
       return;
     }
 
@@ -150,9 +149,19 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
       if (isLimit) {
         setIsLimitReached(true);
-        toast.error("Daily limit reached. Free users can reveal 1 quote per day. Scan again tomorrow!", {
-          id: "daily-limit-reached-toast",
-        });
+        // If quote is already present, reveal it gracefully
+        if (quoteData?.latestQuote) {
+          if (audioPlayerRef.current) {
+            try {
+              await audioPlayerRef.current.play();
+            } catch (audioErr) {}
+          }
+          setIsRevealed(true);
+        } else {
+          toast.error("Daily limit reached. Free users can reveal 1 quote per day. Scan again tomorrow!", {
+            id: "daily-limit-reached-toast",
+          });
+        }
       } else {
         const msg = err.response?.data?.message || "Failed to reveal today's quote. Please try again.";
         toast.error(msg, {
