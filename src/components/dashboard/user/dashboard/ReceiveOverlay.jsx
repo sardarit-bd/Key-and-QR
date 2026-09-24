@@ -72,7 +72,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto overscroll-contain bg-black/80 backdrop-blur-md p-3 sm:p-6 pb-[max(16px,env(safe-area-inset-bottom))] pt-[max(16px,env(safe-area-inset-top))]"
+          className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto overscroll-contain bg-black/80 backdrop-blur-md p-3 sm:p-6 pb-[calc(5rem+env(safe-area-inset-bottom,0px))] sm:pb-6 pt-[max(16px,env(safe-area-inset-top))]"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
@@ -83,7 +83,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
             /* ---------- Reveal Modal Card ---------- */
             <motion.div
               key="reveal"
-              className="relative w-full max-w-lg h-[92dvh] sm:h-[88vh] flex flex-col rounded-3xl overflow-hidden bg-neutral-900/90 border border-white/10 shadow-2xl"
+              className="relative w-full max-w-md mx-auto h-[88dvh] max-h-[850px] flex flex-col rounded-3xl overflow-hidden bg-neutral-900/90 border border-white/10 shadow-2xl"
               initial={{ scale: 0.94, opacity: 0, y: 14 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.96, opacity: 0, y: 10 }}
@@ -107,7 +107,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
               </div>
 
               {/* Responsive Artwork Canvas / Preview Stage */}
-              <div className="flex-1 w-full relative min-h-0 overflow-hidden">
+              <div className="flex-1 min-h-0 w-full relative overflow-y-auto overscroll-contain">
                 {hasVisualDesign ? (
                   <div className="w-full h-full relative flex items-center justify-center">
                     {editorData ? (
@@ -129,7 +129,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
                         <img
                           src={renderedMobileUrl || renderedDesktopUrl}
                           alt={quote?.text || 'Inspiration'}
-                          className="w-full h-full object-contain"
+                          className="w-full h-full object-cover"
                         />
                       </picture>
                     ) : null}
