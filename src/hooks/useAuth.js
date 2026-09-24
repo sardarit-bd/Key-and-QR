@@ -78,7 +78,7 @@ export function useLoginMutation() {
             
             const target = variables?.redirectPath || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null);
             if (data.user?.role === "admin") {
-                if (target && target.startsWith("/t/")) {
+                if (target && (target.startsWith("/t/") || target.startsWith("/tag/"))) {
                     router.push(target);
                 } else {
                     router.push("/dashboard/admin");
@@ -88,7 +88,8 @@ export function useLoginMutation() {
                     toast.success(`Claimed ${data.guestOrders || 0} orders and ${data.guestTags || 0} tags! 🎉`, { duration: 4000 });
                 }
                 const defaultTarget = "/dashboard/user";
-                const desired = target || defaultTarget;
+                const isScanRedirect = target && (target.startsWith("/t/") || target.startsWith("/tag/"));
+                const desired = isScanRedirect ? defaultTarget : (target || defaultTarget);
                 const safeTarget = (desired.startsWith("/dashboard/admin") || desired.startsWith("/admin"))
                     ? defaultTarget
                     : desired;
@@ -126,14 +127,15 @@ export function useRegisterMutation() {
             
             const target = variables?.redirectPath || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("redirect") : null);
             if (data.user?.role === "admin") {
-                if (target && target.startsWith("/t/")) {
+                if (target && (target.startsWith("/t/") || target.startsWith("/tag/"))) {
                     router.push(target);
                 } else {
                     router.push("/dashboard/admin");
                 }
             } else {
                 const defaultTarget = "/dashboard/user";
-                const desired = target || defaultTarget;
+                const isScanRedirect = target && (target.startsWith("/t/") || target.startsWith("/tag/"));
+                const desired = isScanRedirect ? defaultTarget : (target || defaultTarget);
                 const safeTarget = (desired.startsWith("/dashboard/admin") || desired.startsWith("/admin"))
                     ? defaultTarget
                     : desired;
