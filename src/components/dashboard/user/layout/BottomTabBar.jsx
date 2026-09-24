@@ -71,8 +71,8 @@ function TabBarInner() {
             href={tab.href}
             className={`flex flex-col items-center justify-center flex-1 h-full cursor-pointer transition-all duration-200 ${
               active
-                ? 'text-white font-medium'
-                : 'text-neutral-400 hover:text-neutral-200'
+                ? 'text-neutral-900 dark:text-white font-medium'
+                : 'text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-200'
             }`}
           >
             <Icon size={20} strokeWidth={active ? 2.5 : 2} stroke="currentColor" className="shrink-0" />
@@ -103,7 +103,7 @@ export default function BottomTabBar() {
   return (
     <nav
       data-slot="mobile-bottom-nav"
-      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-card/95 dark:bg-card/90 backdrop-blur-xl border-t border-border shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.4)] safe-area-bottom"
+      className="fixed bottom-0 left-0 right-0 z-50 lg:hidden bg-white/95 dark:bg-neutral-950/90 backdrop-blur-xl border-t border-neutral-200 dark:border-white/10 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] dark:shadow-[0_-4px_24px_rgba(0,0,0,0.4)] safe-area-bottom"
     >
       <Suspense fallback={<div className="h-16" />}>
         <TabBarInner />
