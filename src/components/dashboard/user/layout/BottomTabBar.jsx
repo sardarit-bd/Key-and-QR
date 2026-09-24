@@ -69,12 +69,13 @@ function TabBarInner() {
           <Link
             key={tab.id}
             href={tab.href}
-            className={`flex flex-col items-center justify-center flex-1 h-full cursor-pointer transition-all duration-200 ${active
-                ? 'text-primary font-semibold'
-                : 'text-foreground-secondary/70 hover:text-foreground'
-              }`}
+            className={`flex flex-col items-center justify-center flex-1 h-full cursor-pointer transition-all duration-200 ${
+              active
+                ? 'text-white font-medium'
+                : 'text-neutral-400 hover:text-neutral-200'
+            }`}
           >
-            <Icon size={20} strokeWidth={active ? 2.5 : 2} className="shrink-0" />
+            <Icon size={20} strokeWidth={active ? 2.5 : 2} stroke="currentColor" className="shrink-0" />
             <span className={`text-[11px] mt-1 tracking-tight ${active ? 'font-bold' : 'font-medium'}`}>
               {tab.label}
             </span>

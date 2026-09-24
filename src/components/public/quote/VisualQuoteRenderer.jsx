@@ -236,7 +236,7 @@ export default function VisualQuoteRenderer({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full h-full flex items-center justify-center overflow-hidden touch-pan-y ${className}`}
+      className={`w-full h-full relative flex items-center justify-center overflow-hidden touch-pan-y ${className}`}
     >
       {/* Loading Indicator */}
       {loading && (
