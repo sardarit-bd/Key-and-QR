@@ -27,12 +27,36 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
 
   const isLooping = Boolean(track?.loop ?? true);
 
+  // Smooth 200ms audio gain / volume ramp-up to eliminate pops and harsh starts
+  const fadeAudioIn = useCallback((media, targetVolume = 1, durationMs = 200) => {
+    if (!media) return;
+    try {
+      media.volume = 0;
+      const startTime = performance.now();
+      const step = (now) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / durationMs, 1);
+        media.volume = Math.min(progress * targetVolume, 1);
+        if (progress < 1 && !media.paused) {
+          requestAnimationFrame(step);
+        } else if (!media.paused) {
+          media.volume = targetVolume;
+        }
+      };
+      requestAnimationFrame(step);
+    } catch {
+      media.volume = targetVolume;
+    }
+  }, []);
+
   // Pre-warm the media element synchronously on direct user gesture before async operations
   const prime = useCallback(async () => {
     const media = mediaRef.current;
     if (!media) return false;
     try {
-      if (!media.src || media.src === window.location.href) {
+      // If we already have a real track loaded or preloaded, prime directly without resetting the buffer
+      const hasRealSource = media.src && media.src !== SILENT_AUDIO_URI && media.src !== window.location.href;
+      if (!hasRealSource) {
         media.src = SILENT_AUDIO_URI;
       }
       media.muted = false;
@@ -44,21 +68,27 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
     }
   }, []);
 
-  // Attempt unmuted playback; accurately records state without deceptive muted illusions
+  // Attempt unmuted playback with smooth audio gain ramp-up and zero buffer flushing on same source
   const attemptPlay = useCallback(async (customTrack) => {
     const media = mediaRef.current;
     if (!media) return false;
     try {
       const source = customTrack?.source || (typeof customTrack === 'string' ? customTrack : track?.source);
-      if (source && media.src !== source) {
-        media.src = source;
-        media.loop = isLooping;
-        media.volume = customTrack?.volume ?? track?.volume ?? 1;
+      const targetVolume = customTrack?.volume ?? track?.volume ?? 1;
+
+      if (source) {
+        const currentSrc = media.src || '';
+        const isSameSource = currentSrc === source || currentSrc.endsWith(source);
+        if (!isSameSource) {
+          media.src = source;
+          media.loop = isLooping;
+        }
       }
       if (!media.src || media.src === SILENT_AUDIO_URI || media.src === window.location.href) {
         return false;
       }
       media.muted = false;
+      fadeAudioIn(media, targetVolume, 200);
       await media.play();
       setIsPlaying(true);
       return true;
@@ -67,7 +97,7 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
       setIsPlaying(false);
       return false;
     }
-  }, [track?.source, track?.volume, isLooping]);
+  }, [track?.source, track?.volume, isLooping, fadeAudioIn]);
 
   const togglePlay = useCallback(() => {
     const media = mediaRef.current;
@@ -210,6 +240,7 @@ const VisualQuoteAudioPlayer = forwardRef(function VisualQuoteAudioPlayer({
           ref={mediaRef}
           src={track?.source || ''}
           loop={isLooping}
+          playsInline={true}
           crossOrigin="anonymous"
           preload="auto"
           onPlay={() => setIsPlaying(true)}
