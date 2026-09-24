@@ -215,8 +215,9 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   const [isClaiming, setIsClaiming] = useState(false);
   const [isClaimed, setIsClaimed] = useState(false);
 
+  const isAlreadyOwned = Boolean(quoteData?.isAlreadyOwned ?? data?.isAlreadyOwned);
   const isGift = Boolean(data?.isGift || data?.gift || data?.giftOrderId || data?.giftStatus || data?.gift?.giftStatus);
-  const isGiftClaimable = (data?.isClaimable || data?.gift?.isClaimable) && !isClaimed;
+  const isGiftClaimable = !isAlreadyOwned && (data?.isClaimable || data?.gift?.isClaimable) && !isClaimed;
   const giftOrderId = data?.giftOrderId || data?.gift?.orderId;
 
   const handleClaimGift = async () => {
@@ -269,21 +270,26 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   const goToAuth = (type = "register") => {
     if (typeof window !== "undefined" && (activeQuote || quoteData)) {
       try {
-        const quoteToPreserve = {
-          _id: activeQuote?._id || quoteData?._id || null,
-          quote: quoteText || activeQuote?.quote || activeQuote?.text || "",
-          text: quoteText || activeQuote?.quote || activeQuote?.text || "",
-          author: quoteAuthor || activeQuote?.author || "",
-          category: category || activeQuote?.category || "faith",
-          isPersonalMessage: !!isPersonalMessage,
-          renderedImages: activeQuote?.renderedImages || quoteData?.renderedImages || null,
-          editorData: activeQuote?.editorData || quoteData?.editorData || null,
-          image: resolvedBgUrl || null,
-          audioTrack: audioTrack || null,
-          tagCode: tagCode || null,
-          timestamp: Date.now(),
-        };
-        localStorage.setItem("pending_dashboard_quote", JSON.stringify(quoteToPreserve));
+        if (!isAlreadyOwned) {
+          const quoteToPreserve = {
+            _id: activeQuote?._id || quoteData?._id || null,
+            quote: quoteText || activeQuote?.quote || activeQuote?.text || "",
+            text: quoteText || activeQuote?.quote || activeQuote?.text || "",
+            author: quoteAuthor || activeQuote?.author || "",
+            category: category || activeQuote?.category || "faith",
+            isPersonalMessage: !!isPersonalMessage,
+            renderedImages: activeQuote?.renderedImages || quoteData?.renderedImages || null,
+            editorData: activeQuote?.editorData || quoteData?.editorData || null,
+            image: resolvedBgUrl || null,
+            audioTrack: audioTrack || null,
+            tagCode: tagCode || null,
+            timestamp: Date.now(),
+            isAlreadyOwned: false,
+          };
+          localStorage.setItem("pending_dashboard_quote", JSON.stringify(quoteToPreserve));
+        } else {
+          localStorage.removeItem("pending_dashboard_quote");
+        }
       } catch (err) {
         console.error("Failed to save pending quote:", err);
       }
@@ -597,7 +603,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
           )}
 
           {/* Gift Claimed Status */}
-          {isGift && (isClaimed || data?.gift?.giftStatus === "claimed") && !isGiftClaimable && (
+          {isGift && !isAlreadyOwned && (isClaimed || data?.gift?.giftStatus === "claimed") && !isGiftClaimable && (
             <div className="w-full mb-2.5 rounded-xl border border-emerald-400/30 bg-emerald-950/80 backdrop-blur-xl px-3.5 py-1.5 shadow-xl flex items-center justify-center gap-2 animate-in fade-in duration-300">
               <Check className="h-4 w-4 text-emerald-400 shrink-0" />
               <p className="text-xs font-medium text-emerald-200">

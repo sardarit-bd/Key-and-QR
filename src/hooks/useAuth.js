@@ -121,6 +121,12 @@ export function useRegisterMutation() {
             queryClient.setQueryData(authKeys.user, data.user);
             toast.success("Account created successfully! 🎉", { id: "auth-register-toast", duration: 3500 });
             
+            if (data.tagClaimResult && (!data.tagClaimResult.claimed || data.tagClaimResult.reason === "ALREADY_OWNED")) {
+                if (typeof window !== "undefined") {
+                    localStorage.removeItem("pending_dashboard_quote");
+                }
+            }
+
             if (data.guestClaimed) {
                 toast.success("Your guest purchases have been claimed! 🎉", { duration: 4000 });
             }

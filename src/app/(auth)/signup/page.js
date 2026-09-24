@@ -135,6 +135,16 @@ function SignUpPageContent() {
       });
 
       if (result?.success) {
+        if (result?.tagClaimResult && (!result.tagClaimResult.claimed || result.tagClaimResult.reason === "ALREADY_OWNED")) {
+          if (typeof window !== "undefined") {
+            localStorage.removeItem("pending_dashboard_quote");
+          }
+          toast("Account created. Note: This physical tag is already registered to another owner.", {
+            icon: "ℹ️",
+            duration: 6000,
+          });
+        }
+
         if (result.guestClaimed) {
           toast.success("🎉 Your guest purchases have been claimed!");
         }
