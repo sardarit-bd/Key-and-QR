@@ -272,7 +272,7 @@ export const useAuthStore = create(
 
                 try {
                     const response = await authService.register(payload);
-                    const { user, accessToken, refreshToken } = response?.data || {};
+                    const { user, accessToken, refreshToken, tagClaimResult } = response?.data || {};
 
                     if (!accessToken || !user) {
                         set({ loading: false, isLoading: false, error: "Invalid server response" });
@@ -301,6 +301,7 @@ export const useAuthStore = create(
                         success: true,
                         user: filteredUser,
                         guestClaimed: claimResult?.claimed || false,
+                        tagClaimResult: tagClaimResult || response?.data?.tagClaimResult || null,
                     };
                 } catch (error) {
                     const message =

@@ -62,7 +62,15 @@ export default function DashboardHome({
     try {
       const savedQuoteStr = localStorage.getItem("pending_dashboard_quote");
       if (savedQuoteStr) {
+        // Immediately clean up from localStorage so it never leaks or gets stuck
+        localStorage.removeItem("pending_dashboard_quote");
+
         const parsed = JSON.parse(savedQuoteStr);
+        // Do not display if marked as already owned by another user
+        if (parsed?.isAlreadyOwned) {
+          return;
+        }
+
         const isRecent = parsed.timestamp && Date.now() - parsed.timestamp < 24 * 60 * 60 * 1000;
 
         if (isRecent && (parsed.text || parsed.quote || parsed.renderedImages || parsed.editorData)) {
@@ -88,11 +96,10 @@ export default function DashboardHome({
             favorite: false,
             favoriteId: null,
             dailyUsage: dailyUsage || null,
+            isPreviewOnly: true,
           };
-          setActiveInspiration(preservedInspiration);
+          setActiveInspiration((current) => current?.hasReceivedQuote ? current : preservedInspiration);
         }
-        // Immediately clean up from localStorage so it doesn't leak into subsequent sessions
-        localStorage.removeItem("pending_dashboard_quote");
       }
     } catch (err) {
       console.error("Failed to restore pending scanned quote in dashboard:", err);
