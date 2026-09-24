@@ -87,7 +87,8 @@ export async function middleware(request) {
 
         // 3. No tokens at all - redirect to login with return path
         const url = new URL("/login", request.url);
-        url.searchParams.set("redirect", pathname);
+        const safeRedirect = pathname.startsWith("/inspiration") ? "/dashboard/user" : pathname;
+        url.searchParams.set("redirect", safeRedirect);
         return NextResponse.redirect(url);
     }
 

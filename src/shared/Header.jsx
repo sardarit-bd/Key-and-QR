@@ -12,7 +12,6 @@ import {
   User,
   Home,
   Store,
-  Heart,
   LogIn,
   Sparkles,
 } from "lucide-react";
@@ -68,7 +67,6 @@ export default function Header() {
     { name: "Home", href: "/" },
     { name: "Shop", href: "/shop" },
     { name: "How It Works", href: "/how-it-works" },
-    { name: "Inspiration", href: "/inspiration" },
   ];
 
   // Sheet menu items
@@ -76,7 +74,6 @@ export default function Header() {
     { icon: Home, label: "Home", href: "/" },
     { icon: Store, label: "Shop", href: "/shop" },
     { icon: Sparkles, label: "How It Works", href: "/how-it-works" },
-    { icon: Heart, label: "Inspiration", href: "/inspiration" },
   ];
 
   const sheetSecondaryItems = [
