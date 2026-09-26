@@ -28,9 +28,8 @@ export default function InspirationCategoryGrid({ categories = [], isLoading = f
             key={idx}
             className="h-52 rounded-2xl border border-border/60 bg-card/40 animate-pulse p-6 flex flex-col justify-between"
           >
-            <div className="flex items-center justify-between">
+            <div className="flex items-center">
               <div className="h-12 w-12 rounded-xl bg-muted/60" />
-              <div className="h-5 w-16 rounded-full bg-muted/60" />
             </div>
             <div className="space-y-2">
               <div className="h-5 w-3/4 rounded bg-muted/60" />

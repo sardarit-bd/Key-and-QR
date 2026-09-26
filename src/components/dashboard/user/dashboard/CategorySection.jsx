@@ -139,11 +139,6 @@ export default function CategorySection({
           categoryList.map((category, index) => {
             const slug = category?.slug || category?.name || "";
             const categoryColor = category?.color || (slug === 'love' ? '#ef4444' : '#f59e0b');
-            const quoteCount = typeof category?.quoteCount === 'number'
-              ? category.quoteCount
-              : typeof category?.count === 'number'
-                ? category.count
-                : null;
 
             return (
               <motion.button
@@ -191,11 +186,6 @@ export default function CategorySection({
                 {/* Category Name */}
                 <span className="text-[12px] sm:text-[13px] font-semibold text-center leading-tight whitespace-nowrap text-foreground-secondary group-hover:text-foreground transition-colors">
                   {category?.name || "Inspire"}
-                </span>
-
-                {/* Status / Quote count label */}
-                <span className="text-[10px] font-medium text-foreground-tertiary/75">
-                  {quoteCount !== null ? `${quoteCount} ${quoteCount === 1 ? 'quote' : 'quotes'}` : 'Explore'}
                 </span>
               </motion.button>
             );
@@ -278,11 +268,6 @@ export default function CategorySection({
                     {filteredCategories.map((cat, idx) => {
                       const slug = cat?.slug || cat?.name || "";
                       const color = cat?.color || (slug === 'love' ? '#ef4444' : '#f59e0b');
-                      const count = typeof cat?.quoteCount === 'number'
-                        ? cat.quoteCount
-                        : typeof cat?.count === 'number'
-                          ? cat.count
-                          : null;
 
                       return (
                         <button
@@ -297,9 +282,6 @@ export default function CategorySection({
                           </span>
                           <span className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-accent transition-colors leading-tight">
                             {cat?.name || "Inspire"}
-                          </span>
-                          <span className="text-[10px] font-medium text-foreground-tertiary">
-                            {count !== null ? `${count} quotes` : 'Reveal Quote'}
                           </span>
                         </button>
                       );

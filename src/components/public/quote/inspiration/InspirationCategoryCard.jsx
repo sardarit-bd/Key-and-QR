@@ -73,7 +73,6 @@ export default function InspirationCategoryCard({ category, index = 0 }) {
   const slug = category?.slug || category?.name?.toLowerCase() || '';
   const label = category?.name || getCategoryLabel(slug);
   const IconComponent = getCategoryIcon(slug);
-  const quoteCount = typeof category?.quoteCount === 'number' ? category.quoteCount : null;
   const theme = getCategoryTheme(slug, category?.color);
 
   return (
@@ -95,15 +94,6 @@ export default function InspirationCategoryCard({ category, index = 0 }) {
       />
 
       <div className="space-y-4">
-        {/* Top Header: Badge if quoteCount is available */}
-        {quoteCount !== null && (
-          <div className="flex items-center justify-end">
-            <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-tight whitespace-nowrap shadow-2xs ${theme.pillBg}`}>
-              {quoteCount} {quoteCount === 1 ? 'Quote' : 'Quotes'}
-            </span>
-          </div>
-        )}
-
         {/* Main Content Area: Perfectly Aligned Icon & Category Name */}
         <div className="flex items-center gap-3.5 sm:gap-4">
           <div
