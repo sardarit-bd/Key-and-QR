@@ -198,12 +198,25 @@ export default function DashboardHome({
     handleSelectCategory({ slug: 'inspire', name: 'Inspiration' });
   }, [handleSelectCategory]);
 
-  // Consume ?action=inspire from the BottomTabBar Inspire tap.
+  // Consume ?action=inspire from the BottomTabBar Inspire tap or category reveal buttons.
   // Fire once, then replace the URL to remove the param so it doesn't
   // re-trigger on subsequent renders or browser back navigation.
   useEffect(() => {
     if (searchParams?.get('action') === 'inspire' && !actionFiredRef.current) {
       actionFiredRef.current = true;
+      const targetCategory = searchParams?.get('category');
+      if (targetCategory && Array.isArray(categories)) {
+        const found = categories.find(
+          (c) =>
+            (c.slug || '').toLowerCase() === targetCategory.toLowerCase() ||
+            (c.name || '').toLowerCase() === targetCategory.toLowerCase()
+        );
+        if (found) {
+          handleSelectCategory(found);
+          router.replace('/dashboard/user');
+          return;
+        }
+      }
       handleReceiveFirst();
       // Strip the query param cleanly without adding a history entry.
       router.replace('/dashboard/user');
@@ -212,7 +225,7 @@ export default function DashboardHome({
     if (searchParams?.get('action') !== 'inspire') {
       actionFiredRef.current = false;
     }
-  }, [searchParams, handleReceiveFirst, router]);
+  }, [searchParams, handleReceiveFirst, handleSelectCategory, categories, router]);
 
   const handleReadAgain = (receivedQuoteId) => {
     readAgain.mutate(receivedQuoteId, {

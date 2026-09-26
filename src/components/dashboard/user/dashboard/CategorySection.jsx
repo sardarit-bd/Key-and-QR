@@ -1,9 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
-import { Sparkles, ArrowRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { Sparkles, ArrowRight, X, Search } from "lucide-react";
 import { resolveCategory } from "@/components/dashboard/admin/categories/categoryIconRegistry";
 import { getCategoryIcon } from "@/components/public/quote/category";
 
@@ -60,9 +59,11 @@ export default function CategorySection({
   onSelectCategory,
   disabled,
 }) {
-  const router = useRouter();
   const reduceMotion = useReducedMotion();
   const categoryList = Array.isArray(categories) ? categories : [];
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const handleClick = (category) => {
     if (disabled) return;
@@ -72,8 +73,50 @@ export default function CategorySection({
   };
 
   const handleViewAll = () => {
-    router.push("/inspiration");
+    setIsModalOpen(true);
   };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSearchQuery("");
+  };
+
+  const handleModalSelect = (category) => {
+    handleCloseModal();
+    handleClick(category);
+  };
+
+  // Keyboard accessibility: Escape to close modal
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") handleCloseModal();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isModalOpen]);
+
+  // Lock body scroll while category modal is open
+  useEffect(() => {
+    if (!isModalOpen) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isModalOpen]);
+
+  // Filtered categories for in-dashboard modal
+  const filteredCategories = searchQuery.trim()
+    ? categoryList.filter((c) => {
+        const q = searchQuery.toLowerCase().trim();
+        return (
+          (c.name || "").toLowerCase().includes(q) ||
+          (c.slug || "").toLowerCase().includes(q) ||
+          (c.description || "").toLowerCase().includes(q)
+        );
+      })
+    : categoryList;
 
   return (
     <section className="w-full">
@@ -90,6 +133,7 @@ export default function CategorySection({
         </button>
       </div>
 
+      {/* Horizontal Carousel */}
       <div className="flex items-stretch gap-3 sm:gap-4 overflow-x-auto hide-scrollbar rounded-2xl border border-gray-200/70 bg-gray-50/70 px-4 py-4 shadow-sm backdrop-blur-sm dark:border-white/[0.08] dark:bg-white/[0.025] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
         {categoryList.length > 0 ? (
           categoryList.map((category, index) => {
@@ -162,6 +206,122 @@ export default function CategorySection({
           </p>
         )}
       </div>
+
+      {/* In-Dashboard Category Selector Dialog (Preserves Single-Reveal Daily Quota Flow) */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 backdrop-blur-md p-3 sm:p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={handleCloseModal}
+          >
+            <motion.div
+              className="relative w-full max-w-xl max-h-[85dvh] flex flex-col rounded-3xl overflow-hidden bg-white/95 dark:bg-neutral-900/95 border border-black/10 dark:border-white/10 shadow-2xl"
+              initial={{ scale: 0.94, opacity: 0, y: 12 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.96, opacity: 0, y: 8 }}
+              transition={{ type: "spring", stiffness: 180, damping: 22 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="px-5 sm:px-6 pt-5 pb-4 flex items-center justify-between border-b border-gray-100 dark:border-white/10 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-accent/10 text-accent flex items-center justify-center shrink-0">
+                    <Sparkles size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-foreground">
+                      Explore Categories
+                    </h3>
+                    <p className="text-xs text-foreground-tertiary mt-0.5">
+                      Select a category to receive today&apos;s revelation
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  aria-label="Close dialog"
+                  className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-background/80 text-foreground-secondary hover:text-foreground hover:bg-muted transition-colors active:scale-95"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Search filter for rapid category selection */}
+              {categoryList.length > 6 && (
+                <div className="px-5 sm:px-6 pt-3 shrink-0">
+                  <div className="relative">
+                    <Search
+                      size={15}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground-tertiary"
+                    />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search categories..."
+                      className="w-full h-9 pl-9 pr-3 rounded-xl border border-border bg-background/60 text-xs sm:text-sm text-foreground placeholder:text-foreground-tertiary focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Modal Category Grid */}
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6">
+                {filteredCategories.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-3.5">
+                    {filteredCategories.map((cat, idx) => {
+                      const slug = cat?.slug || cat?.name || "";
+                      const color = cat?.color || (slug === 'love' ? '#ef4444' : '#f59e0b');
+                      const count = typeof cat?.quoteCount === 'number'
+                        ? cat.quoteCount
+                        : typeof cat?.count === 'number'
+                          ? cat.count
+                          : null;
+
+                      return (
+                        <button
+                          key={cat?.id || cat?._id || slug || idx}
+                          type="button"
+                          onClick={() => handleModalSelect(cat)}
+                          disabled={disabled}
+                          className="group flex flex-col items-center justify-center gap-2 p-3.5 sm:p-4 rounded-2xl border border-border/70 bg-card/60 hover:bg-accent/5 hover:border-accent/40 dark:hover:border-accent/40 transition-all text-center cursor-pointer shadow-xs active:scale-97"
+                        >
+                          <span className="relative flex items-center justify-center w-11 h-11 rounded-xl transition-transform duration-200 group-hover:scale-105">
+                            <CategoryCardIcon category={cat} categoryColor={color} />
+                          </span>
+                          <span className="text-xs sm:text-sm font-semibold text-foreground group-hover:text-accent transition-colors leading-tight">
+                            {cat?.name || "Inspire"}
+                          </span>
+                          <span className="text-[10px] font-medium text-foreground-tertiary">
+                            {count !== null ? `${count} quotes` : 'Reveal Quote'}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-12 text-center text-xs sm:text-sm text-foreground-tertiary">
+                    No categories found matching &ldquo;{searchQuery}&rdquo;.
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer Notice */}
+              <div className="px-5 py-3 bg-muted/40 border-t border-border/50 text-center shrink-0">
+                <p className="text-[11px] text-foreground-tertiary">
+                  Selecting a category reveals today&apos;s inspiration and respects your daily reveal credit.
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }
