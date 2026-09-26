@@ -10,7 +10,6 @@ import FavoritesFilters from '@/components/dashboard/user/favorites/FavoritesFil
 import FavoriteCard from '@/components/dashboard/user/favorites/FavoriteCard';
 import FavoriteDetailModal from '@/components/dashboard/user/favorites/FavoriteDetailModal';
 import { FavoritesEmptyState, FavoritesFilteredEmpty } from '@/components/dashboard/user/favorites/FavoritesEmptyStates';
-import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
 import useShareQuote from '@/hooks/useShareQuote';
 import ShareQuoteModal from '@/components/public/quote/ShareQuoteModal';
@@ -31,8 +30,6 @@ export default function FavoritesPage() {
   const [sort, setSort] = useState('newest');
   const [detailItem, setDetailItem] = useState(null);
 
-  const debouncedSearch = useDebounce(search, 400);
-
   // Server-driven: search/category/sort all pass through to the backend.
   // sortBy / sortOrder computed from local sort state:
   const sortBy = sort === 'oldest' ? 'createdAt' : 'createdAt';
@@ -42,7 +39,7 @@ export default function FavoritesPage() {
     page,
     limit: FAVORITES_PER_PAGE,
     type: 'quote',
-    search: debouncedSearch,
+    search: search ? search : undefined,
     category: category !== 'all' ? category : '',
     sortBy,
     sortOrder,
@@ -67,7 +64,7 @@ export default function FavoritesPage() {
   }, [favorites, sort]);
 
   // Reset page when filters change.
-  useEffect(() => { setPage(1); }, [debouncedSearch, category, sort]);
+  useEffect(() => { setPage(1); }, [search, category, sort]);
 
   const handleRemove = useCallback((favoriteId) => { removeFavorite.mutate(favoriteId); }, [removeFavorite]);
   const handleReset = useCallback(() => { setSearch(''); setCategory('all'); setSort('newest'); }, []);
@@ -117,7 +114,7 @@ export default function FavoritesPage() {
     );
   }
 
-  const hasActiveFilters = Boolean(debouncedSearch || category !== 'all' || sort !== 'newest');
+  const hasActiveFilters = Boolean((search && search.trim()) || (category && category !== 'all') || (sort && sort !== 'newest'));
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="min-h-screen bg-background">
@@ -129,8 +126,20 @@ export default function FavoritesPage() {
         </div>
 
         <div className="mt-6">
-          <FavoritesFilters search={search} category={category} sort={sort} view={view} categories={quoteCategories}
-            onSearchChange={setSearch} onCategoryChange={setCategory} onSortChange={setSort} onViewChange={setView} onReset={handleReset} />
+          <FavoritesFilters
+            search={search}
+            category={category}
+            sort={sort}
+            view={view}
+            categories={quoteCategories}
+            onSearchChange={setSearch}
+            onCategoryChange={setCategory}
+            onSortChange={setSort}
+            onViewChange={setView}
+            onReset={handleReset}
+            totalItems={meta.total}
+            isLoading={isLoading}
+          />
         </div>
 
         <div className="mt-6">

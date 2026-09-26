@@ -1,14 +1,7 @@
 'use client';
 
-import AdminSearchInput from '@/components/dashboard/admin/common/AdminSearchInput';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { motion } from 'framer-motion';
+import DataTableToolbar from '@/components/common/table/DataTableToolbar';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All Statuses' },
@@ -22,36 +15,49 @@ export default function CategoryFilters({
   isActive,
   onStatusChange,
   totalItems = 0,
+  isLoading = false,
 }) {
+  const hasActiveFilters = Boolean(
+    (search && search.trim()) ||
+    (isActive && isActive !== 'all')
+  );
+
+  const handleReset = () => {
+    onSearchChange?.('');
+    onStatusChange?.('all');
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col gap-3 sm:gap-4"
+      className="w-full"
     >
-      <div className="flex flex-col sm:flex-row gap-3">
-        <AdminSearchInput
-          value={search}
-          onChange={onSearchChange}
-          placeholder="Search by name, slug, or description..."
-          aria-label="Search categories"
-        />
-
-        <Select value={isActive} onValueChange={onStatusChange}>
-          <SelectTrigger className="w-full sm:w-40 h-9">
-            <SelectValue placeholder="All Statuses" />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTIONS.map((o) => (
-              <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <p className="text-xs text-foreground-tertiary">
-        {totalItems} {totalItems === 1 ? 'category' : 'categories'} found
-      </p>
+      <DataTableToolbar
+        variant="admin"
+        search={{
+          value: search,
+          onChange: onSearchChange,
+          placeholder: 'Search by name, slug, or description...',
+          isLoading,
+        }}
+        filters={[
+          {
+            key: 'status',
+            value: isActive,
+            onChange: onStatusChange,
+            placeholder: 'All Statuses',
+            options: STATUS_OPTIONS,
+          },
+        ]}
+        hasActiveFilters={hasActiveFilters}
+        onReset={handleReset}
+        resetLabel="Reset"
+        summary={{
+          total: totalItems,
+          label: 'categories',
+        }}
+      />
     </motion.div>
   );
 }

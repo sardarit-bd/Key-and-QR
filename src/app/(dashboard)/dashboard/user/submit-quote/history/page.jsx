@@ -132,6 +132,8 @@ export default function SubmissionHistoryPage() {
             onStatusChange={setStatus}
             onSortChange={setSort}
             onReset={handleReset}
+            totalItems={pagination.total}
+            isLoading={isLoading}
           />
         </div>
 
