@@ -5,6 +5,7 @@ import { Search, ChevronDown, Check, Layers, Upload, ImageIcon, Library, X, Chev
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
+import { useDebounce } from '@/hooks/useDebounce';
 import {
   CATEGORY_ICON_REGISTRY,
   CATEGORY_ICON_GROUPS,
@@ -199,6 +200,7 @@ export default function CategoryIconPicker({
 }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 250);
   const [mode, setMode] = useState(parentIconType === 'custom' ? 'custom' : 'library');
   const [showAllAlphabetical, setShowAllAlphabetical] = useState(false);
   const scrollContainerRef = useRef(null);
@@ -213,16 +215,16 @@ export default function CategoryIconPicker({
   // Fast zero-lag computation:
   // - When search is empty: show curated groups immediately (~60 icons = 2ms mount!).
   // - If user clicks "Browse all icons", include letter groups.
-  // - When user searches: filter all 1,000+ icons and return exact matches.
+  // - When user searches: filter all 1,000+ icons after 250ms debounce and return exact matches.
   const displayGroups = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = debouncedSearch.trim().toLowerCase();
     if (!q) {
       return showAllAlphabetical ? [...CURATED_DEFS, ...LETTER_GROUP_DEFS] : CURATED_DEFS;
     }
     const matches = ALL_NAMES.filter((n) => n.toLowerCase().includes(q));
     if (matches.length === 0) return [];
     return [{ label: `Search Results (${matches.length})`, icons: buildDefs(matches) }];
-  }, [search, showAllAlphabetical]);
+  }, [debouncedSearch, showAllAlphabetical]);
 
   useEffect(() => {
     if (open) {

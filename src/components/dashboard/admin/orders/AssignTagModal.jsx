@@ -11,8 +11,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Search, Tag } from 'lucide-react';
+import { Tag } from 'lucide-react';
+import AdminSearchInput from '@/components/dashboard/admin/common/AdminSearchInput';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import { adminAssignmentService } from '@/services/dashboard-service/admin-assignment.service';
 import Pagination from '@/components/ui/Pagination';
@@ -75,10 +75,11 @@ export default function AssignTagModal({ open, onOpenChange, onAssign }) {
         </DialogHeader>
 
         <div className="space-y-4 py-2">
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary pointer-events-none" />
-            <Input value={search} onChange={(e) => handleSearchChange(e.target.value)} placeholder="Search unassigned tags..." className="pl-9 h-9 text-sm" />
-          </div>
+          <AdminSearchInput
+            value={search}
+            onChange={handleSearchChange}
+            placeholder="Search unassigned tags..."
+          />
 
           <p className="text-xs text-foreground-tertiary">{meta.total} unassigned tags</p>
 
@@ -122,7 +123,7 @@ export default function AssignTagModal({ open, onOpenChange, onAssign }) {
           )}
         </div>
 
-        <DialogFooter className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+        <DialogFooter className="w-full flex items-center justify-end gap-3 pt-4 border-t border-white/10">
           <button
             type="button"
             onClick={handleClose}

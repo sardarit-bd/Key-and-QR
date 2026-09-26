@@ -321,6 +321,7 @@ const AvatarUploader = forwardRef(function AvatarUploader(
               src={displayImage}
               alt={user?.name || 'Profile avatar'}
               className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
               onError={(e) => {
                 e.currentTarget.style.display = 'none';
               }}

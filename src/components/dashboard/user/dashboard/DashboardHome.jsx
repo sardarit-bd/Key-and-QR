@@ -147,7 +147,32 @@ export default function DashboardHome({
     };
   }, []);
 
+  const isSubscriber = useMemo(() => {
+    return Boolean(
+      subscription?.isPremium ||
+      subscription?.plan === 'subscriber' ||
+      subscription?.status === 'active' ||
+      dailyUsage?.plan === 'subscriber' ||
+      user?.isPremium === true ||
+      user?.plan === 'subscriber' ||
+      user?.role === 'admin' ||
+      user?.role === 'moderator'
+    );
+  }, [subscription, dailyUsage, user]);
+
   const handleSelectCategory = useCallback((category) => {
+    const isExclusive = Boolean(
+      category?.isSubscriberOnly ||
+      category?.isPremium ||
+      category?.isExclusive ||
+      category?.tier === 'premium'
+    );
+
+    if (isExclusive && !isSubscriber) {
+      router.push('/dashboard/user/premium');
+      return;
+    }
+
     // Pre-flight daily limit check — prevents the overlay from opening only
     // to flash-close instantly when the backend returns 429.
     if (dailyUsage?.isLimitReached) {
@@ -198,12 +223,25 @@ export default function DashboardHome({
     handleSelectCategory({ slug: 'inspire', name: 'Inspiration' });
   }, [handleSelectCategory]);
 
-  // Consume ?action=inspire from the BottomTabBar Inspire tap.
+  // Consume ?action=inspire from the BottomTabBar Inspire tap or category reveal buttons.
   // Fire once, then replace the URL to remove the param so it doesn't
   // re-trigger on subsequent renders or browser back navigation.
   useEffect(() => {
     if (searchParams?.get('action') === 'inspire' && !actionFiredRef.current) {
       actionFiredRef.current = true;
+      const targetCategory = searchParams?.get('category');
+      if (targetCategory && Array.isArray(categories)) {
+        const found = categories.find(
+          (c) =>
+            (c.slug || '').toLowerCase() === targetCategory.toLowerCase() ||
+            (c.name || '').toLowerCase() === targetCategory.toLowerCase()
+        );
+        if (found) {
+          handleSelectCategory(found);
+          router.replace('/dashboard/user');
+          return;
+        }
+      }
       handleReceiveFirst();
       // Strip the query param cleanly without adding a history entry.
       router.replace('/dashboard/user');
@@ -212,7 +250,7 @@ export default function DashboardHome({
     if (searchParams?.get('action') !== 'inspire') {
       actionFiredRef.current = false;
     }
-  }, [searchParams, handleReceiveFirst, router]);
+  }, [searchParams, handleReceiveFirst, handleSelectCategory, categories, router]);
 
   const handleReadAgain = (receivedQuoteId) => {
     readAgain.mutate(receivedQuoteId, {
@@ -347,6 +385,7 @@ export default function DashboardHome({
         categories={categories}
         onSelectCategory={handleSelectCategory}
         disabled={receiveQuote.isPending}
+        isSubscriber={isSubscriber}
       />
 
 

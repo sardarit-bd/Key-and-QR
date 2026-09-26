@@ -25,6 +25,7 @@ import {
   Calendar,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
+import AdminSearchInput from '@/components/dashboard/admin/common/AdminSearchInput';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import {
   useAssignableTags,
@@ -465,19 +466,15 @@ export default function AssignQuoteModal({ open, onOpenChange, quote, onSuccess 
                 <div className="space-y-3">
                   {/* Search and Select Available */}
                   <div className="flex items-center gap-2.5">
-                    <div className="relative flex-1">
-                      <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground-secondary/70" />
-                      <input
-                        type="text"
-                        value={tagSearch}
-                        onChange={(e) => {
-                          setTagSearch(e.target.value);
-                          setTagPage(1);
-                        }}
-                        placeholder="Search tags by code or order..."
-                        className="w-full pl-10 pr-3.5 py-2 text-xs sm:text-sm rounded-xl border border-border bg-background text-foreground placeholder:text-foreground-secondary/60 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
-                      />
-                    </div>
+                    <AdminSearchInput
+                      value={tagSearch}
+                      onChange={(val) => {
+                        setTagSearch(val);
+                        setTagPage(1);
+                      }}
+                      placeholder="Search tags by code or order..."
+                      className="flex-1"
+                    />
                     <button
                       type="button"
                       onClick={handleSelectAvailable}
@@ -592,19 +589,15 @@ export default function AssignQuoteModal({ open, onOpenChange, quote, onSuccess 
                 <div className="space-y-3">
                   {/* Search and Select Available */}
                   <div className="flex items-center gap-2.5">
-                    <div className="relative flex-1">
-                      <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground-secondary/70" />
-                      <input
-                        type="text"
-                        value={userSearch}
-                        onChange={(e) => {
-                          setUserSearch(e.target.value);
-                          setUserPage(1);
-                        }}
-                        placeholder="Search customers by name or email..."
-                        className="w-full pl-10 pr-3.5 py-2 text-xs sm:text-sm rounded-xl border border-border bg-background text-foreground placeholder:text-foreground-secondary/60 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
-                      />
-                    </div>
+                    <AdminSearchInput
+                      value={userSearch}
+                      onChange={(val) => {
+                        setUserSearch(val);
+                        setUserPage(1);
+                      }}
+                      placeholder="Search customers by name or email..."
+                      className="flex-1"
+                    />
                     <button
                       type="button"
                       onClick={handleSelectAvailable}

@@ -87,7 +87,7 @@ export default function AssignDialog({
           )}
         </div>
 
-        <DialogFooter className="flex items-center justify-end gap-3 pt-4 border-t border-border">
+        <DialogFooter className="w-full flex items-center justify-end gap-3 pt-4 border-t border-white/10">
           <button
             type="button"
             onClick={() => onOpenChange(false)}

@@ -1,15 +1,7 @@
 'use client';
 
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { motion } from 'framer-motion';
+import DataTableToolbar from '@/components/common/table/DataTableToolbar';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All Status' },
@@ -34,74 +26,78 @@ export default function ProductsFilters({
   onSortChange,
   totalItems = 0,
   viewTrash = false,
+  isLoading = false,
 }) {
+  const categoryOptions = [
+    { value: 'all', label: 'All Categories' },
+    ...categories.map((cat) => ({
+      value: cat.id || cat._id || cat,
+      label: cat.name || cat,
+    })),
+  ];
+
+  const hasActiveFilters = Boolean(
+    (search && search.trim()) ||
+    (category && category !== 'all') ||
+    (!viewTrash && status && status !== 'all') ||
+    (sort && sort !== 'newest')
+  );
+
+  const handleReset = () => {
+    onSearchChange?.('');
+    onCategoryChange?.('all');
+    if (!viewTrash) onStatusChange?.('all');
+    onSortChange?.('newest');
+  };
+
+  const filters = [
+    {
+      key: 'category',
+      value: category,
+      onChange: onCategoryChange,
+      placeholder: 'All Categories',
+      options: categoryOptions,
+    },
+    !viewTrash && {
+      key: 'status',
+      value: status,
+      onChange: onStatusChange,
+      placeholder: 'Status',
+      options: STATUS_OPTIONS,
+    },
+  ].filter(Boolean);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col gap-3 sm:gap-4"
+      className="w-full"
     >
-      <div className="flex flex-col sm:flex-row gap-3">
-        {/* Search */}
-        <div className="relative flex-1">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary pointer-events-none"
-          />
-          <Input
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder={viewTrash ? "Search deleted products..." : "Search by name, category, or brand..."}
-            className="pl-9 h-9 text-sm"
-          />
-        </div>
-
-        {/* Category filter */}
-        <Select value={category} onValueChange={onCategoryChange}>
-          <SelectTrigger className="w-full sm:w-44 h-9">
-            <SelectValue placeholder="All Categories" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All Categories</SelectItem>
-            {categories.map((cat) => (
-              <SelectItem key={cat.id || cat._id || cat} value={cat.id || cat._id || cat}>
-                {cat.name || cat}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Status filter (only lifecycle statuses, hidden when viewing trash) */}
-        {!viewTrash && (
-          <Select value={status} onValueChange={onStatusChange}>
-            <SelectTrigger className="w-full sm:w-36 h-9">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              {STATUS_OPTIONS.map((opt) => (
-                <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        )}
-
-        {/* Sort */}
-        <Select value={sort} onValueChange={onSortChange}>
-          <SelectTrigger className="w-full sm:w-40 h-9">
-            <SelectValue placeholder="Newest First" />
-          </SelectTrigger>
-          <SelectContent>
-            {SORT_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <p className="text-xs text-foreground-tertiary">
-        {totalItems} {totalItems === 1 ? 'product' : 'products'} found
-        {viewTrash ? ' in trash' : ''}
-      </p>
+      <DataTableToolbar
+        variant="admin"
+        search={{
+          value: search,
+          onChange: onSearchChange,
+          placeholder: viewTrash
+            ? 'Search deleted products...'
+            : 'Search by name, category, or brand...',
+          isLoading,
+        }}
+        filters={filters}
+        sort={{
+          value: sort,
+          onChange: onSortChange,
+          placeholder: 'Newest First',
+          options: SORT_OPTIONS,
+        }}
+        hasActiveFilters={hasActiveFilters}
+        onReset={handleReset}
+        resetLabel="Reset"
+        summary={{
+          total: totalItems,
+          label: viewTrash ? 'products in trash' : 'products',
+        }}
+      />
     </motion.div>
   );
 }

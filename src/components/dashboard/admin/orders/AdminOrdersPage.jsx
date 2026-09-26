@@ -6,7 +6,6 @@ import { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { ShoppingBag, Plus } from 'lucide-react';
 import Card from '@/components/dashboard/user/dashboard/Card';
-import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import {
   useAdminOrders,
   useAdminOrdersStats,
@@ -38,7 +37,6 @@ export default function AdminOrdersPage({
   const [paymentStatus, setPaymentStatus] = useState('all');
   const [sort, setSort] = useState('newest');
   const [page, setPage] = useState(1);
-  const debouncedSearch = useDebounce(search, 300);
 
   const [viewOrder, setViewOrder] = useState(null);
   const [statusOrder, setStatusOrder] = useState(null);
@@ -56,7 +54,7 @@ export default function AdminOrdersPage({
   const [dialogVariant, setDialogVariant] = useState('delete');
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const filters = { search: debouncedSearch, fulfillmentStatus, tagAssignmentStatus, page, limit: ITEMS_PER_PAGE };
+  const filters = { search, fulfillmentStatus, tagAssignmentStatus, page, limit: ITEMS_PER_PAGE };
   const { data, isLoading, isError, error, refetch } = useAdminOrders(filters);
   const { data: statsData } = useAdminOrdersStats();
   const { updateFulfillmentStatus, cancelOrder, deleteOrder, createManualOrder } = useAdminOrderActions();

@@ -4,9 +4,9 @@ import { useState, useCallback } from 'react';
 import toast from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { Link2, Search } from 'lucide-react';
+import { Link2 } from 'lucide-react';
 import Card from '@/components/dashboard/user/dashboard/Card';
-import { Input } from '@/components/ui/input';
+import AdminSearchInput from '@/components/dashboard/admin/common/AdminSearchInput';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import {
   useUnassignedTags,
@@ -97,15 +97,11 @@ export default function AdminAssignmentPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-5 md:gap-6">
         {/* Left: Unassigned Tags */}
         <div className="space-y-3">
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary pointer-events-none" />
-            <Input
-              value={tagSearch}
-              onChange={(e) => { setTagSearch(e.target.value); setTagPage(1); }}
-              placeholder="Search tags by code..."
-              className="pl-9 h-9 text-sm"
-            />
-          </div>
+          <AdminSearchInput
+            value={tagSearch}
+            onChange={(v) => { setTagSearch(v); setTagPage(1); }}
+            placeholder="Search tags by code..."
+          />
 
           {tagsLoading ? (
             <div className="bg-card rounded-[22px] border border-border p-6 space-y-3 animate-pulse">
@@ -128,15 +124,11 @@ export default function AdminAssignmentPage() {
 
         {/* Right: Orders */}
         <div className="space-y-3">
-          <div className="relative">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary pointer-events-none" />
-            <Input
-              value={orderSearch}
-              onChange={(e) => { setOrderSearch(e.target.value); setOrderPage(1); }}
-              placeholder="Search orders by customer or ID..."
-              className="pl-9 h-9 text-sm"
-            />
-          </div>
+          <AdminSearchInput
+            value={orderSearch}
+            onChange={(v) => { setOrderSearch(v); setOrderPage(1); }}
+            placeholder="Search orders by customer or ID..."
+          />
 
           {ordersLoading ? (
             <div className="bg-card rounded-[22px] border border-border p-6 space-y-3 animate-pulse">

@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
-import { motion, useReducedMotion } from "framer-motion";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { Sparkles, ArrowRight, X, Search, Crown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { resolveCategory } from "@/components/dashboard/admin/categories/categoryIconRegistry";
 import { getCategoryIcon } from "@/components/public/quote/category";
@@ -39,7 +39,7 @@ function CategoryCardIcon({ category, categoryColor }) {
       <img
         src={iconUrl}
         alt={category?.name || 'Category icon'}
-        className="h-12 w-12 object-contain transition-transform duration-200 group-hover:scale-110"
+        className="w-12 h-12 sm:w-14 sm:h-14 object-contain transition-transform duration-200 group-hover:scale-105"
         onError={() => setImageError(true)}
       />
     );
@@ -47,11 +47,21 @@ function CategoryCardIcon({ category, categoryColor }) {
 
   return (
     <IconComponent
-      size={32}
-      strokeWidth={2.2}
-      className="h-12 w-12 transition-transform duration-200 group-hover:scale-110"
+      size={36}
+      strokeWidth={2}
+      className="w-12 h-12 sm:w-14 sm:h-14 transition-transform duration-200 group-hover:scale-105"
       style={{ color: categoryColor }}
     />
+  );
+}
+
+export function isCategorySubscriberExclusive(category) {
+  if (!category) return false;
+  return Boolean(
+    category.isSubscriberOnly ||
+    category.isPremium ||
+    category.isExclusive ||
+    category.tier === "premium"
   );
 }
 
@@ -59,21 +69,84 @@ export default function CategorySection({
   categories,
   onSelectCategory,
   disabled,
+  isSubscriber = false,
 }) {
   const router = useRouter();
   const reduceMotion = useReducedMotion();
   const categoryList = Array.isArray(categories) ? categories : [];
 
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [upgradeCategory, setUpgradeCategory] = useState(null);
+
   const handleClick = (category) => {
     if (disabled) return;
+
+    const isExclusive = isCategorySubscriberExclusive(category);
+    if (isExclusive && !isSubscriber) {
+      setUpgradeCategory(category);
+      return;
+    }
+
     if (onSelectCategory) {
       onSelectCategory(category);
     }
   };
 
   const handleViewAll = () => {
-    router.push("/inspiration");
+    setIsModalOpen(true);
   };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSearchQuery("");
+  };
+
+  const handleModalSelect = (category) => {
+    const isExclusive = isCategorySubscriberExclusive(category);
+    if (isExclusive && !isSubscriber) {
+      setIsModalOpen(false);
+      setUpgradeCategory(category);
+      return;
+    }
+    handleCloseModal();
+    handleClick(category);
+  };
+
+  // Keyboard accessibility: Escape to close modal
+  useEffect(() => {
+    if (!isModalOpen && !upgradeCategory) return;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") {
+        handleCloseModal();
+        setUpgradeCategory(null);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isModalOpen, upgradeCategory]);
+
+  // Lock body scroll while category modal or upgrade modal is open
+  useEffect(() => {
+    if (!isModalOpen && !upgradeCategory) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isModalOpen, upgradeCategory]);
+
+  // Filtered categories for in-dashboard modal
+  const filteredCategories = searchQuery.trim()
+    ? categoryList.filter((c) => {
+        const q = searchQuery.toLowerCase().trim();
+        return (
+          (c.name || "").toLowerCase().includes(q) ||
+          (c.slug || "").toLowerCase().includes(q) ||
+          (c.description || "").toLowerCase().includes(q)
+        );
+      })
+    : categoryList;
 
   return (
     <section className="w-full">
@@ -90,16 +163,13 @@ export default function CategorySection({
         </button>
       </div>
 
+      {/* Horizontal Carousel */}
       <div className="flex items-stretch gap-3 sm:gap-4 overflow-x-auto hide-scrollbar rounded-2xl border border-gray-200/70 bg-gray-50/70 px-4 py-4 shadow-sm backdrop-blur-sm dark:border-white/[0.08] dark:bg-white/[0.025] dark:shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
         {categoryList.length > 0 ? (
           categoryList.map((category, index) => {
             const slug = category?.slug || category?.name || "";
             const categoryColor = category?.color || (slug === 'love' ? '#ef4444' : '#f59e0b');
-            const quoteCount = typeof category?.quoteCount === 'number'
-              ? category.quoteCount
-              : typeof category?.count === 'number'
-                ? category.count
-                : null;
+            const isExclusive = isCategorySubscriberExclusive(category);
 
             return (
               <motion.button
@@ -121,37 +191,41 @@ export default function CategorySection({
                 }
                 whileTap={!reduceMotion ? { scale: 0.97 } : undefined}
                 className={`
-                  group relative flex flex-shrink-0 flex-col items-center justify-center gap-2
-                  min-w-[96px] sm:min-w-[104px] md:min-w-[108px]
-                  rounded-2xl border px-4 py-4 sm:py-5
+                  group relative flex flex-shrink-0 flex-col items-center justify-between
+                  min-w-[120px] sm:min-w-[136px]
+                  h-[160px] sm:h-[180px]
+                  p-3 rounded-2xl
                   transition-all duration-200
                   cursor-pointer
-                  bg-white/75 dark:bg-neutral-900/70 backdrop-blur-md dark:backdrop-blur-xl
-                  border border-white/80 dark:border-white/[0.08]
-                  shadow-[inset_0_1px_0_0_rgba(255,255,255,0.6),0_4px_20px_-4px_rgba(0,0,0,0.05)]
-                  dark:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05),0_8px_30px_rgba(0,0,0,0.35)]
-                  hover:bg-white/90 dark:hover:bg-neutral-800/80
+                  bg-white/80 dark:bg-neutral-900/80
+                  border border-gray-200/80 dark:border-white/5
+                  shadow-sm dark:shadow-md
+                  hover:bg-white/95 dark:hover:bg-neutral-800/90
                   hover:border-accent/40 dark:hover:border-white/20
-                  hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.8),0_8px_28px_-6px_rgba(0,0,0,0.08)]
-                  dark:hover:shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1),0_12px_36px_rgba(0,0,0,0.4)]
+                  hover:shadow-md dark:hover:shadow-xl
                 `}
                 aria-label={`${category?.name || slug} category`}
               >
-                {/* Primary Category Icon with dynamic color container */}
-                <span
-                  className="relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-200"
-                >
+                {/* Top Slot: Distinct Floating Pill Badge (Exact Reference Recreation) */}
+                <div className="w-full flex items-center justify-center shrink-0">
+                  {isExclusive ? (
+                    <span className="mt-1 px-3 py-1 rounded-full flex items-center justify-center gap-1.5 shadow-sm bg-[#FDE8C7] text-[#9A6218] border border-[#F3CD87] dark:bg-[#2D2312] dark:text-[#F3CD87] dark:border-[#F3CD87]/40 dark:shadow-[0_2px_10px_rgba(243,205,135,0.15)] transition-all">
+                      <Sparkles className="w-3 h-3 text-[#9A6218] dark:text-[#F3CD87] shrink-0" />
+                      <span className="text-[11px] font-semibold tracking-tight whitespace-nowrap">MyInspireTag+</span>
+                    </span>
+                  ) : (
+                    <div className="h-6 w-full" aria-hidden="true" />
+                  )}
+                </div>
+
+                {/* Primary Category Icon with ample central space */}
+                <span className="my-auto flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 transition-all duration-200">
                   <CategoryCardIcon category={category} categoryColor={categoryColor} />
                 </span>
 
                 {/* Category Name */}
-                <span className="text-[12px] sm:text-[13px] font-semibold text-center leading-tight whitespace-nowrap text-foreground-secondary group-hover:text-foreground transition-colors">
+                <span className="text-sm font-semibold text-center leading-tight whitespace-nowrap text-neutral-800 dark:text-neutral-200 group-hover:text-foreground transition-colors mt-auto">
                   {category?.name || "Inspire"}
-                </span>
-
-                {/* Status / Quote count label */}
-                <span className="text-[10px] font-medium text-foreground-tertiary/75">
-                  {quoteCount !== null ? `${quoteCount} ${quoteCount === 1 ? 'quote' : 'quotes'}` : 'Explore'}
                 </span>
               </motion.button>
             );
@@ -162,6 +236,207 @@ export default function CategorySection({
           </p>
         )}
       </div>
+
+      {/* In-Dashboard Category Selector Dialog (Preserves Single-Reveal Daily Quota Flow) */}
+      <AnimatePresence>
+        {isModalOpen && (
+          <motion.div
+            className="fixed inset-0 z-[60] flex items-center justify-center bg-black/75 backdrop-blur-md p-3 sm:p-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={handleCloseModal}
+          >
+            <motion.div
+              className="relative w-full max-w-xl max-h-[85dvh] flex flex-col rounded-3xl overflow-hidden bg-white/95 dark:bg-neutral-900/95 border border-black/10 dark:border-white/10 shadow-2xl"
+              initial={{ scale: 0.94, opacity: 0, y: 12 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.96, opacity: 0, y: 8 }}
+              transition={{ type: "spring", stiffness: 180, damping: 22 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="px-5 sm:px-6 pt-5 pb-4 flex items-center justify-between border-b border-gray-100 dark:border-white/10 shrink-0">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-accent/10 text-accent flex items-center justify-center shrink-0">
+                    <Sparkles size={18} />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-bold text-foreground">
+                      Explore Categories
+                    </h3>
+                    <p className="text-xs text-foreground-tertiary mt-0.5">
+                      Select a category to receive today&apos;s revelation
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  aria-label="Close dialog"
+                  className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-border bg-background/80 text-foreground-secondary hover:text-foreground hover:bg-muted transition-colors active:scale-95"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+
+              {/* Search filter for rapid category selection */}
+              {categoryList.length > 6 && (
+                <div className="px-5 sm:px-6 pt-3 shrink-0">
+                  <div className="relative">
+                    <Search
+                      size={15}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground-tertiary"
+                    />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search categories..."
+                      className="w-full h-9 pl-9 pr-3 rounded-xl border border-border bg-background/60 text-xs sm:text-sm text-foreground placeholder:text-foreground-tertiary focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Modal Category Grid */}
+              <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-6">
+                {filteredCategories.length > 0 ? (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-3.5 pt-2.5">
+                    {filteredCategories.map((cat, idx) => {
+                      const slug = cat?.slug || cat?.name || "";
+                      const color = cat?.color || (slug === 'love' ? '#ef4444' : '#f59e0b');
+                      const isExclusive = isCategorySubscriberExclusive(cat);
+
+                      return (
+                        <button
+                          key={cat?.id || cat?._id || slug || idx}
+                          type="button"
+                          onClick={() => handleModalSelect(cat)}
+                          disabled={disabled}
+                          className="group relative flex flex-col items-center justify-between min-h-[150px] sm:min-h-[170px] p-3 rounded-2xl border border-gray-200/80 dark:border-white/5 bg-white/80 dark:bg-neutral-900/80 hover:bg-white/95 dark:hover:bg-neutral-800/90 hover:border-accent/40 dark:hover:border-accent/40 transition-all text-center cursor-pointer shadow-xs active:scale-97"
+                        >
+                          {/* Top Slot: Distinct Floating Pill Badge */}
+                          <div className="w-full flex items-center justify-center shrink-0">
+                            {isExclusive ? (
+                              <span className="mt-1 px-3 py-1 rounded-full flex items-center justify-center gap-1.5 shadow-sm bg-[#FDE8C7] text-[#9A6218] border border-[#F3CD87] dark:bg-[#2D2312] dark:text-[#F3CD87] dark:border-[#F3CD87]/40 dark:shadow-[0_2px_10px_rgba(243,205,135,0.15)] transition-all">
+                                <Sparkles className="w-3 h-3 text-[#9A6218] dark:text-[#F3CD87] shrink-0" />
+                                <span className="text-[11px] font-semibold tracking-tight whitespace-nowrap">MyInspireTag+</span>
+                              </span>
+                            ) : (
+                              <div className="h-6 w-full" aria-hidden="true" />
+                            )}
+                          </div>
+
+                          <span className="my-auto flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 transition-transform duration-200 group-hover:scale-105">
+                            <CategoryCardIcon category={cat} categoryColor={color} />
+                          </span>
+                          <span className="text-sm font-semibold text-neutral-800 dark:text-neutral-200 group-hover:text-accent transition-colors leading-tight mt-auto">
+                            {cat?.name || "Inspire"}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="py-12 text-center text-xs sm:text-sm text-foreground-tertiary">
+                    No categories found matching &ldquo;{searchQuery}&rdquo;.
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Footer Notice */}
+              <div className="px-5 py-3 bg-muted/40 border-t border-border/50 text-center shrink-0">
+                <p className="text-[11px] text-foreground-tertiary">
+                  Selecting a category reveals today&apos;s inspiration and respects your daily reveal credit.
+                </p>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Subscriber Exclusive Upgrade Prompt Dialog */}
+      <AnimatePresence>
+        {upgradeCategory && (
+          <motion.div
+            className="fixed inset-0 z-[70] flex items-center justify-center bg-black/80 backdrop-blur-md p-4"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            onClick={() => setUpgradeCategory(null)}
+          >
+            <motion.div
+              className="relative w-full max-w-md rounded-3xl overflow-hidden bg-white dark:bg-neutral-900 border border-amber-500/30 shadow-2xl p-6 sm:p-7 text-center space-y-4"
+              initial={{ scale: 0.94, opacity: 0, y: 12 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.96, opacity: 0, y: 8 }}
+              transition={{ type: "spring", stiffness: 180, damping: 22 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Crown Icon */}
+              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-400/20 border border-amber-400/30 flex items-center justify-center mx-auto text-amber-500 shadow-sm">
+                <Crown size={28} />
+              </div>
+
+              {/* Title & Badge */}
+              <div className="space-y-1.5">
+                <span className="inline-block px-3 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-400/30">
+                  Subscriber Exclusive
+                </span>
+                <h3 className="text-lg sm:text-xl font-bold text-foreground">
+                  Unlock {upgradeCategory?.name || "This Category"}
+                </h3>
+                <p className="text-xs sm:text-sm text-foreground-secondary max-w-sm mx-auto leading-relaxed">
+                  <strong className="text-foreground">{upgradeCategory?.name}</strong> is reserved exclusively for <span className="text-amber-500 font-semibold">MyInspireTag+</span> members. Upgrade now to enjoy unlimited inspiration across all categories.
+                </p>
+              </div>
+
+              {/* Perks Highlights */}
+              <div className="p-3.5 rounded-2xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-500/15 text-left text-xs text-foreground-secondary space-y-2">
+                <div className="flex items-center gap-2">
+                  <Sparkles size={14} className="text-amber-500 shrink-0" />
+                  <span>Unlimited daily quote reveals — no daily limits</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Sparkles size={14} className="text-amber-500 shrink-0" />
+                  <span>Access to all exclusive category collections</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Sparkles size={14} className="text-amber-500 shrink-0" />
+                  <span>Audio messages & visual canvas quotes</span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="pt-2 flex flex-col gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setUpgradeCategory(null);
+                    router.push("/dashboard/user/premium");
+                  }}
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs sm:text-sm py-3 px-6 shadow-md transition-all active:scale-97 cursor-pointer"
+                >
+                  <Crown size={16} />
+                  <span>Upgrade to MyInspireTag+ ($4.99/mo)</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setUpgradeCategory(null)}
+                  className="w-full text-xs font-medium text-foreground-tertiary hover:text-foreground py-2 transition-colors cursor-pointer"
+                >
+                  Maybe Later
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </section>
   );
 }

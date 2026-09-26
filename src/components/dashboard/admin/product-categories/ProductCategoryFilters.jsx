@@ -1,15 +1,7 @@
 'use client';
 
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { motion } from 'framer-motion';
+import DataTableToolbar from '@/components/common/table/DataTableToolbar';
 
 const STATUS_OPTIONS = [
   { value: 'all', label: 'All Status' },
@@ -31,61 +23,58 @@ export default function ProductCategoryFilters({
   limit,
   onLimitChange,
   totalItems = 0,
+  isLoading = false,
 }) {
+  const hasActiveFilters = Boolean(
+    (search && search.trim()) ||
+    (status && status !== 'all')
+  );
+
+  const handleReset = () => {
+    onSearchChange?.('');
+    onStatusChange?.('all');
+  };
+
+  const filters = [
+    {
+      key: 'status',
+      value: status,
+      onChange: onStatusChange,
+      placeholder: 'All Status',
+      options: STATUS_OPTIONS,
+    },
+    onLimitChange && {
+      key: 'limit',
+      value: String(limit),
+      onChange: onLimitChange,
+      placeholder: '10 per page',
+      options: LIMIT_OPTIONS,
+    },
+  ].filter(Boolean);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col gap-3 sm:gap-4"
+      className="w-full"
     >
-      <div className="flex flex-col sm:flex-row gap-3">
-        {/* Search */}
-        <div className="relative flex-1">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary pointer-events-none"
-          />
-          <Input
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search categories by name, slug..."
-            className="pl-9 h-9 text-sm"
-          />
-        </div>
-
-        {/* Status filter */}
-        <Select value={status} onValueChange={onStatusChange}>
-          <SelectTrigger className="w-full sm:w-36 h-9">
-            <SelectValue placeholder="All Status" />
-          </SelectTrigger>
-          <SelectContent>
-            {STATUS_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-
-        {/* Rows per page */}
-        <Select value={String(limit)} onValueChange={onLimitChange}>
-          <SelectTrigger className="w-full sm:w-36 h-9">
-            <SelectValue placeholder="10 per page" />
-          </SelectTrigger>
-          <SelectContent>
-            {LIMIT_OPTIONS.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
-      <p className="text-xs text-foreground-tertiary">
-        {totalItems} {totalItems === 1 ? 'category' : 'categories'} found
-        {status !== 'all' && ` (${status})`}
-      </p>
+      <DataTableToolbar
+        variant="admin"
+        search={{
+          value: search,
+          onChange: onSearchChange,
+          placeholder: 'Search categories by name, slug...',
+          isLoading,
+        }}
+        filters={filters}
+        hasActiveFilters={hasActiveFilters}
+        onReset={handleReset}
+        resetLabel="Reset"
+        summary={{
+          total: totalItems,
+          label: 'categories',
+        }}
+      />
     </motion.div>
   );
 }

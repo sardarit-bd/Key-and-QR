@@ -155,18 +155,20 @@ function LoginPageContent() {
 
   return (
     // ************* Full-Screen Background Container *************
-    <div
-      className="min-h-screen flex items-center justify-center p-4 relative"
-      style={{
-        backgroundImage: "url('/login/login-bg.png')",
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-        minHeight: "100vh",
-      }}
-    >
+    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+      {/* ************* High-Priority Optimized Background Image ************* */}
+      <Image
+        src="/login/login-bg.png"
+        alt="Authentication background"
+        fill
+        priority
+        sizes="100vw"
+        quality={85}
+        className="object-cover object-center pointer-events-none select-none z-0"
+      />
+
       {/* ************* Dark Overlay ************* */}
-      <div className="absolute inset-0 bg-white/40" />
+      <div className="absolute inset-0 bg-white/40 pointer-events-none z-0" />
 
       {/* ************* Logo - Top Left ************* */}
       <motion.div

@@ -194,6 +194,7 @@ export default function Header() {
                       <AvatarImage
                         src={getProfileImageUrl() || ""}
                         alt={user?.name || "User"}
+                        referrerPolicy="no-referrer"
                       />
                       <AvatarFallback className="bg-gray-100 text-gray-700 text-sm font-semibold">
                         {getUserInitials()}
@@ -209,6 +210,7 @@ export default function Header() {
                           <AvatarImage
                             src={getProfileImageUrl() || ""}
                             alt={user?.name || "User"}
+                            referrerPolicy="no-referrer"
                           />
                           <AvatarFallback className="bg-muted text-foreground text-sm font-semibold">
                             {getUserInitials()}
@@ -427,6 +429,7 @@ export default function Header() {
                             <AvatarImage
                               src={getProfileImageUrl() || ""}
                               alt={user?.name || "User"}
+                              referrerPolicy="no-referrer"
                             />
                             <AvatarFallback className="bg-muted text-foreground text-sm font-semibold">
                               {getUserInitials()}

@@ -18,6 +18,8 @@ import {
 import toast from "react-hot-toast";
 import api from "@/lib/api";
 
+import AdminSearchInput from "@/components/dashboard/admin/common/AdminSearchInput";
+
 const ITEMS_PER_PAGE = 10;
 
 const STATUS_OPTIONS = [
@@ -155,30 +157,23 @@ export default function AdminSubscriptionsPage() {
     }
   };
 
+  // Reset to page 1 whenever debounced search or status filter changes
   useEffect(() => {
-    if (!isInitialized) return;
-    if (!user || user.role !== "admin") return;
-    fetchSubscriptions();
-    fetchStats();
-    fetchPrice();
-  }, [
-    user,
-    currentPage,
-    filterStatus,
-    isInitialized,
-    fetchSubscriptions,
-    fetchStats,
-    fetchPrice,
-  ]);
+    setCurrentPage(1);
+  }, [searchTerm, filterStatus]);
 
+  // Initial stats and plans fetch
   useEffect(() => {
     if (!isInitialized || !user || user.role !== "admin") return;
-    const timer = setTimeout(() => {
-      if (currentPage === 1) fetchSubscriptions();
-      else setCurrentPage(1);
-    }, 400);
-    return () => clearTimeout(timer);
-  }, [searchTerm, isInitialized, user, currentPage, fetchSubscriptions]);
+    fetchStats();
+    fetchPrice();
+  }, [isInitialized, user, fetchStats, fetchPrice]);
+
+  // Fetch subscriptions when debounced search, page, or filter status updates
+  useEffect(() => {
+    if (!isInitialized || !user || user.role !== "admin") return;
+    fetchSubscriptions();
+  }, [isInitialized, user, fetchSubscriptions]);
 
   const priceDisplay = price
     ? `$${Number(price.amount).toFixed(2)}/${price.interval}`
@@ -255,16 +250,13 @@ export default function AdminSubscriptionsPage() {
 
         {/* Filters */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <div className="relative flex-1 max-w-sm">
-            <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-            <input
-              type="text"
-              placeholder="Search by tag, email, name..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-10 pl-9 pr-4 rounded-xl border border-border bg-background text-sm text-foreground placeholder:text-foreground-tertiary/40 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition"
-            />
-          </div>
+          <AdminSearchInput
+            value={searchTerm}
+            onChange={setSearchTerm}
+            placeholder="Search by tag, email, name..."
+            className="flex-1 max-w-sm"
+            isLoading={loading}
+          />
           <div className="flex flex-wrap gap-2">
             {STATUS_OPTIONS.map((opt) => (
               <button

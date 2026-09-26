@@ -6,7 +6,6 @@ import { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { Users } from 'lucide-react';
 import Card from '@/components/dashboard/user/dashboard/Card';
-import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import {
   useAdminUsers,
   useAdminUsersStats,
@@ -34,7 +33,6 @@ export default function AdminUsersPage({
   const [status, setStatus] = useState(defaultStatus);
   const [sort, setSort] = useState('newest');
   const [page, setPage] = useState(1);
-  const debouncedSearch = useDebounce(search, 300);
 
   const [viewUser, setViewUser] = useState(null);
   const [editUser, setEditUser] = useState(null);
@@ -44,7 +42,7 @@ export default function AdminUsersPage({
   const [dialogVariant, setDialogVariant] = useState('delete');
   const [selectedUser, setSelectedUser] = useState(null);
 
-  const filters = { search: debouncedSearch, role, status, sort, page, limit: ITEMS_PER_PAGE };
+  const filters = { search, role, status, sort, page, limit: ITEMS_PER_PAGE };
   const { data, isLoading, isError, error, refetch } = useAdminUsers(filters);
   const { data: statsData } = useAdminUsersStats();
   const { suspendUser, activateUser, deleteUser, updateUser } = useAdminUserActions();
