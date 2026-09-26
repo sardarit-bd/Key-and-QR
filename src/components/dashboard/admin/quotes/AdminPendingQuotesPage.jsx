@@ -395,7 +395,7 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
                 <label className="block text-xs font-medium text-foreground-secondary">Admin Note (optional)</label>
                 <Textarea value={adminNote} onChange={(e) => setAdminNote(e.target.value)} placeholder="Add a note..." rows={2} />
               </div>
-              <DialogFooter className="gap-2 sm:gap-0">
+              <DialogFooter className="w-full flex items-center justify-end gap-3 pt-4 border-t border-white/10">
                 <Button
                   type="button"
                   variant="outline"
