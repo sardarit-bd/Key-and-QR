@@ -1,10 +1,12 @@
 'use client';
 
+import { useState } from 'react';
 import { Crown, Shield } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 export default function SidebarProfile({ profile, isCollapsed, isCompact = false }) {
+  const [avatarError, setAvatarError] = useState(false);
   const pathname = usePathname();
   const isAdmin =
     profile?.plan === 'admin' ||
@@ -15,7 +17,8 @@ export default function SidebarProfile({ profile, isCollapsed, isCompact = false
     ? '/dashboard/admin/profile'
     : '/dashboard/user/profile';
 
-  const hasAvatar = profile?.avatar;
+  const avatarUrl = typeof profile?.avatar === 'string' ? profile.avatar : profile?.avatar?.url || null;
+  const hasAvatar = avatarUrl && !avatarError;
 
   if (isCollapsed) {
     return (
@@ -26,7 +29,13 @@ export default function SidebarProfile({ profile, isCollapsed, isCompact = false
           title={`${profile?.name || 'Profile'}`}
         >
           {hasAvatar ? (
-            <img src={hasAvatar} alt="User" className="w-full h-full object-cover" />
+            <img
+              src={avatarUrl}
+              alt={profile?.name || "User"}
+              className="w-full h-full object-cover"
+              referrerPolicy="no-referrer"
+              onError={() => setAvatarError(true)}
+            />
           ) : (
             profile?.initials || 'U'
           )}
@@ -49,7 +58,13 @@ export default function SidebarProfile({ profile, isCollapsed, isCompact = false
           <Link href={profileHref} className="group relative shrink-0">
             <div className="w-12 h-12 rounded-xl bg-accent/10 border border-accent/20 flex items-center justify-center overflow-hidden text-accent font-bold text-base shadow-2xs group-hover:scale-105 transition-all duration-300">
               {hasAvatar ? (
-                <img src={hasAvatar} alt="User" className="w-full h-full object-cover" />
+                <img
+                  src={avatarUrl}
+                  alt={profile?.name || "User"}
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                  onError={() => setAvatarError(true)}
+                />
               ) : (
                 profile?.initials || 'U'
               )}
@@ -91,7 +106,13 @@ export default function SidebarProfile({ profile, isCollapsed, isCompact = false
           <div className="w-14 h-14 rounded-full p-1 bg-background shadow-xs border border-border group-hover:border-accent/40 group-hover:scale-105 transition-all duration-300">
             <div className="w-full h-full rounded-full bg-accent/10 flex items-center justify-center overflow-hidden text-accent font-bold text-lg">
               {hasAvatar ? (
-                <img src={hasAvatar} alt="User" className="w-full h-full object-cover" />
+                <img
+                  src={avatarUrl}
+                  alt={profile?.name || "User"}
+                  className="w-full h-full object-cover"
+                  referrerPolicy="no-referrer"
+                  onError={() => setAvatarError(true)}
+                />
               ) : (
                 profile?.initials || 'U'
               )}

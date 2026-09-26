@@ -36,6 +36,7 @@ export default function Avatar({ user, size = 'md', className = '' }) {
                     src={imageUrl}
                     alt={user?.name || 'User'}
                     className="w-full h-full object-cover"
+                    referrerPolicy="no-referrer"
                     onError={() => setImgError(true)}
                 />
             </div>
