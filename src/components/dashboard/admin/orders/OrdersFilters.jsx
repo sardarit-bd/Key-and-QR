@@ -1,7 +1,6 @@
 'use client';
 
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import AdminSearchInput from '@/components/dashboard/admin/common/AdminSearchInput';
 import {
   Select,
   SelectContent,
@@ -63,18 +62,11 @@ export default function OrdersFilters({
     >
       <div className="flex flex-col sm:flex-row gap-3 flex-wrap">
         {/* Search */}
-        <div className="relative flex-1 min-w-[200px]">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary pointer-events-none"
-          />
-          <Input
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search by order ID, customer, or product..."
-            className="pl-9 h-9 text-sm"
-          />
-        </div>
+        <AdminSearchInput
+          value={search}
+          onChange={onSearchChange}
+          placeholder="Search by order ID, customer, or product..."
+        />
 
         {/* Tag Assignment filter */}
         <Select value={tagAssignmentStatus} onValueChange={onTagAssignmentChange}>

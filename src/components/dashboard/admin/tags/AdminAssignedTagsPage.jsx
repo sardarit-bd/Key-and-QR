@@ -19,6 +19,7 @@ import UserViewDialog from '../shared/UserViewDialog';
 import OrderViewDialog from '../shared/OrderViewDialog';
 import ConfirmDialog from '../shared/ConfirmDialog';
 import Pagination from '@/components/ui/Pagination';
+import AdminSearchInput from '@/components/dashboard/admin/common/AdminSearchInput';
 import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import {
@@ -267,10 +268,11 @@ export default function AdminAssignedTagsPage() {
       </motion.div>
 
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary pointer-events-none" />
-          <Input value={search} onChange={(e) => handleSearchChange(e.target.value)} placeholder="Search by tag code..." className="pl-9 h-9 text-sm" />
-        </div>
+        <AdminSearchInput
+          value={search}
+          onChange={handleSearchChange}
+          placeholder="Search by tag code..."
+        />
         <Select value={subscriptionType} onValueChange={handlePlanChange}>
           <SelectTrigger className="w-full sm:w-36 h-9">
             <SelectValue placeholder="All Plans" />

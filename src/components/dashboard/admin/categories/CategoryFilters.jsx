@@ -1,7 +1,6 @@
 'use client';
 
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import AdminSearchInput from '@/components/dashboard/admin/common/AdminSearchInput';
 import {
   Select,
   SelectContent,
@@ -31,16 +30,12 @@ export default function CategoryFilters({
       className="flex flex-col gap-3 sm:gap-4"
     >
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary pointer-events-none" />
-          <Input
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search by name, slug, or description..."
-            className="pl-9 h-9 text-sm"
-            aria-label="Search categories"
-          />
-        </div>
+        <AdminSearchInput
+          value={search}
+          onChange={onSearchChange}
+          placeholder="Search by name, slug, or description..."
+          aria-label="Search categories"
+        />
 
         <Select value={isActive} onValueChange={onStatusChange}>
           <SelectTrigger className="w-full sm:w-40 h-9">

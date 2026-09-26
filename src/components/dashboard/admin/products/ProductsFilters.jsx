@@ -1,7 +1,6 @@
 'use client';
 
-import { Search } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import AdminSearchInput from '@/components/dashboard/admin/common/AdminSearchInput';
 import {
   Select,
   SelectContent,
@@ -34,6 +33,7 @@ export default function ProductsFilters({
   onSortChange,
   totalItems = 0,
   viewTrash = false,
+  isLoading = false,
 }) {
   return (
     <motion.div
@@ -43,18 +43,12 @@ export default function ProductsFilters({
     >
       <div className="flex flex-col sm:flex-row gap-3">
         {/* Search */}
-        <div className="relative flex-1">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary pointer-events-none"
-          />
-          <Input
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder={viewTrash ? "Search deleted products..." : "Search by name, category, or brand..."}
-            className="pl-9 h-9 text-sm"
-          />
-        </div>
+        <AdminSearchInput
+          value={search}
+          onChange={onSearchChange}
+          placeholder={viewTrash ? "Search deleted products..." : "Search by name, category, or brand..."}
+          isLoading={isLoading}
+        />
 
         {/* Category filter */}
         <Select value={category} onValueChange={onCategoryChange}>

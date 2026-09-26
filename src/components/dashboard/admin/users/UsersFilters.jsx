@@ -1,7 +1,7 @@
 'use client';
 
-import { Search, ArrowUpDown } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { ArrowUpDown } from 'lucide-react';
+import AdminSearchInput from '@/components/dashboard/admin/common/AdminSearchInput';
 import {
   Select,
   SelectContent,
@@ -49,18 +49,11 @@ export default function UsersFilters({
       {/* Search + Filters row */}
       <div className="flex flex-col sm:flex-row gap-3">
         {/* Search */}
-        <div className="relative flex-1">
-          <Search
-            size={16}
-            className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary pointer-events-none"
-          />
-          <Input
-            value={search}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder="Search users by name or email..."
-            className="pl-9 h-9 text-sm"
-          />
-        </div>
+        <AdminSearchInput
+          value={search}
+          onChange={onSearchChange}
+          placeholder="Search users by name or email..."
+        />
 
         {/* Role filter */}
         <Select value={role} onValueChange={onRoleChange}>

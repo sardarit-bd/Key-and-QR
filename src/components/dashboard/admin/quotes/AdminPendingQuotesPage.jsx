@@ -4,12 +4,10 @@ import { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Clock, CheckCircle, XCircle, Eye, Trash2 } from 'lucide-react';
 import Card from '@/components/dashboard/user/dashboard/Card';
-import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import { useAdminPendingQuotes, useAdminQuoteActions } from '@/hooks/dashboard/useAdminQuotes';
 import ConfirmDialog from '../shared/ConfirmDialog';
 import Pagination from '@/components/ui/Pagination';
-import { Input } from '@/components/ui/input';
-import { Search } from 'lucide-react';
+import AdminSearchInput from '@/components/dashboard/admin/common/AdminSearchInput';
 import {
   Select,
   SelectContent,
@@ -58,7 +56,6 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState(defaultStatus || 'all');
   const [page, setPage] = useState(1);
-  const debouncedSearch = useDebounce(search, 300);
 
   const [viewQuote, setViewQuote] = useState(null);
   const [reviewQuote, setReviewQuote] = useState(null);
@@ -67,7 +64,7 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
   const [deleteId, setDeleteId] = useState(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const filters = { search: debouncedSearch, status, page, limit: ITEMS_PER_PAGE };
+  const filters = { search, status, page, limit: ITEMS_PER_PAGE };
   const { data, isLoading, isError, error, refetch } = useAdminPendingQuotes(filters);
   const { approveQuote, rejectQuote, deletePendingQuote } = useAdminQuoteActions();
 
@@ -155,10 +152,12 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
       </motion.div>
 
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative flex-1">
-          <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-foreground-tertiary pointer-events-none" />
-          <Input value={search} onChange={(e) => handleSearchChange(e.target.value)} placeholder="Search by text or user..." className="pl-9 h-9 text-sm" />
-        </div>
+        <AdminSearchInput
+          value={search}
+          onChange={handleSearchChange}
+          placeholder="Search by text or user..."
+          isLoading={isLoading}
+        />
         <Select value={status} onValueChange={handleStatusChange}>
           <SelectTrigger className="w-full sm:w-40 h-9">
             <SelectValue placeholder="Status" />
