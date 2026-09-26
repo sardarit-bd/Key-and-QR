@@ -147,7 +147,32 @@ export default function DashboardHome({
     };
   }, []);
 
+  const isSubscriber = useMemo(() => {
+    return Boolean(
+      subscription?.isPremium ||
+      subscription?.plan === 'subscriber' ||
+      subscription?.status === 'active' ||
+      dailyUsage?.plan === 'subscriber' ||
+      user?.isPremium === true ||
+      user?.plan === 'subscriber' ||
+      user?.role === 'admin' ||
+      user?.role === 'moderator'
+    );
+  }, [subscription, dailyUsage, user]);
+
   const handleSelectCategory = useCallback((category) => {
+    const isExclusive = Boolean(
+      category?.isSubscriberOnly ||
+      category?.isPremium ||
+      category?.isExclusive ||
+      category?.tier === 'premium'
+    );
+
+    if (isExclusive && !isSubscriber) {
+      router.push('/dashboard/user/premium');
+      return;
+    }
+
     // Pre-flight daily limit check — prevents the overlay from opening only
     // to flash-close instantly when the backend returns 429.
     if (dailyUsage?.isLimitReached) {
@@ -360,6 +385,7 @@ export default function DashboardHome({
         categories={categories}
         onSelectCategory={handleSelectCategory}
         disabled={receiveQuote.isPending}
+        isSubscriber={isSubscriber}
       />
 
 
