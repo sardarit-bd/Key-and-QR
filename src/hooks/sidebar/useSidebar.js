@@ -67,7 +67,7 @@ export const useSidebar = () => {
       name: user?.name || 'User',
       email: user?.email || '',
       initials: getUserInitials(user?.name),
-      avatar: user?.profileImage || null,
+      avatar: (typeof user?.profileImage === 'string' ? user.profileImage : user?.profileImage?.url) || null,
       memberSince: formatMemberSince(user?.createdAt),
       plan: userPlan,
       subscriptionLabel: subscriptionDisplay.label,

@@ -26,10 +26,10 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import Link from 'next/link';
-import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import { useAdminQuotes, useAdminQuoteActions } from '@/hooks/dashboard/useAdminQuotes';
 import { useQuoteAssignments } from '@/hooks/dashboard/useAdminQuoteAssignment';
 import ConfirmDialog from '../shared/ConfirmDialog';
+import AdminSearchInput from '@/components/dashboard/admin/common/AdminSearchInput';
 import AssignQuoteModal from './AssignQuoteModal';
 import QuoteDetailsModal from './QuoteDetailsModal';
 import {
@@ -179,7 +179,6 @@ export default function AdminQuotesPage() {
   const [assignmentFilter, setAssignmentFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [limit, setLimit] = useState(10);
-  const debouncedSearch = useDebounce(search, 300);
 
   // Modals state
   const [selectedQuoteForAssign, setSelectedQuoteForAssign] = useState(null);
@@ -190,7 +189,7 @@ export default function AdminQuotesPage() {
   // Queries
   const { data: quoteCategories = [] } = useQuoteCategories();
 
-  const filters = { search: debouncedSearch, category, isActive, page, limit };
+  const filters = { search, category, isActive, page, limit };
   const { data, isLoading, isError, error, refetch } = useAdminQuotes(filters);
   const { toggleQuoteActive, deleteQuote } = useAdminQuoteActions();
 
@@ -340,14 +339,13 @@ export default function AdminQuotesPage() {
       <div className="bg-card border border-border/80 rounded-2xl p-3.5 sm:p-4 shadow-2xs space-y-3">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
           {/* Search Input */}
-          <div className="lg:col-span-6 relative">
-            <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-foreground-secondary/70" />
-            <input
-              type="text"
+          <div className="lg:col-span-6">
+            <AdminSearchInput
               value={search}
-              onChange={(e) => handleSearchChange(e.target.value)}
+              onChange={handleSearchChange}
               placeholder="Search quotes by text, author or category..."
-              className="w-full pl-10 pr-4 py-2 text-xs sm:text-sm rounded-xl border border-border bg-background text-foreground placeholder:text-foreground-secondary/60 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-colors"
+              className="w-full min-w-0"
+              isLoading={isLoading}
             />
           </div>
 

@@ -165,11 +165,10 @@ export default function InspirationStreak({ streak }) {
                     {day}
                   </span>
                   <div
-                    className={`w-8 h-8 sm:w-9.5 sm:h-9.5 rounded-full flex items-center justify-center border transition-all duration-200 select-none ${
-                      active
-                        ? 'bg-rose-500/15 border-rose-500/40 text-rose-500 dark:bg-rose-500/25 dark:text-rose-400 dark:border-rose-500/50 shadow-2xs'
-                        : 'bg-card border-border/80 text-transparent dark:bg-muted/10'
-                    }`}
+                    className={`w-8 h-8 sm:w-9.5 sm:h-9.5 rounded-full flex items-center justify-center border transition-all duration-200 select-none ${active
+                      ? 'bg-rose-500/15 border-rose-500/40 text-rose-500 dark:bg-rose-500/25 dark:text-rose-400 dark:border-rose-500/50 shadow-2xs'
+                      : 'bg-card border-border/80 text-transparent dark:bg-muted/10'
+                      }`}
                   >
                     {active && <Check size={15} strokeWidth={2.5} />}
                   </div>

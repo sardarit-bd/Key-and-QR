@@ -85,7 +85,7 @@ export default function TagBatchGenerateDialog({ open, onOpenChange, onSave, isL
           {error && <p className="text-[11px] text-destructive font-medium">{error}</p>}
         </div>
 
-        <DialogFooter className="gap-2 sm:gap-0">
+        <DialogFooter className="w-full flex items-center justify-end gap-3 pt-4 border-t border-white/10">
           <Button
             type="button"
             variant="outline"

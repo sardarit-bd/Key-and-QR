@@ -7,7 +7,6 @@ import { motion } from 'framer-motion';
 import { QrCode, Layers, Plus } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import Card from '@/components/dashboard/user/dashboard/Card';
-import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import {
   useAdminTags,
   useAdminTagStats,
@@ -28,9 +27,9 @@ import Pagination from '@/components/ui/Pagination';
 const ITEMS_PER_PAGE = 10;
 
 // Map frontend filter names to backend query params
-function mapFilters({ debouncedSearch, status, page, limit }) {
+function mapFilters({ search, status, page, limit }) {
   const filters = { page, limit };
-  if (debouncedSearch) filters.search = debouncedSearch;
+  if (search) filters.search = search;
   if (status && status !== 'all') filters.status = status;
   return filters;
 }
@@ -40,7 +39,6 @@ export default function AdminTagsPage() {
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [page, setPage] = useState(1);
-  const debouncedSearch = useDebounce(search, 300);
 
   // Dialogs
   const [qrTag, setQrTag] = useState(null);
@@ -65,7 +63,7 @@ export default function AdminTagsPage() {
   const [toggleOpen, setToggleOpen] = useState(false);
 
   // Data
-  const filters = mapFilters({ debouncedSearch, status, page, limit: ITEMS_PER_PAGE });
+  const filters = mapFilters({ search, status, page, limit: ITEMS_PER_PAGE });
   const { data, isLoading, isError, error, refetch } = useAdminTags(filters);
   const { data: statsData } = useAdminTagStats();
   const { createTag, updateTag, bulkGenerateTags, deleteTag: deleteTagMutation } = useAdminTagActions();

@@ -541,7 +541,7 @@ export default function ProductEditDialog({
           </div>
         </div>
 
-        <DialogFooter className="mt-4 border-t border-border/40 pt-4 flex gap-2 justify-end">
+        <DialogFooter className="w-full flex items-center justify-end gap-3 pt-4 border-t border-white/10">
           <Button
             type="button"
             variant="outline"

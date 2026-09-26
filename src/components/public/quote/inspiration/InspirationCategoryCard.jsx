@@ -1,7 +1,7 @@
 'use client';
 
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Sparkles } from 'lucide-react';
 import Link from 'next/link';
 import { getCategoryIcon, getCategoryLabel } from '@/components/public/quote/category';
 
@@ -73,8 +73,14 @@ export default function InspirationCategoryCard({ category, index = 0 }) {
   const slug = category?.slug || category?.name?.toLowerCase() || '';
   const label = category?.name || getCategoryLabel(slug);
   const IconComponent = getCategoryIcon(slug);
-  const quoteCount = typeof category?.quoteCount === 'number' ? category.quoteCount : null;
   const theme = getCategoryTheme(slug, category?.color);
+
+  const isExclusive = Boolean(
+    category?.isSubscriberOnly ||
+    category?.isPremium ||
+    category?.isExclusive ||
+    category?.tier === "premium"
+  );
 
   return (
     <motion.div
@@ -86,24 +92,27 @@ export default function InspirationCategoryCard({ category, index = 0 }) {
         ease: [0.22, 1, 0.36, 1],
       }}
       whileHover={!reduceMotion ? { y: -4, transition: { duration: 0.2 } } : undefined}
-      className="group relative flex flex-col justify-between w-full rounded-3xl border border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/50 backdrop-blur-md p-4.5 sm:p-5 md:p-6 transition-all duration-300 shadow-sm hover:shadow-xl hover:border-primary/40 dark:hover:border-primary/40 overflow-hidden cursor-pointer"
+      className={`group relative flex flex-col justify-between w-full rounded-3xl border border-gray-100 dark:border-gray-800 bg-white/70 dark:bg-gray-900/50 backdrop-blur-md p-4.5 sm:p-5 md:p-6 transition-all duration-300 shadow-sm hover:shadow-xl hover:border-primary/40 dark:hover:border-primary/40 cursor-pointer ${isExclusive ? 'pt-7 sm:pt-8' : ''}`}
     >
-      {/* Background soft ambient glow */}
-      <div
-        className="pointer-events-none absolute -right-8 -top-8 h-24 w-24 sm:h-28 sm:w-28 rounded-full blur-2xl opacity-15 group-hover:opacity-30 transition-opacity duration-300"
-        style={{ backgroundColor: theme.accentColor }}
-      />
+      {/* MyInspireTag+ Subscriber Exclusive Luxury Pill */}
+      {isExclusive && (
+        <div className="absolute top-2.5 sm:top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
+          <span className="px-3 py-1 rounded-full flex items-center justify-center gap-1.5 shadow-sm bg-[#FDE8C7] text-[#9A6218] border border-[#F3CD87] dark:bg-[#2D2312] dark:text-[#F3CD87] dark:border-[#F3CD87]/40 dark:shadow-[0_2px_10px_rgba(243,205,135,0.15)] transition-all">
+            <Sparkles className="w-3 h-3 text-[#9A6218] dark:text-[#F3CD87] shrink-0" />
+            <span className="text-[11px] font-semibold tracking-tight whitespace-nowrap">MyInspireTag+</span>
+          </span>
+        </div>
+      )}
+
+      {/* Background soft ambient glow (contained) */}
+      <div className="pointer-events-none absolute inset-0 rounded-3xl overflow-hidden">
+        <div
+          className="absolute -right-8 -top-8 h-24 w-24 sm:h-28 sm:w-28 rounded-full blur-2xl opacity-15 group-hover:opacity-30 transition-opacity duration-300"
+          style={{ backgroundColor: theme.accentColor }}
+        />
+      </div>
 
       <div className="space-y-4">
-        {/* Top Header: Badge if quoteCount is available */}
-        {quoteCount !== null && (
-          <div className="flex items-center justify-end">
-            <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold tracking-tight whitespace-nowrap shadow-2xs ${theme.pillBg}`}>
-              {quoteCount} {quoteCount === 1 ? 'Quote' : 'Quotes'}
-            </span>
-          </div>
-        )}
-
         {/* Main Content Area: Perfectly Aligned Icon & Category Name */}
         <div className="flex items-center gap-3.5 sm:gap-4">
           <div

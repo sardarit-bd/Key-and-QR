@@ -5,18 +5,20 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { ChevronDown, Search } from 'lucide-react';
+import { useDebounce } from '@/hooks/useDebounce';
 import { SHAPE_REGISTRY, SHAPE_CATEGORIES } from './shapeRegistry';
 
 export default function ShapePicker({ value, onChange }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 250);
 
   const selectedShape = useMemo(() => {
     return SHAPE_REGISTRY.find((s) => s.id === value) || SHAPE_REGISTRY[0];
   }, [value]);
 
   const categoriesData = useMemo(() => {
-    const query = search.toLowerCase().trim();
+    const query = debouncedSearch.toLowerCase().trim();
     
     // Group all shapes by category
     const categoriesMap = {};

@@ -290,7 +290,7 @@ export default function EditorHeader() {
               You have unsaved changes to this quote. Are you sure you want to leave without saving?
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 pt-3">
+          <DialogFooter className="w-full flex items-center justify-end gap-3 pt-4 border-t border-white/10">
             <Button
               type="button"
               variant="outline"

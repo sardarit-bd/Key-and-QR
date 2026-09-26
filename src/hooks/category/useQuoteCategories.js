@@ -29,7 +29,7 @@ export function useQuoteCategories(params = {}) {
  * Get explore quotes for public inspiration browsing
  * GET /quotes/explore
  */
-export function useExploreQuotes({ category, search, sort, page = 1, limit = 12 } = {}) {
+export function useExploreQuotes({ category, search, sort, page = 1, limit = 12, enabled = true } = {}) {
   return useQuery({
     queryKey: quoteCategoryKeys.explore({ category, search, sort, page, limit }),
     queryFn: () =>
@@ -40,6 +40,7 @@ export function useExploreQuotes({ category, search, sort, page = 1, limit = 12 
         page,
         limit,
       }),
+    enabled,
     staleTime: 5 * 60 * 1000,
     gcTime: 15 * 60 * 1000,
     retry: 2,

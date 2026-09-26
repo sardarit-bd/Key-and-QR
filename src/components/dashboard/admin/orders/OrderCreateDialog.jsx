@@ -261,7 +261,7 @@ export default function OrderCreateDialog({ open, onOpenChange, onSave, isLoadin
               {error && <p className="text-xs text-destructive font-medium">{error}</p>}
             </div>
 
-            <DialogFooter className="mt-6 border-t border-border/40 pt-4 flex gap-2 justify-end">
+            <DialogFooter className="w-full flex items-center justify-end gap-3 pt-4 border-t border-white/10">
               <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading} className="h-10 px-4 rounded-lg cursor-pointer">
                 Cancel
               </Button>

@@ -109,6 +109,8 @@ export default function ScanHistoryPage() {
             onCategoryChange={setCategory}
             onSortChange={setSort}
             onReset={resetFilters}
+            totalItems={pagination?.total}
+            isLoading={loading}
           />
         </div>
 

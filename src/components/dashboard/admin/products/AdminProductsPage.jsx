@@ -6,7 +6,6 @@ import { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { Package, Plus, Trash2, ArrowLeft } from 'lucide-react';
 import Card from '@/components/dashboard/user/dashboard/Card';
-import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import {
   useAdminProducts,
   useAdminProductCategories,
@@ -30,7 +29,6 @@ export default function AdminProductsPage() {
   const [sort, setSort] = useState('newest');
   const [page, setPage] = useState(1);
   const [isTrashView, setIsTrashView] = useState(false);
-  const debouncedSearch = useDebounce(search, 300);
 
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [createOpen, setCreateOpen] = useState(false);
@@ -48,7 +46,7 @@ export default function AdminProductsPage() {
   const { data, isLoading, isError, error, refetch } = useAdminProducts({
     page,
     limit: ITEMS_PER_PAGE,
-    search: debouncedSearch,
+    search: search ? search : undefined,
     category: category !== 'all' ? category : undefined,
     status: isTrashView ? 'trash' : status,
     isTrash: isTrashView,
@@ -68,7 +66,11 @@ export default function AdminProductsPage() {
   const products = data?.data || [];
   const meta = data?.meta || { page: 1, totalPage: 0, total: 0 };
 
-  const handleSearchChange = useCallback((v) => { setSearch(v); setPage(1); }, []);
+  const handleSearchChange = useCallback((v) => {
+    const query = typeof v === 'string' ? v : v?.target?.value ?? '';
+    setSearch(query);
+    setPage(1);
+  }, []);
   const handleCategoryChange = useCallback((v) => { setCategory(v); setPage(1); }, []);
   const handleStatusChange = useCallback((v) => { setStatus(v); setPage(1); }, []);
   const handleSortChange = useCallback((v) => { setSort(v); setPage(1); }, []);
@@ -293,6 +295,7 @@ export default function AdminProductsPage() {
         onSortChange={handleSortChange}
         totalItems={meta.total}
         viewTrash={isTrashView}
+        isLoading={isLoading}
       />
 
       {/* No results */}
