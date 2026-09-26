@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Pagination from '@/components/ui/Pagination';
-import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
+import DataTableToolbar from '@/components/common/table/DataTableToolbar';
 
 const ORDERS_PER_PAGE = 10;
 
@@ -80,15 +80,13 @@ export default function OrdersPage() {
   const [page, setPage] = useState(1);
   const [detailId, setDetailId] = useState(null);
 
-  const debouncedSearch = useDebounce(search, 400);
-
-  useEffect(() => { setPage(1); }, [debouncedSearch, status, sort]);
+  useEffect(() => { setPage(1); }, [search, status, sort]);
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['user-orders', { page, limit: ORDERS_PER_PAGE, search: debouncedSearch, status, sort }],
+    queryKey: ['user-orders', { page, limit: ORDERS_PER_PAGE, search, status, sort }],
     queryFn: async () => {
       const params = { page, limit: ORDERS_PER_PAGE };
-      if (debouncedSearch) params.search = debouncedSearch;
+      if (search) params.search = search;
       if (status !== 'all') params.status = status;
       if (sort !== 'newest') params.sort = sort;
       const res = await api.get('/orders', { params });
@@ -161,42 +159,42 @@ export default function OrdersPage() {
         <div className="mt-6"><OrdersStats stats={stats} /></div>
 
         {/* Status tabs + filters */}
-        <div className="mt-6">
-          <div className="flex flex-col gap-4">
-            <div className="flex flex-wrap gap-2">
-              {STATUS_TABS.map((tab) => (
-                <button key={tab.id} onClick={() => setStatus(tab.id)}
-                  className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[13px] font-medium transition-all duration-300 cursor-pointer active:scale-95 ${
-                    status === tab.id
-                      ? 'border-accent/50 bg-gradient-to-r from-accent/20 to-accent/10 text-accent shadow-[0_0_20px_-4px_rgba(253,182,92,0.35)] dark:text-amber-200'
-                      : 'border-white/8 bg-background-secondary/40 text-foreground-secondary hover:-translate-y-0.5 hover:border-accent/30 hover:text-foreground light:border-[#E8DFCE]/70 light:bg-white/60'
-                  }`}>
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-
-            <div className="flex flex-col sm:flex-row gap-3">
-              <div className={`relative w-full sm:w-72 ${CONTROL_CLASS}`}>
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground-tertiary" />
-                <Input type="text" placeholder="Search by order ID or item..." value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  className="h-full w-full border-0 bg-transparent pl-11 pr-4 text-sm text-foreground placeholder:text-foreground-tertiary focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none" />
-              </div>
-              <Select value={sort} onValueChange={setSort}>
-                <SelectTrigger className={`w-full sm:w-40 ${CONTROL_CLASS} bg-transparent text-foreground-secondary`}><SelectValue placeholder="Sort" /></SelectTrigger>
-                <SelectContent className="rounded-xl border border-white/6 bg-popover text-foreground shadow-xl backdrop-blur-xl light:border-[#E8DFCE]/80">
-                  {SORT_OPTIONS.map((s) => <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>)}
-                </SelectContent>
-              </Select>
-              {hasActiveFilters && (
-                <Button variant="ghost" size="sm" onClick={handleReset}
-                  className="h-11 cursor-pointer gap-1.5 rounded-xl px-3.5 text-foreground-tertiary hover:bg-background-secondary/70 hover:text-foreground transition-all duration-300">
-                  <X className="h-4 w-4" /> Reset
-                </Button>
-              )}
-            </div>
+        <div className="mt-6 flex flex-col gap-4">
+          <div className="flex flex-wrap gap-2">
+            {STATUS_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setStatus(tab.id)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[13px] font-medium transition-all duration-300 cursor-pointer active:scale-95 ${
+                  status === tab.id
+                    ? 'border-accent/50 bg-gradient-to-r from-accent/20 to-accent/10 text-accent shadow-[0_0_20px_-4px_rgba(253,182,92,0.35)] dark:text-amber-200'
+                    : 'border-white/8 bg-background-secondary/40 text-foreground-secondary hover:-translate-y-0.5 hover:border-accent/30 hover:text-foreground light:border-[#E8DFCE]/70 light:bg-white/60'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
           </div>
+
+          <DataTableToolbar
+            variant="user"
+            search={{
+              value: search,
+              onChange: setSearch,
+              placeholder: 'Search by order ID or item...',
+              isLoading,
+            }}
+            sort={{
+              value: sort,
+              onChange: setSort,
+              placeholder: 'Sort',
+              options: SORT_OPTIONS,
+            }}
+            hasActiveFilters={hasActiveFilters}
+            onReset={handleReset}
+            resetLabel="Reset"
+            summary={{ total: meta.total, label: 'orders' }}
+          />
         </div>
 
         {/* Orders table / cards */}
