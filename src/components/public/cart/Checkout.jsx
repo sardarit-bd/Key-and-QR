@@ -14,6 +14,7 @@ import {
 import CheckoutSkeleton from "@/components/ui/skeletons/CheckoutSkeleton";
 import { CHECKOUT_CONFIG, formatPrice, getCountryName } from "@/config/checkout.config";
 import { validateCheckoutForm } from "@/lib/validators/checkout.validator";
+import { cn } from "@/lib/utils";
 import { ChevronDown, ShieldCheck, Lock, CreditCard, Gift, Sparkles, AlertCircle } from "lucide-react";
 import CountryCombobox from "@/components/ui/CountryCombobox";
 import Link from "next/link";
