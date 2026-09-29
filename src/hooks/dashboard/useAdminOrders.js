@@ -113,5 +113,34 @@ export function useAdminOrderActions() {
     onSettled: invalidate,
   });
 
-  return { updateFulfillmentStatus, cancelOrder, deleteOrder, createManualOrder };
+  const approveGiftMessage = useMutation({
+    mutationFn: async ({ orderId }) => {
+      const res = await adminOrdersService.approveGiftMessage(orderId);
+      return res.data;
+    },
+    onSettled: () => {
+      invalidate();
+      queryClient.invalidateQueries({ queryKey: ADMIN_ORDERS_KEYS.detail });
+    },
+  });
+
+  const rejectGiftMessage = useMutation({
+    mutationFn: async ({ orderId }) => {
+      const res = await adminOrdersService.rejectGiftMessage(orderId);
+      return res.data;
+    },
+    onSettled: () => {
+      invalidate();
+      queryClient.invalidateQueries({ queryKey: ADMIN_ORDERS_KEYS.detail });
+    },
+  });
+
+  return {
+    updateFulfillmentStatus,
+    cancelOrder,
+    deleteOrder,
+    createManualOrder,
+    approveGiftMessage,
+    rejectGiftMessage,
+  };
 }

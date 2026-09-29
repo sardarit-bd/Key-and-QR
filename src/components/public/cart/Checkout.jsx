@@ -14,7 +14,7 @@ import {
 import CheckoutSkeleton from "@/components/ui/skeletons/CheckoutSkeleton";
 import { CHECKOUT_CONFIG, formatPrice, getCountryName } from "@/config/checkout.config";
 import { validateCheckoutForm } from "@/lib/validators/checkout.validator";
-import { ChevronDown, ShieldCheck, Lock, CreditCard, Gift } from "lucide-react";
+import { ChevronDown, ShieldCheck, Lock, CreditCard, Gift, Sparkles, AlertCircle } from "lucide-react";
 import CountryCombobox from "@/components/ui/CountryCombobox";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -67,18 +67,25 @@ export default function Checkout() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [isRedirecting, setIsRedirecting] = useState(false);
     const [fieldErrors, setFieldErrors] = useState({});
+    const [checkoutError, setCheckoutError] = useState(null);
 
-    const [formData, setFormData] = useState({
-        email: "",
-        fullName: "",
-        phone: "",
-        address: "",
-        city: "",
-        state: "",
-        postalCode: "",
-        country: CHECKOUT_CONFIG.defaults.country,
-        purchaseType: CHECKOUT_CONFIG.defaults.purchaseType,
-        giftMessage: "",
+    const [formData, setFormData] = useState(() => {
+        const initialCart = typeof window !== "undefined" ? (useCartStore.getState().cart || []) : [];
+        const giftItem = initialCart.find(
+            (item) => item.purchaseType === "gift" || Boolean(item.giftMessage)
+        );
+        return {
+            email: "",
+            fullName: "",
+            phone: "",
+            address: "",
+            city: "",
+            state: "",
+            postalCode: "",
+            country: CHECKOUT_CONFIG.defaults.country,
+            purchaseType: giftItem ? "gift" : CHECKOUT_CONFIG.defaults.purchaseType,
+            giftMessage: giftItem?.giftMessage || "",
+        };
     });
 
     // Get checkout items from cart
@@ -152,6 +159,27 @@ export default function Checkout() {
         fetchOrder();
     }, [orderId]);
 
+    // Pre-populate gift status and message from cart items if user configured it on product page
+    useEffect(() => {
+        if (!orderId && checkoutItems.length > 0) {
+            const giftItem = checkoutItems.find(
+                (item) => item.purchaseType === "gift" || Boolean(item.giftMessage)
+            );
+            if (giftItem) {
+                setFormData((prev) => {
+                    if (prev.purchaseType === "gift" && prev.giftMessage === (giftItem.giftMessage || "")) {
+                        return prev;
+                    }
+                    return {
+                        ...prev,
+                        purchaseType: "gift",
+                        giftMessage: prev.giftMessage || giftItem.giftMessage || "",
+                    };
+                });
+            }
+        }
+    }, [orderId, checkoutItems]);
+
     // Calculate totals
     const subtotal = checkoutItems.reduce((sum, item) => sum + (item.price * (item.qty || 1)), 0);
     const shippingCost = CHECKOUT_CONFIG.shipping.cost;
@@ -189,14 +217,19 @@ export default function Checkout() {
 
         const cartItems = getCheckoutItems();
 
+        // Determine if this order or any item is a gift, and resolve unified message
+        const isGiftOrder =
+            formData.purchaseType === "gift" || cartItems.some((item) => item.purchaseType === "gift");
+        const resolvedGiftMessage = isGiftOrder
+            ? (formData.giftMessage?.trim() || cartItems.find((item) => item.giftMessage)?.giftMessage?.trim() || null)
+            : null;
+
         // Convert to backend expected format
         const items = cartItems.map(item => ({
             product: item.productId,
             quantity: item.quantity || 1,
-            purchaseType: item.purchaseType || formData.purchaseType || "self",
-            giftMessage: (item.purchaseType || formData.purchaseType) === "gift"
-                ? item.giftMessage || formData.giftMessage || null
-                : null,
+            purchaseType: isGiftOrder ? "gift" : (item.purchaseType || "self"),
+            giftMessage: isGiftOrder ? (resolvedGiftMessage || item.giftMessage || null) : null,
         }));
 
         return {
@@ -204,8 +237,8 @@ export default function Checkout() {
             // Legacy support for single product
             productId: items.length === 1 ? items[0].product : undefined,
             quantity: items.length === 1 ? items[0].quantity : undefined,
-            purchaseType: formData.purchaseType,
-            giftMessage: formData.purchaseType === "gift" ? formData.giftMessage || null : null,
+            purchaseType: isGiftOrder ? "gift" : "self",
+            giftMessage: isGiftOrder ? resolvedGiftMessage : null,
             fullName: formData.fullName,
             email: formData.email,
             phone: formData.phone,
@@ -239,8 +272,9 @@ export default function Checkout() {
             return;
         }
 
-        // Clear field errors
+        // Clear field and checkout errors
         setFieldErrors({});
+        setCheckoutError(null);
 
         setIsSubmitting(true);
         setLoading(true);
@@ -274,10 +308,15 @@ export default function Checkout() {
             let errorMessage = "Something went wrong. Please try again.";
             if (error.response?.data?.message) {
                 errorMessage = error.response.data.message;
+            } else if (error.response?.data?.error) {
+                errorMessage = typeof error.response.data.error === "string" 
+                    ? error.response.data.error 
+                    : JSON.stringify(error.response.data.error);
             } else if (error.message) {
                 errorMessage = error.message;
             }
 
+            setCheckoutError(errorMessage);
             toast.error(errorMessage);
             setIsRedirecting(false);
         } finally {
@@ -544,8 +583,8 @@ export default function Checkout() {
                             </div>
                         </div>
 
-                        {/* Purchase Type - Only for single item or new orders */}
-                        {!orderId && checkoutItems.length <= 1 && (
+                        {/* Purchase Type & Gift Information */}
+                        {!orderId && (
                             <div className="rounded-2xl border border-[#EDE4D0]/80 bg-white p-5 sm:p-6 shadow-[0_2px_12px_-4px_rgb(60_45_15/0.06)]">
                                 <h2 className="mb-5 flex items-center gap-2 text-base font-bold tracking-tight text-[#2E2A24]">
                                     <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#2E2A24] text-[13px] font-bold text-white">3</span>
@@ -555,9 +594,10 @@ export default function Checkout() {
                                 <div className="space-y-4">
                                     <Field label="Purchase Type" htmlFor="purchaseType">
                                         <Select
-                                            value={formData.purchaseType}
+                                            key={`purchaseType-${formData.purchaseType || "self"}`}
+                                            value={formData.purchaseType || "self"}
                                             onValueChange={(val) => {
-                                                setFormData({ ...formData, purchaseType: val });
+                                                setFormData(prev => ({ ...prev, purchaseType: val }));
                                                 if (fieldErrors.purchaseType) {
                                                     setFieldErrors(prev => ({ ...prev, purchaseType: undefined }));
                                                 }
@@ -583,12 +623,33 @@ export default function Checkout() {
                                             initial={reduceMotion ? false : { opacity: 0, height: 0 }}
                                             animate={{ opacity: 1, height: 'auto' }}
                                             transition={{ duration: 0.25, ease: 'easeOut' }}
-                                            className="overflow-hidden"
+                                            className="overflow-hidden space-y-3"
                                         >
+                                            {/* Unified Personal Gift Message Card */}
+                                            {formData.giftMessage && (
+                                                <div className="rounded-xl border border-[#C6922D]/30 bg-[#FDF8EE] p-3.5 text-[#2E2A24] space-y-1.5">
+                                                    <div className="flex items-center justify-between">
+                                                        <span className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#A6782B]">
+                                                            <Sparkles size={13} className="text-[#C6922D]" />
+                                                            Personal Gift Message (Synced from item)
+                                                        </span>
+                                                        <span className="text-[11px] font-medium text-[#8A7A5C]">
+                                                            Included with tag
+                                                        </span>
+                                                    </div>
+                                                    <div className="relative rounded-lg bg-white/90 p-2.5 border border-[#EDE4D0] italic text-xs text-[#2E2A24] leading-relaxed">
+                                                        &ldquo;{formData.giftMessage}&rdquo;
+                                                    </div>
+                                                    <p className="text-[11.5px] text-[#8A7A5C]">
+                                                        Your dedication is synced from your selection. You can refine or edit it below before checkout.
+                                                    </p>
+                                                </div>
+                                            )}
+
                                             <Field label="Gift Message" htmlFor="giftMessage" error={fieldErrors.giftMessage}>
                                                 <textarea
                                                     id="giftMessage"
-                                                    placeholder="Write your gift message here..."
+                                                    placeholder="Write something heartfelt and meaningful to be read upon scanning..."
                                                     value={formData.giftMessage}
                                                     onChange={(e) => {
                                                         setFormData({ ...formData, giftMessage: e.target.value });
@@ -597,11 +658,28 @@ export default function Checkout() {
                                                             setFieldErrors(prev => ({ ...prev, giftMessage: errors.giftMessage }));
                                                         }
                                                     }}
-                                                    rows={4}
-                                                    className={`${inputClass(fieldErrors.giftMessage)} resize-none`}
+                                                    rows={5}
+                                                    maxLength={500}
+                                                    className={`min-h-[120px] w-full resize-none rounded-xl border bg-white p-3.5 text-sm text-[#2E2A24] leading-relaxed placeholder:text-[#A99B7F] transition-all duration-200 focus:outline-none ${
+                                                        fieldErrors.giftMessage
+                                                            ? "border-red-400 focus:border-red-500 focus:ring-2 focus:ring-red-500/15"
+                                                            : "border-[#E5DCC8] hover:border-[#C6922D]/40 focus:border-[#C6922D] focus:ring-3 focus:ring-[#C6922D]/15"
+                                                    }`}
                                                     disabled={isSubmitting || loading || isRedirecting}
                                                     aria-label="Gift message"
                                                 />
+                                                <div className="mt-2 flex items-center justify-between text-xs">
+                                                    <span className="text-[#8A7A5C] text-[12px] flex items-center gap-1.5">
+                                                        <span>✨</span>
+                                                        <span>Write a heartfelt message to be linked to this physical tag and delivered on first scan.</span>
+                                                    </span>
+                                                    <span className={cn(
+                                                        "font-medium tabular-nums shrink-0 ml-3 text-[11.5px] px-2 py-0.5 rounded-md",
+                                                        (formData.giftMessage?.length || 0) === 0 ? "text-[#A99B7F] bg-[#F5EDDC]/50" : (formData.giftMessage?.length || 0) >= 450 ? "text-[#A6782B] bg-[#FCE8CB]" : "text-[#7A6A4E] bg-[#F5EDDC]"
+                                                    )}>
+                                                        {formData.giftMessage?.length || 0}/500
+                                                    </span>
+                                                </div>
                                             </Field>
                                         </motion.div>
                                     )}
@@ -620,6 +698,32 @@ export default function Checkout() {
                                     </p>
                                 </div>
                             </div>
+                        )}
+
+                        {/* Inline Error Alert Banner */}
+                        {checkoutError && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.2 }}
+                                className="rounded-xl border border-red-200 bg-red-50/90 p-4 text-sm text-red-700 flex items-start gap-3 shadow-sm"
+                                role="alert"
+                            >
+                                <AlertCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                                <div className="flex-1 min-w-0">
+                                    <h4 className="font-semibold text-red-800 text-[13.5px]">Unable to process order</h4>
+                                    <p className="mt-0.5 text-xs text-red-600 leading-relaxed break-words">{checkoutError}</p>
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setCheckoutError(null)}
+                                    className="text-red-400 hover:text-red-600 cursor-pointer text-sm p-1 rounded-md transition-colors"
+                                    aria-label="Dismiss error"
+                                >
+                                    ✕
+                                </button>
+                            </motion.div>
                         )}
 
                         {/* Submit Button */}

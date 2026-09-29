@@ -66,6 +66,18 @@ export const adminOrdersService = {
     const response = await api.post('/orders/admin/manual-order', payload);
     return response.data;
   },
+
+  /** Approve gift message */
+  approveGiftMessage: async (orderId) => {
+    const response = await api.put(`/orders/${orderId}/approve-gift-message`);
+    return response.data;
+  },
+
+  /** Reject gift message */
+  rejectGiftMessage: async (orderId) => {
+    const response = await api.put(`/orders/${orderId}/reject-gift-message`);
+    return response.data;
+  },
 };
 
 export default adminOrdersService;
