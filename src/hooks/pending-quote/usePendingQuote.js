@@ -79,7 +79,8 @@ export function useSubmitQuoteMutation() {
         // Surface the machine-readable cooldown error (SUBMISSION_COOLDOWN_ACTIVE)
         // with the next-allowed timestamp so the UI can start a countdown.
         const error = new Error(result.message || 'Failed to submit quote');
-        error.code = result.error?.code;
+        error.code = result.error?.code || (result.status === 429 ? 'SUBMISSION_COOLDOWN_ACTIVE' : undefined);
+        error.status = result.status;
         error.nextAllowedAt = result.error?.nextAllowedAt;
         error.remainingDays = result.error?.remainingDays;
         throw error;
