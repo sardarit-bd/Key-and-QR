@@ -216,9 +216,11 @@ export default function OrderViewDialog({ open, onOpenChange, order, isLoading =
                         <MessageSquareHeart size={14} />
                         Customer Gift Dedication
                       </div>
-                      <p className="italic text-sm text-foreground leading-relaxed">
-                        &ldquo;{giftMessageText}&rdquo;
-                      </p>
+                      <div className="max-h-40 overflow-y-auto pr-2 [scrollbar-width:thin]">
+                        <p className="italic text-sm text-foreground leading-relaxed break-words whitespace-pre-wrap">
+                          &ldquo;{giftMessageText}&rdquo;
+                        </p>
+                      </div>
                       {currentOrder?.giftMessageReviewedAt && (
                         <p className="text-[10px] text-foreground-tertiary pt-1 border-t border-purple-500/10">
                           Reviewed: {formatDate(currentOrder.giftMessageReviewedAt)}

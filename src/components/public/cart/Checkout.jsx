@@ -637,7 +637,7 @@ export default function Checkout() {
                                                             Included with tag
                                                         </span>
                                                     </div>
-                                                    <div className="relative rounded-lg bg-white/90 p-2.5 border border-[#EDE4D0] italic text-xs text-[#2E2A24] leading-relaxed">
+                                                    <div className="relative rounded-lg bg-white/90 p-2.5 border border-[#EDE4D0] italic text-xs text-[#2E2A24] leading-relaxed max-h-28 overflow-y-auto break-words whitespace-pre-wrap [scrollbar-width:thin]">
                                                         &ldquo;{formData.giftMessage}&rdquo;
                                                     </div>
                                                     <p className="text-[11.5px] text-[#8A7A5C]">

@@ -348,8 +348,10 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
           {viewQuote && (
             <div className="py-2 space-y-4">
               <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
-                <p className="text-base text-foreground italic leading-relaxed">&ldquo;{viewQuote.text}&rdquo;</p>
-                <p className="text-sm text-foreground-tertiary mt-2">— {viewQuote.author || 'InspireTag'}</p>
+                <div className="max-h-44 overflow-y-auto pr-2 [scrollbar-width:thin]">
+                  <p className="text-base text-foreground italic leading-relaxed break-words whitespace-pre-wrap">&ldquo;{viewQuote.text}&rdquo;</p>
+                </div>
+                <p className="text-sm text-foreground-tertiary mt-2 shrink-0">— {viewQuote.author || 'InspireTag'}</p>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -387,8 +389,10 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
           {reviewQuote && (
             <div className="py-2 space-y-4">
               <div className="bg-muted/30 rounded-xl p-4 border border-border/50">
-                <p className="text-sm text-foreground italic">&ldquo;{reviewQuote.text}&rdquo;</p>
-                <p className="text-xs text-foreground-tertiary mt-1">— {reviewQuote.author || 'Anonymous'} · {reviewQuote.category}</p>
+                <div className="max-h-36 overflow-y-auto pr-2 [scrollbar-width:thin]">
+                  <p className="text-sm text-foreground italic break-words whitespace-pre-wrap">&ldquo;{reviewQuote.text}&rdquo;</p>
+                </div>
+                <p className="text-xs text-foreground-tertiary mt-1 shrink-0">— {reviewQuote.author || 'Anonymous'} · {reviewQuote.category}</p>
               </div>
               <div className="space-y-1.5">
                 <label className="block text-xs font-medium text-foreground-secondary">Admin Note (optional)</label>
