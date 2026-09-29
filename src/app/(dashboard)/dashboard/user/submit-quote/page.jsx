@@ -15,7 +15,9 @@ import {
 import {
   useSubmitQuoteMutation,
   useSubmissionStatus,
+  pendingQuoteKeys,
 } from '@/hooks/pending-quote/usePendingQuote';
+import { useQueryClient } from '@tanstack/react-query';
 import { useQuoteCategories } from '@/hooks/category/useQuoteCategories';
 import { useAuthStore } from '@/store/authStore';
 
@@ -37,6 +39,7 @@ export default function SubmitQuotePage() {
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState(null);
 
+  const queryClient = useQueryClient();
   const { isInitialized } = useAuthStore();
   const submitQuote = useSubmitQuoteMutation();
   const { data: quoteCategories = [], isLoading: isCategoriesLoading } = useQuoteCategories();
@@ -82,7 +85,8 @@ export default function SubmitQuotePage() {
     async (e) => {
       e.preventDefault();
       if (!canSubmit) {
-        setError('Your next submission is not available yet.');
+        setError(null);
+        refetchStatus();
         return;
       }
       if (text.trim().length < 3) {
@@ -107,15 +111,31 @@ export default function SubmitQuotePage() {
         setAuthor('');
         setCategory(defaultCategory);
       } catch (err) {
-        // If the backend rejected with the cooldown code, surface it with
-        // the next-allowed timestamp so the UI can start a countdown.
-        if (err?.code === 'SUBMISSION_COOLDOWN_ACTIVE') {
+        // If the backend rejected with the cooldown code or 429, seamlessly
+        // transition to the live cooldown countdown card instead of showing an alert.
+        const isCooldown =
+          err?.code === 'SUBMISSION_COOLDOWN_ACTIVE' ||
+          err?.status === 429 ||
+          err?.message?.toLowerCase().includes('cooldown') ||
+          err?.message?.toLowerCase().includes('hour');
+
+        if (isCooldown) {
+          setError(null);
+          if (err?.nextAllowedAt) {
+            queryClient.setQueryData(pendingQuoteKeys.status(), (prev) => ({
+              ...(prev || {}),
+              canSubmit: false,
+              cooldownEndsAt: err.nextAllowedAt,
+              remainingMs: Math.max(new Date(err.nextAllowedAt).getTime() - Date.now(), 0),
+            }));
+          }
           refetchStatus();
+          return;
         }
         setError(err?.message || 'Failed to submit quote');
       }
     },
-    [text, author, category, submitQuote, defaultCategory, canSubmit, refetchStatus]
+    [text, author, category, submitQuote, defaultCategory, canSubmit, refetchStatus, queryClient]
   );
 
   // Success state — shows the live cooldown countdown; the submission form
@@ -157,7 +177,7 @@ export default function SubmitQuotePage() {
   }
 
   // Cooldown state — show the live countdown instead of the form.
-  if (!canSubmit && cooldownEndsAt) {
+  if (!canSubmit) {
     return (
       <motion.div
         initial={{ opacity: 0 }}

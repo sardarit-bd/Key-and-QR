@@ -6,7 +6,7 @@ import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
-import { Check, Loader2, ShieldBan, ShoppingCart } from "lucide-react";
+import { Check, Loader2, ShieldBan, ShoppingCart, Gift } from "lucide-react";
 import QuantitySelector from "./QuantitySelector";
 import toast from "react-hot-toast";
 
@@ -32,18 +32,12 @@ export const AddToCartSection = ({
     const handleAddToCart = async () => {
         if (!product || product.stock <= 0 || isAdding || isAdmin) return;
 
-        // If the product is already in the cart, never create a duplicate —
-        // update quantity via existing cart logic and inform the user.
-        if (isProductInCart) {
-            toast("This item is already in your cart.", {
-                icon: "🛒",
-                duration: 2500,
-            });
-            return;
-        }
-
         setIsAdding(true);
-        const qtyToAdd = Math.min(quantity, product.stock);
+        const currentCartItem = cart.find((i) => i.id === product._id);
+        const isUpdatingOptions = isProductInCart;
+        const qtyToAdd = isProductInCart
+            ? (currentCartItem?.qty || quantity)
+            : Math.min(quantity, product.stock);
 
         const result = await addToCart({
             id: product._id,
@@ -51,6 +45,7 @@ export const AddToCartSection = ({
             price: product.price,
             img: selectedImage,
             qty: qtyToAdd,
+            replaceQty: isProductInCart,
             stock: product.stock,
             stockQuantity: product.stock,
             purchaseType: selectedOption === "gift" ? "gift" : "self",
@@ -60,14 +55,19 @@ export const AddToCartSection = ({
         setIsAdding(false);
 
         if (result?.success) {
-            toast.success("Added to cart successfully", {
-                duration: 2500,
-                icon: "✓",
-                action: {
-                    label: "Go to Cart",
-                    onClick: () => router.push("/cart"),
-                },
-            });
+            toast.success(
+                isUpdatingOptions
+                    ? "Cart updated with your gift options"
+                    : "Added to cart successfully",
+                {
+                    duration: 2500,
+                    icon: "✓",
+                    action: {
+                        label: "Go to Cart",
+                        onClick: () => router.push("/cart"),
+                    },
+                }
+            );
         } else if (result?.error) {
             toast.error(result.error);
         }
@@ -108,7 +108,7 @@ export const AddToCartSection = ({
                 <Button
                     onClick={handleAddToCart}
                     disabled={isOutOfStock || isAdding}
-                    aria-label={isProductInCart ? "Added to cart" : "Add to cart"}
+                    aria-label={isProductInCart ? (selectedOption === "gift" ? "Update gift in cart" : "In cart - Click to update") : "Add to cart"}
                     className={`flex-1 sm:flex-none h-12 px-7 py-3 rounded-xl text-white transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:hover:translate-y-0 ${
                         isProductInCart
                             ? "bg-[#2E5B3A] hover:bg-[#24502F] shadow-[0_8px_24px_-8px_rgba(46,91,58,0.55)]"
@@ -126,7 +126,7 @@ export const AddToCartSection = ({
                                 className="flex items-center"
                             >
                                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                                Adding...
+                                {isProductInCart ? "Updating..." : "Adding..."}
                             </motion.span>
                         ) : isProductInCart ? (
                             <motion.span
@@ -136,15 +136,24 @@ export const AddToCartSection = ({
                                 transition={{ type: "spring", stiffness: 400, damping: 18 }}
                                 className="flex items-center"
                             >
-                                <motion.span
-                                    initial={{ scale: 0, rotate: -90 }}
-                                    animate={{ scale: 1, rotate: 0 }}
-                                    transition={{ type: "spring", stiffness: 500, damping: 20, delay: 0.05 }}
-                                    className="mr-2 flex h-5 w-5 items-center justify-center rounded-full bg-white/20"
-                                >
-                                    <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
-                                </motion.span>
-                                Added to Cart
+                                {selectedOption === "gift" ? (
+                                    <>
+                                        <Gift className="mr-2 h-4 w-4 text-[#C6922D]" />
+                                        Update Gift in Cart
+                                    </>
+                                ) : (
+                                    <>
+                                        <motion.span
+                                            initial={{ scale: 0, rotate: -90 }}
+                                            animate={{ scale: 1, rotate: 0 }}
+                                            transition={{ type: "spring", stiffness: 500, damping: 20, delay: 0.05 }}
+                                            className="mr-2 flex h-5 w-5 items-center justify-center rounded-full bg-white/20"
+                                        >
+                                            <Check className="h-3.5 w-3.5 text-white" strokeWidth={3} />
+                                        </motion.span>
+                                        Added to Cart
+                                    </>
+                                )}
                             </motion.span>
                         ) : (
                             <motion.span

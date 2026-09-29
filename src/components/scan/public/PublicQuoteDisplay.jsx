@@ -757,22 +757,24 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             className="flex flex-col justify-center items-center max-w-xl mx-auto w-full px-5 py-6 sm:px-8 sm:py-8 rounded-3xl bg-neutral-950/25 backdrop-blur-xs border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.6)] pointer-events-auto"
           >
             {/* Elegant Golden Heart Separator */}
-            <div className="mb-3.5 sm:mb-5 flex items-center justify-center opacity-90">
+            <div className="mb-3.5 sm:mb-5 flex items-center justify-center opacity-90 shrink-0">
               <div className="h-px w-8 sm:w-12 bg-gradient-to-r from-transparent to-amber-400/80" />
               <Heart size={14} className="mx-2 text-amber-400 fill-amber-400/50 drop-shadow-[0_0_8px_rgba(245,158,11,0.6)]" />
               <div className="h-px w-8 sm:w-12 bg-gradient-to-l from-transparent to-amber-400/80" />
             </div>
 
-            {/* Quote Body Text */}
+            {/* Quote Body Text with sleek scroll container */}
             {quoteText && (
-              <h1 className="text-white text-[20px] sm:text-[25px] md:text-[30px] leading-[1.35] sm:leading-[1.4] font-serif font-normal drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)] tracking-tight sm:tracking-normal max-w-lg">
-                &ldquo;{quoteText}&rdquo;
-              </h1>
+              <div className="max-h-[38vh] sm:max-h-[46vh] w-full overflow-y-auto overscroll-contain px-2 pr-2.5 text-center [scrollbar-width:thin] [scrollbar-color:rgba(198,146,45,0.4)_transparent]">
+                <h1 className="text-white text-[19px] sm:text-[24px] md:text-[28px] leading-[1.38] sm:leading-[1.4] font-serif font-normal drop-shadow-[0_4px_24px_rgba(0,0,0,0.95)] tracking-tight sm:tracking-normal max-w-lg mx-auto break-words whitespace-pre-wrap">
+                  &ldquo;{quoteText}&rdquo;
+                </h1>
+              </div>
             )}
 
             {/* Author Credit — Anchored directly below quote */}
             {quoteAuthor && (
-              <div className="mt-4 sm:mt-5 flex items-center justify-center gap-2">
+              <div className="mt-4 sm:mt-5 flex items-center justify-center gap-2 shrink-0">
                 <div className="h-px w-4 sm:w-6 bg-amber-400/40" />
                 <p className="text-[#f3d6a0] text-xs sm:text-sm font-medium tracking-widest uppercase drop-shadow-md">
                   {quoteAuthor}

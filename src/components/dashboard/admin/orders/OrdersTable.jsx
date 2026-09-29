@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Gift } from 'lucide-react';
 import Card from '@/components/dashboard/user/dashboard/Card';
 import ActionMenu from '../shared/ActionMenu';
 import {
@@ -29,6 +29,10 @@ function OrderRow({ order, onView, onStatus, onCancel, onDelete, onAssign }) {
   const paymentStyle = getPaymentStatusStyle(order.paymentStatus);
   const productNames = order.items?.map((it) => it.product?.name).join(', ') || '—';
   const isCancelOrReturn = order.fulfillmentStatus === 'cancelled' || order.fulfillmentStatus === 'returned';
+  const isGift =
+    order.purchaseType === 'gift' ||
+    Boolean(order.giftMessage) ||
+    order.items?.some((i) => i.purchaseType === 'gift' || Boolean(i.giftMessage));
 
   const actions = [
     { label: 'View Details', onClick: () => onView(order) },
@@ -51,7 +55,18 @@ function OrderRow({ order, onView, onStatus, onCancel, onDelete, onAssign }) {
   return (
     <div className="grid grid-cols-[minmax(0,2fr)_minmax(0,2.5fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_minmax(0,100px)_minmax(0,36px)] items-center gap-2 py-3 px-2 hover:bg-muted/30 rounded-lg transition-colors">
       <div className="min-w-0">
-        <p className="text-xs font-medium text-foreground truncate">#{idShort(order._id)}</p>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <p className="text-xs font-medium text-foreground truncate">#{idShort(order._id)}</p>
+          {isGift && (
+            <span
+              title="Gift Order"
+              className="inline-flex items-center gap-0.5 rounded-full bg-purple-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-purple-600 dark:text-purple-400 border border-purple-500/20 shrink-0"
+            >
+              <Gift size={10} className="shrink-0" />
+              Gift
+            </span>
+          )}
+        </div>
         <p className="text-[10px] text-foreground-tertiary truncate">{order.orderNumber || ''}</p>
       </div>
 

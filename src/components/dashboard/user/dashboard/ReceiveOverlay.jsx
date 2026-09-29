@@ -137,25 +137,27 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
                 ) : (
                   /* Legacy non-canvas Quote text styled in responsive canvas stage */
                   <div className="w-full h-full flex flex-col justify-center items-center p-6 sm:p-10 relative text-center bg-gradient-to-br from-[#1a1a2e] via-[#16213e] to-[#0f3460]">
-                    <motion.blockquote
-                      className="text-[20px] sm:text-[28px] md:text-[34px] leading-[1.25] italic text-white font-light max-w-[680px]"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: 0.15, duration: 0.4 }}
-                    >
-                      &ldquo;{quote?.text}&rdquo;
-                    </motion.blockquote>
-
-                    {quote?.author && (
-                      <motion.p
-                        className="mt-4 sm:mt-6 text-xs sm:text-sm font-medium text-amber-300 tracking-wide"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.3, duration: 0.4 }}
+                    <div className="max-h-[55vh] w-full overflow-y-auto overscroll-contain px-2 pr-2.5 [scrollbar-width:thin] [scrollbar-color:rgba(245,158,11,0.4)_transparent]">
+                      <motion.blockquote
+                        className="text-[19px] sm:text-[26px] md:text-[30px] leading-[1.35] italic text-white font-light max-w-[680px] mx-auto break-words whitespace-pre-wrap"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.15, duration: 0.4 }}
                       >
-                        — {quote.author}
-                      </motion.p>
-                    )}
+                        &ldquo;{quote?.text}&rdquo;
+                      </motion.blockquote>
+
+                      {quote?.author && (
+                        <motion.p
+                          className="mt-4 sm:mt-6 text-xs sm:text-sm font-medium text-amber-300 tracking-wide shrink-0"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: 0.3, duration: 0.4 }}
+                        >
+                          — {quote.author}
+                        </motion.p>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>

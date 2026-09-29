@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -14,6 +15,12 @@ import {
   Package,
   Clock,
   QrCode,
+  Gift,
+  Sparkles,
+  MessageSquareHeart,
+  Check,
+  X,
+  Loader2,
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
@@ -21,6 +28,8 @@ import {
   getFulfillmentStatusStyle,
   getPaymentStatusStyle,
 } from '@/utils/statusFormatter';
+import { adminOrdersService } from '@/services/dashboard-service/admin-orders.service';
+import toast from 'react-hot-toast';
 
 const TAG_STATUS_STYLES = {
   complete:           'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
@@ -58,17 +67,68 @@ function Row({ label, value, className = '' }) {
   );
 }
 
-export default function OrderViewDialog({ open, onOpenChange, order, isLoading = false }) {
-  const fulfillmentStyle = getFulfillmentStatusStyle(order?.fulfillmentStatus);
-  const paymentStyle = getPaymentStatusStyle(order?.paymentStatus);
-  const tagStatusStyle = TAG_STATUS_STYLES[order?.tagAssignmentStatus] || TAG_STATUS_STYLES.none;
+export default function OrderViewDialog({ open, onOpenChange, order, isLoading = false, onOrderUpdated }) {
+  const [currentOrder, setCurrentOrder] = useState(order);
+  const [moderating, setModerating] = useState(false);
 
-  const isCancelledOrReturned = order?.fulfillmentStatus === 'cancelled' || order?.fulfillmentStatus === 'returned';
-  const assignedTagsList = order?.assignedTags?.length > 0
-    ? order.assignedTags
-    : order?.assignedTag
-      ? [{ tag: order.assignedTag, assignedAt: order.updatedAt, assignedBy: 'admin' }]
+  useEffect(() => {
+    setCurrentOrder(order);
+  }, [order]);
+
+  const fulfillmentStyle = getFulfillmentStatusStyle(currentOrder?.fulfillmentStatus);
+  const paymentStyle = getPaymentStatusStyle(currentOrder?.paymentStatus);
+  const tagStatusStyle = TAG_STATUS_STYLES[currentOrder?.tagAssignmentStatus] || TAG_STATUS_STYLES.none;
+
+  const isCancelledOrReturned = currentOrder?.fulfillmentStatus === 'cancelled' || currentOrder?.fulfillmentStatus === 'returned';
+  const assignedTagsList = currentOrder?.assignedTags?.length > 0
+    ? currentOrder.assignedTags
+    : currentOrder?.assignedTag
+      ? [{ tag: currentOrder.assignedTag, assignedAt: currentOrder.updatedAt, assignedBy: 'admin' }]
       : [];
+
+  const giftMessageText = currentOrder?.giftMessage || currentOrder?.items?.find((i) => i.giftMessage)?.giftMessage;
+  const isGiftOrder = currentOrder?.purchaseType === 'gift' || Boolean(giftMessageText);
+  const giftMessageStatus = currentOrder?.giftMessageStatus || (giftMessageText ? 'pending' : 'none');
+
+  const handleApproveMessage = async () => {
+    if (!currentOrder?._id || moderating) return;
+    setModerating(true);
+    try {
+      await adminOrdersService.approveGiftMessage(currentOrder._id);
+      toast.success('Gift message approved');
+      const updated = {
+        ...currentOrder,
+        giftMessageStatus: 'approved',
+        giftMessageReviewedAt: new Date().toISOString(),
+      };
+      setCurrentOrder(updated);
+      onOrderUpdated?.(updated);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to approve gift message');
+    } finally {
+      setModerating(false);
+    }
+  };
+
+  const handleRejectMessage = async () => {
+    if (!currentOrder?._id || moderating) return;
+    setModerating(true);
+    try {
+      await adminOrdersService.rejectGiftMessage(currentOrder._id);
+      toast.success('Gift message rejected');
+      const updated = {
+        ...currentOrder,
+        giftMessageStatus: 'rejected',
+        giftMessageReviewedAt: new Date().toISOString(),
+      };
+      setCurrentOrder(updated);
+      onOrderUpdated?.(updated);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || 'Failed to reject gift message');
+    } finally {
+      setModerating(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -81,16 +141,16 @@ export default function OrderViewDialog({ open, onOpenChange, order, isLoading =
           <div className="space-y-4 py-4">
             {[...Array(8)].map((_, i) => <Skeleton key={i} className="h-10 w-full rounded-lg" />)}
           </div>
-        ) : order ? (
+        ) : currentOrder ? (
           <div className="py-2 space-y-4">
             {/* Order identity */}
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-xs text-foreground-tertiary">#{order._id?.slice(-8).toUpperCase()}</p>
-                <p className="text-sm font-semibold text-foreground">{order.orderNumber || ''}</p>
+                <p className="text-xs text-foreground-tertiary">#{currentOrder._id?.slice(-8).toUpperCase()}</p>
+                <p className="text-sm font-semibold text-foreground">{currentOrder.orderNumber || ''}</p>
               </div>
               <span className={`text-[10px] px-2 py-0.5 rounded-full border ${fulfillmentStyle}`}>
-                {formatStatusLabel(order.fulfillmentStatus || 'pending')}
+                {formatStatusLabel(currentOrder.fulfillmentStatus || 'pending')}
               </span>
             </div>
 
@@ -100,9 +160,9 @@ export default function OrderViewDialog({ open, onOpenChange, order, isLoading =
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs text-foreground-tertiary">Status</span>
                   <span className={`text-[10px] px-2 py-0.5 rounded-full border ${tagStatusStyle}`}>
-                    {order.tagAssignmentStatus === 'pending_assignment' ? 'Pending QR Assignment'
-                      : order.tagAssignmentStatus === 'complete' ? 'Assigned'
-                      : order.tagAssignmentStatus === 'partial' ? 'Partial'
+                    {currentOrder.tagAssignmentStatus === 'pending_assignment' ? 'Pending QR Assignment'
+                      : currentOrder.tagAssignmentStatus === 'complete' ? 'Assigned'
+                      : currentOrder.tagAssignmentStatus === 'partial' ? 'Partial'
                       : 'No Tag'}
                   </span>
                 </div>
@@ -111,7 +171,7 @@ export default function OrderViewDialog({ open, onOpenChange, order, isLoading =
                   <div className="space-y-2 mb-2">
                     {assignedTagsList.map((item, idx) => {
                       const tagObj = item.tag?._id ? item.tag : item.tag;
-                      const tagCode = tagObj?.tagCode || (typeof tagObj === 'string' ? tagObj : order?.assignedTag?.tagCode || 'Tag');
+                      const tagCode = tagObj?.tagCode || (typeof tagObj === 'string' ? tagObj : currentOrder?.assignedTag?.tagCode || 'Tag');
                       return (
                         <div key={idx} className="bg-muted/30 rounded-lg p-2.5">
                           <p className="text-sm font-medium text-foreground">{tagCode}</p>
@@ -127,23 +187,96 @@ export default function OrderViewDialog({ open, onOpenChange, order, isLoading =
               </Section>
             )}
 
+            {/* Gift Message Details */}
+            {isGiftOrder && (
+              <Section icon={Gift} title="Gift Information & Message">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-foreground-tertiary">Moderation Status</span>
+                    <span
+                      className={`text-[10px] px-2 py-0.5 rounded-full border font-medium ${
+                        giftMessageStatus === 'approved'
+                          ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20'
+                          : giftMessageStatus === 'rejected'
+                          ? 'bg-red-500/10 text-red-500 border-red-500/20'
+                          : 'bg-amber-500/10 text-amber-500 border-amber-500/20'
+                      }`}
+                    >
+                      {giftMessageStatus === 'approved'
+                        ? 'Approved'
+                        : giftMessageStatus === 'rejected'
+                        ? 'Rejected'
+                        : 'Pending Approval'}
+                    </span>
+                  </div>
+
+                  {giftMessageText ? (
+                    <div className="rounded-xl border border-purple-500/20 bg-purple-500/5 p-3.5 space-y-2">
+                      <div className="flex items-center gap-1.5 text-xs font-semibold text-purple-600 dark:text-purple-400">
+                        <MessageSquareHeart size={14} />
+                        Customer Gift Dedication
+                      </div>
+                      <div className="max-h-40 overflow-y-auto pr-2 [scrollbar-width:thin]">
+                        <p className="italic text-sm text-foreground leading-relaxed break-words whitespace-pre-wrap">
+                          &ldquo;{giftMessageText}&rdquo;
+                        </p>
+                      </div>
+                      {currentOrder?.giftMessageReviewedAt && (
+                        <p className="text-[10px] text-foreground-tertiary pt-1 border-t border-purple-500/10">
+                          Reviewed: {formatDate(currentOrder.giftMessageReviewedAt)}
+                        </p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-foreground-tertiary italic">
+                      Marked as a gift, but no custom dedication provided.
+                    </p>
+                  )}
+
+                  {/* Moderation actions for pending gift messages */}
+                  {giftMessageText && giftMessageStatus === 'pending' && (
+                    <div className="flex items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={handleApproveMessage}
+                        disabled={moderating}
+                        className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
+                      >
+                        {moderating ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />}
+                        Approve Message
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleRejectMessage}
+                        disabled={moderating}
+                        className="flex-1 flex items-center justify-center gap-1.5 rounded-lg bg-red-600 hover:bg-red-700 text-white py-2 px-3 text-xs font-semibold transition-colors disabled:opacity-50 cursor-pointer shadow-sm"
+                      >
+                        {moderating ? <Loader2 size={13} className="animate-spin" /> : <X size={13} />}
+                        Reject Message
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </Section>
+            )}
+
             {/* Customer Information */}
             <Section icon={User} title="Customer">
-              <Row label="Name" value={order.user?.name || order.guestCustomer?.fullName || 'Guest'} />
-              <Row label="Email" value={order.user?.email || order.guestCustomer?.email || '—'} />
-              <Row label="Type" value={order.isGuestOrder ? 'Guest' : 'Registered'} />
+              <Row label="Name" value={currentOrder.user?.name || currentOrder.guestCustomer?.fullName || 'Guest'} />
+              <Row label="Email" value={currentOrder.user?.email || currentOrder.guestCustomer?.email || '—'} />
+              <Row label="Type" value={currentOrder.isGuestOrder ? 'Guest' : 'Registered'} />
             </Section>
 
             {/* Shipping Address */}
             <Section icon={MapPin} title="Shipping">
-              {order.shippingAddress ? (
+              {currentOrder.shippingAddress ? (
                 <>
-                  {order.shippingAddress.fullName && <Row label="Recipient" value={order.shippingAddress.fullName} />}
-                  {order.shippingAddress.phone && <Row label="Phone" value={order.shippingAddress.phone} />}
-                  <Row label="Address" value={order.shippingAddress.address || '—'} />
-                  <Row label="City / State" value={[order.shippingAddress.city, order.shippingAddress.state].filter(Boolean).join(', ') || '—'} />
-                  <Row label="ZIP" value={order.shippingAddress.postalCode || '—'} />
-                  {order.shippingAddress.country && <Row label="Country" value={order.shippingAddress.country} />}
+                  {currentOrder.shippingAddress.fullName && <Row label="Recipient" value={currentOrder.shippingAddress.fullName} />}
+                  {currentOrder.shippingAddress.phone && <Row label="Phone" value={currentOrder.shippingAddress.phone} />}
+                  <Row label="Address" value={currentOrder.shippingAddress.address || '—'} />
+                  <Row label="City / State" value={[currentOrder.shippingAddress.city, currentOrder.shippingAddress.state].filter(Boolean).join(', ') || '—'} />
+                  <Row label="ZIP" value={currentOrder.shippingAddress.postalCode || '—'} />
+                  {currentOrder.shippingAddress.country && <Row label="Country" value={currentOrder.shippingAddress.country} />}
                 </>
               ) : (
                 <p className="text-xs text-foreground-tertiary">No shipping address</p>
@@ -152,7 +285,7 @@ export default function OrderViewDialog({ open, onOpenChange, order, isLoading =
 
             {/* Ordered Products */}
             <Section icon={Package} title="Products">
-              {order.items?.map((item, idx) => (
+              {currentOrder.items?.map((item, idx) => (
                 <div key={idx} className="bg-muted/30 rounded-lg p-2.5 mb-2 last:mb-0">
                   <div className="flex items-center justify-between">
                     <p className="text-sm font-medium text-foreground">{item.product?.name || 'Product'}</p>
@@ -176,23 +309,23 @@ export default function OrderViewDialog({ open, onOpenChange, order, isLoading =
 
             {/* Pricing Summary */}
             <Section icon={CreditCard} title="Payment">
-              <Row label="Subtotal" value={formatPrice(order.subtotal)} />
-              {order.shippingCost > 0 && <Row label="Shipping" value={formatPrice(order.shippingCost)} />}
-              {order.discount > 0 && <Row label="Discount" value={`-${formatPrice(order.discount)}`} className="text-emerald-400" />}
-              <Row label="Total" value={formatPrice(order.grandTotal)} className="text-base font-bold text-foreground" />
+              <Row label="Subtotal" value={formatPrice(currentOrder.subtotal)} />
+              {currentOrder.shippingCost > 0 && <Row label="Shipping" value={formatPrice(currentOrder.shippingCost)} />}
+              {currentOrder.discount > 0 && <Row label="Discount" value={`-${formatPrice(currentOrder.discount)}`} className="text-emerald-400" />}
+              <Row label="Total" value={formatPrice(currentOrder.grandTotal)} className="text-base font-bold text-foreground" />
               <div className="flex items-center justify-between pt-1">
                 <span className="text-xs text-foreground-tertiary">Payment Status</span>
                 <span className={`text-[10px] px-2 py-0.5 rounded-full border ${paymentStyle}`}>
-                  {formatStatusLabel(order.paymentStatus || 'pending')}
+                  {formatStatusLabel(currentOrder.paymentStatus || 'pending')}
                 </span>
               </div>
             </Section>
 
             {/* Timeline */}
             <Section icon={Clock} title="Timeline">
-              <Row label="Created" value={formatDate(order.createdAt)} />
-              {order.deliveredAt && <Row label="Delivered" value={formatDate(order.deliveredAt)} />}
-              {order.cancellationReason && <Row label="Cancel reason" value={order.cancellationReason} className="text-amber-400" />}
+              <Row label="Created" value={formatDate(currentOrder.createdAt)} />
+              {currentOrder.deliveredAt && <Row label="Delivered" value={formatDate(currentOrder.deliveredAt)} />}
+              {currentOrder.cancellationReason && <Row label="Cancel reason" value={currentOrder.cancellationReason} className="text-amber-400" />}
             </Section>
           </div>
         ) : (

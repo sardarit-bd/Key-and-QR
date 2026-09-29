@@ -41,7 +41,7 @@ export default function FavoriteDetailModal({ favorite, onClose, onRemove, onSha
       <motion.div className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm px-4"
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
         onClick={onClose}>
-        <motion.div className="relative max-w-xl w-full overflow-hidden rounded-[24px] border border-accent/20 bg-card shadow-2xl light:border-[#E8DFCE]/80"
+        <motion.div className="relative max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden rounded-[24px] border border-accent/20 bg-card shadow-2xl light:border-[#E8DFCE]/80"
           initial={{ scale: 0.9, opacity: 0, y: 16 }} animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.95, opacity: 0 }} transition={{ type: 'spring', stiffness: 120, damping: 18 }}
           onClick={(e) => e.stopPropagation()}>
@@ -55,17 +55,17 @@ export default function FavoriteDetailModal({ favorite, onClose, onRemove, onSha
 
           {/* Image area */}
           {hasImage && (
-            <div className="relative h-52 bg-cover bg-center" style={{ backgroundImage: `url(${quote.image.url})` }}>
+            <div className="relative h-44 sm:h-52 shrink-0 bg-cover bg-center" style={{ backgroundImage: `url(${quote.image.url})` }}>
               <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-black/60" />
               <div className="pointer-events-none absolute inset-0 light:bg-gradient-to-b light:from-[#FDFBF6]/40 light:via-transparent light:to-[#FBF7EF]/85" />
             </div>
           )}
 
-          <div className="relative z-10 px-6 py-8 sm:px-10 sm:py-12 text-center">
+          <div className="relative z-10 px-6 py-6 sm:px-10 sm:py-8 text-center flex-1 overflow-y-auto overscroll-contain">
             <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize ${chip.border} ${chip.bg} ${chip.text} ${chip.lightText} ${chip.glow}`}>
               {categoryLabel}
             </span>
-            <motion.blockquote className="mt-5 text-[22px] sm:text-[26px] md:text-[30px] leading-[1.35] italic text-foreground"
+            <motion.blockquote className="mt-4 max-h-48 overflow-y-auto px-2 text-[20px] sm:text-[24px] md:text-[28px] leading-[1.4] italic text-foreground break-words whitespace-pre-wrap [scrollbar-width:thin]"
               initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, duration: 0.5 }}>
               &ldquo;{quote.text}&rdquo;
             </motion.blockquote>
@@ -76,7 +76,7 @@ export default function FavoriteDetailModal({ favorite, onClose, onRemove, onSha
             <div className="mt-5 flex items-center justify-center gap-1 text-[11px] text-foreground-tertiary">
               <Calendar size={12} /> Saved {formattedDate}
             </div>
-            <div className="mt-5 flex items-center justify-center gap-3">
+            <div className="mt-5 flex items-center justify-center gap-3 flex-wrap">
               <Button variant="outline" size="sm" onClick={handleShare} className="cursor-pointer gap-1.5 text-foreground-secondary"><Share2 size={14} /> Share</Button>
               <Button variant="outline" size="sm" onClick={() => { navigator.clipboard?.writeText(`"${quote.text}" — ${quote.author || 'InspireTag'}`); toast.success('Copied!'); }} className="cursor-pointer gap-1.5 text-foreground-secondary"><Copy size={14} /> Copy</Button>
               <Button variant="outline" size="sm" onClick={async () => { setIsRemoving(true); try { await onRemove?.(favorite._id); onClose?.(); } finally { setIsRemoving(false); } }} disabled={isRemoving}

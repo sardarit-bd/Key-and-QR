@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Gift } from 'lucide-react';
 import Card from '@/components/dashboard/user/dashboard/Card';
 import ActionMenu from '../shared/ActionMenu';
 
@@ -30,6 +30,10 @@ function OrderCard({ order, onView, onStatus, onCancel, onDelete }) {
   const paymentStyle = getPaymentStatusStyle(order.paymentStatus);
   const isCancelOrReturn = order.fulfillmentStatus === 'cancelled' || order.fulfillmentStatus === 'returned';
   const productNames = order.items?.map((it) => it.product?.name).join(', ') || '—';
+  const isGift =
+    order.purchaseType === 'gift' ||
+    Boolean(order.giftMessage) ||
+    order.items?.some((i) => i.purchaseType === 'gift' || Boolean(i.giftMessage));
 
   const actions = [
     { label: 'View Details', onClick: () => onView(order) },
@@ -51,7 +55,18 @@ function OrderCard({ order, onView, onStatus, onCancel, onDelete }) {
           <p className="text-sm font-medium text-foreground truncate">{order.user?.name || order.guestCustomer?.fullName || 'Guest'}</p>
           <ActionMenu actions={actions} />
         </div>
-        <p className="text-xs text-foreground-tertiary mt-0.5">#{idShort(order._id)}</p>
+        <div className="flex items-center gap-1.5 mt-0.5">
+          <p className="text-xs text-foreground-tertiary">#{idShort(order._id)}</p>
+          {isGift && (
+            <span
+              title="Gift Order"
+              className="inline-flex items-center gap-0.5 rounded-full bg-purple-500/10 px-1.5 py-0.5 text-[9px] font-semibold text-purple-600 dark:text-purple-400 border border-purple-500/20"
+            >
+              <Gift size={10} className="shrink-0" />
+              Gift
+            </span>
+          )}
+        </div>
         <p className="text-xs text-foreground-tertiary truncate mt-0.5">{productNames}</p>
         <div className="flex items-center gap-2 mt-2 flex-wrap">
           <span className={`text-[10px] px-2 py-0.5 rounded-full border ${paymentStyle}`}>

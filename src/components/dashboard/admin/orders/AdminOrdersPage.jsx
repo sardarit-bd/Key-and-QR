@@ -261,7 +261,7 @@ export default function AdminOrdersPage({
         <Pagination currentPage={meta.page} totalPages={meta.totalPage} onPageChange={setPage} className="pt-2" />
       )}
 
-      <OrderViewDialog open={!!viewOrder} onOpenChange={(o) => { if (!o) setViewOrder(null); }} order={viewOrder} />
+      <OrderViewDialog open={!!viewOrder} onOpenChange={(o) => { if (!o) setViewOrder(null); }} order={viewOrder} onOrderUpdated={() => refetch()} />
       <OrderStatusDialog open={!!statusOrder} onOpenChange={(o) => { if (!o) setStatusOrder(null); }} order={statusOrder} onSave={handleStatusSave} isLoading={statusLoading} />
       <OrderCreateDialog open={createOpen} onOpenChange={setCreateOpen} onSave={handleCreateSave} isLoading={createLoading} />
       <AssignTagModal open={assignOpen} onOpenChange={setAssignOpen} onAssign={handleAssignConfirm} />

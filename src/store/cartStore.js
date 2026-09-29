@@ -24,7 +24,9 @@ export const useCartStore = create(
                 const { cart } = get();
                 const existingItem = cart.find((item) => item.id === product.id);
                 const quantityToAdd = product.qty || 1;
-                const targetQty = existingItem ? existingItem.qty + quantityToAdd : quantityToAdd;
+                const targetQty = product.replaceQty
+                    ? quantityToAdd
+                    : (existingItem ? existingItem.qty + quantityToAdd : quantityToAdd);
                 
                 // Check stock
                 let resolvedStock = product.stock ?? product.stockQuantity;
@@ -59,6 +61,8 @@ export const useCartStore = create(
                             ? { 
                                 ...item, 
                                 qty: targetQty,
+                                purchaseType: product.purchaseType !== undefined ? product.purchaseType : (item.purchaseType || "self"),
+                                giftMessage: product.giftMessage !== undefined ? product.giftMessage : item.giftMessage,
                                 stock: typeof resolvedStock === 'number' ? resolvedStock : item.stock,
                                 stockQuantity: typeof resolvedStock === 'number' ? resolvedStock : item.stockQuantity,
                               }
