@@ -252,7 +252,10 @@ export default function AdminProductCategoriesPage() {
         <Pagination
           currentPage={meta.page}
           totalPages={meta.totalPage}
+          totalItems={meta.total}
+          itemsPerPage={ITEMS_PER_PAGE}
           onPageChange={setPage}
+          label="categories"
           className="pt-2"
         />
       )}

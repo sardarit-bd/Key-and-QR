@@ -234,7 +234,15 @@ export default function AdminCategoriesPage() {
 
       {/* Pagination */}
       {meta.totalPage > 1 && (
-        <Pagination currentPage={meta.page} totalPages={meta.totalPage} onPageChange={setPage} className="pt-2" />
+        <Pagination
+          currentPage={meta.page}
+          totalPages={meta.totalPage}
+          totalItems={meta.total}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setPage}
+          label="categories"
+          className="pt-2"
+        />
       )}
 
       {/* Dialogs */}

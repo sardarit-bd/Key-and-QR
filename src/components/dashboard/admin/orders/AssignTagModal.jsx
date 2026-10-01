@@ -119,7 +119,7 @@ export default function AssignTagModal({ open, onOpenChange, onAssign }) {
           )}
 
           {meta.totalPage > 1 && (
-            <Pagination currentPage={meta.page} totalPages={meta.totalPage} onPageChange={setPage} className="pt-1" />
+            <Pagination currentPage={meta.page} totalPages={meta.totalPage} onPageChange={setPage} compact className="pt-1" />
           )}
         </div>
 

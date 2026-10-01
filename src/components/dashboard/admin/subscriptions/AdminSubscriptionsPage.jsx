@@ -19,6 +19,7 @@ import toast from "react-hot-toast";
 import api from "@/lib/api";
 
 import AdminSearchInput from "@/components/dashboard/admin/common/AdminSearchInput";
+import Pagination from "@/components/ui/Pagination";
 
 const ITEMS_PER_PAGE = 10;
 
@@ -348,28 +349,16 @@ export default function AdminSubscriptionsPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between px-6 py-4 border-t border-white/6 light:border-[#E8DFCE]/80">
-              <span className="text-xs text-foreground-tertiary">
-                {(currentPage - 1) * ITEMS_PER_PAGE + 1}–
-                {Math.min(currentPage * ITEMS_PER_PAGE, totalSubscriptions)} of {totalSubscriptions}
-              </span>
-              <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-                  disabled={currentPage === 1}
-                  className="p-2 rounded-lg text-foreground-tertiary hover:text-foreground hover:bg-foreground/5 disabled:opacity-30 disabled:cursor-not-allowed transition"
-                >
-                  <ChevronLeft size={16} />
-                </button>
-                <span className="px-2 text-xs text-foreground-tertiary tabular-nums">{currentPage} / {totalPages}</span>
-                <button
-                  onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                  className="p-2 rounded-lg text-foreground-tertiary hover:text-foreground hover:bg-foreground/5 disabled:opacity-30 disabled:cursor-not-allowed transition"
-                >
-                  <ChevronRight size={16} />
-                </button>
-              </div>
+            <div className="px-6 py-4 border-t border-white/6 light:border-[#E8DFCE]/80">
+              <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalItems={totalSubscriptions}
+                itemsPerPage={ITEMS_PER_PAGE}
+                onPageChange={setCurrentPage}
+                label="subscriptions"
+                className="border-t-0 pt-0 sm:pt-0"
+              />
             </div>
           )}
         </div>

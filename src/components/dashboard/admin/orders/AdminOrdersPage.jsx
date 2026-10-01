@@ -54,7 +54,9 @@ export default function AdminOrdersPage({
   const [dialogVariant, setDialogVariant] = useState('delete');
   const [selectedOrder, setSelectedOrder] = useState(null);
 
-  const filters = { search, fulfillmentStatus, tagAssignmentStatus, page, limit: ITEMS_PER_PAGE };
+  const [limit, setLimit] = useState(ITEMS_PER_PAGE);
+
+  const filters = { search, fulfillmentStatus, tagAssignmentStatus, page, limit };
   const { data, isLoading, isError, error, refetch } = useAdminOrders(filters);
   const { data: statsData } = useAdminOrdersStats();
   const { updateFulfillmentStatus, cancelOrder, deleteOrder, createManualOrder } = useAdminOrderActions();
@@ -258,7 +260,20 @@ export default function AdminOrdersPage({
       )}
 
       {meta.totalPage > 1 && (
-        <Pagination currentPage={meta.page} totalPages={meta.totalPage} onPageChange={setPage} className="pt-2" />
+        <Pagination
+          currentPage={meta.page}
+          totalPages={meta.totalPage}
+          totalItems={meta.total}
+          itemsPerPage={limit}
+          onPageChange={setPage}
+          onItemsPerPageChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+          itemsPerPageOptions={[5, 10, 20, 50]}
+          label="orders"
+          className="pt-2"
+        />
       )}
 
       <OrderViewDialog open={!!viewOrder} onOpenChange={(o) => { if (!o) setViewOrder(null); }} order={viewOrder} onOrderUpdated={() => refetch()} />

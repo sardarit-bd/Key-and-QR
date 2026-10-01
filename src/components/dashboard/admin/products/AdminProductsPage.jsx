@@ -343,7 +343,15 @@ export default function AdminProductsPage() {
 
       {/* Pagination */}
       {meta.totalPage > 1 && (
-        <Pagination currentPage={meta.page} totalPages={meta.totalPage} onPageChange={setPage} className="pt-2" />
+        <Pagination
+          currentPage={meta.page}
+          totalPages={meta.totalPage}
+          totalItems={meta.total}
+          itemsPerPage={ITEMS_PER_PAGE}
+          onPageChange={setPage}
+          label="products"
+          className="pt-2"
+        />
       )}
 
       {/* View dialog */}
