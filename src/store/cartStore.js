@@ -1,6 +1,7 @@
+import { useState, useEffect } from "react";
 import productService from "@/services/product-service/product.service";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 // Stock cache to prevent duplicate requests
 const stockCache = new Map();
@@ -10,8 +11,10 @@ export const useCartStore = create(
     persist(
         (set, get) => ({
             cart: [],
+            isHydrated: false,
             isLoading: false,
             error: null,
+            setHydrated: (val) => set({ isHydrated: val }),
 
             // ************* EXISTING METHODS *************
 
@@ -323,13 +326,44 @@ export const useCartStore = create(
         }),
         {
             name: "qkey-cart",
-            storage: typeof window !== "undefined" ? localStorage : undefined,
+            storage: createJSONStorage(() => localStorage),
             partialize: (state) => ({
                 cart: state.cart,
             }),
+            onRehydrateStorage: () => (state, error) => {
+                if (error) {
+                    console.error("Cart rehydration error:", error);
+                }
+                state?.setHydrated?.(true);
+            },
         }
     )
 );
+
+/**
+ * Hook to verify whether cart store has finished client-side hydration from localStorage
+ */
+export const useCartHydration = () => {
+    const isHydrated = useCartStore((state) => state.isHydrated);
+    const [hydrated, setHydrated] = useState(false);
+
+    useEffect(() => {
+        if (isHydrated || useCartStore.persist?.hasHydrated?.()) {
+            setHydrated(true);
+            if (!isHydrated) {
+                useCartStore.getState().setHydrated?.(true);
+            }
+        } else {
+            const unsub = useCartStore.persist?.onFinishHydration?.(() => {
+                setHydrated(true);
+                useCartStore.getState().setHydrated?.(true);
+            });
+            return () => unsub?.();
+        }
+    }, [isHydrated]);
+
+    return hydrated || isHydrated;
+};
 
 // ************* Stock Cache Helper *************
 

@@ -27,6 +27,16 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
   const [quoteData, setQuoteData] = useState(data);
 
+  const giftDedication =
+    quoteData?.giftDedication ||
+    data?.giftDedication ||
+    quoteData?.latestQuote?.giftDedication ||
+    null;
+
+  const [showDedicationModal, setShowDedicationModal] = useState(false);
+  const [dedicationSaved, setDedicationSaved] = useState(false);
+  const [dedicationFavoriteLoading, setDedicationFavoriteLoading] = useState(false);
+
   const isPersonalMessage = Boolean(
     quoteData?.isPersonalMessage || quoteData?.latestQuote?.isPersonalMessage
   );
@@ -366,7 +376,12 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   }, [activeQuote, quoteData, category, renderedMobileUrl, renderedDesktopUrl]);
 
   const categoryLabel = getPrettyCategoryLabel(category);
-  const canFavorite = !isPersonalMessage;
+  const currentQuoteId =
+    activeQuote?._id ||
+    quoteData?._id ||
+    (isPersonalMessage && giftDedication?.quoteId) ||
+    null;
+  const canFavorite = Boolean(currentQuoteId);
 
   const [saved, setSaved] = useState(false);
   const [favoriteId, setFavoriteId] = useState(null);
@@ -377,9 +392,9 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   const [isClaimed, setIsClaimed] = useState(false);
 
   const isAlreadyOwned = Boolean(quoteData?.isAlreadyOwned ?? data?.isAlreadyOwned);
-  const isGift = Boolean(data?.isGift || data?.gift || data?.giftOrderId || data?.giftStatus || data?.gift?.giftStatus);
+  const isGift = Boolean(data?.isGift || data?.gift || data?.giftOrderId || data?.giftStatus || data?.gift?.giftStatus || giftDedication);
   const isGiftClaimable = !isAlreadyOwned && (data?.isClaimable || data?.gift?.isClaimable) && !isClaimed;
-  const giftOrderId = data?.giftOrderId || data?.gift?.orderId;
+  const giftOrderId = data?.giftOrderId || data?.gift?.orderId || giftDedication?.orderId;
 
   const handleClaimGift = async () => {
     if (!user) {
@@ -410,7 +425,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   };
 
   const checkFavoriteStatus = async () => {
-    const id = activeQuote?._id || quoteData?._id;
+    const id = currentQuoteId;
     if (!id) return;
     try {
       const response = await favoriteService.checkFavorite({ quoteId: id });
@@ -423,10 +438,56 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   };
 
   useEffect(() => {
-    if (isInitialized && user && canFavorite) {
+    if (isInitialized && user && canFavorite && currentQuoteId) {
       checkFavoriteStatus();
     }
-  }, [isInitialized, user, tagCode, canFavorite, activeQuote?._id]);
+  }, [isInitialized, user, tagCode, canFavorite, currentQuoteId]);
+
+  const checkDedicationFavoriteStatus = async () => {
+    if (!giftDedication?.quoteId || !user) return;
+    try {
+      const response = await favoriteService.checkFavorite({ quoteId: giftDedication.quoteId });
+      setDedicationSaved(!!response?.data?.exists);
+    } catch (err) {}
+  };
+
+  useEffect(() => {
+    if (isInitialized && user && giftDedication?.quoteId) {
+      checkDedicationFavoriteStatus();
+    }
+  }, [isInitialized, user, giftDedication?.quoteId]);
+
+  const handleFavoriteDedication = async () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    if (!giftDedication?.quoteId) {
+      toast.error("Gift dedication cannot be saved right now");
+      return;
+    }
+
+    try {
+      setDedicationFavoriteLoading(true);
+      const premium = await premiumService.hasActiveSubscription();
+      if (!premium?.data?.hasActive) {
+        setShowUpgradeModal(true);
+        return;
+      }
+      await favoriteService.addFavorite({ quoteId: giftDedication.quoteId });
+      setDedicationSaved(true);
+      toast.success("Saved gift dedication to favorites!");
+    } catch (error) {
+      const code = error.response?.data?.code;
+      if (code === "UPGRADE_REQUIRED") {
+        setShowUpgradeModal(true);
+      } else {
+        toast.error(error.response?.data?.message || "Failed to save dedication");
+      }
+    } finally {
+      setDedicationFavoriteLoading(false);
+    }
+  };
 
   const goToAuth = (type = "register") => {
     if (typeof window !== "undefined" && (activeQuote || quoteData)) {
@@ -467,7 +528,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
       return;
     }
 
-    const id = activeQuote?._id || quoteData?._id;
+    const id = currentQuoteId;
     if (!id) {
       toast.error("This quote can't be saved right now");
       return;
@@ -835,6 +896,39 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             </div>
           )}
 
+          {/* Persistent Gift Dedication Indicator / Button */}
+          {giftDedication && (
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowDedicationModal(true)}
+              className="w-full mb-2.5 rounded-2xl border border-amber-400/40 bg-gradient-to-r from-amber-950/70 via-neutral-900/80 to-amber-950/70 backdrop-blur-xl px-4 py-2.5 shadow-[0_4px_20px_rgba(245,158,11,0.2)] flex items-center justify-between gap-3 text-left cursor-pointer group hover:border-amber-400/80 transition-all duration-200"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/40 shadow-inner group-hover:scale-105 transition-transform">
+                  <Gift className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-amber-200 tracking-tight flex items-center gap-1.5">
+                    <span>Personal Gift Dedication</span>
+                    {giftDedication.senderName && (
+                      <span className="text-white/60 font-normal truncate">
+                        · from {giftDedication.senderName}
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-[11px] text-white/70 truncate italic">
+                    &ldquo;{giftDedication.text}&rdquo;
+                  </p>
+                </div>
+              </div>
+              <span className="shrink-0 rounded-lg bg-amber-400/25 px-2.5 py-1 text-[11px] font-semibold text-amber-300 border border-amber-400/40 group-hover:bg-amber-400 group-hover:text-black transition-colors">
+                View
+              </span>
+            </motion.button>
+          )}
+
           {/* Liquid Glass Floating Action Card (Compact & Optimized) */}
           <div className="mx-auto flex max-w-[340px] items-center justify-around rounded-[22px] bg-white/[0.02] px-3 py-2.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_8px_25px_rgba(0,0,0,0.2)] sm:max-w-sm sm:px-4 sm:py-3">
             {/* Save button */}
@@ -1011,6 +1105,82 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
         onClose={closeShare}
         quoteData={shareData}
       />
+
+      {/* Persistent Gift Dedication Modal */}
+      {showDedicationModal && giftDedication && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0">
+          <div className="w-full max-w-md rounded-3xl bg-neutral-950/95 border border-amber-400/30 p-6 sm:p-7 shadow-[0_10px_40px_rgba(245,158,11,0.25)] relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 text-white">
+            <button
+              onClick={() => setShowDedicationModal(false)}
+              className="absolute right-4 top-4 text-white/50 hover:text-white transition-colors cursor-pointer p-1"
+              aria-label="Close"
+            >
+              <X size={20} />
+            </button>
+
+            {/* Gift icon with golden glow */}
+            <div className="flex justify-center mb-4">
+              <div className="relative flex h-14 w-14 items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-amber-400/30 blur-xl animate-pulse" />
+                <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-400/20 border border-amber-400/40 text-amber-300 shadow-inner">
+                  <Gift size={24} />
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center mb-4">
+              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-300 uppercase tracking-widest bg-amber-400/10 border border-amber-400/30 px-3 py-1 rounded-full mb-2">
+                <Sparkles size={11} className="fill-current" />
+                Personal Gift Dedication
+              </span>
+              <h3 className="text-lg font-serif italic text-white/90">
+                {giftDedication.senderName ? `From ${giftDedication.senderName}` : "A Special Gift For You"}
+              </h3>
+            </div>
+
+            {/* Dedication Text Card */}
+            <div className="rounded-2xl bg-white/[0.04] border border-amber-400/20 p-5 mb-5 shadow-inner">
+              <div className="flex items-center justify-center mb-2.5 opacity-80">
+                <div className="h-px w-8 bg-gradient-to-r from-transparent to-amber-400/70" />
+                <Heart size={12} className="mx-2 text-amber-400 fill-amber-400/50" />
+                <div className="h-px w-8 bg-gradient-to-l from-transparent to-amber-400/70" />
+              </div>
+              <p className="text-white text-base sm:text-lg font-serif italic text-center leading-relaxed">
+                &ldquo;{giftDedication.text}&rdquo;
+              </p>
+              {giftDedication.senderName && (
+                <p className="mt-3 text-center text-xs tracking-wider text-amber-300/80 uppercase font-medium">
+                  — {giftDedication.senderName}
+                </p>
+              )}
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-col sm:flex-row gap-2.5">
+              {giftDedication.quoteId && (
+                <button
+                  onClick={handleFavoriteDedication}
+                  disabled={dedicationFavoriteLoading || dedicationSaved}
+                  className={`flex-1 h-11 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                    dedicationSaved
+                      ? "bg-amber-400/20 text-amber-300 border border-amber-400/50"
+                      : "bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 hover:brightness-110 text-black shadow-lg"
+                  }`}
+                >
+                  <Heart size={15} className={dedicationSaved ? "fill-current text-amber-400" : ""} />
+                  <span>{dedicationSaved ? "Saved to Collection" : "Save Dedication"}</span>
+                </button>
+              )}
+              <button
+                onClick={() => setShowDedicationModal(false)}
+                className="h-11 px-5 rounded-xl border border-white/20 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white text-xs sm:text-sm font-medium transition cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
