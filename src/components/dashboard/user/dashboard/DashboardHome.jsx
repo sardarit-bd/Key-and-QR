@@ -187,7 +187,7 @@ export default function DashboardHome({
     overlayCategoryRef.current = category?.name || 'Inspiration';
     setRevealState({ quote: null });
     setIsOverlayOpen(true);
-    receiveQuote.mutate(category?.slug || 'inspire', {
+    receiveQuote.mutate(category?.slug || 'inspiration', {
       onSuccess: (quote) => {
         const flattened = flattenQuotePayload(quote);
         const formattedInspiration = {
@@ -202,7 +202,7 @@ export default function DashboardHome({
           renderedImages: flattened.renderedImages || null,
           theme: flattened.theme || null,
           editorData: flattened.editorData || null,
-          category: flattened.category || { name: category?.name || 'Inspiration', slug: category?.slug || 'inspire' },
+          category: flattened.category || { name: category?.name || 'Inspiration', slug: category?.slug || 'inspiration' },
           receivedAt: flattened.receivedAt || new Date().toISOString(),
           favorite: flattened.favorite || false,
           favoriteId: flattened.favoriteId || null,
@@ -220,7 +220,7 @@ export default function DashboardHome({
   }, [dailyUsage, receiveQuote, flattenQuotePayload]);
 
   const handleReceiveFirst = useCallback(() => {
-    handleSelectCategory({ slug: 'inspire', name: 'Inspiration' });
+    handleSelectCategory({ slug: 'inspiration', name: 'Inspiration' });
   }, [handleSelectCategory]);
 
   // Consume ?action=inspire from the BottomTabBar Inspire tap or category reveal buttons.
