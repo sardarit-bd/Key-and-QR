@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Sparkles, ArrowRight, X, Search, Crown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { resolveCategory } from "@/components/dashboard/admin/categories/categoryIconRegistry";
 import { getCategoryIcon } from "@/components/public/quote/category";
+import { useSubscriptionStore } from "@/store/subscriptionStore";
 
 function hexToRgba(hex, alpha = 0.1) {
   if (!hex || typeof hex !== 'string') return `rgba(239, 68, 68, ${alpha})`;
@@ -78,6 +79,42 @@ export default function CategorySection({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [upgradeCategory, setUpgradeCategory] = useState(null);
+
+  const { plans, fetchPlans } = useSubscriptionStore();
+
+  useEffect(() => {
+    if (!plans || plans.length === 0) {
+      fetchPlans();
+    }
+  }, [plans, fetchPlans]);
+
+  const plan = useMemo(() => {
+    if (!Array.isArray(plans) || plans.length === 0) return null;
+    const targetPlan =
+      plans.find((p) => p.name === "subscriber" || p.name === "premium") ||
+      plans.find((p) => p.price > 0) ||
+      null;
+
+    if (!targetPlan) return null;
+
+    const rawMonthly =
+      targetPlan.monthlyPrice ??
+      (targetPlan.price != null && targetPlan.price > 0 ? targetPlan.price : null);
+
+    if (rawMonthly == null) return null;
+
+    const formattedPrice =
+      typeof rawMonthly === "number"
+        ? `$${rawMonthly.toFixed(2)}`
+        : String(rawMonthly).startsWith("$")
+        ? String(rawMonthly)
+        : `$${rawMonthly}`;
+
+    return {
+      ...targetPlan,
+      monthlyPrice: formattedPrice,
+    };
+  }, [plans]);
 
   const handleClick = (category) => {
     if (disabled) return;
@@ -422,7 +459,9 @@ export default function CategorySection({
                   className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-[#E5B842] hover:bg-[#d8ab36] text-neutral-950 font-semibold text-xs sm:text-sm py-3 px-6 shadow-sm transition-all active:scale-97 cursor-pointer"
                 >
                   <Crown size={16} />
-                  <span>Upgrade to MyInspireTag+ ($4.99/mo)</span>
+                  <span>
+                    Upgrade to MyInspireTag+{plan?.monthlyPrice ? ` (${plan.monthlyPrice}/mo)` : ""}
+                  </span>
                 </button>
 
                 <button
