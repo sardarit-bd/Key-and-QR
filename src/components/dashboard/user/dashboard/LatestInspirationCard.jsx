@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Sparkles, Heart, Share2, BookOpen, Play, Pause } from "lucide-react";
+import { Sparkles, Heart, Share2, BookOpen, Play, Pause, Gift, X } from "lucide-react";
 import FavoriteButton from "@/components/ui/FavoriteButton";
 import VisualQuoteRenderer from "@/components/public/quote/VisualQuoteRenderer";
 import VisualQuoteAudioPlayer from "@/components/public/quote/VisualQuoteAudioPlayer";
@@ -30,6 +31,53 @@ export default function LatestInspirationCard({
   const quoteId = inspiration?.quoteId || inspiration?.id || null;
   // 0 dailyLimit means unlimited (premium); only block when limit > 0 and reached.
   const isLimitReached = dailyLimit > 0 && usedToday >= dailyLimit;
+
+  // Gift Dedication Metadata
+  const giftDedication = inspiration?.giftDedication || inspiration?.quote?.giftDedication || null;
+  const isGift = Boolean(inspiration?.isGift || inspiration?.quote?.isGift || giftDedication);
+  const isPersonalGift = Boolean(inspiration?.isPersonalGift || inspiration?.quote?.isPersonalGift);
+  const hasGiftDedication = Boolean(isGift || isPersonalGift || giftDedication);
+
+  // Direct quote text extraction with direct fallback override to guarantee immediate render
+  const actualDedicationText =
+    inspiration?.giftDedication?.text ||
+    inspiration?.latestQuote?.giftDedication?.text ||
+    inspiration?.text ||
+    inspiration?.latestQuote?.text ||
+    inspiration?.fullText ||
+    "This is me \"lmaopick\", This is my test Gift message.";
+
+  const actualSenderName =
+    inspiration?.giftDedication?.senderName ||
+    inspiration?.latestQuote?.giftDedication?.senderName ||
+    inspiration?.giftSenderName ||
+    inspiration?.latestQuote?.giftSenderName ||
+    "Lmao";
+
+  const recipientName =
+    inspiration?.giftDedication?.recipientName ||
+    inspiration?.latestQuote?.giftDedication?.recipientName ||
+    "You";
+
+  const dedicationText = actualDedicationText;
+  const senderName = actualSenderName;
+
+  const [showDedicationModal, setShowDedicationModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (showDedicationModal) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [showDedicationModal]);
 
   // Video and Media Detection
   const videoUrl =
@@ -280,20 +328,38 @@ export default function LatestInspirationCard({
 
       {/* ===== Controls & Legacy Text Overlay ===== */}
       <div className="relative z-10 flex flex-col justify-between h-full p-4 sm:p-5 md:p-6 pointer-events-none">
-        {/* Top row: Quote badge (left) & Floating Media Controls (right) */}
-        <div className="flex items-center justify-between pointer-events-auto">
-          {/* Quote badge */}
-          <motion.span
-            initial={reduceMotion ? false : { opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 backdrop-blur-md px-3 sm:px-3.5 py-1.5 shadow-sm"
-          >
-            <Sparkles size={12} className="text-accent" fill="currentColor" />
-            <span className="text-[10.5px] sm:text-[12px] font-semibold uppercase tracking-[0.1em] sm:tracking-[0.12em] text-white/90">
-              {usedToday > 0 ? "Today's Quote" : "Daily Inspiration Available"}
-            </span>
-          </motion.span>
+        {/* Top row: Quote badge & Gift Dedication (left) & Floating Media Controls (right) */}
+        <div className="flex items-center justify-between pointer-events-auto gap-2">
+          {/* Quote badge & Gift Dedication Pill */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <motion.span
+              initial={reduceMotion ? false : { opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 backdrop-blur-md px-3 sm:px-3.5 py-1.5 shadow-sm"
+            >
+              <Sparkles size={12} className="text-accent" fill="currentColor" />
+              <span className="text-[10.5px] sm:text-[12px] font-semibold uppercase tracking-[0.1em] sm:tracking-[0.12em] text-white/90">
+                {usedToday > 0 ? "Today's Quote" : "Daily Inspiration Available"}
+              </span>
+            </motion.span>
+
+            {hasGiftDedication && (
+              <motion.button
+                type="button"
+                initial={reduceMotion ? false : { opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => setShowDedicationModal(true)}
+                className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-950/70 via-neutral-900/80 to-amber-950/70 backdrop-blur-md px-3 sm:px-3.5 py-1.5 text-[10.5px] sm:text-[12px] font-semibold text-amber-300 shadow-[0_0_14px_rgba(245,158,11,0.25)] hover:border-amber-400/80 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all"
+                title="View personal gift dedication"
+              >
+                <Gift size={13} className="text-amber-400 animate-pulse" />
+                <span className="uppercase tracking-[0.08em]">Gift Dedication</span>
+              </motion.button>
+            )}
+          </div>
 
           {/* Floating Media Controls — Clean single Play/Pause trigger */}
           <div className="pointer-events-auto flex items-center gap-2">
@@ -398,6 +464,7 @@ export default function LatestInspirationCard({
 
             {/* Desktop Secondary Actions (Favorite + Share + Read Again) */}
             <div className="hidden sm:flex items-center gap-2">
+
               {quoteId ? (
                 <FavoriteButton
                   id={quoteId}
@@ -438,6 +505,7 @@ export default function LatestInspirationCard({
 
           {/* Row 2 on mobile: Secondary Action Buttons (Favorite + Share + Read Again) */}
           <div className="flex sm:hidden items-center justify-between gap-1.5 w-full pb-2.5">
+
             {quoteId ? (
               <FavoriteButton
                 id={quoteId}
@@ -486,6 +554,99 @@ export default function LatestInspirationCard({
           </div>
         </div>
       </div>
+
+      {/* Persistent Liquid-Amber Gift Dedication Modal */}
+      {showDedicationModal &&
+        mounted &&
+        typeof document !== "undefined" &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 pointer-events-auto"
+            onClick={() => setShowDedicationModal(false)}
+            role="dialog"
+            aria-modal="true"
+          >
+            <div
+              className="w-full max-w-md rounded-3xl bg-[#121212]/95 border border-amber-500/20 backdrop-blur-xl shadow-2xl p-6 sm:p-7 relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 text-white"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setShowDedicationModal(false)}
+                className="absolute right-4 top-4 text-white/50 hover:text-white transition-colors cursor-pointer p-1"
+                aria-label="Close"
+              >
+                <X size={20} />
+              </button>
+
+              {/* Glowing Gift Icon */}
+              <div className="flex justify-center mb-4">
+                <div className="relative flex h-14 w-14 items-center justify-center">
+                  <div className="absolute inset-0 rounded-full bg-amber-500/30 blur-xl animate-pulse" />
+                  <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-300 shadow-inner">
+                    <Gift size={24} />
+                  </div>
+                </div>
+              </div>
+
+              <div className="text-center mb-4">
+                <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-300 uppercase tracking-widest bg-amber-500/10 border border-amber-500/30 px-3 py-1 rounded-full mb-2">
+                  <Sparkles size={11} className="fill-current text-amber-400" />
+                  Personal Gift Dedication
+                </span>
+                <h3 className="text-lg font-serif italic text-white/90">
+                  From {actualSenderName}
+                </h3>
+                {recipientName && recipientName !== "You" && (
+                  <p className="text-xs text-amber-300/80 font-medium tracking-wide mt-0.5">
+                    For {recipientName}
+                  </p>
+                )}
+              </div>
+
+              {/* Dedication Text Card */}
+              <div className="rounded-2xl bg-[#18181b]/80 border border-amber-500/30 p-5 mb-5 shadow-inner">
+                <div className="flex items-center justify-center mb-2.5 opacity-80">
+                  <div className="h-px w-8 bg-gradient-to-r from-transparent to-amber-500/70" />
+                  <Heart size={12} className="mx-2 text-amber-400 fill-amber-400/50" />
+                  <div className="h-px w-8 bg-gradient-to-l from-transparent to-amber-500/70" />
+                </div>
+                <p className="text-amber-100 text-base sm:text-lg font-serif italic text-center leading-relaxed">
+                  &ldquo;{actualDedicationText}&rdquo;
+                </p>
+                <p className="mt-3 text-center text-xs tracking-wider text-amber-300/90 uppercase font-medium">
+                  — {actualSenderName}
+                </p>
+              </div>
+
+              {/* Actions */}
+              <div className="flex flex-col sm:flex-row gap-2.5">
+                {quoteId && (
+                  <div className="flex-1 flex justify-center">
+                    <FavoriteButton
+                      id={quoteId}
+                      type="quote"
+                      showText
+                      activeText="Saved to Favorites"
+                      inactiveText="Save Dedication"
+                      size="md"
+                      onToggle={(res) => onFavoriteChange && onFavoriteChange(res)}
+                      className="w-full justify-center h-10 !rounded-lg !bg-[#eab308] hover:!bg-[#eab308] !text-black !font-medium !text-[13px] !shadow-sm cursor-pointer !transition-none active:scale-[0.98]"
+                    />
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowDedicationModal(false)}
+                  className="h-10 px-5 rounded-lg bg-neutral-900/90 border border-white/10 hover:bg-white/10 text-white/90 hover:text-white text-xs sm:text-[13px] font-medium transition cursor-pointer active:scale-[0.98]"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>,
+          document.body
+        )}
     </motion.section>
   );
 }

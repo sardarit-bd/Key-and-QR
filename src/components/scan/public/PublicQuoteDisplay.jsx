@@ -500,6 +500,18 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             author: quoteAuthor || activeQuote?.author || "",
             category: category || activeQuote?.category || "faith",
             isPersonalMessage: !!isPersonalMessage,
+            isGift: Boolean(activeQuote?.isGift || quoteData?.isGift || activeQuote?.giftDedication || quoteData?.giftDedication),
+            isPersonalGift: Boolean(activeQuote?.isPersonalGift || quoteData?.isPersonalGift || isPersonalMessage),
+            giftDedication: activeQuote?.giftDedication || quoteData?.giftDedication || null,
+            giftSenderName:
+              activeQuote?.giftDedication?.senderName ||
+              quoteData?.giftDedication?.senderName ||
+              activeQuote?.giftSenderName ||
+              quoteData?.giftSenderName ||
+              quoteAuthor ||
+              null,
+            orderId: activeQuote?.giftOrderId || quoteData?.giftOrderId || activeQuote?.orderId || quoteData?.orderId || null,
+            giftOrderId: activeQuote?.giftOrderId || quoteData?.giftOrderId || null,
             renderedImages: activeQuote?.renderedImages || quoteData?.renderedImages || null,
             editorData: activeQuote?.editorData || quoteData?.editorData || null,
             image: resolvedBgUrl || null,

@@ -97,6 +97,11 @@ export default function DashboardHome({
             favoriteId: null,
             dailyUsage: dailyUsage || null,
             isPreviewOnly: true,
+            isGift: Boolean(parsed.isGift || parsed.isPersonalGift || parsed.giftDedication),
+            isPersonalGift: Boolean(parsed.isPersonalGift),
+            giftDedication: parsed.giftDedication || null,
+            giftSenderName: parsed.giftSenderName || null,
+            orderId: parsed.orderId || parsed.giftOrderId || null,
           };
           setActiveInspiration((current) => current?.hasReceivedQuote ? current : preservedInspiration);
         }
@@ -144,6 +149,11 @@ export default function DashboardHome({
       receivedAt: payload?.receivedAt || null,
       favorite: !!payload?.favorite,
       favoriteId: payload?.favoriteId || null,
+      isGift: Boolean(q.isGift || q.isPersonalGift || payload?.isGift || payload?.source === 'personal'),
+      isPersonalGift: Boolean(q.isPersonalGift || payload?.isPersonalGift),
+      giftDedication: q.giftDedication || payload?.giftDedication || null,
+      giftSenderName: q.giftSenderName || payload?.giftSenderName || q.author || null,
+      orderId: q.orderId || payload?.orderId || payload?.order || null,
     };
   }, []);
 
@@ -274,6 +284,11 @@ export default function DashboardHome({
           favorite: flattened.favorite || false,
           favoriteId: flattened.favoriteId || null,
           dailyUsage: dailyUsage || null,
+          isGift: flattened.isGift,
+          isPersonalGift: flattened.isPersonalGift,
+          giftDedication: flattened.giftDedication,
+          giftSenderName: flattened.giftSenderName,
+          orderId: flattened.orderId,
         };
         // Synchronize main dashboard quote state
         setActiveInspiration(formattedInspiration);

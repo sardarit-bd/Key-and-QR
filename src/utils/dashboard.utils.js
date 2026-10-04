@@ -191,6 +191,11 @@ export function mapLatestInspiration(latestInspiration, dailyUsage) {
     receivedAt: quote?.receivedAt || null,
     favorite: !!quote?.favorite,
     favoriteId: quote?.favoriteId || null,
+    isGift: Boolean(quote?.isGift || quote?.isPersonalGift || latestInspiration?.isGift),
+    isPersonalGift: Boolean(quote?.isPersonalGift || latestInspiration?.isPersonalGift),
+    giftDedication: quote?.giftDedication || latestInspiration?.giftDedication || null,
+    giftSenderName: quote?.giftSenderName || latestInspiration?.giftSenderName || quote?.author || null,
+    orderId: quote?.orderId || latestInspiration?.orderId || null,
     dailyUsage: dailyUsage
       ? {
           usedToday: dailyUsage.usedToday ?? 0,
