@@ -7,9 +7,8 @@
  */
 
 /* ============================================
-   DARK MODE (Default) — Premium Dark Palette
+   DARK MODE — Premium Dark Palette
    ============================================ */
-:root,
 .dark {
   /* Backgrounds — Matte Charcoal Obsidian (Avoid pure pitch black #000000) */
   --background: #121316; /* 225 10% 8% */
@@ -94,8 +93,9 @@
 }
 
 /* ============================================
-   LIGHT MODE - Premium Light Palette
+   LIGHT MODE (Default) - Premium Light Palette
    ============================================ */
+:root,
 .light {
   /* Backgrounds - Warm, slightly off-white for card separation */
   --background: oklch(0.97 0.004 85);

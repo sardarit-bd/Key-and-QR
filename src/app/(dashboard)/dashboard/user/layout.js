@@ -63,36 +63,35 @@ export default function UserDashboardLayout({ children }) {
     }
   }, [hydrated, isInitialized, isAuthenticated, user, router]);
 
-  // Show skeleton until client-side hydration is complete or if admin is being redirected
-  if (!hydrated || (isInitialized && isAuthenticated && user?.role === 'admin')) {
-    return <DashboardSkeleton />;
-  }
+  const showSkeleton = !hydrated || (isInitialized && isAuthenticated && user?.role === 'admin');
 
   return (
     <ThemeProvider themeId={THEME_IDS.USER_DASHBOARD}>
-      <div className="min-h-screen flex flex-col lg:flex-row bg-background text-foreground font-sans selection:bg-primary/30">
-        
-        {/* 1. Mobile Top Navbar (sticky at top on mobile/tablet) */}
-        <MobileTopNavbar onMenuClick={() => setIsMobileMenuOpen(true)} />
+      {showSkeleton ? (
+        <DashboardSkeleton />
+      ) : (
+        <div className="min-h-screen flex flex-col lg:flex-row bg-background text-foreground font-sans selection:bg-primary/30">
+          {/* 1. Mobile Top Navbar (sticky at top on mobile/tablet) */}
+          <MobileTopNavbar onMenuClick={() => setIsMobileMenuOpen(true)} />
 
-        {/* 2. Sidebar (Desktop Left + Mobile Right Drawer) */}
-        <Sidebar
-          user={user}
-          isMobileOpen={isMobileMenuOpen}
-          onMobileClose={() => setIsMobileMenuOpen(false)}
-        />
+          {/* 2. Sidebar (Desktop Left + Mobile Right Drawer) */}
+          <Sidebar
+            user={user}
+            isMobileOpen={isMobileMenuOpen}
+            onMobileClose={() => setIsMobileMenuOpen(false)}
+          />
 
-        {/* 3. Main Content Container */}
-        <main className="flex-1 w-full lg:ml-72 transition-[margin] duration-300">
-          <div className="pb-28 lg:pb-16">
-            {children}
-          </div>
-        </main>
+          {/* 3. Main Content Container */}
+          <main className="flex-1 w-full lg:ml-72 transition-[margin] duration-300">
+            <div className="pb-28 lg:pb-16">
+              {children}
+            </div>
+          </main>
 
-        {/* 4. Mobile Bottom Tab Bar */}
-        <BottomTabBar />
-        
-      </div>
+          {/* 4. Mobile Bottom Tab Bar */}
+          <BottomTabBar />
+        </div>
+      )}
     </ThemeProvider>
   );
 }

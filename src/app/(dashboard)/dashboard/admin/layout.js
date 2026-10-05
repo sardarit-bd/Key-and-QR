@@ -66,35 +66,33 @@ export default function AdminDashboardLayout({ children }) {
     ? 'lg:ml-20'
     : 'lg:ml-72';
 
-  if (!hydrated) {
-    return <AdminDashboardSkeleton collapsed={false} />;
-  }
-
-  if (!isInitialized || !isAuthenticated || user?.role !== 'admin') {
-    return <AdminDashboardSkeleton collapsed={sidebarCollapsed} />;
-  }
+  const showSkeleton = !hydrated || !isInitialized || !isAuthenticated || user?.role !== 'admin';
 
   return (
     <ThemeProvider themeId={THEME_IDS.ADMIN_DASHBOARD}>
-      <div className="min-h-screen flex flex-col lg:flex-row bg-background text-foreground font-sans selection:bg-primary/30">
-        {/* Mobile Top Navbar */}
-        <MobileTopNavbar onMenuClick={() => setIsMobileMenuOpen(true)} />
+      {showSkeleton ? (
+        <AdminDashboardSkeleton collapsed={!hydrated ? false : sidebarCollapsed} />
+      ) : (
+        <div className="min-h-screen flex flex-col lg:flex-row bg-background text-foreground font-sans selection:bg-primary/30">
+          {/* Mobile Top Navbar */}
+          <MobileTopNavbar onMenuClick={() => setIsMobileMenuOpen(true)} />
 
-        {/* Sidebar (Permanent Left on Desktop, Right-Sliding Drawer on Mobile) */}
-        <Sidebar
-          user={user}
-          isCollapsed={sidebarCollapsed}
-          onToggle={(collapsed) => setSidebarCollapsed(collapsed)}
-          isMobileOpen={isMobileMenuOpen}
-          onMobileClose={() => setIsMobileMenuOpen(false)}
-        />
+          {/* Sidebar (Permanent Left on Desktop, Right-Sliding Drawer on Mobile) */}
+          <Sidebar
+            user={user}
+            isCollapsed={sidebarCollapsed}
+            onToggle={(collapsed) => setSidebarCollapsed(collapsed)}
+            isMobileOpen={isMobileMenuOpen}
+            onMobileClose={() => setIsMobileMenuOpen(false)}
+          />
 
-        <main className={`flex-1 w-full ${marginLeftClass} transition-[margin] duration-300`}>
-          <div className="min-h-screen">
-            {children}
-          </div>
-        </main>
-      </div>
+          <main className={`flex-1 w-full ${marginLeftClass} transition-[margin] duration-300`}>
+            <div className="min-h-screen">
+              {children}
+            </div>
+          </main>
+        </div>
+      )}
     </ThemeProvider>
   );
 }
