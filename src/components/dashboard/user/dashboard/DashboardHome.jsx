@@ -164,6 +164,9 @@ export default function DashboardHome({
       subscription?.status === 'active' ||
       dailyUsage?.plan === 'subscriber' ||
       user?.isPremium === true ||
+      user?.premium === true ||
+      user?.subscriptionTier === 'subscriber' ||
+      user?.plan === 'premium' ||
       user?.plan === 'subscriber' ||
       user?.role === 'admin' ||
       user?.role === 'moderator'

@@ -1,45 +1,51 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import { subscriptionService } from "@/services/subscription.service";
 
-export const useSubscriptionStore = create((set, get) => ({
-    plans: [],
-    mySubscriptions: [],
-    loading: false,
-    error: null,
+export const useSubscriptionStore = create(
+    persist(
+        (set, get) => ({
+            plans: [],
+            mySubscriptions: [],
+            loading: false,
+            isLoaded: false,
+            error: null,
 
-    fetchPlans: async () => {
-        set({ loading: true, error: null });
-        try {
-            const response = await subscriptionService.getPlans();
+            fetchPlans: async () => {
+                set({ loading: true, error: null });
+                try {
+                    const response = await subscriptionService.getPlans();
 
-            set({
-                plans: response?.data || [],
-                loading: false,
-            });
-        } catch (error) {
-            set({
-                error: error.response?.data?.message || "Failed to load plans",
-                loading: false,
-            });
-        }
-    },
+                    set({
+                        plans: response?.data || [],
+                        loading: false,
+                    });
+                } catch (error) {
+                    set({
+                        error: error.response?.data?.message || "Failed to load plans",
+                        loading: false,
+                    });
+                }
+            },
 
-    fetchMySubscriptions: async () => {
-        set({ loading: true, error: null });
-        try {
-            const response = await subscriptionService.getMySubscriptions();
+            fetchMySubscriptions: async () => {
+                set({ loading: true, error: null });
+                try {
+                    const response = await subscriptionService.getMySubscriptions();
 
-            set({
-                mySubscriptions: response?.data || [],
-                loading: false,
-            });
-        } catch (error) {
-            set({
-                error: error.response?.data?.message || "Failed to load subscriptions",
-                loading: false,
-            });
-        }
-    },
+                    set({
+                        mySubscriptions: response?.data || [],
+                        loading: false,
+                        isLoaded: true,
+                    });
+                } catch (error) {
+                    set({
+                        error: error.response?.data?.message || "Failed to load subscriptions",
+                        loading: false,
+                        isLoaded: true,
+                    });
+                }
+            },
 
     createCheckout: async (tagCode, preferredCategory) => {
         set({ loading: true, error: null });
@@ -101,11 +107,23 @@ export const useSubscriptionStore = create((set, get) => ({
                 error: message,
                 loading: false,
             });
-
             return {
                 success: false,
                 error: message,
             };
         }
     },
-}));
+}),
+    {
+        name: "myinspiretag-subscriptions",
+        partialize: (state) => ({
+            plans: state.plans,
+            mySubscriptions: state.mySubscriptions,
+        }),
+        onRehydrateStorage: () => (state) => {
+            if (state) {
+                state.isLoaded = true;
+            }
+        },
+    }
+));

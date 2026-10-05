@@ -10,7 +10,14 @@ export default function GreetingSection({ greeting, user, subscription }) {
   const reduceMotion = useReducedMotion();
   const name = greeting?.name || user?.name || 'there';
   const timeGreeting = greeting?.text || 'Welcome';
-  const isPremium = !!subscription?.isPremium || subscription?.plan === 'subscriber';
+  const isPremium =
+    !!subscription?.isPremium ||
+    subscription?.plan === 'subscriber' ||
+    user?.isPremium === true ||
+    user?.premium === true ||
+    user?.subscriptionTier === 'subscriber' ||
+    user?.plan === 'premium' ||
+    user?.plan === 'subscriber';
 
   return (
     <motion.section

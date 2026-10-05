@@ -129,9 +129,10 @@ export const orderService = {
     /**
      * Claim gift
      */
-    claimGift: async (orderId) => {
+    claimGift: async (orderId, tagCode = null) => {
         try {
-            const response = await api.post(`/orders/${orderId}/claim-gift`);
+            const payload = tagCode ? { tagCode } : {};
+            const response = await api.post(`/orders/${orderId}/claim-gift`, payload);
             return response.data;
         } catch (error) {
             console.error("Claim gift error:", error);

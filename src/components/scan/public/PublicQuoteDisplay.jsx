@@ -425,7 +425,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
 
     setIsClaiming(true);
     try {
-      const res = await orderService.claimGift(giftOrderId);
+      const res = await orderService.claimGift(giftOrderId, tagCode);
       if (res?.success) {
         toast.success("🎉 Gift claimed successfully! This MyInspireTag is now yours.");
         setIsClaimed(true);
