@@ -157,20 +157,65 @@ export default function GiftDedicationCard({
     setMounted(true);
   }, []);
 
+  const handleClose = () => {
+    // Explicitly restore document body styles when user triggers close
+    if (typeof document !== "undefined") {
+      document.body.style.removeProperty("overflow");
+      document.body.style.removeProperty("position");
+      document.body.style.removeProperty("top");
+      document.body.style.removeProperty("width");
+    }
+    onClose?.();
+  };
+
   useEffect(() => {
-    const onKey = (e) => e.key === "Escape" && onClose?.();
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        handleClose();
+      }
+    };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
 
   useEffect(() => {
-    if (isOpen) {
-      const originalStyle = window.getComputedStyle(document.body).overflow;
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = originalStyle;
-      };
-    }
+    if (!isOpen) return;
+
+    // Capture the existing inline styles (instead of computed styles)
+    const prevInlineOverflow = document.body.style.overflow;
+    const prevInlinePosition = document.body.style.position;
+    const prevInlineTop = document.body.style.top;
+    const prevInlineWidth = document.body.style.width;
+
+    // Apply scroll lock
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      // Revert styles cleanly upon close/unmount
+      if (prevInlineOverflow && prevInlineOverflow !== "hidden") {
+        document.body.style.overflow = prevInlineOverflow;
+      } else {
+        document.body.style.removeProperty("overflow");
+      }
+
+      if (prevInlinePosition) {
+        document.body.style.position = prevInlinePosition;
+      } else {
+        document.body.style.removeProperty("position");
+      }
+
+      if (prevInlineTop) {
+        document.body.style.top = prevInlineTop;
+      } else {
+        document.body.style.removeProperty("top");
+      }
+
+      if (prevInlineWidth) {
+        document.body.style.width = prevInlineWidth;
+      } else {
+        document.body.style.removeProperty("width");
+      }
+    };
   }, [isOpen]);
 
   if (!isOpen || !mounted || typeof document === "undefined") return null;
@@ -212,9 +257,9 @@ export default function GiftDedicationCard({
   const pf = playfair.className;
 
   return createPortal(
-    <div className={styles.overlay} onClick={onClose} role="dialog" aria-modal="true">
+    <div className={styles.overlay} onClick={handleClose} role="dialog" aria-modal="true">
       <div className={styles.card} onClick={(e) => e.stopPropagation()}>
-        <button type="button" onClick={onClose} className={styles.closeX} aria-label="Close">
+        <button type="button" onClick={handleClose} className={styles.closeX} aria-label="Close">
           <CloseIcon />
         </button>
 
