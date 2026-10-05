@@ -93,10 +93,12 @@
   navigation: auto;
 }
 
+html,
 body {
   overflow-x: hidden;
   font-family: var(--font-sans);
-  @apply bg-background text-foreground;
+  background-color: var(--background, #121316);
+  color: var(--foreground, #ffffff);
 }
 
 ::selection {
@@ -116,15 +118,21 @@ body {
 
   html {
     @apply font-sans;
-    color-scheme: light;
+    background-color: #121316;
+    color: #ffffff;
+    color-scheme: dark;
   }
 
   html.dark {
+    background-color: #121316;
+    color: #ffffff;
     color-scheme: dark;
   }
 
   .light html,
   html.light {
+    background-color: oklch(0.97 0.004 85);
+    color: oklch(0.15 0.015 260);
     color-scheme: light;
   }
 
@@ -206,9 +214,11 @@ body {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-/* Prevent hydration flash - initial state before JS loads */
-html:not(.dark):not(.light) {
-  color-scheme: light;
+/* Prevent hydration flash - initial state defaults to dark before JS loads */
+html:not(.light) {
+  background-color: #121316;
+  color: #ffffff;
+  color-scheme: dark;
 }
 
 /* Force cursor pointer across all shadcn interactive elements */

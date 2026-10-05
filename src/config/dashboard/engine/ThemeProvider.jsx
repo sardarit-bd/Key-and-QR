@@ -47,7 +47,12 @@ export function ThemeProvider({
 }) {
   const [themeMode, setThemeMode] = useState(() => {
     const stored = getStoredThemeMode();
-    return stored || 'dark';
+    if (stored) return stored;
+    if (typeof document !== 'undefined') {
+      if (document.documentElement.classList.contains('light')) return 'light';
+      if (document.documentElement.classList.contains('dark')) return 'dark';
+    }
+    return 'dark';
   });
   const [isReady, setIsReady] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
@@ -56,7 +61,10 @@ export function ThemeProvider({
   useEffect(() => {
     setIsMounted(true);
     const stored = getStoredThemeMode();
-    const initialMode = stored || getSystemTheme();
+    const currentDomMode = typeof document !== 'undefined'
+      ? (document.documentElement.classList.contains('light') ? 'light' : (document.documentElement.classList.contains('dark') ? 'dark' : null))
+      : null;
+    const initialMode = stored || currentDomMode || getSystemTheme();
     setThemeMode(initialMode);
     applyThemeToDom(initialMode);
     setIsReady(true);
