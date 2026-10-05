@@ -95,7 +95,8 @@
 /* ============================================
    LIGHT MODE (Default) - Premium Light Palette
    ============================================ */
-:root,
+/* :where(:root) has 0 specificity so `html.dark` (the .dark block above) always wins. */
+:where(:root),
 .light {
   /* Backgrounds - Warm, slightly off-white for card separation */
   --background: oklch(0.97 0.004 85);

@@ -278,10 +278,15 @@ export function ThemeProvider({
 
   return (
     <ThemeContext.Provider value={contextValue}>
+      {/*
+        HYDRATION FIX: server cannot read localStorage. Until mounted, render NO mode-specific
+        attributes (identical on server and client) and inherit from <html>, which themeScript in
+        layout.js already set before first paint. After mount, state-driven updates take over.
+      */}
       <div
-        className={`dashboard-theme-scope ${themeMode === 'dark' ? 'dark' : 'light'} min-h-screen`}
-        data-theme-mode={themeMode}
-        style={{ colorScheme: themeMode }}
+        className={`dashboard-theme-scope ${isMounted ? (themeMode === 'dark' ? 'dark' : 'light') : ''} min-h-screen`}
+        data-theme-mode={isMounted ? themeMode : undefined}
+        style={isMounted ? { colorScheme: themeMode } : undefined}
       >
         {children}
       </div>
