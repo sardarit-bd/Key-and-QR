@@ -82,7 +82,8 @@ export default function AdminAssignedTagsPage() {
   }, []);
 
   const queryClient = useQueryClient();
-  const filters = { search: debouncedSearch, subscriptionType, page, limit: ITEMS_PER_PAGE };
+  const [limit, setLimit] = useState(ITEMS_PER_PAGE);
+  const filters = { search: debouncedSearch, subscriptionType, page, limit };
 
   const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['admin-tags', 'assigned', filters],
@@ -324,7 +325,20 @@ export default function AdminAssignedTagsPage() {
       )}
 
       {meta.totalPage > 1 && (
-        <Pagination currentPage={meta.page} totalPages={meta.totalPage} onPageChange={handlePageChange} className="pt-2" />
+        <Pagination
+          currentPage={meta.page}
+          totalPages={meta.totalPage}
+          totalItems={meta.total}
+          itemsPerPage={limit}
+          onPageChange={handlePageChange}
+          onItemsPerPageChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+          itemsPerPageOptions={[5, 10, 20, 50]}
+          label="assigned tags"
+          className="pt-2"
+        />
       )}
 
       {/* Offscreen Canvas for Direct PNG Downloads */}

@@ -63,7 +63,8 @@ export default function AdminTagsPage() {
   const [toggleOpen, setToggleOpen] = useState(false);
 
   // Data
-  const filters = mapFilters({ search, status, page, limit: ITEMS_PER_PAGE });
+  const [limit, setLimit] = useState(ITEMS_PER_PAGE);
+  const filters = mapFilters({ search, status, page, limit });
   const { data, isLoading, isError, error, refetch } = useAdminTags(filters);
   const { data: statsData } = useAdminTagStats();
   const { createTag, updateTag, bulkGenerateTags, deleteTag: deleteTagMutation } = useAdminTagActions();
@@ -311,7 +312,20 @@ export default function AdminTagsPage() {
 
       {/* Pagination */}
       {meta.totalPage > 1 && (
-        <Pagination currentPage={meta.page} totalPages={meta.totalPage} onPageChange={setPage} className="pt-2" />
+        <Pagination
+          currentPage={meta.page}
+          totalPages={meta.totalPage}
+          totalItems={meta.total}
+          itemsPerPage={limit}
+          onPageChange={setPage}
+          onItemsPerPageChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+          itemsPerPageOptions={[5, 10, 20, 50]}
+          label="tags"
+          className="pt-2"
+        />
       )}
 
       {/* Offscreen Canvas for Direct PNG Downloads */}

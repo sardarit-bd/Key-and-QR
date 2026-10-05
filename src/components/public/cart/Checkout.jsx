@@ -1,7 +1,7 @@
 "use client";
 
 import { orderService } from "@/services/order.service";
-import { useCartStore } from "@/store/cartStore";
+import { useCartStore, useCartHydration } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { ProductImage } from "@/components/ui/ProductImage";
 import {
@@ -14,6 +14,7 @@ import {
 import CheckoutSkeleton from "@/components/ui/skeletons/CheckoutSkeleton";
 import { CHECKOUT_CONFIG, formatPrice, getCountryName } from "@/config/checkout.config";
 import { validateCheckoutForm } from "@/lib/validators/checkout.validator";
+import { cn } from "@/lib/utils";
 import { ChevronDown, ShieldCheck, Lock, CreditCard, Gift, Sparkles, AlertCircle } from "lucide-react";
 import CountryCombobox from "@/components/ui/CountryCombobox";
 import Link from "next/link";
@@ -23,6 +24,7 @@ import { motion, useReducedMotion } from "framer-motion";
 import toast from "react-hot-toast";
 
 const PLACEHOLDER_IMAGE = "https://placehold.co/400x400/e2e8f0/1e293b?text=No+Image";
+const DRAFT_STORAGE_KEY = "qkey_checkout_draft";
 
 // Shared input styling for consistent premium form fields
 const inputClass = (hasError) =>
@@ -48,6 +50,7 @@ export default function Checkout() {
     const searchParams = useSearchParams();
     const orderId = searchParams.get("orderId");
     const reduceMotion = useReducedMotion();
+    const isHydrated = useCartHydration();
 
     const { user } = useAuthStore();
     const {
@@ -70,10 +73,30 @@ export default function Checkout() {
     const [checkoutError, setCheckoutError] = useState(null);
 
     const [formData, setFormData] = useState(() => {
-        const initialCart = typeof window !== "undefined" ? (useCartStore.getState().cart || []) : [];
-        const giftItem = initialCart.find(
-            (item) => item.purchaseType === "gift" || Boolean(item.giftMessage)
-        );
+        if (typeof window !== "undefined") {
+            try {
+                const savedDraft = sessionStorage.getItem(DRAFT_STORAGE_KEY);
+                if (savedDraft) {
+                    const parsed = JSON.parse(savedDraft);
+                    if (parsed && typeof parsed === "object") {
+                        return {
+                            email: parsed.email || "",
+                            fullName: parsed.fullName || "",
+                            phone: parsed.phone || "",
+                            address: parsed.address || "",
+                            city: parsed.city || "",
+                            state: parsed.state || "",
+                            postalCode: parsed.postalCode || "",
+                            country: parsed.country || CHECKOUT_CONFIG.defaults.country,
+                            purchaseType: parsed.purchaseType || CHECKOUT_CONFIG.defaults.purchaseType,
+                            giftMessage: parsed.giftMessage || "",
+                        };
+                    }
+                }
+            } catch (e) {
+                console.warn("Failed to load checkout draft:", e);
+            }
+        }
         return {
             email: "",
             fullName: "",
@@ -83,8 +106,8 @@ export default function Checkout() {
             state: "",
             postalCode: "",
             country: CHECKOUT_CONFIG.defaults.country,
-            purchaseType: giftItem ? "gift" : CHECKOUT_CONFIG.defaults.purchaseType,
-            giftMessage: giftItem?.giftMessage || "",
+            purchaseType: CHECKOUT_CONFIG.defaults.purchaseType,
+            giftMessage: "",
         };
     });
 
@@ -121,13 +144,24 @@ export default function Checkout() {
 
     const firstItem = checkoutItems?.[0];
 
-    // Set user data to form
+    // Persist form data draft to sessionStorage on changes
+    useEffect(() => {
+        if (typeof window !== "undefined") {
+            try {
+                sessionStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(formData));
+            } catch (e) {
+                // Ignore storage issues
+            }
+        }
+    }, [formData]);
+
+    // Set user data to form if not already filled
     useEffect(() => {
         if (user) {
             setFormData((prev) => ({
                 ...prev,
-                email: user.email || "",
-                fullName: user.name || "",
+                email: prev.email || user.email || "",
+                fullName: prev.fullName || user.name || "",
             }));
         }
     }, [user]);
@@ -161,13 +195,13 @@ export default function Checkout() {
 
     // Pre-populate gift status and message from cart items if user configured it on product page
     useEffect(() => {
-        if (!orderId && checkoutItems.length > 0) {
+        if (!orderId && isHydrated && checkoutItems.length > 0) {
             const giftItem = checkoutItems.find(
                 (item) => item.purchaseType === "gift" || Boolean(item.giftMessage)
             );
             if (giftItem) {
                 setFormData((prev) => {
-                    if (prev.purchaseType === "gift" && prev.giftMessage === (giftItem.giftMessage || "")) {
+                    if (prev.purchaseType === "gift" && (prev.giftMessage || !giftItem.giftMessage)) {
                         return prev;
                     }
                     return {
@@ -178,7 +212,7 @@ export default function Checkout() {
                 });
             }
         }
-    }, [orderId, checkoutItems]);
+    }, [orderId, isHydrated, checkoutItems]);
 
     // Calculate totals
     const subtotal = checkoutItems.reduce((sum, item) => sum + (item.price * (item.qty || 1)), 0);
@@ -295,6 +329,11 @@ export default function Checkout() {
             const response = await orderService.createCheckout(payload);
 
             if (response?.data?.url) {
+                if (typeof window !== "undefined") {
+                    try {
+                        sessionStorage.removeItem(DRAFT_STORAGE_KEY);
+                    } catch (e) {}
+                }
                 // Do NOT clear cart here - will be cleared on success page
                 setIsRedirecting(true);
                 window.location.href = response.data.url;
@@ -337,8 +376,8 @@ export default function Checkout() {
         return item.img || PLACEHOLDER_IMAGE;
     };
 
-    // Loading state — premium skeleton, no layout shift
-    if (pageLoading) {
+    // Loading & hydration guard — premium skeleton, no layout shift or flash of empty cart
+    if (!isHydrated || pageLoading) {
         return <CheckoutSkeleton />;
     }
 
@@ -346,21 +385,30 @@ export default function Checkout() {
     if (isRedirecting) {
         return (
             <section className="max-w-7xl mx-auto py-32 px-4 text-center">
-                <div className="bg-[#FDFBF6] p-8 rounded-2xl border border-[#EDE4D0] max-w-md mx-auto">
+                <div className="bg-[#FDFBF6] p-8 sm:p-10 rounded-2xl border border-[#EDE4D0] max-w-md mx-auto shadow-sm">
                     <div className="flex flex-col items-center gap-4">
-                        <span className="relative flex h-3 w-3">
-                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#C6922D] opacity-60" />
-                            <span className="relative inline-flex h-3 w-3 rounded-full bg-[#C6922D]" />
-                        </span>
-                        <p className="text-[#8A7A5C]">Redirecting to secure payment...</p>
+                        <div className="relative flex items-center justify-center">
+                            <div className="absolute inset-0 rounded-full bg-amber-500/20 blur-md animate-pulse" />
+                            <svg
+                                className="relative h-7 w-7 animate-spin text-amber-500"
+                                xmlns="http://www.w3.org/2000/svg"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                aria-hidden="true"
+                            >
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3" />
+                                <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                            </svg>
+                        </div>
+                        <p className="text-sm font-medium tracking-wide text-[#5C5346]">Redirecting to secure payment...</p>
                     </div>
                 </div>
             </section>
         );
     }
 
-    // Empty cart - Only show when not submitting and not redirecting
-    if (!orderId && !hasItems() && !isSubmitting && !loading) {
+    // Empty cart - Only show when fully hydrated, not submitting, and not redirecting
+    if (!orderId && isHydrated && !hasItems() && !isSubmitting && !loading) {
         return (
             <section className="max-w-7xl mx-auto py-32 px-4 text-center">
                 <div className="bg-[#FDFBF6] p-8 rounded-2xl border border-[#EDE4D0] max-w-md mx-auto">
@@ -727,29 +775,78 @@ export default function Checkout() {
                         )}
 
                         {/* Submit Button */}
-                        <button
-                            type="submit"
-                            disabled={isSubmitting || loading || isRedirecting || checkoutItems.length === 0}
-                            className={`w-full flex items-center justify-center gap-2 rounded-xl py-4 text-sm font-bold transition-all duration-300 ${isSubmitting || loading || isRedirecting || checkoutItems.length === 0
-                                ? "bg-[#EDE4D0] text-[#A99B7F] cursor-not-allowed"
-                                : "bg-[#2E2A24] text-white hover:bg-[#1F1C18] active:scale-[0.99] cursor-pointer"
-                                }`}
-                        >
-                            {isSubmitting || loading ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <span className="relative flex h-2 w-2">
-                                        <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white opacity-60" />
-                                        <span className="relative inline-flex h-2 w-2 rounded-full bg-white" />
-                                    </span>
-                                    Processing...
-                                </span>
-                            ) : (
-                                <span className="flex items-center gap-2">
-                                    <Lock size={16} />
-                                    {orderId ? "Pay Now" : "Place Order"} • {formatPrice(total)}
-                                </span>
-                            )}
-                        </button>
+                        {(() => {
+                            const isProcessing = Boolean(isSubmitting || loading || isRedirecting);
+                            const isEmpty = checkoutItems.length === 0;
+
+                            return (
+                                <button
+                                    type="submit"
+                                    disabled={isProcessing || isEmpty}
+                                    className={`relative w-full h-[54px] flex items-center justify-center gap-2.5 rounded-xl text-sm font-bold overflow-hidden transition-all duration-300 select-none ${
+                                        isProcessing
+                                            ? "bg-neutral-900 text-white border border-neutral-800 shadow-[0_10px_25px_-5px_rgba(0,0,0,0.35),0_0_15px_rgba(245,158,11,0.08)] cursor-wait"
+                                            : isEmpty
+                                            ? "bg-[#EDE4D0] text-[#A99B7F] cursor-not-allowed"
+                                            : "bg-[#2E2A24] text-white hover:bg-[#1F1C18] active:scale-[0.99] cursor-pointer shadow-md hover:shadow-lg hover:shadow-black/10"
+                                    }`}
+                                >
+                                    {/* Luxury shimmer sweep animation when processing */}
+                                    {isProcessing && (
+                                        <motion.div
+                                            initial={{ x: "-100%" }}
+                                            animate={{ x: "200%" }}
+                                            transition={{
+                                                repeat: Infinity,
+                                                duration: 1.8,
+                                                ease: "easeInOut",
+                                            }}
+                                            className="pointer-events-none absolute inset-0 -skew-x-12 bg-gradient-to-r from-transparent via-white/[0.12] to-transparent"
+                                        />
+                                    )}
+
+                                    {isProcessing ? (
+                                        <span className="relative z-10 flex items-center justify-center gap-2.5">
+                                            {/* Warm amber circular spinner */}
+                                            <span className="relative flex items-center justify-center shrink-0">
+                                                <span className="absolute inset-0 rounded-full bg-amber-500/20 blur-sm animate-pulse" />
+                                                <svg
+                                                    className="relative h-4 w-4 animate-spin text-amber-400"
+                                                    xmlns="http://www.w3.org/2000/svg"
+                                                    fill="none"
+                                                    viewBox="0 0 24 24"
+                                                    aria-hidden="true"
+                                                >
+                                                    <circle
+                                                        className="opacity-25"
+                                                        cx="12"
+                                                        cy="12"
+                                                        r="10"
+                                                        stroke="currentColor"
+                                                        strokeWidth="3.5"
+                                                    />
+                                                    <path
+                                                        className="opacity-95"
+                                                        fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                    />
+                                                </svg>
+                                            </span>
+                                            <span className="tracking-wide text-white/95 font-medium text-[13.5px]">
+                                                Securing your order...
+                                            </span>
+                                        </span>
+                                    ) : (
+                                        <span className="relative z-10 flex items-center justify-center gap-2">
+                                            <Lock size={15} className="text-[#D8B36E] shrink-0" />
+                                            <span>{orderId ? "Pay Now" : "Place Order"}</span>
+                                            <span className="text-white/40">•</span>
+                                            <span className="tabular-nums font-bold text-amber-200/90">{formatPrice(total)}</span>
+                                        </span>
+                                    )}
+                                </button>
+                            );
+                        })()}
 
                         {/* Security note */}
                         <p className="flex items-center justify-center gap-1.5 text-xs text-[#A99B7F]">

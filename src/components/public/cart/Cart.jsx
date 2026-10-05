@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useCartStore } from "@/store/cartStore";
+import { useCartStore, useCartHydration } from "@/store/cartStore";
 import { ProductImage } from "@/components/ui/ProductImage";
 import { Minus, Plus, Trash2, ShoppingBag, ShieldCheck, ArrowRight, Lock } from "lucide-react";
 import Link from "next/link";
@@ -10,6 +10,7 @@ import CartSkeleton from "@/components/ui/skeletons/CartSkeleton";
 import toast from "react-hot-toast";
 
 export default function Cart() {
+    const isHydrated = useCartHydration();
     const {
         cart,
         increaseQty,
@@ -87,8 +88,8 @@ export default function Cart() {
         }, 200);
     };
 
-    // Hydration guard — show skeleton for one frame to avoid flash.
-    if (!mounted) {
+    // Hydration guard — show skeleton until mounted AND hydrated from localStorage to prevent flash of empty cart
+    if (!mounted || !isHydrated) {
         return <CartSkeleton />;
     }
 

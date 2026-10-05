@@ -42,7 +42,8 @@ export default function AdminUsersPage({
   const [dialogVariant, setDialogVariant] = useState('delete');
   const [selectedUser, setSelectedUser] = useState(null);
 
-  const filters = { search, role, status, sort, page, limit: ITEMS_PER_PAGE };
+  const [limit, setLimit] = useState(ITEMS_PER_PAGE);
+  const filters = { search, role, status, sort, page, limit };
   const { data, isLoading, isError, error, refetch } = useAdminUsers(filters);
   const { data: statsData } = useAdminUsersStats();
   const { suspendUser, activateUser, deleteUser, updateUser } = useAdminUserActions();
@@ -216,7 +217,15 @@ export default function AdminUsersPage({
         <Pagination
           currentPage={pagination.page}
           totalPages={pagination.totalPages}
+          totalItems={pagination.totalItems}
+          itemsPerPage={limit}
           onPageChange={setPage}
+          onItemsPerPageChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+          itemsPerPageOptions={[5, 10, 20, 50]}
+          label="users"
           className="pt-2"
         />
       )}

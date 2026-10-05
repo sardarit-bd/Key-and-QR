@@ -32,6 +32,7 @@ import ConfirmDialog from '../shared/ConfirmDialog';
 import AdminSearchInput from '@/components/dashboard/admin/common/AdminSearchInput';
 import AssignQuoteModal from './AssignQuoteModal';
 import QuoteDetailsModal from './QuoteDetailsModal';
+import Pagination from '@/components/ui/Pagination';
 import {
   Select,
   SelectContent,
@@ -269,9 +270,6 @@ export default function AdminQuotesPage() {
   // Pagination calculation
   const totalQuotes = meta?.total || rawQuotes.length;
   const totalPages = meta?.totalPage || Math.ceil(totalQuotes / limit) || 1;
-  const startRange = totalQuotes === 0 ? 0 : (page - 1) * limit + 1;
-  const endRange = Math.min(page * limit, totalQuotes);
-  const pageNumbers = useMemo(() => generatePageNumbers(page, totalPages), [page, totalPages]);
 
   const handleSearchChange = useCallback((v) => { setSearch(v); setPage(1); }, []);
   const handleCategoryChange = useCallback((v) => { setCategory(v); setPage(1); }, []);
@@ -687,92 +685,20 @@ export default function AdminQuotesPage() {
           </div>
         )}
 
-        {/* 4. Conditional Compact Server Pagination Footer */}
-        {totalQuotes > limit && (
-          <div className="pt-4 sm:pt-6 border-t border-border/40 mt-2 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs sm:text-sm">
-            {/* Left: Result Range Info */}
-            <div className="text-foreground-secondary font-medium order-2 sm:order-1">
-              Showing <span className="text-foreground font-semibold">{startRange}–{endRange}</span> of{' '}
-              <span className="text-foreground font-semibold">{totalQuotes}</span> quotes
-            </div>
-
-            {/* Center: Page Controls */}
-            {totalPages > 1 && (
-              <div className="flex items-center gap-1 order-1 sm:order-2">
-                {/* Previous Button */}
-                <button
-                  type="button"
-                  disabled={page <= 1}
-                  onClick={() => setPage((p) => Math.max(1, p - 1))}
-                  className="h-8 px-2 rounded-lg border border-border bg-card hover:bg-muted text-foreground-secondary hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center justify-center text-xs font-medium"
-                  aria-label="Previous Page"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </button>
-
-                {/* Page Number Buttons */}
-                {pageNumbers.map((pNum, idx) => {
-                  if (pNum === '...') {
-                    return (
-                      <span
-                        key={`ellipsis-${idx}`}
-                        className="h-8 w-6 flex items-center justify-center text-foreground-secondary/60 text-xs font-medium"
-                      >
-                        …
-                      </span>
-                    );
-                  }
-
-                  const isCurrent = page === pNum;
-                  return (
-                    <button
-                      key={`page-${pNum}`}
-                      type="button"
-                      onClick={() => setPage(pNum)}
-                      className={`h-8 min-w-8 px-2 rounded-lg text-xs transition-all flex items-center justify-center ${isCurrent
-                        ? 'bg-primary text-white shadow-2xs font-bold'
-                        : 'bg-card border border-border/70 hover:bg-muted text-foreground-secondary hover:text-foreground font-medium'
-                        }`}
-                    >
-                      {pNum}
-                    </button>
-                  );
-                })}
-
-                {/* Next Button */}
-                <button
-                  type="button"
-                  disabled={page >= totalPages}
-                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                  className="h-8 px-2 rounded-lg border border-border bg-card hover:bg-muted text-foreground-secondary hover:text-foreground disabled:opacity-30 disabled:pointer-events-none transition-colors flex items-center justify-center text-xs font-medium"
-                  aria-label="Next Page"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </button>
-              </div>
-            )}
-
-            {/* Right: Page Size Selector */}
-            <div className="flex items-center gap-2 shrink-0 order-3">
-              <Select
-                value={String(limit)}
-                onValueChange={(val) => {
-                  setLimit(Number(val));
-                  setPage(1);
-                }}
-              >
-                <SelectTrigger className="h-8 text-xs sm:text-sm rounded-lg border-border bg-card px-2.5 min-w-22">
-                  <SelectValue placeholder={`Show ${limit}`} />
-                </SelectTrigger>
-                <SelectContent className="rounded-xl">
-                  <SelectItem value="5" className="text-xs sm:text-sm">Show 5</SelectItem>
-                  <SelectItem value="10" className="text-xs sm:text-sm">Show 10</SelectItem>
-                  <SelectItem value="20" className="text-xs sm:text-sm">Show 20</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        )}
+        {/* 4. Unified Server Pagination */}
+        <Pagination
+          currentPage={page}
+          totalPages={totalPages}
+          totalItems={totalQuotes}
+          itemsPerPage={limit}
+          onPageChange={setPage}
+          onItemsPerPageChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+          itemsPerPageOptions={[5, 10, 20, 50]}
+          label="quotes"
+        />
       </div>
 
       {/* 5. Assign Quote Modal */}

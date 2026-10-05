@@ -64,7 +64,8 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
   const [deleteId, setDeleteId] = useState(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
 
-  const filters = { search, status, page, limit: ITEMS_PER_PAGE };
+  const [limit, setLimit] = useState(ITEMS_PER_PAGE);
+  const filters = { search, status, page, limit };
   const { data, isLoading, isError, error, refetch } = useAdminPendingQuotes(filters);
   const { approveQuote, rejectQuote, deletePendingQuote } = useAdminQuoteActions();
 
@@ -338,7 +339,20 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
       )}
 
       {meta.totalPage > 1 && (
-        <Pagination currentPage={meta.page} totalPages={meta.totalPage} onPageChange={setPage} className="pt-2" />
+        <Pagination
+          currentPage={meta.page}
+          totalPages={meta.totalPage}
+          totalItems={meta.total}
+          itemsPerPage={limit}
+          onPageChange={setPage}
+          onItemsPerPageChange={(newLimit) => {
+            setLimit(newLimit);
+            setPage(1);
+          }}
+          itemsPerPageOptions={[5, 10, 20, 50]}
+          label="pending quotes"
+          className="pt-2"
+        />
       )}
 
       {/* View Dialog */}

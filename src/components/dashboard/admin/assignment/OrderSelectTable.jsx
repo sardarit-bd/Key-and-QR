@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { ShoppingBag } from 'lucide-react';
+import { ShoppingBag, Check } from 'lucide-react';
 import Card from '@/components/dashboard/user/dashboard/Card';
 import {
   formatStatusLabel,
@@ -21,14 +21,14 @@ export default function OrderSelectTable({ orders = [], selectedOrderId, selecte
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-      <Card className="p-4">
-        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
-          <ShoppingBag size={16} className="text-indigo-400" />
-          Select Order
-          <span className="text-[10px] text-foreground-tertiary font-normal">({orders.length})</span>
+      <div className="p-4 sm:p-5 rounded-2xl bg-white dark:bg-neutral-900/60 backdrop-blur-md border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-neutral-200 shadow-xs">
+        <h3 className="text-sm font-semibold text-neutral-900 dark:text-neutral-100 flex items-center gap-2 mb-3.5">
+          <ShoppingBag size={16} className="text-[#E5C378] shrink-0" />
+          <span>Select Order</span>
+          <span className="text-[11px] text-neutral-500 dark:text-neutral-400 font-normal">({orders.length})</span>
         </h3>
 
-        <div className="divide-y divide-border/50 max-h-[400px] overflow-y-auto">
+        <div className="space-y-2.5 max-h-[460px] overflow-y-auto pr-1">
           {orders.map((order) => {
             const isSelected = selectedOrderId === order._id;
             const fulfillmentStyle = getFulfillmentStatusStyle(order.fulfillmentStatus);
@@ -40,33 +40,55 @@ export default function OrderSelectTable({ orders = [], selectedOrderId, selecte
             return (
               <button
                 key={order._id}
+                type="button"
                 onClick={() => onSelect(order)}
-                className={`w-full flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 py-3 px-3 rounded-xl transition-all text-left cursor-pointer ${
+                className={`relative group w-full flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 rounded-xl text-left cursor-pointer transition-all duration-200 select-none ${
                   isSelected
-                    ? 'bg-primary/10 border-2 border-primary shadow-xs'
-                    : 'hover:bg-muted/40 border border-border/60 bg-card/40'
+                    ? 'bg-amber-50/70 dark:bg-neutral-900/80 dark:bg-amber-400/[0.04] border-2 border-[#E5C158]/50 dark:border-[#E5C378]/50 shadow-sm ring-1 ring-[#E5C378]/25'
+                    : 'bg-white dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-neutral-200 hover:border-neutral-300 dark:hover:border-neutral-700'
                 }`}
               >
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground truncate">{customer}</p>
-                  <p className="text-xs text-foreground-tertiary truncate mt-0.5">
-                    #{order._id?.slice(-8).toUpperCase()} · {formatDate(order.createdAt)}
-                  </p>
+                {/* Left: Radio checkmark + Order & Customer Info */}
+                <div className="flex items-start gap-3 min-w-0 flex-1">
+                  <div className="flex-shrink-0 mt-0.5">
+                    {isSelected ? (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#E5C378]/15 border border-[#E5C378]/40 text-[#E5C378] shadow-xs">
+                        <Check size={12} strokeWidth={2.5} />
+                      </span>
+                    ) : (
+                      <span className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-neutral-300 dark:border-neutral-700 group-hover:border-neutral-400 dark:group-hover:border-neutral-600 transition-colors" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-sm font-semibold truncate ${
+                      isSelected
+                        ? 'text-amber-800 dark:text-[#E5C378]'
+                        : 'text-neutral-900 dark:text-neutral-100'
+                    }`}>
+                      {customer}
+                    </p>
+                    <p className="text-xs text-neutral-500 dark:text-neutral-400 truncate mt-0.5">
+                      <span className="font-mono font-medium">#{order._id?.slice(-8).toUpperCase()}</span>
+                      <span className="mx-1.5 opacity-60">·</span>
+                      <span>{formatDate(order.createdAt)}</span>
+                    </p>
+                  </div>
                 </div>
 
-                <div className="flex items-center sm:items-end justify-between sm:justify-center sm:flex-col gap-1.5 flex-shrink-0">
-                  <span className="text-sm font-semibold text-foreground">
+                {/* Right: Amount & Badges */}
+                <div className="flex items-center sm:items-end justify-between sm:justify-center sm:flex-col gap-1.5 flex-shrink-0 pl-8 sm:pl-0">
+                  <span className="text-sm font-bold text-neutral-900 dark:text-neutral-100 tabular-nums">
                     ${Number(order.grandTotal).toFixed(2)}
                   </span>
                   <div className="flex items-center gap-1.5 flex-wrap">
                     <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${fulfillmentStyle}`}>
-                      Order: {formatStatusLabel(order.fulfillmentStatus || 'pending')}
+                      {formatStatusLabel(order.fulfillmentStatus || 'pending')}
                     </span>
                     <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${paymentStyle}`}>
-                      Payment: {formatStatusLabel(order.paymentStatus || 'pending')}
+                      {formatStatusLabel(order.paymentStatus || 'pending')}
                     </span>
                     <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${assignmentStyle}`}>
-                      Assignment: {formatStatusLabel(assignmentStatus)}
+                      {formatStatusLabel(assignmentStatus)}
                     </span>
                   </div>
                 </div>
@@ -74,8 +96,7 @@ export default function OrderSelectTable({ orders = [], selectedOrderId, selecte
             );
           })}
         </div>
-      </Card>
+      </div>
     </motion.div>
   );
 }
-

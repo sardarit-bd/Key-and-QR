@@ -25,33 +25,33 @@ export function formatStatusLabel(status) {
 }
 
 export const FULFILLMENT_STATUS_STYLES = {
-  pending: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  assigned: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  shipped: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
-  delivered: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  cancelled: 'bg-red-500/10 text-red-400 border-red-500/20',
-  returned: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
+  pending: 'bg-[#E5C378]/10 text-amber-800 dark:text-[#E5C378] border-[#E5C378]/25',
+  assigned: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/25',
+  shipped: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/25',
+  delivered: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25',
+  cancelled: 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/25',
+  returned: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/25',
 };
 
 export const PAYMENT_STATUS_STYLES = {
-  paid: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  succeeded: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
-  pending: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
-  processing: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  refunded: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-  partial_refunded: 'bg-purple-500/10 text-purple-400 border-purple-500/20',
-  failed: 'bg-red-500/10 text-red-400 border-red-500/20',
-  cancelled: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-  abandoned: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
+  paid: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25',
+  succeeded: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/25',
+  pending: 'bg-[#E5C378]/10 text-amber-800 dark:text-[#E5C378] border-[#E5C378]/25',
+  processing: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/25',
+  refunded: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/25',
+  partial_refunded: 'bg-purple-500/10 text-purple-700 dark:text-purple-400 border-purple-500/25',
+  failed: 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/25',
+  cancelled: 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border-neutral-500/20',
+  abandoned: 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border-neutral-500/20',
 };
 
 export const ASSIGNMENT_STATUS_STYLES = {
-  assigned: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  complete: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-  unassigned: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-  none: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-  pending_assignment: 'bg-slate-500/10 text-slate-400 border-slate-500/20',
-  partial: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+  assigned: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/25',
+  complete: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/25',
+  unassigned: 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border-neutral-500/20',
+  none: 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border-neutral-500/20',
+  pending_assignment: 'bg-neutral-500/10 text-neutral-600 dark:text-neutral-400 border-neutral-500/20',
+  partial: 'bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border-indigo-500/25',
 };
 
 export function getFulfillmentStatusStyle(status) {

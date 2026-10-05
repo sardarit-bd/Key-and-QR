@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Sparkles, Heart, Share2, BookOpen, Play, Pause } from "lucide-react";
+import { Sparkles, Heart, Share2, BookOpen, Play, Pause, Gift, X } from "lucide-react";
 import FavoriteButton from "@/components/ui/FavoriteButton";
 import VisualQuoteRenderer from "@/components/public/quote/VisualQuoteRenderer";
 import VisualQuoteAudioPlayer from "@/components/public/quote/VisualQuoteAudioPlayer";
+import GiftDedicationCard from "@/components/common/GiftDedicationCard";
 
 const SESSION_INTERACTION_KEY = "myinspire_user_interacted";
 
@@ -28,6 +30,76 @@ export default function LatestInspirationCard({
   const usedToday = inspiration?.dailyUsage?.usedToday ?? 0;
   const dailyLimit = inspiration?.dailyUsage?.dailyLimit ?? 0;
   const quoteId = inspiration?.quoteId || inspiration?.id || null;
+  // 0 dailyLimit means unlimited (premium); only block when limit > 0 and reached.
+  const isLimitReached = dailyLimit > 0 && usedToday >= dailyLimit;
+
+  // Gift Dedication Metadata
+  const rawGiftDedication = inspiration?.giftDedication || inspiration?.quote?.giftDedication || null;
+  const giftDedication = (rawGiftDedication && (rawGiftDedication.text || rawGiftDedication.message)) ? rawGiftDedication : null;
+  const isGift = Boolean(inspiration?.isGift || inspiration?.quote?.isGift || giftDedication);
+  const isPersonalGift = Boolean(inspiration?.isPersonalGift || inspiration?.quote?.isPersonalGift);
+  const hasGiftDedication = Boolean(giftDedication || isGift || isPersonalGift);
+
+  // Dedicated quote text extraction for the gift dedication modal
+  const actualDedicationText =
+    giftDedication?.text ||
+    giftDedication?.message ||
+    giftDedication?.quote ||
+    inspiration?.giftDedication?.text ||
+    inspiration?.giftDedication?.message ||
+    inspiration?.latestQuote?.giftDedication?.text ||
+    inspiration?.latestQuote?.giftDedication?.message ||
+    inspiration?.giftMessage ||
+    inspiration?.personalMessage ||
+    (isGift ? (inspiration?.text || inspiration?.quote || inspiration?.latestQuote?.text || inspiration?.latestQuote?.quote || inspiration?.fullText) : null) ||
+    inspiration?.text ||
+    inspiration?.quote ||
+    inspiration?.latestQuote?.text ||
+    inspiration?.latestQuote?.quote ||
+    inspiration?.fullText ||
+    inspiration?.previewText ||
+    quote ||
+    "";
+
+  const actualSenderName =
+    giftDedication?.senderName ||
+    inspiration?.giftDedication?.senderName ||
+    inspiration?.latestQuote?.giftDedication?.senderName ||
+    inspiration?.giftSenderName ||
+    inspiration?.latestQuote?.giftSenderName ||
+    author ||
+    "";
+
+  const recipientName =
+    giftDedication?.recipientName ||
+    inspiration?.giftDedication?.recipientName ||
+    inspiration?.latestQuote?.giftDedication?.recipientName ||
+    null;
+
+  const dedicationQuoteId =
+    giftDedication?.quoteId ||
+    inspiration?.giftDedication?.quoteId ||
+    (isGift ? (inspiration?.quoteId || inspiration?.id) : null);
+
+  const dedicationText = actualDedicationText;
+  const senderName = actualSenderName;
+
+  const [showDedicationModal, setShowDedicationModal] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (showDedicationModal) {
+      const originalStyle = window.getComputedStyle(document.body).overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = originalStyle;
+      };
+    }
+  }, [showDedicationModal]);
 
   // Video and Media Detection
   const videoUrl =
@@ -278,20 +350,38 @@ export default function LatestInspirationCard({
 
       {/* ===== Controls & Legacy Text Overlay ===== */}
       <div className="relative z-10 flex flex-col justify-between h-full p-4 sm:p-5 md:p-6 pointer-events-none">
-        {/* Top row: Quote badge (left) & Floating Media Controls (right) */}
-        <div className="flex items-center justify-between pointer-events-auto">
-          {/* Quote badge */}
-          <motion.span
-            initial={reduceMotion ? false : { opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 backdrop-blur-md px-3 sm:px-3.5 py-1.5 shadow-sm"
-          >
-            <Sparkles size={12} className="text-accent" fill="currentColor" />
-            <span className="text-[10.5px] sm:text-[12px] font-semibold uppercase tracking-[0.1em] sm:tracking-[0.12em] text-white/90">
-              {usedToday > 0 ? "Today's Quote" : "Daily Inspiration Available"}
-            </span>
-          </motion.span>
+        {/* Top row: Quote badge & Gift Dedication (left) & Floating Media Controls (right) */}
+        <div className="flex items-center justify-between pointer-events-auto gap-2">
+          {/* Quote badge & Gift Dedication Pill */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <motion.span
+              initial={reduceMotion ? false : { opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 backdrop-blur-md px-3 sm:px-3.5 py-1.5 shadow-sm"
+            >
+              <Sparkles size={12} className="text-accent" fill="currentColor" />
+              <span className="text-[10.5px] sm:text-[12px] font-semibold uppercase tracking-[0.1em] sm:tracking-[0.12em] text-white/90">
+                {usedToday > 0 ? "Today's Quote" : "Daily Inspiration Available"}
+              </span>
+            </motion.span>
+
+            {hasGiftDedication && (
+              <motion.button
+                type="button"
+                initial={reduceMotion ? false : { opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                whileHover={{ scale: 1.04 }}
+                whileTap={{ scale: 0.96 }}
+                onClick={() => setShowDedicationModal(true)}
+                className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-950/70 via-neutral-900/80 to-amber-950/70 backdrop-blur-md px-3 sm:px-3.5 py-1.5 text-[10.5px] sm:text-[12px] font-semibold text-amber-300 shadow-[0_0_14px_rgba(245,158,11,0.25)] hover:border-amber-400/80 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all"
+                title="View personal gift dedication"
+              >
+                <Gift size={13} className="text-amber-400 animate-pulse" />
+                <span className="uppercase tracking-[0.08em]">Gift Dedication</span>
+              </motion.button>
+            )}
+          </div>
 
           {/* Floating Media Controls — Clean single Play/Pause trigger */}
           <div className="pointer-events-auto flex items-center gap-2">
@@ -359,9 +449,30 @@ export default function LatestInspirationCard({
         {/* On desktop (sm: >= 640px), hidden by default and reveals smoothly on hover/focus */}
         {/* On mobile (< 640px), permanently visible and touch-accessible */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3 opacity-100 translate-y-0 pointer-events-auto sm:opacity-0 sm:translate-y-2 sm:pointer-events-none sm:group-hover:opacity-100 sm:group-hover:translate-y-0 sm:group-hover:pointer-events-auto sm:group-focus-within:opacity-100 sm:group-focus-within:translate-y-0 sm:group-focus-within:pointer-events-auto transition-all duration-300 ease-out z-20 w-full">
-          {/* Mobile Row 1 (Usage Status & Future Reflect Slot) / Desktop Left Action Group */}
-          <div className="flex items-center justify-end sm:justify-start gap-2 w-full sm:w-auto">
-            {/* Space reserved for future Reflect / Diary action */}
+          {/* Row 1 on mobile / Left group on desktop */}
+          <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-2 w-full sm:w-auto">
+            {/* Primary Action: Inspire */}
+            <button
+              onClick={isLimitReached ? undefined : onInspire}
+              disabled={isReceiving || isLimitReached}
+              aria-disabled={isLimitReached}
+              title={isLimitReached ? "Daily limit reached — come back tomorrow" : undefined}
+              className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full px-4 sm:px-4.5 py-2 text-[12px] sm:text-[13px] font-semibold transition-all duration-150 active:scale-[0.97] flex-1 sm:flex-initial ${isLimitReached
+                ? "bg-white/10 border border-white/15 text-white/40 cursor-not-allowed opacity-60 backdrop-blur-md"
+                : `bg-accent text-accent-foreground shadow-md shadow-accent/20 hover:brightness-105 disabled:opacity-60 disabled:cursor-not-allowed ${usedToday === 0 ? "ring-2 ring-accent/60 shadow-lg shadow-accent/30" : ""}`
+                }`}
+            >
+              <Sparkles size={14} fill={isLimitReached ? "none" : "currentColor"} />
+              <span className="truncate">
+                {isReceiving
+                  ? "Inspiring..."
+                  : isLimitReached
+                    ? "Limit reached"
+                    : usedToday === 0
+                      ? "Receive Inspiration"
+                      : "Inspire"}
+              </span>
+            </button>
 
             {/* Mobile Usage Status Pill (Row 1 right) */}
             <div className="sm:hidden inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 backdrop-blur-md px-3 py-1.5 text-[11px] font-medium text-white/85 select-none shrink-0">
@@ -375,6 +486,7 @@ export default function LatestInspirationCard({
 
             {/* Desktop Secondary Actions (Favorite + Share + Read Again) */}
             <div className="hidden sm:flex items-center gap-2">
+
               {quoteId ? (
                 <FavoriteButton
                   id={quoteId}
@@ -415,6 +527,7 @@ export default function LatestInspirationCard({
 
           {/* Row 2 on mobile: Secondary Action Buttons (Favorite + Share + Read Again) */}
           <div className="flex sm:hidden items-center justify-between gap-1.5 w-full pb-2.5">
+
             {quoteId ? (
               <FavoriteButton
                 id={quoteId}
@@ -463,6 +576,23 @@ export default function LatestInspirationCard({
           </div>
         </div>
       </div>
+
+      {/* Persistent Gift Dedication Modal */}
+      <GiftDedicationCard
+        isOpen={showDedicationModal && hasGiftDedication}
+        onClose={() => setShowDedicationModal(false)}
+        senderName={giftDedication?.senderName || actualSenderName || inspiration?.latestQuote?.author || author || "A Loved One"}
+        message={giftDedication?.text || actualDedicationText || inspiration?.latestQuote?.quote || inspiration?.latestQuote?.text || quote || ""}
+        dedicationData={giftDedication}
+        giftDedication={giftDedication}
+        activeQuote={inspiration?.latestQuote || inspiration}
+        inspiration={inspiration}
+        quoteText={giftDedication?.text || actualDedicationText || quote}
+        text={giftDedication?.text || actualDedicationText || quote}
+        quote={quote}
+        onSave={() => onFavoriteChange && onFavoriteChange({ quoteId: dedicationQuoteId || quoteId })}
+        isSaved={inspiration?.favorite}
+      />
     </motion.section>
   );
 }

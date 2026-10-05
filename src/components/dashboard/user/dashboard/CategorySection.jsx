@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Sparkles, ArrowRight, X, Search, Crown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { resolveCategory } from "@/components/dashboard/admin/categories/categoryIconRegistry";
 import { getCategoryIcon } from "@/components/public/quote/category";
+import { useSubscriptionStore } from "@/store/subscriptionStore";
 
 function hexToRgba(hex, alpha = 0.1) {
   if (!hex || typeof hex !== 'string') return `rgba(239, 68, 68, ${alpha})`;
@@ -78,6 +79,42 @@ export default function CategorySection({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [upgradeCategory, setUpgradeCategory] = useState(null);
+
+  const { plans, fetchPlans } = useSubscriptionStore();
+
+  useEffect(() => {
+    if (!plans || plans.length === 0) {
+      fetchPlans();
+    }
+  }, [plans, fetchPlans]);
+
+  const plan = useMemo(() => {
+    if (!Array.isArray(plans) || plans.length === 0) return null;
+    const targetPlan =
+      plans.find((p) => p.name === "subscriber" || p.name === "premium") ||
+      plans.find((p) => p.price > 0) ||
+      null;
+
+    if (!targetPlan) return null;
+
+    const rawMonthly =
+      targetPlan.monthlyPrice ??
+      (targetPlan.price != null && targetPlan.price > 0 ? targetPlan.price : null);
+
+    if (rawMonthly == null) return null;
+
+    const formattedPrice =
+      typeof rawMonthly === "number"
+        ? `$${rawMonthly.toFixed(2)}`
+        : String(rawMonthly).startsWith("$")
+        ? String(rawMonthly)
+        : `$${rawMonthly}`;
+
+    return {
+      ...targetPlan,
+      monthlyPrice: formattedPrice,
+    };
+  }, [plans]);
 
   const handleClick = (category) => {
     if (disabled) return;
@@ -370,7 +407,7 @@ export default function CategorySection({
             onClick={() => setUpgradeCategory(null)}
           >
             <motion.div
-              className="relative w-full max-w-md rounded-3xl overflow-hidden bg-white dark:bg-neutral-900 border border-amber-500/30 shadow-2xl p-6 sm:p-7 text-center space-y-4"
+              className="relative w-full max-w-md rounded-3xl overflow-hidden bg-white dark:bg-neutral-900 border border-[#F3CA68]/30 shadow-2xl p-6 sm:p-7 text-center space-y-4"
               initial={{ scale: 0.94, opacity: 0, y: 12 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.96, opacity: 0, y: 8 }}
@@ -378,35 +415,35 @@ export default function CategorySection({
               onClick={(e) => e.stopPropagation()}
             >
               {/* Crown Icon */}
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500/20 to-yellow-400/20 border border-amber-400/30 flex items-center justify-center mx-auto text-amber-500 shadow-sm">
+              <div className="w-14 h-14 rounded-2xl bg-[#F3CA68]/10 border border-[#F3CA68]/30 flex items-center justify-center mx-auto text-[#F3CA68] shadow-sm">
                 <Crown size={28} />
               </div>
 
               {/* Title & Badge */}
               <div className="space-y-1.5">
-                <span className="inline-block px-3 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-400/30">
+                <span className="inline-block px-3 py-0.5 text-[10px] font-bold tracking-wider uppercase rounded-full bg-[#F3CA68]/10 text-[#F3CA68] border border-[#F3CA68]/30">
                   Subscriber Exclusive
                 </span>
                 <h3 className="text-lg sm:text-xl font-bold text-foreground">
                   Unlock {upgradeCategory?.name || "This Category"}
                 </h3>
                 <p className="text-xs sm:text-sm text-foreground-secondary max-w-sm mx-auto leading-relaxed">
-                  <strong className="text-foreground">{upgradeCategory?.name}</strong> is reserved exclusively for <span className="text-amber-500 font-semibold">MyInspireTag+</span> members. Upgrade now to enjoy unlimited inspiration across all categories.
+                  <strong className="text-foreground">{upgradeCategory?.name}</strong> is reserved exclusively for <span className="text-[#F3CA68] font-semibold">MyInspireTag+</span> members. Upgrade now to enjoy unlimited inspiration across all categories.
                 </p>
               </div>
 
               {/* Perks Highlights */}
-              <div className="p-3.5 rounded-2xl bg-amber-500/5 dark:bg-amber-950/20 border border-amber-500/15 text-left text-xs text-foreground-secondary space-y-2">
+              <div className="p-3.5 rounded-2xl bg-[#F3CA68]/5 dark:bg-[#F3CA68]/5 border border-[#F3CA68]/15 text-left text-xs text-foreground-secondary space-y-2">
                 <div className="flex items-center gap-2">
-                  <Sparkles size={14} className="text-amber-500 shrink-0" />
+                  <Sparkles size={14} className="text-[#F3CA68] shrink-0" />
                   <span>Unlimited daily quote reveals — no daily limits</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Sparkles size={14} className="text-amber-500 shrink-0" />
+                  <Sparkles size={14} className="text-[#F3CA68] shrink-0" />
                   <span>Access to all exclusive category collections</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Sparkles size={14} className="text-amber-500 shrink-0" />
+                  <Sparkles size={14} className="text-[#F3CA68] shrink-0" />
                   <span>Audio messages & visual canvas quotes</span>
                 </div>
               </div>
@@ -419,10 +456,12 @@ export default function CategorySection({
                     setUpgradeCategory(null);
                     router.push("/dashboard/user/premium");
                   }}
-                  className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-bold text-xs sm:text-sm py-3 px-6 shadow-md transition-all active:scale-97 cursor-pointer"
+                  className="w-full inline-flex items-center justify-center gap-2 rounded-full bg-[#E5B842] hover:bg-[#d8ab36] text-neutral-950 font-semibold text-xs sm:text-sm py-3 px-6 shadow-sm transition-all active:scale-97 cursor-pointer"
                 >
                   <Crown size={16} />
-                  <span>Upgrade to MyInspireTag+ ($4.99/mo)</span>
+                  <span>
+                    Upgrade to MyInspireTag+{plan?.monthlyPrice ? ` (${plan.monthlyPrice}/mo)` : ""}
+                  </span>
                 </button>
 
                 <button

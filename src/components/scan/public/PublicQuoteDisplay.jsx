@@ -19,6 +19,7 @@ import VisualQuoteRenderer from "@/components/public/quote/VisualQuoteRenderer";
 import VisualQuoteAudioPlayer from "@/components/public/quote/VisualQuoteAudioPlayer";
 import useShareQuote from "@/hooks/useShareQuote";
 import ShareQuoteModal from "@/components/public/quote/ShareQuoteModal";
+import GiftDedicationCard from "@/components/common/GiftDedicationCard";
 
 export default function PublicQuoteDisplay({ data, tagCode }) {
   const router = useRouter();
@@ -26,6 +27,31 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   const { user, isInitialized } = useAuthStore();
 
   const [quoteData, setQuoteData] = useState(data);
+
+  const giftDedication =
+    quoteData?.giftDedication ||
+    data?.giftDedication ||
+    quoteData?.latestQuote?.giftDedication ||
+    (quoteData?.personalMessage || data?.personalMessage || quoteData?.gift?.giftMessage || data?.gift?.giftMessage
+      ? {
+          text:
+            quoteData?.personalMessage ||
+            data?.personalMessage ||
+            quoteData?.gift?.giftMessage ||
+            data?.gift?.giftMessage,
+          senderName:
+            quoteData?.giftSenderName ||
+            data?.giftSenderName ||
+            quoteData?.gift?.giftSenderName ||
+            data?.gift?.giftSenderName ||
+            quoteData?.author ||
+            "A Loved One",
+        }
+      : null);
+
+  const [showDedicationModal, setShowDedicationModal] = useState(false);
+  const [dedicationSaved, setDedicationSaved] = useState(false);
+  const [dedicationFavoriteLoading, setDedicationFavoriteLoading] = useState(false);
 
   const isPersonalMessage = Boolean(
     quoteData?.isPersonalMessage || quoteData?.latestQuote?.isPersonalMessage
@@ -221,10 +247,10 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
           typeof incomingAudio === 'string'
             ? { source: incomingAudio, autoplay: true, loop: true }
             : incomingAudio?.source
-            ? incomingAudio
-            : incomingAudio?.url
-            ? { ...incomingAudio, source: incomingAudio.url }
-            : null;
+              ? incomingAudio
+              : incomingAudio?.url
+                ? { ...incomingAudio, source: incomingAudio.url }
+                : null;
 
         setQuoteData(unlockedData);
         setIsRevealed(true); // Trigger visual card entrance immediately with data
@@ -263,7 +289,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
         }));
         setIsRevealed(true);
         if (audioPlayerRef.current) {
-          audioPlayerRef.current.play().catch(() => {});
+          audioPlayerRef.current.play().catch(() => { });
         }
         return;
       }
@@ -278,7 +304,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             setQuoteData(verifiedData);
             setIsRevealed(true);
             if (audioPlayerRef.current) {
-              audioPlayerRef.current.play().catch(() => {});
+              audioPlayerRef.current.play().catch(() => { });
             }
             return;
           }
@@ -303,7 +329,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
         if (quoteData?.latestQuote) {
           setIsRevealed(true);
           if (audioPlayerRef.current) {
-            audioPlayerRef.current.play().catch(() => {});
+            audioPlayerRef.current.play().catch(() => { });
           }
         } else {
           toast.error("Daily limit reached. Free users can reveal 1 quote per day. Scan again tomorrow!", {
@@ -366,7 +392,12 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   }, [activeQuote, quoteData, category, renderedMobileUrl, renderedDesktopUrl]);
 
   const categoryLabel = getPrettyCategoryLabel(category);
-  const canFavorite = !isPersonalMessage;
+  const currentQuoteId =
+    activeQuote?._id ||
+    quoteData?._id ||
+    (isPersonalMessage && giftDedication?.quoteId) ||
+    null;
+  const canFavorite = Boolean(currentQuoteId);
 
   const [saved, setSaved] = useState(false);
   const [favoriteId, setFavoriteId] = useState(null);
@@ -377,9 +408,9 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   const [isClaimed, setIsClaimed] = useState(false);
 
   const isAlreadyOwned = Boolean(quoteData?.isAlreadyOwned ?? data?.isAlreadyOwned);
-  const isGift = Boolean(data?.isGift || data?.gift || data?.giftOrderId || data?.giftStatus || data?.gift?.giftStatus);
+  const isGift = Boolean(data?.isGift || data?.gift || data?.giftOrderId || data?.giftStatus || data?.gift?.giftStatus || giftDedication);
   const isGiftClaimable = !isAlreadyOwned && (data?.isClaimable || data?.gift?.isClaimable) && !isClaimed;
-  const giftOrderId = data?.giftOrderId || data?.gift?.orderId;
+  const giftOrderId = data?.giftOrderId || data?.gift?.orderId || giftDedication?.orderId;
 
   const handleClaimGift = async () => {
     if (!user) {
@@ -410,7 +441,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   };
 
   const checkFavoriteStatus = async () => {
-    const id = activeQuote?._id || quoteData?._id;
+    const id = currentQuoteId;
     if (!id) return;
     try {
       const response = await favoriteService.checkFavorite({ quoteId: id });
@@ -423,10 +454,56 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   };
 
   useEffect(() => {
-    if (isInitialized && user && canFavorite) {
+    if (isInitialized && user && canFavorite && currentQuoteId) {
       checkFavoriteStatus();
     }
-  }, [isInitialized, user, tagCode, canFavorite, activeQuote?._id]);
+  }, [isInitialized, user, tagCode, canFavorite, currentQuoteId]);
+
+  const checkDedicationFavoriteStatus = async () => {
+    if (!giftDedication?.quoteId || !user) return;
+    try {
+      const response = await favoriteService.checkFavorite({ quoteId: giftDedication.quoteId });
+      setDedicationSaved(!!response?.data?.exists);
+    } catch (err) { }
+  };
+
+  useEffect(() => {
+    if (isInitialized && user && giftDedication?.quoteId) {
+      checkDedicationFavoriteStatus();
+    }
+  }, [isInitialized, user, giftDedication?.quoteId]);
+
+  const handleFavoriteDedication = async () => {
+    if (!user) {
+      setShowAuthModal(true);
+      return;
+    }
+    if (!giftDedication?.quoteId) {
+      toast.error("Gift dedication cannot be saved right now");
+      return;
+    }
+
+    try {
+      setDedicationFavoriteLoading(true);
+      const premium = await premiumService.hasActiveSubscription();
+      if (!premium?.data?.hasActive) {
+        setShowUpgradeModal(true);
+        return;
+      }
+      await favoriteService.addFavorite({ quoteId: giftDedication.quoteId });
+      setDedicationSaved(true);
+      toast.success("Saved gift dedication to favorites!");
+    } catch (error) {
+      const code = error.response?.data?.code;
+      if (code === "UPGRADE_REQUIRED") {
+        setShowUpgradeModal(true);
+      } else {
+        toast.error(error.response?.data?.message || "Failed to save dedication");
+      }
+    } finally {
+      setDedicationFavoriteLoading(false);
+    }
+  };
 
   const goToAuth = (type = "register") => {
     if (typeof window !== "undefined" && (activeQuote || quoteData)) {
@@ -439,6 +516,18 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             author: quoteAuthor || activeQuote?.author || "",
             category: category || activeQuote?.category || "faith",
             isPersonalMessage: !!isPersonalMessage,
+            isGift: Boolean(activeQuote?.isGift || quoteData?.isGift || activeQuote?.giftDedication || quoteData?.giftDedication),
+            isPersonalGift: Boolean(activeQuote?.isPersonalGift || quoteData?.isPersonalGift || isPersonalMessage),
+            giftDedication: activeQuote?.giftDedication || quoteData?.giftDedication || null,
+            giftSenderName:
+              activeQuote?.giftDedication?.senderName ||
+              quoteData?.giftDedication?.senderName ||
+              activeQuote?.giftSenderName ||
+              quoteData?.giftSenderName ||
+              quoteAuthor ||
+              null,
+            orderId: activeQuote?.giftOrderId || quoteData?.giftOrderId || activeQuote?.orderId || quoteData?.orderId || null,
+            giftOrderId: activeQuote?.giftOrderId || quoteData?.giftOrderId || null,
             renderedImages: activeQuote?.renderedImages || quoteData?.renderedImages || null,
             editorData: activeQuote?.editorData || quoteData?.editorData || null,
             image: resolvedBgUrl || null,
@@ -467,7 +556,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
       return;
     }
 
-    const id = activeQuote?._id || quoteData?._id;
+    const id = currentQuoteId;
     if (!id) {
       toast.error("This quote can't be saved right now");
       return;
@@ -669,13 +758,13 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                     animate={
                       isRevealing
                         ? {
-                            scale: [1, 1.05, 1],
-                            boxShadow: [
-                              "0 0 25px rgba(245,158,11,0.5)",
-                              "0 0 50px rgba(245,158,11,0.9)",
-                              "0 0 25px rgba(245,158,11,0.5)",
-                            ],
-                          }
+                          scale: [1, 1.05, 1],
+                          boxShadow: [
+                            "0 0 25px rgba(245,158,11,0.5)",
+                            "0 0 50px rgba(245,158,11,0.9)",
+                            "0 0 25px rgba(245,158,11,0.5)",
+                          ],
+                        }
                         : { scale: 1 }
                     }
                     transition={
@@ -833,6 +922,39 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                 {quoteData?.message || quoteData?.latestQuote?.message || "Today's quote has already been unlocked. Come back tomorrow!"}
               </p>
             </div>
+          )}
+
+          {/* Persistent Gift Dedication Indicator / Button */}
+          {giftDedication && (
+            <motion.button
+              type="button"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => setShowDedicationModal(true)}
+              className="w-full mb-2.5 rounded-2xl border border-amber-400/40 bg-gradient-to-r from-amber-950/70 via-neutral-900/80 to-amber-950/70 backdrop-blur-xl px-4 py-2.5 shadow-[0_4px_20px_rgba(245,158,11,0.2)] flex items-center justify-between gap-3 text-left cursor-pointer group hover:border-amber-400/80 transition-all duration-200"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-amber-400/20 text-amber-300 border border-amber-400/40 shadow-inner group-hover:scale-105 transition-transform">
+                  <Gift className="h-4 w-4" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-semibold text-amber-200 tracking-tight flex items-center gap-1.5">
+                    <span>Personal Gift Dedication</span>
+                    {giftDedication.senderName && (
+                      <span className="text-white/60 font-normal truncate">
+                        · from {giftDedication.senderName}
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-[11px] text-white/70 truncate italic">
+                    &ldquo;{giftDedication.text}&rdquo;
+                  </p>
+                </div>
+              </div>
+              <span className="shrink-0 rounded-lg bg-amber-400/25 px-2.5 py-1 text-[11px] font-semibold text-amber-300 border border-amber-400/40 group-hover:bg-amber-400 group-hover:text-black transition-colors">
+                View
+              </span>
+            </motion.button>
           )}
 
           {/* Liquid Glass Floating Action Card (Compact & Optimized) */}
@@ -1010,6 +1132,50 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
         isOpen={isShareOpen}
         onClose={closeShare}
         quoteData={shareData}
+      />
+
+      {/* Persistent Gift Dedication Modal */}
+      <GiftDedicationCard
+        isOpen={showDedicationModal && Boolean(giftDedication)}
+        onClose={() => setShowDedicationModal(false)}
+        senderName={
+          giftDedication?.senderName ||
+          giftDedication?.giftSenderName ||
+          giftDedication?.author ||
+          activeQuote?.author ||
+          quoteAuthor ||
+          author ||
+          "A Loved One"
+        }
+        message={
+          giftDedication?.text ||
+          giftDedication?.message ||
+          giftDedication?.giftMessage ||
+          giftDedication?.quote ||
+          quoteData?.personalMessage ||
+          data?.personalMessage ||
+          quoteData?.gift?.giftMessage ||
+          data?.gift?.giftMessage ||
+          activeQuote?.quote ||
+          activeQuote?.text ||
+          quoteText ||
+          quote ||
+          quoteData?.quote ||
+          quoteData?.text ||
+          data?.quote ||
+          data?.text ||
+          ""
+        }
+        dedicationData={giftDedication}
+        giftDedication={giftDedication}
+        activeQuote={activeQuote}
+        data={quoteData || data}
+        quoteText={quoteText || quote}
+        text={quoteText || quote}
+        quote={quote}
+        onSave={handleFavoriteDedication}
+        isSaved={dedicationSaved}
+        isSaving={dedicationFavoriteLoading}
       />
     </div>
   );

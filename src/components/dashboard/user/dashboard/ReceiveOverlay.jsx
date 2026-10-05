@@ -2,14 +2,14 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Sparkles, Loader2, X } from 'lucide-react';
+import { Sparkles, X } from 'lucide-react';
 import VisualQuoteRenderer from '@/components/public/quote/VisualQuoteRenderer';
 import { stopAllAudio } from '@/lib/audioCoordinator';
 
 const LOADING_MESSAGES = [
-  'Finding today\'s message...',
-  'Preparing your inspiration...',
-  'Receiving today\'s message...',
+  "Crafting today's personalized message...",
+  'Preparing your daily inspiration...',
+  'Unfolding wisdom for your journey...',
 ];
 
 /**
@@ -163,20 +163,42 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
               </div>
             </motion.div>
           ) : (
-            /* ---------- Loading State ---------- */
+            /* ---------- Luxury Loading State ---------- */
             <motion.div
               key="loading"
-              className="flex flex-col items-center text-center"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
+              initial={{ opacity: 0, scale: 0.94, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: -10 }}
+              transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
+              className="max-w-sm w-full mx-4 rounded-3xl bg-neutral-950/75 border border-white/10 backdrop-blur-2xl p-8 sm:p-10 shadow-2xl shadow-black/80 flex flex-col items-center text-center"
+              onClick={(e) => e.stopPropagation()}
             >
-              <div className="relative mb-6 flex h-20 w-20 items-center justify-center">
-                <div className="absolute inset-0 rounded-full bg-accent/20 blur-xl animate-pulse" />
-                <Loader2 size={36} className="relative z-10 animate-spin text-accent" />
+              {/* Dual-Layer Luxury Pulsing Loader */}
+              <div className="relative flex h-20 w-20 items-center justify-center">
+                {/* Soft ambient glow aura */}
+                <div className="absolute inset-0 rounded-full bg-amber-500/20 blur-xl animate-pulse" />
+
+                {/* Sleek thin spinning progress ring */}
+                <div className="absolute inset-0 rounded-full border-2 border-white/5 border-t-[#F3CA68] border-r-[#E5B842]/50 animate-spin" />
+
+                {/* Secondary reverse subtle dashed ring */}
+                <div className="absolute inset-2 rounded-full border border-dashed border-[#F3CA68]/20 animate-spin [animation-duration:8s] [animation-direction:reverse]" />
+
+                {/* Center glowing warm gold sparkle icon */}
+                <div className="relative z-10 flex h-11 w-11 items-center justify-center rounded-2xl bg-neutral-900/90 border border-[#F3CA68]/30 shadow-lg shadow-black/60">
+                  <Sparkles className="h-5 w-5 text-[#F3CA68] animate-pulse" fill="currentColor" />
+                </div>
               </div>
-              <LoadingMessages />
+
+              {/* Primary Text */}
+              <h3 className="text-lg font-semibold tracking-tight text-white mt-5">
+                Unveiling Your Inspiration
+              </h3>
+
+              {/* Subtitle / Dynamic Phase Indicator */}
+              <div className="h-5 flex items-center justify-center mt-2">
+                <LoadingMessages />
+              </div>
             </motion.div>
           )}
         </motion.div>
@@ -186,7 +208,7 @@ export default function ReceiveOverlay({ isOpen, quote, categoryName, onClose })
 }
 
 /**
- * Rotating loading messages — each shows for ~700ms.
+ * Rotating phase messages with subtle opacity transitions.
  */
 function LoadingMessages() {
   const [index, setIndex] = useState(0);
@@ -194,7 +216,7 @@ function LoadingMessages() {
   useEffect(() => {
     const timer = setInterval(() => {
       setIndex((i) => (i + 1) % LOADING_MESSAGES.length);
-    }, 700);
+    }, 900);
     return () => clearInterval(timer);
   }, []);
 
@@ -202,10 +224,10 @@ function LoadingMessages() {
     <AnimatePresence mode="wait">
       <motion.p
         key={index}
-        className="text-[15px] sm:text-[16px] font-medium text-white drop-shadow-md"
-        initial={{ opacity: 0, y: 8 }}
+        className="text-xs text-neutral-400 font-light tracking-wide"
+        initial={{ opacity: 0, y: 3 }}
         animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
+        exit={{ opacity: 0, y: -3 }}
         transition={{ duration: 0.2 }}
       >
         {LOADING_MESSAGES[index]}

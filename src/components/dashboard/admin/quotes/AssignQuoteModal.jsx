@@ -27,6 +27,7 @@ import {
 import toast from 'react-hot-toast';
 import AdminSearchInput from '@/components/dashboard/admin/common/AdminSearchInput';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
+import Pagination from '@/components/ui/Pagination';
 import {
   useAssignableTags,
   useAssignableUsers,
@@ -557,29 +558,15 @@ export default function AssignQuoteModal({ open, onOpenChange, quote, onSuccess 
 
                   {/* Pagination for Tags */}
                   {tagMeta.totalPage > 1 && (
-                    <div className="flex justify-between items-center text-xs text-foreground-secondary pt-1">
-                      <span>
-                        Page {tagMeta.page} of {tagMeta.totalPage} ({tagMeta.total} total tags)
-                      </span>
-                      <div className="flex gap-1.5">
-                        <button
-                          type="button"
-                          disabled={tagPage <= 1}
-                          onClick={() => setTagPage((p) => Math.max(1, p - 1))}
-                          className="px-3 py-1 rounded-lg border border-border disabled:opacity-40 hover:bg-muted font-medium"
-                        >
-                          Prev
-                        </button>
-                        <button
-                          type="button"
-                          disabled={tagPage >= tagMeta.totalPage}
-                          onClick={() => setTagPage((p) => Math.min(tagMeta.totalPage, p + 1))}
-                          className="px-3 py-1 rounded-lg border border-border disabled:opacity-40 hover:bg-muted font-medium"
-                        >
-                          Next
-                        </button>
-                      </div>
-                    </div>
+                    <Pagination
+                      currentPage={tagMeta.page}
+                      totalPages={tagMeta.totalPage}
+                      totalItems={tagMeta.total}
+                      itemsPerPage={10}
+                      onPageChange={setTagPage}
+                      label="tags"
+                      className="pt-2"
+                    />
                   )}
                 </div>
               )}
@@ -674,29 +661,15 @@ export default function AssignQuoteModal({ open, onOpenChange, quote, onSuccess 
 
                   {/* Pagination for Users */}
                   {userMeta.totalPage > 1 && (
-                    <div className="flex justify-between items-center text-xs text-foreground-secondary pt-1">
-                      <span>
-                        Page {userMeta.page} of {userMeta.totalPage} ({userMeta.total} total customers)
-                      </span>
-                      <div className="flex gap-1.5">
-                        <button
-                          type="button"
-                          disabled={userPage <= 1}
-                          onClick={() => setUserPage((p) => Math.max(1, p - 1))}
-                          className="px-3 py-1 rounded-lg border border-border disabled:opacity-40 hover:bg-muted font-medium"
-                        >
-                          Prev
-                        </button>
-                        <button
-                          type="button"
-                          disabled={userPage >= userMeta.totalPage}
-                          onClick={() => setUserPage((p) => Math.min(userMeta.totalPage, p + 1))}
-                          className="px-3 py-1 rounded-lg border border-border disabled:opacity-40 hover:bg-muted font-medium"
-                        >
-                          Next
-                        </button>
-                      </div>
-                    </div>
+                    <Pagination
+                      currentPage={userMeta.page}
+                      totalPages={userMeta.totalPage}
+                      totalItems={userMeta.total}
+                      itemsPerPage={10}
+                      onPageChange={setUserPage}
+                      label="customers"
+                      className="pt-2"
+                    />
                   )}
                 </div>
               )}

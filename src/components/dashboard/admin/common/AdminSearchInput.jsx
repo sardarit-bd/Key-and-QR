@@ -82,7 +82,7 @@ const SearchInputView = forwardRef(function SearchInputView(
   return (
     <div
       className={cn(
-        'group relative flex items-center w-full min-w-[240px] max-w-md h-10 px-3.5 rounded-xl bg-neutral-900/80 border border-white/10 hover:border-white/20 transition-all duration-200 focus-within:border-amber-500/50 focus-within:ring-2 focus-within:ring-amber-500/20 shadow-sm backdrop-blur-md',
+        'group relative flex items-center w-full min-w-[240px] max-w-md h-10 px-3.5 rounded-xl bg-white dark:bg-neutral-900/60 border border-neutral-200 dark:border-neutral-800 text-neutral-900 dark:text-neutral-200 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 hover:border-neutral-300 dark:hover:border-neutral-700 transition-all duration-200 focus-within:ring-1 focus-within:ring-[#E5C378]/30 focus-within:border-[#E5C378]/60 dark:focus-within:border-[#E5C378]/50 shadow-xs backdrop-blur-md',
         disabled && 'opacity-60 cursor-not-allowed pointer-events-none',
         className
       )}
@@ -90,7 +90,7 @@ const SearchInputView = forwardRef(function SearchInputView(
       {/* Modern Muted Left Search Icon with Amber Light-Up on Focus */}
       <Search
         size={16}
-        className="text-neutral-500 group-focus-within:text-amber-400 transition-colors shrink-0 mr-2.5 pointer-events-none"
+        className="text-neutral-400 dark:text-neutral-500 group-focus-within:text-[#E5C378] transition-colors shrink-0 mr-2.5 pointer-events-none"
       />
 
       {/* Raw Frameless Transparent Input */}
@@ -104,7 +104,7 @@ const SearchInputView = forwardRef(function SearchInputView(
         disabled={disabled}
         autoFocus={autoFocus}
         className={cn(
-          'w-full bg-transparent text-sm text-neutral-100 placeholder:text-neutral-500 focus:outline-none border-none p-0 tracking-normal',
+          'w-full bg-transparent text-sm text-neutral-900 dark:text-neutral-100 placeholder:text-neutral-400 dark:placeholder:text-neutral-500 focus:outline-none border-none p-0 tracking-normal',
           inputClassName
         )}
         {...props}
@@ -115,19 +115,19 @@ const SearchInputView = forwardRef(function SearchInputView(
         {isLoading ? (
           <Loader2
             size={15}
-            className="animate-spin text-amber-400 pointer-events-none"
+            className="animate-spin text-[#E5C378] pointer-events-none"
           />
         ) : showClear && value ? (
           <button
             type="button"
             onClick={onClear}
-            className="hover:bg-white/10 rounded-md p-1 text-neutral-400 hover:text-white transition-colors cursor-pointer"
+            className="hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-md p-1 text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 transition-colors cursor-pointer"
             aria-label="Clear search"
           >
             <X size={14} />
           </button>
         ) : enableShortcut ? (
-          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-white/10 text-[10px] font-mono text-neutral-400 select-none bg-white/[0.03]">
+          <kbd className="hidden sm:inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded border border-neutral-200 dark:border-neutral-700 text-[10px] font-mono text-neutral-400 dark:text-neutral-500 select-none bg-neutral-100 dark:bg-neutral-800/60">
             {shortcutKey}
           </kbd>
         ) : null}

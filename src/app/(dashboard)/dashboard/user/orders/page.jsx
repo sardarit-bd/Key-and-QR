@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Pagination from '@/components/ui/Pagination';
 import DataTableToolbar from '@/components/common/table/DataTableToolbar';
+import { useDebounce } from '@/hooks/useDebounce';
 
 const ORDERS_PER_PAGE = 10;
 
@@ -80,13 +81,15 @@ export default function OrdersPage() {
   const [page, setPage] = useState(1);
   const [detailId, setDetailId] = useState(null);
 
-  useEffect(() => { setPage(1); }, [search, status, sort]);
+  const debouncedSearch = useDebounce(search, 300);
+
+  useEffect(() => { setPage(1); }, [debouncedSearch, status, sort]);
 
   const { data, isLoading, isError, error } = useQuery({
-    queryKey: ['user-orders', { page, limit: ORDERS_PER_PAGE, search, status, sort }],
+    queryKey: ['user-orders', { page, limit: ORDERS_PER_PAGE, search: debouncedSearch, status, sort }],
     queryFn: async () => {
       const params = { page, limit: ORDERS_PER_PAGE };
-      if (search) params.search = search;
+      if (debouncedSearch) params.search = debouncedSearch;
       if (status !== 'all') params.status = status;
       if (sort !== 'newest') params.sort = sort;
       const res = await api.get('/orders', { params });
