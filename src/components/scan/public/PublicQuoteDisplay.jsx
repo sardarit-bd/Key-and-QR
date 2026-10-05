@@ -1145,7 +1145,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
           activeQuote?.author ||
           quoteAuthor ||
           author ||
-          ""
+          "A Loved One"
         }
         message={
           giftDedication?.text ||

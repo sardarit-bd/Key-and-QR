@@ -175,17 +175,28 @@ export default function GiftDedicationCard({
 
   if (!isOpen || !mounted || typeof document === "undefined") return null;
 
-  // Multi-paragraph long message for testing layout bounds, text wrapping, and scrolling
-  const TEST_LONG_MESSAGE = `This is me "Imaopick", and this is my special test gift dedication message for you.
+  // Resolve message with deep fallback across all potential keys and object structures
+  const message =
+    extractText(directMessage) ||
+    extractText(quoteText) ||
+    extractText(text) ||
+    extractText(quote) ||
+    extractText(giftDedication) ||
+    extractText(dedicationData) ||
+    extractText(activeQuote) ||
+    extractText(latestQuote) ||
+    extractText(inspiration) ||
+    extractText(data) ||
+    extractText(props?.message) ||
+    extractText(props?.quoteText) ||
+    extractText(props?.text) ||
+    extractText(props?.quote) ||
+    extractText(props?.giftDedication) ||
+    extractText(props?.activeQuote) ||
+    extractText(props?.dedicationData) ||
+    "";
 
-May every step you take be guided by courage, purpose, and an unwavering belief in your boundless potential. Even when the journey feels steep and the horizon seems far, remember that every mountain is climbed one quiet, persistent breath at a time.
-
-May this year bring you deep peace in your heart, abundant joy in your spirit, and wonderful adventures that inspire your soul every single day.`;
-
-  // Temporarily inject long multi-paragraph message for testing as requested
-  const message = TEST_LONG_MESSAGE;
-
-  // Resolve sender name with fallback to LMAO for testing
+  // Resolve sender name with graceful fallback to "A Loved One"
   const senderName =
     extractSender(directSenderName) ||
     extractSender(props?.senderName) ||
@@ -196,7 +207,7 @@ May this year bring you deep peace in your heart, abundant joy in your spirit, a
     extractSender(inspiration) ||
     extractSender(data) ||
     extractSender(props?.author) ||
-    "LMAO";
+    "A Loved One";
 
   const pf = playfair.className;
 

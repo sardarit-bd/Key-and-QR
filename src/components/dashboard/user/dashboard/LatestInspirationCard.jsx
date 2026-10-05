@@ -581,14 +581,14 @@ export default function LatestInspirationCard({
       <GiftDedicationCard
         isOpen={showDedicationModal && hasGiftDedication}
         onClose={() => setShowDedicationModal(false)}
-        senderName={actualSenderName}
-        message={actualDedicationText || quote}
+        senderName={giftDedication?.senderName || actualSenderName || inspiration?.latestQuote?.author || author || "A Loved One"}
+        message={giftDedication?.text || actualDedicationText || inspiration?.latestQuote?.quote || inspiration?.latestQuote?.text || quote || ""}
         dedicationData={giftDedication}
         giftDedication={giftDedication}
         activeQuote={inspiration?.latestQuote || inspiration}
         inspiration={inspiration}
-        quoteText={actualDedicationText || quote}
-        text={actualDedicationText || quote}
+        quoteText={giftDedication?.text || actualDedicationText || quote}
+        text={giftDedication?.text || actualDedicationText || quote}
         quote={quote}
         onSave={() => onFavoriteChange && onFavoriteChange({ quoteId: dedicationQuoteId || quoteId })}
         isSaved={inspiration?.favorite}

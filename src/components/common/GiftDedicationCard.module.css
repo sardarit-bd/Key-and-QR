@@ -177,7 +177,7 @@
   min-height: 260px;
   max-height: 490px;
   margin-top: 10px;
-  padding: 44px 36px 30px;
+  padding: 44px 36px 54px;
   border-radius: 16px;
   border: 1px solid rgba(233, 185, 63, 0.55);
   background:
@@ -229,22 +229,22 @@
 }
 
 .quoteClose {
-  bottom: 30px;
-  right: 40px;
+  bottom: 40px;
+  right: 46px;
 }
 
 .scrollContainer {
   position: relative;
   z-index: 2;
   width: calc(100% - 48px);
-  max-height: 330px;
+  max-height: 320px;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: flex-start;
-  margin: 0 auto 14px auto;
+  margin: 0 auto;
   padding: 6px 14px 10px 14px;
   box-sizing: border-box;
 
@@ -293,7 +293,7 @@ blockquote.message,
 
 .signature {
   position: relative;
-  margin: 18px 0 4px;
+  margin: 24px 0 6px;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.16em;
@@ -311,44 +311,52 @@ blockquote.message,
   .panel {
     min-height: 220px;
     max-height: 420px;
-    padding: 34px 16px 22px;
+    padding: 36px 18px 46px;
   }
 
   .ribbonTL,
   .ribbonBR {
-    width: 120px;
+    width: 110px;
   }
 
   .quote {
-    font-size: 52px;
+    font-size: 46px;
   }
 
   .quoteOpen {
-    top: 22px;
-    left: 28px;
+    top: 26px;
+    left: 36px;
   }
 
   .quoteClose {
-    bottom: 18px;
-    right: 22px;
+    bottom: 30px;
+    right: 32px;
   }
 
   .scrollContainer {
-    width: calc(100% - 36px);
-    max-height: 290px;
-    margin: 0 auto 10px auto;
-    padding: 4px 8px;
+    width: calc(100% - 32px);
+    max-height: 270px;
+    margin: 0 auto;
+    padding: 4px 10px 8px 10px;
+  }
+
+  .scrollContainer::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .scrollContainer::-webkit-scrollbar-track {
+    margin: 6px 0;
   }
 
   blockquote.message,
   .message {
-    font-size: 21px;
-    line-height: 1.42;
-    padding: 2px 8px;
+    font-size: 20px;
+    line-height: 1.45;
+    padding: 2px 10px;
   }
 
   .signature {
-    margin: 14px 0 2px;
+    margin: 18px 0 2px;
     font-size: 12px;
   }
 }
