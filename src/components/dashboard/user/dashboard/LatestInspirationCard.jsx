@@ -91,16 +91,6 @@ export default function LatestInspirationCard({
     setMounted(true);
   }, []);
 
-  useEffect(() => {
-    if (showDedicationModal) {
-      const originalStyle = window.getComputedStyle(document.body).overflow;
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = originalStyle;
-      };
-    }
-  }, [showDedicationModal]);
-
   // Video and Media Detection
   const videoUrl =
     inspiration?.videoUrl ||
