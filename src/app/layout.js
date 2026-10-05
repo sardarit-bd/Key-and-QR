@@ -23,32 +23,59 @@ export const metadata = {
 const themeScript = `
 (function() {
   try {
-    var key = 'myinspiretag-theme-mode';
-    var stored = localStorage.getItem(key) || localStorage.getItem('theme');
     var path = window.location.pathname || '';
-    var isDashboard = path.indexOf('/dashboard') !== -1;
-    var isScan = path.startsWith('/t/') || path.startsWith('/tag/') || path.startsWith('/q/') || path.startsWith('/TAG-') || path.startsWith('/QR-');
-    var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-    
-    var mode = 'light';
-    if (isScan) {
-      mode = 'dark';
-    } else if (isDashboard) {
-      mode = stored ? stored : 'dark';
-    } else if (stored === 'dark') {
-      mode = 'dark';
-    } else if (stored === 'light') {
-      mode = 'light';
-    } else {
-      mode = prefersDark ? 'dark' : 'light';
+    var isDashboard = path.indexOf('/dashboard') !== -1 || path.indexOf('/admin') !== -1;
+    var root = document.documentElement;
+
+    function cleanTheme(v) {
+      if (!v || typeof v !== 'string') return null;
+      var c = v.replace(/['"]+/g, '').trim().toLowerCase();
+      return (c === 'light' || c === 'dark') ? c : null;
     }
 
-    var root = document.documentElement;
-    root.classList.remove('light', 'dark');
-    root.classList.add(mode);
-    root.style.colorScheme = mode;
-    root.setAttribute('data-theme-mode', mode);
-  } catch (e) {}
+    function getCookie(name) {
+      try {
+        var match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+        return match ? decodeURIComponent(match[1]) : null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    var rawTheme = null;
+    var rawLegacy = null;
+    try {
+      rawTheme = localStorage.getItem('theme');
+      rawLegacy = localStorage.getItem('myinspiretag-theme-mode');
+    } catch (e) {}
+
+    var rawCookie = getCookie('theme');
+
+    if (isDashboard) {
+      // 1. Check primary 'theme' key, then legacy 'myinspiretag-theme-mode', then cookie
+      var stored = cleanTheme(rawTheme) || cleanTheme(rawLegacy) || cleanTheme(rawCookie);
+
+      // If a valid saved preference exists ('light' or 'dark'), use it directly!
+      // Only default to 'dark' for dashboards if NO preference was ever stored.
+      var mode = stored ? stored : 'dark';
+
+      console.log('[ThemeScript:Head] path=' + path + ' | rawTheme=' + rawTheme + ' | rawLegacy=' + rawLegacy + ' | rawCookie=' + rawCookie + ' => applied mode=' + mode);
+
+      root.classList.remove('light', 'dark');
+      root.classList.add(mode);
+      root.style.colorScheme = mode;
+      root.setAttribute('data-theme-mode', mode);
+    } else {
+      console.log('[ThemeScript:Head] public/auth route (' + path + ') => applied light');
+      // Public, auth, and landing pages strictly default to light mode
+      root.classList.remove('dark');
+      root.classList.add('light');
+      root.style.colorScheme = 'light';
+      root.setAttribute('data-theme-mode', 'light');
+    }
+  } catch (e) {
+    console.warn('[ThemeScript:Head] error:', e);
+  }
 })();
 `;
 

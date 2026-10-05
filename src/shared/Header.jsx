@@ -130,7 +130,7 @@ export default function Header() {
   return (
     <>
       {/* DESKTOP HEADER */}
-      <header className="bg-white sticky top-0 z-50 border-b border-gray-100 hidden md:block">
+      <header className="bg-white sticky top-0 z-50 border-b border-gray-100 hidden md:block w-full">
         <div
           className={`${isDashboard ? "px-6" : "max-w-7xl mx-auto px-6 lg:px-8"
             } h-[96px] flex items-center justify-between`}
@@ -187,7 +187,7 @@ export default function Header() {
           <div className="flex items-center gap-6">
             {/* User Dropdown - shadcn/ui */}
             {isAuth && user ? (
-              <DropdownMenu>
+              <DropdownMenu modal={false}>
                 <DropdownMenuTrigger asChild>
                   <button className="cursor-pointer focus:outline-none">
                     <Avatar className="w-9 h-9 ring-1 ring-gray-200 hover:ring-gray-300 transition-all">
@@ -202,7 +202,7 @@ export default function Header() {
                     </Avatar>
                   </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-80 mt-2 p-2 bg-popover text-popover-foreground border border-border rounded-xl shadow-lg">
+                <DropdownMenuContent align="end" className="w-80 mt-2 p-2 bg-popover text-popover-foreground border border-border rounded-xl shadow-lg z-[100]">
                   <DropdownMenuLabel className="p-0 font-normal">
                     <div className="px-3.5 py-3 bg-muted/60 rounded-lg mb-1.5 border border-border/50">
                       <div className="flex items-center gap-3">

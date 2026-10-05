@@ -6,38 +6,86 @@ import { THEME_IDS } from '@/config/dashboard/themes';
 
 const ThemeContext = createContext(null);
 
-const THEME_STORAGE_KEY = 'myinspiretag-theme-mode';
+export const THEME_STORAGE_KEY = 'theme';
+export const LEGACY_THEME_STORAGE_KEY = 'myinspiretag-theme-mode';
+
+function cleanThemeValue(val) {
+  if (!val || typeof val !== 'string') return null;
+  const cleaned = val.replace(/['"]+/g, '').trim().toLowerCase();
+  return (cleaned === 'light' || cleaned === 'dark') ? cleaned : null;
+}
+
+function getCookie(name) {
+  if (typeof document === 'undefined') return null;
+  try {
+    const match = document.cookie.match(new RegExp('(?:^|; )' + name + '=([^;]*)'));
+    return match ? decodeURIComponent(match[1]) : null;
+  } catch {
+    return null;
+  }
+}
 
 function getSystemTheme() {
   if (typeof window === 'undefined') return 'dark';
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
-function getStoredThemeMode() {
+export function getStoredThemeMode() {
   if (typeof window === 'undefined') return null;
   try {
-    return localStorage.getItem(THEME_STORAGE_KEY);
-  } catch {
+    const rawTheme = localStorage.getItem(THEME_STORAGE_KEY);
+    const rawLegacy = localStorage.getItem(LEGACY_THEME_STORAGE_KEY);
+    const primary = cleanThemeValue(rawTheme);
+    const legacy = cleanThemeValue(rawLegacy);
+    const cookieVal = cleanThemeValue(getCookie('theme'));
+    const resolved = primary || legacy || cookieVal || null;
+    console.log('[ThemeProvider:getStoredThemeMode] rawTheme=' + rawTheme + ' | rawLegacy=' + rawLegacy + ' | cookie=' + cookieVal + ' => resolved=' + resolved);
+    return resolved;
+  } catch (e) {
+    console.warn('[ThemeProvider:getStoredThemeMode] Error reading storage:', e);
     return null;
   }
 }
 
-function setStoredThemeMode(mode) {
+export function setStoredThemeMode(mode) {
+  const validMode = (mode === 'light' || mode === 'dark') ? mode : 'dark';
+  console.log('[ThemeProvider:setStoredThemeMode] Persisting theme=' + validMode);
   try {
-    localStorage.setItem(THEME_STORAGE_KEY, mode);
-  } catch {
-    // localStorage not available
+    localStorage.setItem(THEME_STORAGE_KEY, validMode);
+    localStorage.setItem(LEGACY_THEME_STORAGE_KEY, validMode);
+  } catch (e) {
+    console.warn('[ThemeProvider:setStoredThemeMode] LocalStorage failed:', e);
+  }
+  try {
+    if (typeof document !== 'undefined') {
+      document.cookie = `theme=${validMode}; path=/; max-age=31536000; SameSite=Lax`;
+    }
+  } catch (e) {
+    console.warn('[ThemeProvider:setStoredThemeMode] Cookie failed:', e);
   }
 }
 
 function applyThemeToDom(mode) {
   if (typeof document === 'undefined') return;
+  const path = typeof window !== 'undefined' ? (window.location.pathname || '') : '';
+  const isDashboard = path.indexOf('/dashboard') !== -1 || path.indexOf('/admin') !== -1;
   const root = document.documentElement;
-  root.classList.remove('light', 'dark');
-  root.classList.add(mode);
-  root.style.colorScheme = mode;
-  root.setAttribute('data-theme-mode', mode);
-  setStoredThemeMode(mode);
+
+  console.log('[ThemeProvider:applyThemeToDom] mode=' + mode + ' | isDashboard=' + isDashboard + ' | path=' + path);
+
+  if (isDashboard) {
+    root.classList.remove('light', 'dark');
+    root.classList.add(mode);
+    root.style.colorScheme = mode;
+    root.setAttribute('data-theme-mode', mode);
+    setStoredThemeMode(mode);
+  } else {
+    // Strictly preserve light mode on public/auth pages without wiping dashboard preference
+    root.classList.remove('dark');
+    root.classList.add('light');
+    root.style.colorScheme = 'light';
+    root.setAttribute('data-theme-mode', 'light');
+  }
 }
 
 export function ThemeProvider({
@@ -46,12 +94,32 @@ export function ThemeProvider({
   userRole = null,
 }) {
   const [themeMode, setThemeMode] = useState(() => {
+    // 1. Check saved preferences first (localStorage / cookie)
     const stored = getStoredThemeMode();
-    if (stored) return stored;
-    if (typeof document !== 'undefined') {
-      if (document.documentElement.classList.contains('light')) return 'light';
-      if (document.documentElement.classList.contains('dark')) return 'dark';
+    if (stored) {
+      console.log('[ThemeProvider:useState] Initializing state from stored: ' + stored);
+      return stored;
     }
+
+    // 2. Check DOM initialized by themeScript in <head>
+    if (typeof document !== 'undefined') {
+      const dataMode = cleanThemeValue(document.documentElement.getAttribute('data-theme-mode'));
+      if (dataMode) {
+        console.log('[ThemeProvider:useState] Initializing state from DOM data-theme-mode: ' + dataMode);
+        return dataMode;
+      }
+
+      if (document.documentElement.classList.contains('light')) {
+        console.log('[ThemeProvider:useState] Initializing state from DOM class: light');
+        return 'light';
+      }
+      if (document.documentElement.classList.contains('dark')) {
+        console.log('[ThemeProvider:useState] Initializing state from DOM class: dark');
+        return 'dark';
+      }
+    }
+
+    console.log('[ThemeProvider:useState] Fallback: dark');
     return 'dark';
   });
   const [isReady, setIsReady] = useState(false);
@@ -62,9 +130,15 @@ export function ThemeProvider({
     setIsMounted(true);
     const stored = getStoredThemeMode();
     const currentDomMode = typeof document !== 'undefined'
-      ? (document.documentElement.classList.contains('light') ? 'light' : (document.documentElement.classList.contains('dark') ? 'dark' : null))
+      ? cleanThemeValue(document.documentElement.getAttribute('data-theme-mode')) ||
+        (document.documentElement.classList.contains('light') ? 'light' :
+         document.documentElement.classList.contains('dark') ? 'dark' : null)
       : null;
-    const initialMode = stored || currentDomMode || getSystemTheme();
+
+    console.log('[ThemeProvider:mount] stored=' + stored + ' | currentDomMode=' + currentDomMode);
+    // Prioritize explicit saved user preference; never force dark if light is saved
+    const initialMode = stored || currentDomMode || 'dark';
+    console.log('[ThemeProvider:mount] setting themeMode=' + initialMode);
     setThemeMode(initialMode);
     applyThemeToDom(initialMode);
     setIsReady(true);
@@ -179,6 +253,7 @@ export function ThemeProvider({
 
   const toggleTheme = useCallback((coordsOrEvent) => {
     const nextMode = themeMode === 'dark' ? 'light' : 'dark';
+    console.log('[ThemeProvider:toggleTheme] themeMode=' + themeMode + ' -> switching to ' + nextMode);
     changeThemeWithTransition(nextMode, coordsOrEvent);
   }, [themeMode, changeThemeWithTransition]);
 
@@ -203,7 +278,13 @@ export function ThemeProvider({
 
   return (
     <ThemeContext.Provider value={contextValue}>
-      {children}
+      <div
+        className={`dashboard-theme-scope ${themeMode === 'dark' ? 'dark' : 'light'} min-h-screen`}
+        data-theme-mode={themeMode}
+        style={{ colorScheme: themeMode }}
+      >
+        {children}
+      </div>
     </ThemeContext.Provider>
   );
 }
