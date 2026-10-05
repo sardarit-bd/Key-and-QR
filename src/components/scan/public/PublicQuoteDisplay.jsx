@@ -19,6 +19,7 @@ import VisualQuoteRenderer from "@/components/public/quote/VisualQuoteRenderer";
 import VisualQuoteAudioPlayer from "@/components/public/quote/VisualQuoteAudioPlayer";
 import useShareQuote from "@/hooks/useShareQuote";
 import ShareQuoteModal from "@/components/public/quote/ShareQuoteModal";
+import GiftDedicationCard from "@/components/common/GiftDedicationCard";
 
 export default function PublicQuoteDisplay({ data, tagCode }) {
   const router = useRouter();
@@ -31,7 +32,22 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     quoteData?.giftDedication ||
     data?.giftDedication ||
     quoteData?.latestQuote?.giftDedication ||
-    null;
+    (quoteData?.personalMessage || data?.personalMessage || quoteData?.gift?.giftMessage || data?.gift?.giftMessage
+      ? {
+          text:
+            quoteData?.personalMessage ||
+            data?.personalMessage ||
+            quoteData?.gift?.giftMessage ||
+            data?.gift?.giftMessage,
+          senderName:
+            quoteData?.giftSenderName ||
+            data?.giftSenderName ||
+            quoteData?.gift?.giftSenderName ||
+            data?.gift?.giftSenderName ||
+            quoteData?.author ||
+            "A Loved One",
+        }
+      : null);
 
   const [showDedicationModal, setShowDedicationModal] = useState(false);
   const [dedicationSaved, setDedicationSaved] = useState(false);
@@ -231,10 +247,10 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
           typeof incomingAudio === 'string'
             ? { source: incomingAudio, autoplay: true, loop: true }
             : incomingAudio?.source
-            ? incomingAudio
-            : incomingAudio?.url
-            ? { ...incomingAudio, source: incomingAudio.url }
-            : null;
+              ? incomingAudio
+              : incomingAudio?.url
+                ? { ...incomingAudio, source: incomingAudio.url }
+                : null;
 
         setQuoteData(unlockedData);
         setIsRevealed(true); // Trigger visual card entrance immediately with data
@@ -273,7 +289,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
         }));
         setIsRevealed(true);
         if (audioPlayerRef.current) {
-          audioPlayerRef.current.play().catch(() => {});
+          audioPlayerRef.current.play().catch(() => { });
         }
         return;
       }
@@ -288,7 +304,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             setQuoteData(verifiedData);
             setIsRevealed(true);
             if (audioPlayerRef.current) {
-              audioPlayerRef.current.play().catch(() => {});
+              audioPlayerRef.current.play().catch(() => { });
             }
             return;
           }
@@ -313,7 +329,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
         if (quoteData?.latestQuote) {
           setIsRevealed(true);
           if (audioPlayerRef.current) {
-            audioPlayerRef.current.play().catch(() => {});
+            audioPlayerRef.current.play().catch(() => { });
           }
         } else {
           toast.error("Daily limit reached. Free users can reveal 1 quote per day. Scan again tomorrow!", {
@@ -448,7 +464,7 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
     try {
       const response = await favoriteService.checkFavorite({ quoteId: giftDedication.quoteId });
       setDedicationSaved(!!response?.data?.exists);
-    } catch (err) {}
+    } catch (err) { }
   };
 
   useEffect(() => {
@@ -742,13 +758,13 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
                     animate={
                       isRevealing
                         ? {
-                            scale: [1, 1.05, 1],
-                            boxShadow: [
-                              "0 0 25px rgba(245,158,11,0.5)",
-                              "0 0 50px rgba(245,158,11,0.9)",
-                              "0 0 25px rgba(245,158,11,0.5)",
-                            ],
-                          }
+                          scale: [1, 1.05, 1],
+                          boxShadow: [
+                            "0 0 25px rgba(245,158,11,0.5)",
+                            "0 0 50px rgba(245,158,11,0.9)",
+                            "0 0 25px rgba(245,158,11,0.5)",
+                          ],
+                        }
                         : { scale: 1 }
                     }
                     transition={
@@ -1119,80 +1135,48 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
       />
 
       {/* Persistent Gift Dedication Modal */}
-      {showDedicationModal && giftDedication && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0">
-          <div className="w-full max-w-md rounded-3xl bg-neutral-950/95 border border-amber-400/30 p-6 sm:p-7 shadow-[0_10px_40px_rgba(245,158,11,0.25)] relative animate-in slide-in-from-bottom-4 sm:zoom-in-95 duration-200 text-white">
-            <button
-              onClick={() => setShowDedicationModal(false)}
-              className="absolute right-4 top-4 text-white/50 hover:text-white transition-colors cursor-pointer p-1"
-              aria-label="Close"
-            >
-              <X size={20} />
-            </button>
-
-            {/* Gift icon with golden glow */}
-            <div className="flex justify-center mb-4">
-              <div className="relative flex h-14 w-14 items-center justify-center">
-                <div className="absolute inset-0 rounded-full bg-amber-400/30 blur-xl animate-pulse" />
-                <div className="relative flex h-12 w-12 items-center justify-center rounded-2xl bg-amber-400/20 border border-amber-400/40 text-amber-300 shadow-inner">
-                  <Gift size={24} />
-                </div>
-              </div>
-            </div>
-
-            <div className="text-center mb-4">
-              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-amber-300 uppercase tracking-widest bg-amber-400/10 border border-amber-400/30 px-3 py-1 rounded-full mb-2">
-                <Sparkles size={11} className="fill-current" />
-                Personal Gift Dedication
-              </span>
-              <h3 className="text-lg font-serif italic text-white/90">
-                {giftDedication.senderName ? `From ${giftDedication.senderName}` : "A Special Gift For You"}
-              </h3>
-            </div>
-
-            {/* Dedication Text Card */}
-            <div className="rounded-2xl bg-white/[0.04] border border-amber-400/20 p-5 mb-5 shadow-inner">
-              <div className="flex items-center justify-center mb-2.5 opacity-80">
-                <div className="h-px w-8 bg-gradient-to-r from-transparent to-amber-400/70" />
-                <Heart size={12} className="mx-2 text-amber-400 fill-amber-400/50" />
-                <div className="h-px w-8 bg-gradient-to-l from-transparent to-amber-400/70" />
-              </div>
-              <p className="text-white text-base sm:text-lg font-serif italic text-center leading-relaxed">
-                &ldquo;{giftDedication.text}&rdquo;
-              </p>
-              {giftDedication.senderName && (
-                <p className="mt-3 text-center text-xs tracking-wider text-amber-300/80 uppercase font-medium">
-                  — {giftDedication.senderName}
-                </p>
-              )}
-            </div>
-
-            {/* Action Buttons */}
-            <div className="flex flex-col sm:flex-row gap-2.5">
-              {giftDedication.quoteId && (
-                <button
-                  onClick={handleFavoriteDedication}
-                  disabled={dedicationFavoriteLoading || dedicationSaved}
-                  className={`flex-1 h-11 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition-all cursor-pointer ${
-                    dedicationSaved
-                      ? "bg-amber-400/20 text-amber-300 border border-amber-400/50"
-                      : "bg-gradient-to-r from-amber-400 via-amber-300 to-amber-500 hover:brightness-110 text-black shadow-lg"
-                  }`}
-                >
-                  <Heart size={15} className={dedicationSaved ? "fill-current text-amber-400" : ""} />
-                  <span>{dedicationSaved ? "Saved to Collection" : "Save Dedication"}</span>
-                </button>
-              )}
-              <button
-                onClick={() => setShowDedicationModal(false)}
-                className="h-11 px-5 rounded-xl border border-white/20 bg-white/5 text-white/80 hover:bg-white/10 hover:text-white text-xs sm:text-sm font-medium transition cursor-pointer"
-              >
-                Close
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <GiftDedicationCard
+        isOpen={showDedicationModal && Boolean(giftDedication)}
+        onClose={() => setShowDedicationModal(false)}
+        senderName={
+          giftDedication?.senderName ||
+          giftDedication?.giftSenderName ||
+          giftDedication?.author ||
+          activeQuote?.author ||
+          quoteAuthor ||
+          author ||
+          ""
+        }
+        message={
+          giftDedication?.text ||
+          giftDedication?.message ||
+          giftDedication?.giftMessage ||
+          giftDedication?.quote ||
+          quoteData?.personalMessage ||
+          data?.personalMessage ||
+          quoteData?.gift?.giftMessage ||
+          data?.gift?.giftMessage ||
+          activeQuote?.quote ||
+          activeQuote?.text ||
+          quoteText ||
+          quote ||
+          quoteData?.quote ||
+          quoteData?.text ||
+          data?.quote ||
+          data?.text ||
+          ""
+        }
+        dedicationData={giftDedication}
+        giftDedication={giftDedication}
+        activeQuote={activeQuote}
+        data={quoteData || data}
+        quoteText={quoteText || quote}
+        text={quoteText || quote}
+        quote={quote}
+        onSave={handleFavoriteDedication}
+        isSaved={dedicationSaved}
+        isSaving={dedicationFavoriteLoading}
+      />
     </div>
   );
 }

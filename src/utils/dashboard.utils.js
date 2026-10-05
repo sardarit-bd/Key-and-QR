@@ -193,8 +193,17 @@ export function mapLatestInspiration(latestInspiration, dailyUsage) {
     favoriteId: quote?.favoriteId || null,
     isGift: Boolean(quote?.isGift || quote?.isPersonalGift || latestInspiration?.isGift),
     isPersonalGift: Boolean(quote?.isPersonalGift || latestInspiration?.isPersonalGift),
-    giftDedication: quote?.giftDedication || latestInspiration?.giftDedication || null,
-    giftSenderName: quote?.giftSenderName || latestInspiration?.giftSenderName || quote?.author || null,
+    giftDedication:
+      (quote?.giftDedication && (quote.giftDedication.text || quote.giftDedication.message))
+        ? quote.giftDedication
+        : ((latestInspiration?.giftDedication && (latestInspiration.giftDedication.text || latestInspiration.giftDedication.message))
+            ? latestInspiration.giftDedication
+            : null),
+    giftSenderName:
+      (quote?.giftDedication?.senderName || quote?.giftSenderName) ||
+      (latestInspiration?.giftDedication?.senderName || latestInspiration?.giftSenderName) ||
+      quote?.author ||
+      null,
     orderId: quote?.orderId || latestInspiration?.orderId || null,
     dailyUsage: dailyUsage
       ? {
