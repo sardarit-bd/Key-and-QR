@@ -22,6 +22,13 @@ import { startTokenRefreshTimer, stopTokenRefreshTimer, performTokenRefresh } fr
 
 const filterUserData = (user) => {
     if (!user) return null;
+    const isPremium = Boolean(
+        user.isPremium ||
+        user.premium ||
+        user.subscriptionTier === 'subscriber' ||
+        user.plan === 'premium' ||
+        user.plan === 'subscriber'
+    );
     return {
         _id: user._id,
         name: user.name,
@@ -34,6 +41,8 @@ const filterUserData = (user) => {
         isEmailVerified: user.isEmailVerified || false,
         stripeCustomerId: user.stripeCustomerId || null,
         nameChangedAt: user.nameChangedAt || null,
+        isPremium,
+        subscriptionTier: user.subscriptionTier || (isPremium ? 'subscriber' : 'free'),
     };
 };
 

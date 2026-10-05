@@ -64,7 +64,7 @@ function resolvePrice(subscription, plans) {
 export default function SubscriptionPage() {
   const { data: dashboard } = useDashboardOverview();
   const { user } = useAuthStore();
-  const { mySubscriptions, fetchMySubscriptions, plans, fetchPlans } = useSubscriptionStore();
+  const { mySubscriptions, fetchMySubscriptions, plans, fetchPlans, loading: subsLoading, isLoaded: subsLoaded } = useSubscriptionStore();
   const [portalLoading, setPortalLoading] = useState(false);
   const [upgradeLoading, setUpgradeLoading] = useState(false);
 
@@ -79,9 +79,30 @@ export default function SubscriptionPage() {
     ) || null;
   }, [mySubscriptions]);
 
-  const isPremium = !!subscription;
-  const status = subscription?.status || 'inactive';
-  const planType = subscription?.subscriptionType || 'free';
+  // Determine if user has premium via subscription, user record, or cookie
+  const isPremium = useMemo(() => {
+    if (subscription) return true;
+    if (
+      user?.isPremium === true ||
+      user?.premium === true ||
+      user?.subscriptionTier === 'subscriber' ||
+      user?.subscriptionTier === 'premium' ||
+      user?.plan === 'premium' ||
+      user?.plan === 'subscriber'
+    ) return true;
+    if (typeof document !== 'undefined') {
+      try {
+        const match = document.cookie.match(/(?:^|;\s*)isPremium=([^;]*)/);
+        if (match && match[1] === 'true') return true;
+      } catch (_) {}
+    }
+    return false;
+  }, [subscription, user]);
+
+  const isResolving = (!subsLoaded && subsLoading && !subscription && !isPremium);
+
+  const status = subscription?.status || (isPremium ? 'active' : 'inactive');
+  const planType = subscription?.subscriptionType || (isPremium ? 'subscriber' : 'free');
   const cancelAtPeriodEnd = subscription?.cancelAtPeriodEnd || false;
   const currentPeriodEnd = subscription?.currentPeriodEnd;
   const price = resolvePrice(subscription, plans);
@@ -173,81 +194,97 @@ export default function SubscriptionPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24 space-y-5 sm:space-y-6">
 
         {/* ===== 1. MERGED HERO ===== */}
-        <section className={`${GLASS_CARD} relative overflow-hidden p-6 sm:p-8 md:p-10`}>
-          <CardGlow />
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
-            {/* Left: title + badge + description */}
-            <div className="flex items-start gap-4">
-              <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-accent/25 bg-gradient-to-br from-accent/20 to-accent/5 shadow-[0_0_24px_-4px_rgba(253,182,92,0.25)] ring-1 ring-accent/20">
-                <Crown size={20} className="text-accent" />
-              </span>
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-[24px] sm:text-[30px] md:text-[36px] leading-[1.12] font-semibold tracking-tight text-foreground">
-                    {isPremium ? 'Premium Member' : 'Free Plan'}
-                  </h1>
-                  {isPremium ? (
-                    <StatusBadge />
-                  ) : (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[11px] font-medium text-foreground-tertiary">
-                      Current Plan
-                    </span>
-                  )}
+        {isResolving ? (
+          <section className={`${GLASS_CARD} relative overflow-hidden p-6 sm:p-8 md:p-10 animate-pulse`}>
+            <CardGlow />
+            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              <div className="flex items-start gap-4">
+                <div className="h-12 w-12 rounded-2xl bg-white/10" />
+                <div className="space-y-2.5">
+                  <div className="h-8 w-48 rounded-lg bg-white/10" />
+                  <div className="h-4 w-72 rounded bg-white/10" />
                 </div>
-                <p className="mt-1.5 text-[13px] sm:text-[14px] text-foreground-secondary max-w-md">
-                  {isPremium
-                    ? `Active until ${fmtDate(currentPeriodEnd)}${cancelAtPeriodEnd ? ' — cancels at period end' : ''}`
-                    : "You're currently using the Free plan. Upgrade to unlock unlimited inspiration, all categories, and a premium ad-free experience."}
-                </p>
               </div>
+              <div className="h-10 w-36 rounded-full bg-white/10" />
             </div>
-
-            {/* Center: plan details */}
-            {isPremium ? (
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+          </section>
+        ) : (
+          <section className={`${GLASS_CARD} relative overflow-hidden p-6 sm:p-8 md:p-10`}>
+            <CardGlow />
+            <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+              {/* Left: title + badge + description */}
+              <div className="flex items-start gap-4">
+                <span className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-accent/25 bg-gradient-to-br from-accent/20 to-accent/5 shadow-[0_0_24px_-4px_rgba(253,182,92,0.25)] ring-1 ring-accent/20">
+                  <Crown size={20} className="text-accent" />
+                </span>
                 <div>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground-tertiary">Plan</span>
-                  <p className="font-semibold text-foreground capitalize">{planType}</p>
-                </div>
-                <div>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground-tertiary">Status</span>
-                  <p className={`font-medium capitalize ${status === 'active' || status === 'trialing' ? 'text-emerald-400' : 'text-amber-400'}`}>{status.replace(/_/g, ' ')}</p>
-                </div>
-                <div>
-                  <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground-tertiary">Renewal</span>
-                  <p className="font-medium text-foreground">{fmtDate(currentPeriodEnd)}</p>
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-[24px] sm:text-[30px] md:text-[36px] leading-[1.12] font-semibold tracking-tight text-foreground">
+                      {isPremium ? 'Premium Member' : 'Free Plan'}
+                    </h1>
+                    {isPremium ? (
+                      <StatusBadge />
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-2.5 py-0.5 text-[11px] font-medium text-foreground-tertiary">
+                        Current Plan
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1.5 text-[13px] sm:text-[14px] text-foreground-secondary max-w-md">
+                    {isPremium
+                      ? `Active until ${fmtDate(currentPeriodEnd)}${cancelAtPeriodEnd ? ' — cancels at period end' : ''}`
+                      : "You're currently using the Free plan. Upgrade to unlock unlimited inspiration, all categories, and a premium ad-free experience."}
+                  </p>
                 </div>
               </div>
-            ) : (
-              /* Free Plan Upgrade CTA in Hero */
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={handleUpgrade}
-                  disabled={upgradeLoading}
-                  className="group relative inline-flex shrink-0 cursor-pointer items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-accent to-accent/85 px-6 py-3 text-[13px] sm:text-[14px] font-semibold text-accent-foreground shadow-[0_8px_24px_-8px_rgba(253,182,92,0.5)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-8px_rgba(253,182,92,0.6)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
-                >
+
+              {/* Center: plan details */}
+              {isPremium ? (
+                <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+                  <div>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground-tertiary">Plan</span>
+                    <p className="font-semibold text-foreground capitalize">{planType}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground-tertiary">Status</span>
+                    <p className={`font-medium capitalize ${status === 'active' || status === 'trialing' ? 'text-emerald-400' : 'text-amber-400'}`}>{status.replace(/_/g, ' ')}</p>
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-foreground-tertiary">Renewal</span>
+                    <p className="font-medium text-foreground">{fmtDate(currentPeriodEnd)}</p>
+                  </div>
+                </div>
+              ) : (
+                /* Free Plan Upgrade CTA in Hero */
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={handleUpgrade}
+                    disabled={upgradeLoading}
+                    className="group relative inline-flex shrink-0 cursor-pointer items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-accent to-accent/85 px-6 py-3 text-[13px] sm:text-[14px] font-semibold text-accent-foreground shadow-[0_8px_24px_-8px_rgba(253,182,92,0.5)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-8px_rgba(253,182,92,0.6)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed"
+                  >
+                    <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
+                    {upgradeLoading ? (
+                      <RefreshCw size={15} className="animate-spin" />
+                    ) : (
+                      <Zap size={15} className="text-accent-foreground fill-current" />
+                    )}
+                    <span>{upgradeLoading ? 'Creating checkout...' : 'Upgrade to Premium'}</span>
+                  </button>
+                </div>
+              )}
+
+              {/* Right: button */}
+              {isPremium && (
+                <button onClick={handleManageSubscription} disabled={portalLoading}
+                  className="group relative inline-flex shrink-0 cursor-pointer items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-accent to-accent/85 px-5 py-2.5 text-[13px] font-semibold text-accent-foreground shadow-[0_8px_24px_-8px_rgba(253,182,92,0.5)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-8px_rgba(253,182,92,0.6)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
                   <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-                  {upgradeLoading ? (
-                    <RefreshCw size={15} className="animate-spin" />
-                  ) : (
-                    <Zap size={15} className="text-accent-foreground fill-current" />
-                  )}
-                  <span>{upgradeLoading ? 'Creating checkout...' : 'Upgrade to Premium'}</span>
+                  {portalLoading ? <RefreshCw size={15} className="animate-spin" /> : <CreditCard size={15} />}
+                  {portalLoading ? 'Opening...' : 'Manage Subscription'}
                 </button>
-              </div>
-            )}
-
-            {/* Right: button */}
-            {isPremium && (
-              <button onClick={handleManageSubscription} disabled={portalLoading}
-                className="group relative inline-flex shrink-0 cursor-pointer items-center gap-2 overflow-hidden rounded-full bg-gradient-to-r from-accent to-accent/85 px-5 py-2.5 text-[13px] font-semibold text-accent-foreground shadow-[0_8px_24px_-8px_rgba(253,182,92,0.5)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_32px_-8px_rgba(253,182,92,0.6)] active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
-                <span className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/25 to-transparent transition-transform duration-700 group-hover:translate-x-full" />
-                {portalLoading ? <RefreshCw size={15} className="animate-spin" /> : <CreditCard size={15} />}
-                {portalLoading ? 'Opening...' : 'Manage Subscription'}
-              </button>
-            )}
-          </div>
-        </section>
+              )}
+            </div>
+          </section>
+        )}
 
         {/* ===== 2. PREMIUM MEMBERSHIP (Benefits + Insights merged) ===== */}
         <section className={`${GLASS_CARD} relative overflow-hidden p-6 sm:p-8`}>
@@ -289,7 +326,7 @@ export default function SubscriptionPage() {
             </div>
 
             {/* Upgrade Banner for Free Users */}
-            {!isPremium && (
+            {!isPremium && !isResolving && (
               <div className="flex flex-col sm:flex-row items-center justify-between gap-4 p-5 rounded-2xl border border-accent/25 bg-gradient-to-r from-accent/15 via-accent/5 to-transparent backdrop-blur-sm">
                 <div className="flex items-center gap-3 text-left">
                   <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/20 border border-accent/30 text-accent">

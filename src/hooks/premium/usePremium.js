@@ -13,7 +13,16 @@ export const usePremium = () => {
   
   const [loading, setLoading] = useState(true);
   const [subscriptions, setSubscriptions] = useState([]);
-  const [isPremium, setIsPremium] = useState(false);
+  const [isPremium, setIsPremium] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return Boolean(
+      user?.isPremium ||
+      user?.premium ||
+      user?.subscriptionTier === 'subscriber' ||
+      user?.plan === 'premium' ||
+      user?.plan === 'subscriber'
+    );
+  });
   const [currentQuote, setCurrentQuote] = useState(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('random');
@@ -28,6 +37,9 @@ export const usePremium = () => {
   useEffect(() => {
     if (isInitialized && !user) {
       router.push('/login?redirect=/dashboard/user/premium');
+    }
+    if (user?.isPremium || user?.premium || user?.subscriptionTier === 'subscriber' || user?.plan === 'premium' || user?.plan === 'subscriber') {
+      setIsPremium(true);
     }
   }, [isInitialized, user, router]);
 

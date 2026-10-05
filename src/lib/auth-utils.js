@@ -109,6 +109,7 @@ export const clearTokens = () => {
     localStorage.removeItem(USER_KEY);
     clearCookie("accessToken");
     clearCookie("refreshToken");
+    clearCookie("isPremium");
     
     // Reset write state
     _writeQueue = [];
@@ -129,6 +130,14 @@ export const clearTokens = () => {
 export const setUser = (user) => {
     if (typeof window !== "undefined" && user) {
         localStorage.setItem(USER_KEY, JSON.stringify(user));
+        const isPremium = Boolean(
+            user.isPremium ||
+            user.premium ||
+            user.subscriptionTier === 'subscriber' ||
+            user.plan === 'premium' ||
+            user.plan === 'subscriber'
+        );
+        setCookie("isPremium", isPremium ? "true" : "false", 30 * 24 * 60 * 60, false);
     }
 };
 
@@ -251,7 +260,4 @@ export {
     setCookie, 
     clearCookie, 
     getCookieValue,
-    // Internal exports for testing
-    processWriteQueue,
-    performWrite,
 };

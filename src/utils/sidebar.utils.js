@@ -54,14 +54,27 @@ export const getUserPlan = (user = null, subscriptions = []) => {
   if (
     user?.isPremium === true ||
     user?.premium === true ||
+    user?.subscriptionTier === 'subscriber' ||
+    user?.subscriptionTier === 'premium' ||
     user?.plan === 'premium' ||
     user?.plan === 'PREMIUM' ||
+    user?.plan === 'subscriber' ||
     user?.subscriptionPlan === 'premium' ||
     user?.subscriptionPlan === 'PREMIUM' ||
     user?.subscriptionStatus === 'active' ||
     user?.subscriptionStatus === 'ACTIVE'
   ) {
     return SUBSCRIPTION_PLANS.PREMIUM;
+  }
+
+  // Immediate cookie fallback for zero-flicker client-side rendering
+  if (typeof document !== 'undefined') {
+    try {
+      const match = document.cookie.match(/(?:^|;\s*)isPremium=([^;]*)/);
+      if (match && match[1] === 'true') {
+        return SUBSCRIPTION_PLANS.PREMIUM;
+      }
+    } catch (_) {}
   }
 
   // Expired

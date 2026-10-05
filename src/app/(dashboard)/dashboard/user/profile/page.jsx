@@ -133,7 +133,20 @@ export default function ProfilePage() {
 
   const isPremium = useMemo(() => {
     if (user?.role === 'admin' || user?.role === 'ADMIN') return true;
-    if (user?.isPremium === true || user?.premium === true || user?.plan === 'premium') return true;
+    if (
+      user?.isPremium === true ||
+      user?.premium === true ||
+      user?.subscriptionTier === 'subscriber' ||
+      user?.subscriptionTier === 'premium' ||
+      user?.plan === 'premium' ||
+      user?.plan === 'subscriber'
+    ) return true;
+    if (typeof document !== 'undefined') {
+      try {
+        const match = document.cookie.match(/(?:^|;\s*)isPremium=([^;]*)/);
+        if (match && match[1] === 'true') return true;
+      } catch (_) {}
+    }
     return Array.isArray(mySubscriptions)
       ? mySubscriptions.some(
         (sub) => sub?.status === 'active' || sub?.status === 'trialing'
@@ -155,6 +168,15 @@ export default function ProfilePage() {
 
   const subscriptionSummary = useMemo(() => {
     if (!activeSubscription) {
+      if (isPremium) {
+        return {
+          plan: 'Premium',
+          status: 'active',
+          statusLabel: 'Active',
+          renewalDate: null,
+          billingCycle: 'Monthly',
+        };
+      }
       return {
         plan: 'Free',
         status: 'inactive',
@@ -178,7 +200,7 @@ export default function ProfilePage() {
       renewalDate: cycle,
       billingCycle: activeSubscription.billingCycle || 'Monthly',
     };
-  }, [activeSubscription]);
+  }, [activeSubscription, isPremium]);
 
   // ---------- 30-Day Name Change Cooldown Calculation ----------
   const nameCooldownInfo = useMemo(() => {

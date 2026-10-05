@@ -267,9 +267,18 @@ export function buildDashboardProps(data) {
     categories: mapCategories(home?.categories),
     user: home?.user || null,
     subscription: {
-      plan: home?.subscription?.plan || home?.dailyUsage?.plan || 'free',
-      isPremium: home?.subscription?.isPremium || home?.dailyUsage?.plan === 'subscriber' || false,
-      status: home?.subscription?.status || null,
+      plan: home?.subscription?.plan || home?.dailyUsage?.plan || (home?.user?.isPremium || home?.user?.subscriptionTier === 'subscriber' ? 'subscriber' : 'free'),
+      isPremium: Boolean(
+        home?.subscription?.isPremium ||
+        home?.dailyUsage?.plan === 'subscriber' ||
+        home?.user?.isPremium ||
+        home?.user?.premium ||
+        home?.user?.subscriptionTier === 'subscriber' ||
+        home?.user?.plan === 'premium' ||
+        home?.user?.plan === 'subscriber' ||
+        false
+      ),
+      status: home?.subscription?.status || (home?.user?.isPremium ? 'active' : null),
       currentPeriodEnd: home?.subscription?.currentPeriodEnd || null,
     },
     dailyUsage: home?.dailyUsage || null,
