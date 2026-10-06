@@ -2,11 +2,25 @@ import AuthProvider from "@/components/auth/AuthProvider";
 
 import "./globals.css";
 
-import { Inter } from "next/font/google";
+import { Inter, Cormorant_Garamond, Playfair_Display } from "next/font/google";
 import { Providers } from "@/providers/Providers";
 
 const inter = Inter({
   variable: "--font-inter",
+  subsets: ["latin"],
+  display: "swap",
+});
+
+const cormorant = Cormorant_Garamond({
+  variable: "--font-cormorant",
+  subsets: ["latin"],
+  weight: ["500", "600"],
+  style: ["italic"],
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  variable: "--font-playfair",
   subsets: ["latin"],
   display: "swap",
 });
@@ -91,6 +105,8 @@ export default function RootLayout({ children }) {
       <body
         className={`
           ${inter.variable}
+          ${cormorant.variable}
+          ${playfair.variable}
           font-sans
           antialiased
           bg-background

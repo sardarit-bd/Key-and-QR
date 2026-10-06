@@ -55,6 +55,12 @@
   border-radius: 10px;
 }
 
+.card ::selection,
+.card::selection {
+  background: rgba(180, 130, 25, 0.9);
+  color: #ffffff;
+}
+
 .closeX {
   position: absolute;
   top: 18px;
@@ -118,7 +124,16 @@
   height: 28px;
 }
 
+.playfair {
+  font-family: var(--font-playfair), serif;
+}
+
+.cormorant {
+  font-family: var(--font-cormorant), serif;
+}
+
 .badge {
+  font-family: var(--font-playfair), serif;
   margin-top: 10px;
   display: inline-flex;
   align-items: center;
@@ -135,6 +150,7 @@
 }
 
 .from {
+  font-family: var(--font-playfair), serif;
   margin: 8px 0 0;
   font-size: 18px;
   font-weight: 400;
@@ -219,6 +235,7 @@
 }
 
 .quote {
+  font-family: var(--font-playfair), serif;
   position: absolute;
   display: block;
   font-size: 70px;
@@ -285,11 +302,12 @@
 
 blockquote.message,
 .message {
+  font-family: var(--font-cormorant), serif;
+  font-style: italic;
   position: relative;
   margin: auto 0;
   padding: 4px 12px;
   border: none;
-  font-style: normal;
   font-size: 26px;
   line-height: 1.48;
   font-weight: 500;
@@ -303,6 +321,7 @@ blockquote.message,
 }
 
 .signature {
+  font-family: var(--font-playfair), serif;
   position: relative;
   margin: 24px 0 6px;
   font-size: 13px;
