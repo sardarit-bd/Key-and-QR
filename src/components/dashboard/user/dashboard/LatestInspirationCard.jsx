@@ -359,11 +359,13 @@ export default function LatestInspirationCard({
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.96 }}
               onClick={() => setShowDedicationModal(true)}
-              className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-950/70 via-neutral-900/80 to-amber-950/70 backdrop-blur-md px-3 sm:px-3.5 py-1.5 text-[10.5px] sm:text-[12px] font-semibold text-amber-300 shadow-[0_0_14px_rgba(245,158,11,0.25)] hover:border-amber-400/80 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all"
+              className="inline-flex cursor-pointer items-center gap-2 rounded-full border border-white/20 bg-black/40 hover:bg-black/55 hover:border-white/30 backdrop-blur-md px-3 sm:px-3.5 py-1.5 shadow-sm transition-all"
               title="View personal gift dedication"
             >
-              <Gift size={13} className="text-amber-400 animate-pulse" />
-              <span className="uppercase tracking-[0.08em]">Gift Dedication</span>
+              <Gift size={13} className="text-accent" />
+              <span className="text-[10.5px] sm:text-[12px] font-semibold uppercase tracking-[0.1em] sm:tracking-[0.12em] text-white/90">
+                Gift Dedication
+              </span>
             </motion.button>
           )}
         </div>

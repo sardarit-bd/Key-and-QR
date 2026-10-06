@@ -2,20 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Cormorant_Garamond, Playfair_Display } from "next/font/google";
 import styles from "./GiftDedicationCard.module.css";
-
-/* Fonts declared at module scope */
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["500", "600"],
-  style: ["italic"],
-});
-const playfair = Playfair_Display({
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
-  style: ["normal", "italic"],
-});
 
 const GiftIcon = () => (
   <svg viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -254,7 +241,7 @@ export default function GiftDedicationCard({
     extractSender(props?.author) ||
     "A Loved One";
 
-  const pf = playfair.className;
+  const pf = styles.playfair || "";
 
   return createPortal(
     <div className={styles.overlay} onClick={handleClose} role="dialog" aria-modal="true">
@@ -298,7 +285,7 @@ export default function GiftDedicationCard({
           <span className={`${styles.quote} ${styles.quoteClose} ${pf}`} aria-hidden="true">&rdquo;</span>
 
           <div className={styles.scrollContainer}>
-            <blockquote className={`${styles.message} ${cormorant.className}`}>
+            <blockquote className={`${styles.message} ${styles.cormorant || ""}`}>
               {message}
             </blockquote>
 
