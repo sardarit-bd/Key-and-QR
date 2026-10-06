@@ -19,6 +19,7 @@ import useShareQuote from '@/hooks/useShareQuote';
 import ShareQuoteModal from '@/components/public/quote/ShareQuoteModal';
 import FavoriteButton from '@/components/ui/FavoriteButton';
 import VisualQuoteRenderer from '@/components/public/quote/VisualQuoteRenderer';
+import FloatingQuoteControls from '@/components/public/quote/FloatingQuoteControls';
 
 function resolveQuoteArtwork(quote) {
   if (!quote) return null;
@@ -155,7 +156,7 @@ export default function InspirationQuoteCard({ quote, view = 'grid' }) {
         initial={reduceMotion ? false : { opacity: 0, scale: 0.98 }}
         animate={{ opacity: 1, scale: 1 }}
         whileHover={!reduceMotion ? { y: -4, transition: { duration: 0.2 } } : undefined}
-        className={`group relative overflow-hidden rounded-2xl border ${FAVORITE_CARD_SURFACE} ${FAVORITE_HOVER} transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/50 aspect-[4/3] flex flex-col justify-between`}
+        className={`group relative overflow-hidden rounded-2xl border ${FAVORITE_CARD_SURFACE} ${FAVORITE_HOVER} transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-black/10 dark:hover:shadow-black/50 aspect-[4/3]`}
       >
         {/* Full-bleed Quote Artwork */}
         <div className="absolute inset-0 z-0 bg-muted/30 overflow-hidden flex items-center justify-center">
@@ -195,43 +196,20 @@ export default function InspirationQuoteCard({ quote, view = 'grid' }) {
         </div>
 
         {/* Category Pill (Top-Right Badge) */}
-        <div className="relative z-10 p-3 flex items-start justify-end pointer-events-none">
+        <div className="absolute top-3 right-3 z-10 pointer-events-none">
           <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[10px] sm:text-[11px] font-semibold capitalize backdrop-blur-md shadow-sm ${chip.border} ${chip.bg} ${chip.text} ${chip.lightText}`}>
             {categoryLabel}
           </span>
         </div>
 
-        {/* Hover / Mobile Action Overlay */}
-        <div className="relative z-20 mt-auto p-3 sm:p-3.5 bg-gradient-to-t from-black/80 via-black/40 to-transparent transition-all duration-200 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 flex items-center justify-between gap-2 pointer-events-auto">
-          {/* View Details Link */}
-          <Link
-            href={`/q/${quote._id}`}
-            className="inline-flex items-center gap-1.5 text-xs font-semibold text-white/90 hover:text-white transition-colors"
-          >
-            <span>View Details</span>
-            <ExternalLink size={13} />
-          </Link>
-
-          {/* Action Buttons: Share & Favorite */}
-          <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleShare}
-              aria-label="Share quote"
-              className="h-8 w-8 cursor-pointer rounded-full bg-black/40 border border-white/20 text-white backdrop-blur-md hover:bg-white/20 hover:text-white transition-all active:scale-95"
-            >
-              <Share2 size={14} />
-            </Button>
-
-            <FavoriteButton
-              id={quote._id}
-              type="quote"
-              className="h-8 w-8 rounded-full border border-white/20 bg-black/40 text-white backdrop-blur-md hover:bg-white/20 transition-all active:scale-95 flex items-center justify-center"
-              size="sm"
-            />
-          </div>
-        </div>
+        {/* Floating Glassmorphic Dock */}
+        <FloatingQuoteControls
+          quoteId={quote._id}
+          detailHref={`/q/${quote._id}`}
+          onShare={handleShare}
+          showFavorite={true}
+          showCollection={true}
+        />
       </motion.div>
 
       <ShareQuoteModal isOpen={isShareOpen} onClose={closeShare} quoteData={shareData} quote={shareData} />

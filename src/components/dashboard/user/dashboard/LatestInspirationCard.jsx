@@ -4,11 +4,11 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Sparkles, Heart, Share2, BookOpen, Play, Pause, Gift, X } from "lucide-react";
-import FavoriteButton from "@/components/ui/FavoriteButton";
+import { Sparkles, Play, Pause, Gift } from "lucide-react";
 import VisualQuoteRenderer from "@/components/public/quote/VisualQuoteRenderer";
 import VisualQuoteAudioPlayer from "@/components/public/quote/VisualQuoteAudioPlayer";
 import GiftDedicationCard from "@/components/common/GiftDedicationCard";
+import FloatingQuoteControls from "@/components/public/quote/FloatingQuoteControls";
 
 const SESSION_INTERACTION_KEY = "myinspire_user_interacted";
 
@@ -255,9 +255,6 @@ export default function LatestInspirationCard({
     }
   }, [isVideoPlaying]);
 
-  const actionButtonClass =
-    "inline-flex h-8.5 sm:h-9 cursor-pointer items-center gap-1.5 rounded-full border border-white/15 bg-black/40 backdrop-blur-md px-3 sm:px-3.5 text-[12px] sm:text-[13px] font-medium text-white/90 transition-all duration-150 ease-out hover:bg-white/15 hover:border-white/30 hover:text-white active:scale-[0.97]";
-
   return (
     <motion.section
       initial={reduceMotion ? false : { opacity: 0, y: 12 }}
@@ -338,234 +335,115 @@ export default function LatestInspirationCard({
         className="pointer-events-none absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/50 via-black/20 to-transparent opacity-90 sm:opacity-0 transition-opacity duration-300 ease-out sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 z-[5]"
       />
 
-      {/* ===== Controls & Legacy Text Overlay ===== */}
-      <div className="relative z-10 flex flex-col justify-between h-full p-4 sm:p-5 md:p-6 pointer-events-none">
-        {/* Top row: Quote badge & Gift Dedication (left) & Floating Media Controls (right) */}
-        <div className="flex items-center justify-between pointer-events-auto gap-2">
-          {/* Quote badge & Gift Dedication Pill */}
-          <div className="flex items-center gap-2 flex-wrap">
-            <motion.span
-              initial={reduceMotion ? false : { opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.4, delay: 0.1 }}
-              className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 backdrop-blur-md px-3 sm:px-3.5 py-1.5 shadow-sm"
+      {/* Top bar: Quote badge & Gift Dedication (left) & Floating Media Controls (right) */}
+      <div className="absolute top-3 sm:top-4 left-3 sm:left-4 right-3 sm:right-4 z-20 flex items-center justify-between pointer-events-auto gap-2">
+        {/* Quote badge & Gift Dedication Pill */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <motion.span
+            initial={reduceMotion ? false : { opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.4, delay: 0.1 }}
+            className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-black/40 backdrop-blur-md px-3 sm:px-3.5 py-1.5 shadow-sm"
+          >
+            <Sparkles size={12} className="text-accent" fill="currentColor" />
+            <span className="text-[10.5px] sm:text-[12px] font-semibold uppercase tracking-[0.1em] sm:tracking-[0.12em] text-white/90">
+              {usedToday > 0 ? "Today's Quote" : "Daily Inspiration Available"}
+            </span>
+          </motion.span>
+
+          {hasGiftDedication && (
+            <motion.button
+              type="button"
+              initial={reduceMotion ? false : { opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => setShowDedicationModal(true)}
+              className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-950/70 via-neutral-900/80 to-amber-950/70 backdrop-blur-md px-3 sm:px-3.5 py-1.5 text-[10.5px] sm:text-[12px] font-semibold text-amber-300 shadow-[0_0_14px_rgba(245,158,11,0.25)] hover:border-amber-400/80 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all"
+              title="View personal gift dedication"
             >
-              <Sparkles size={12} className="text-accent" fill="currentColor" />
-              <span className="text-[10.5px] sm:text-[12px] font-semibold uppercase tracking-[0.1em] sm:tracking-[0.12em] text-white/90">
-                {usedToday > 0 ? "Today's Quote" : "Daily Inspiration Available"}
-              </span>
-            </motion.span>
-
-            {hasGiftDedication && (
-              <motion.button
-                type="button"
-                initial={reduceMotion ? false : { opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                whileHover={{ scale: 1.04 }}
-                whileTap={{ scale: 0.96 }}
-                onClick={() => setShowDedicationModal(true)}
-                className="inline-flex cursor-pointer items-center gap-1.5 rounded-full border border-amber-400/40 bg-gradient-to-r from-amber-950/70 via-neutral-900/80 to-amber-950/70 backdrop-blur-md px-3 sm:px-3.5 py-1.5 text-[10.5px] sm:text-[12px] font-semibold text-amber-300 shadow-[0_0_14px_rgba(245,158,11,0.25)] hover:border-amber-400/80 hover:shadow-[0_0_20px_rgba(245,158,11,0.4)] transition-all"
-                title="View personal gift dedication"
-              >
-                <Gift size={13} className="text-amber-400 animate-pulse" />
-                <span className="uppercase tracking-[0.08em]">Gift Dedication</span>
-              </motion.button>
-            )}
-          </div>
-
-          {/* Floating Media Controls — Clean single Play/Pause trigger */}
-          <div className="pointer-events-auto flex items-center gap-2">
-            {videoUrl ? (
-              <button
-                type="button"
-                onClick={toggleVideoPlay}
-                aria-label={isVideoPlaying ? "Pause video" : "Play video"}
-                className="w-9 h-9 sm:w-10 sm:h-10 min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] rounded-full bg-black/65 hover:bg-black/85 backdrop-blur-md border border-white/20 text-white shadow-xl flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer"
-              >
-                {isVideoPlaying ? (
-                  <Pause size={15} className="fill-current text-accent" />
-                ) : (
-                  <Play size={15} className="fill-current text-white translate-x-0.5" />
-                )}
-              </button>
-            ) : audioTrack?.source ? (
-              <VisualQuoteAudioPlayer
-                track={audioTrack}
-                compact
-                disableAutoplay={disableAutoplay}
-                paused={isMuted}
-              />
-            ) : null}
-          </div>
+              <Gift size={13} className="text-amber-400 animate-pulse" />
+              <span className="uppercase tracking-[0.08em]">Gift Dedication</span>
+            </motion.button>
+          )}
         </div>
 
-        {/* Middle: Legacy Quote Block (only shown if not a visual design) */}
-        {!hasVisualDesign && (
-          <div className="flex-1 flex flex-col justify-center items-center my-auto w-full min-h-0 overflow-y-auto hide-scrollbar pointer-events-auto px-2 sm:px-4 text-center">
-            <AnimatePresence mode="wait">
-              <motion.blockquote
-                key={quote}
-                initial={reduceMotion ? false : { opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={reduceMotion ? undefined : { opacity: 0, y: -12 }}
-                transition={{ duration: 0.45, ease: "easeOut" }}
-                className="max-w-[340px] sm:max-w-[720px] mx-auto"
-              >
-                <p className="text-[20px] sm:text-[28px] md:text-[36px] lg:text-[44px] leading-[1.28] sm:leading-[1.2] tracking-tight text-white font-medium sm:font-light text-pretty break-words drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
-                  {quote}
-                </p>
-
-                {(author || category?.name) && (
-                  <footer className="mt-4 sm:mt-6 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-                    {author && (
-                      <cite className="not-italic text-[13px] sm:text-[15px] md:text-[16px] text-amber-300/90 font-medium tracking-wide drop-shadow-[0_1px_4px_rgba(0,0,0,0.3)]">
-                        &mdash; {author} &mdash;
-                      </cite>
-                    )}
-                    {category?.name && (
-                      <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/10 backdrop-blur-md px-2.5 py-0.5 text-[10.5px] sm:text-[12px] font-medium text-white/80">
-                        <Sparkles size={10} className="text-accent" />
-                        {category.name}
-                      </span>
-                    )}
-                  </footer>
-                )}
-              </motion.blockquote>
-            </AnimatePresence>
-          </div>
-        )}
-
-        {/* Bottom controls: 2 Compact Rows on mobile, 1 Row on desktop */}
-        {/* On desktop (sm: >= 640px), hidden by default and reveals smoothly on hover/focus */}
-        {/* On mobile (< 640px), permanently visible and touch-accessible */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-3 opacity-100 translate-y-0 pointer-events-auto sm:opacity-0 sm:translate-y-2 sm:pointer-events-none sm:group-hover:opacity-100 sm:group-hover:translate-y-0 sm:group-hover:pointer-events-auto sm:group-focus-within:opacity-100 sm:group-focus-within:translate-y-0 sm:group-focus-within:pointer-events-auto transition-all duration-300 ease-out z-20 w-full">
-          {/* Row 1 on mobile / Left group on desktop */}
-          <div className="flex items-center justify-between sm:justify-start gap-2 sm:gap-2 w-full sm:w-auto">
-            {/* Primary Action: Inspire */}
+        {/* Floating Media Controls — Clean single Play/Pause trigger */}
+        <div className="pointer-events-auto flex items-center gap-2">
+          {videoUrl ? (
             <button
-              onClick={isLimitReached ? undefined : onInspire}
-              disabled={isReceiving || isLimitReached}
-              aria-disabled={isLimitReached}
-              title={isLimitReached ? "Daily limit reached — come back tomorrow" : undefined}
-              className={`inline-flex cursor-pointer items-center justify-center gap-1.5 rounded-full px-4 sm:px-4.5 py-2 text-[12px] sm:text-[13px] font-semibold transition-all duration-150 active:scale-[0.97] flex-1 sm:flex-initial ${isLimitReached
-                ? "bg-white/10 border border-white/15 text-white/40 cursor-not-allowed opacity-60 backdrop-blur-md"
-                : `bg-accent text-accent-foreground shadow-md shadow-accent/20 hover:brightness-105 disabled:opacity-60 disabled:cursor-not-allowed ${usedToday === 0 ? "ring-2 ring-accent/60 shadow-lg shadow-accent/30" : ""}`
-                }`}
+              type="button"
+              onClick={toggleVideoPlay}
+              aria-label={isVideoPlaying ? "Pause video" : "Play video"}
+              className="w-9 h-9 sm:w-10 sm:h-10 min-w-[36px] sm:min-w-[40px] min-h-[36px] sm:min-h-[40px] rounded-full bg-black/65 hover:bg-black/85 backdrop-blur-md border border-white/20 text-white shadow-xl flex items-center justify-center transition-all duration-200 active:scale-95 cursor-pointer"
             >
-              <Sparkles size={14} fill={isLimitReached ? "none" : "currentColor"} />
-              <span className="truncate">
-                {isReceiving
-                  ? "Inspiring..."
-                  : isLimitReached
-                    ? "Limit reached"
-                    : usedToday === 0
-                      ? "Receive Inspiration"
-                      : "Inspire"}
-              </span>
-            </button>
-
-            {/* Mobile Usage Status Pill (Row 1 right) */}
-            <div className="sm:hidden inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 backdrop-blur-md px-3 py-1.5 text-[11px] font-medium text-white/85 select-none shrink-0">
-              <Sparkles size={12} className="text-accent shrink-0" />
-              <span>
-                {dailyLimit === 0
-                  ? "Unlimited"
-                  : `${usedToday}/${dailyLimit}`}
-              </span>
-            </div>
-
-            {/* Desktop Secondary Actions (Favorite + Share + Read Again) */}
-            <div className="hidden sm:flex items-center gap-2">
-
-              {quoteId ? (
-                <FavoriteButton
-                  id={quoteId}
-                  type="quote"
-                  showText
-                  activeText="Favorited"
-                  inactiveText="Favorite"
-                  size="sm"
-                  onToggle={(res) => onFavoriteChange && onFavoriteChange(res)}
-                  className={actionButtonClass}
-                />
+              {isVideoPlaying ? (
+                <Pause size={15} className="fill-current text-accent" />
               ) : (
-                <span className={`${actionButtonClass} !text-white/40 !cursor-not-allowed`}>
-                  <Heart size={14} />
-                  <span>Favorite</span>
-                </span>
+                <Play size={15} className="fill-current text-white translate-x-0.5" />
               )}
-
-              <button
-                onClick={onShare}
-                aria-label="Share quote"
-                className={actionButtonClass}
-              >
-                <Share2 size={14} />
-                <span>Share</span>
-              </button>
-
-              <button
-                onClick={onReadAgain}
-                aria-label="Read quote again"
-                className={actionButtonClass}
-              >
-                <BookOpen size={14} />
-                <span>Read Again</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Row 2 on mobile: Secondary Action Buttons (Favorite + Share + Read Again) */}
-          <div className="flex sm:hidden items-center justify-between gap-1.5 w-full pb-2.5">
-
-            {quoteId ? (
-              <FavoriteButton
-                id={quoteId}
-                type="quote"
-                showText
-                activeText="Favorited"
-                inactiveText="Favorite"
-                size="sm"
-                onToggle={(res) => onFavoriteChange && onFavoriteChange(res)}
-                className={`${actionButtonClass} flex-1 justify-center`}
-              />
-            ) : (
-              <span className={`${actionButtonClass} flex-1 justify-center !text-white/40 !cursor-not-allowed`}>
-                <Heart size={14} />
-                <span>Favorite</span>
-              </span>
-            )}
-
-            <button
-              onClick={onShare}
-              aria-label="Share quote"
-              className={`${actionButtonClass} flex-1 justify-center`}
-            >
-              <Share2 size={14} />
-              <span>Share</span>
             </button>
-
-            <button
-              onClick={onReadAgain}
-              aria-label="Read quote again"
-              className={`${actionButtonClass} flex-1 justify-center`}
-            >
-              <BookOpen size={14} />
-              <span>Read</span>
-            </button>
-          </div>
-
-          {/* Desktop Usage Status Pill */}
-          <div className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-white/15 bg-black/40 backdrop-blur-md px-3.5 py-2 text-[12px] font-medium text-white/85 select-none shrink-0">
-            <Sparkles size={13} className="text-accent shrink-0" />
-            <span>
-              {dailyLimit === 0
-                ? "Unlimited"
-                : `${usedToday} of ${dailyLimit} used today`}
-            </span>
-          </div>
+          ) : audioTrack?.source ? (
+            <VisualQuoteAudioPlayer
+              track={audioTrack}
+              compact
+              disableAutoplay={disableAutoplay}
+              paused={isMuted}
+            />
+          ) : null}
         </div>
       </div>
+
+      {/* Middle: Legacy Quote Block (only shown if not a visual design) */}
+      {!hasVisualDesign && (
+        <div className="absolute inset-x-4 sm:inset-x-8 top-16 bottom-20 z-10 flex flex-col justify-center items-center pointer-events-auto px-2 sm:px-4 text-center overflow-y-auto hide-scrollbar">
+          <AnimatePresence mode="wait">
+            <motion.blockquote
+              key={quote}
+              initial={reduceMotion ? false : { opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={reduceMotion ? undefined : { opacity: 0, y: -12 }}
+              transition={{ duration: 0.45, ease: "easeOut" }}
+              className="max-w-[340px] sm:max-w-[720px] mx-auto"
+            >
+              <p className="text-[20px] sm:text-[28px] md:text-[36px] lg:text-[44px] leading-[1.28] sm:leading-[1.2] tracking-tight text-white font-medium sm:font-light text-pretty break-words drop-shadow-[0_2px_12px_rgba(0,0,0,0.4)]">
+                {quote}
+              </p>
+
+              {(author || category?.name) && (
+                <footer className="mt-4 sm:mt-6 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                  {author && (
+                    <cite className="not-italic text-[13px] sm:text-[15px] md:text-[16px] text-amber-300/90 font-medium tracking-wide drop-shadow-[0_1px_4px_rgba(0,0,0,0.3)]">
+                      &mdash; {author} &mdash;
+                    </cite>
+                  )}
+                  {category?.name && (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-white/15 bg-white/10 backdrop-blur-md px-2.5 py-0.5 text-[10.5px] sm:text-[12px] font-medium text-white/80">
+                      <Sparkles size={10} className="text-accent" />
+                      {category.name}
+                    </span>
+                  )}
+                </footer>
+              )}
+            </motion.blockquote>
+          </AnimatePresence>
+        </div>
+      )}
+
+      {/* Floating Glassmorphic Action Controls directly over the artwork image */}
+      <FloatingQuoteControls
+        quoteId={quoteId}
+        onInspire={onInspire}
+        isReceiving={isReceiving}
+        isLimitReached={isLimitReached}
+        usedToday={usedToday}
+        dailyLimit={dailyLimit}
+        onReadAgain={onReadAgain}
+        onShare={onShare}
+        onFavoriteChange={onFavoriteChange}
+        showCollection={true}
+        className="absolute bottom-4 left-4 right-4 z-20"
+      />
 
       {/* Persistent Gift Dedication Modal */}
       <GiftDedicationCard

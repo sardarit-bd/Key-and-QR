@@ -14,31 +14,65 @@ import {
   getCategoryLabel,
 } from '@/components/public/quote/category';
 import VisualQuoteRenderer from '@/components/public/quote/VisualQuoteRenderer';
+import FloatingQuoteControls from '@/components/public/quote/FloatingQuoteControls';
 
 function resolveQuoteArtwork(quote) {
-  if (!quote) return null;
+  if (!quote || typeof quote !== 'object') return null;
   return (
     quote.renderedImages?.desktop?.url ||
     quote.renderedImages?.mobile?.url ||
     quote.quote?.renderedImages?.desktop?.url ||
     quote.quote?.renderedImages?.mobile?.url ||
-    quote.imageUrl ||
+    (typeof quote.imageUrl === 'string' && quote.imageUrl ? quote.imageUrl : null) ||
     quote.image?.url ||
     (typeof quote.image === 'string' && (quote.image.startsWith('http') || quote.image.startsWith('/')) ? quote.image : null) ||
     null
   );
 }
 
+function resolveAuthorName(quote, categoryLabel) {
+  const rawAuthor = typeof quote?.author === 'string' ? quote.author.trim() : '';
+  if (!rawAuthor) return 'MyInspireTag';
+  const lower = rawAuthor.toLowerCase();
+  if (
+    lower === 'unknown' ||
+    lower === 'undefined' ||
+    lower === 'null' ||
+    (quote?.category && lower === quote.category.toLowerCase()) ||
+    (categoryLabel && lower === categoryLabel.toLowerCase())
+  ) {
+    return 'MyInspireTag';
+  }
+  return rawAuthor;
+}
+
+function getDisplayTitle(quote, categoryLabel) {
+  if (quote?.title?.trim()) return quote.title.trim();
+  if (quote?.text?.trim()) return quote.text.trim();
+  if (quote?.description?.trim()) return quote.description.trim();
+  const cat = (categoryLabel || '').trim();
+  if (!cat) return 'Visual Quote';
+  if (/inspiration/i.test(cat)) return 'Inspirational Quote';
+  return `${cat} Quote`;
+}
+
 export default function FavoriteCard({ favorite, view = 'grid', onRemove, onViewDetail, onShare }) {
   const [isRemoving, setIsRemoving] = useState(false);
   const [imageError, setImageError] = useState(false);
-  const quote = favorite?.quote || favorite;
+  const quote = favorite?.quote;
 
-  if (!quote) return null;
+  if (!quote || typeof quote !== 'object') return null;
 
   const category = quote.category || 'motivation';
   const categoryLabel = getCategoryLabel(category);
   const chip = getCategoryChipTheme(category);
+
+  // Clean author fallback (never duplicates category label)
+  const authorName = resolveAuthorName(quote, categoryLabel);
+
+  // Clean text and title fallbacks without string concatenation duplication
+  const quoteText = quote.text?.trim() || '';
+  const fallbackTitle = getDisplayTitle(quote, categoryLabel);
 
   const rawArtworkUrl = resolveQuoteArtwork(quote);
   const artworkUrl = imageError ? null : rawArtworkUrl;
@@ -52,14 +86,24 @@ export default function FavoriteCard({ favorite, view = 'grid', onRemove, onView
   );
 
   const hasVisualArtwork = Boolean(artworkUrl || hasCanvasElements);
-  const formattedDate = favorite.createdAt ? format(new Date(favorite.createdAt), 'MMM d, yyyy') : '';
+  let formattedDate = '';
+  if (favorite?.createdAt) {
+    try {
+      const parsed = new Date(favorite.createdAt);
+      if (!isNaN(parsed.getTime())) {
+        formattedDate = format(parsed, 'MMM d, yyyy');
+      }
+    } catch {
+      formattedDate = '';
+    }
+  }
 
   const handleShare = () => {
     if (onShare) {
       onShare({
         quoteId: quote._id,
-        text: quote.text,
-        author: quote.author,
+        text: quoteText || quote.description?.trim() || fallbackTitle,
+        author: authorName,
         category: quote.category,
         imageUrl: artworkUrl,
       });
@@ -67,7 +111,12 @@ export default function FavoriteCard({ favorite, view = 'grid', onRemove, onView
   };
 
   const handleCopy = () => {
-    navigator.clipboard?.writeText(`"${quote.text}" — ${quote.author || 'InspireTag'}`);
+    const textToCopy = quoteText
+      ? `"${quoteText}" — ${authorName}`
+      : quote.description?.trim()
+      ? `${quote.description.trim()} — ${authorName}`
+      : `"${fallbackTitle}" — ${authorName}`;
+    navigator.clipboard?.writeText(textToCopy);
     toast.success('Quote copied!');
   };
 
@@ -91,7 +140,7 @@ export default function FavoriteCard({ favorite, view = 'grid', onRemove, onView
           {artworkUrl ? (
             <img
               src={artworkUrl}
-              alt={quote.text || 'Quote artwork'}
+              alt={quoteText || fallbackTitle}
               onError={() => setImageError(true)}
               className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             />
@@ -112,9 +161,11 @@ export default function FavoriteCard({ favorite, view = 'grid', onRemove, onView
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="line-clamp-2 text-sm font-medium text-foreground">&ldquo;{quote.text}&rdquo;</p>
+          <p className="line-clamp-2 text-sm font-medium text-foreground">
+            {quoteText ? `“${quoteText}”` : quote.description?.trim() || fallbackTitle}
+          </p>
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            <span className="text-xs text-foreground-tertiary">{quote.author || 'InspireTag'}</span>
+            <span className="text-xs text-foreground-tertiary">{authorName}</span>
             <span className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold capitalize ${chip.border} ${chip.bg} ${chip.text} ${chip.lightText}`}>{categoryLabel}</span>
             {formattedDate && <span className="flex items-center gap-1 text-[10px] text-foreground-tertiary"><Calendar className="h-3 w-3" />{formattedDate}</span>}
           </div>
@@ -145,7 +196,7 @@ export default function FavoriteCard({ favorite, view = 'grid', onRemove, onView
             {artworkUrl ? (
               <img
                 src={artworkUrl}
-                alt={quote.text || 'Quote artwork'}
+                alt={quoteText || fallbackTitle}
                 onError={() => setImageError(true)}
                 className="w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02]"
               />
@@ -163,25 +214,29 @@ export default function FavoriteCard({ favorite, view = 'grid', onRemove, onView
 
           <div className="pointer-events-none relative z-10 p-3 flex items-start justify-between gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/40 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/95 backdrop-blur-md light:border-[#E8DFCE]/80 light:bg-white/70 light:text-[#4A3C2D]">
-              {quote.author || 'MyInspireTag'}
+              {authorName}
             </span>
             <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize backdrop-blur-md shadow-sm ${chip.border} ${chip.bg} ${chip.text} ${chip.lightText}`}>
               {categoryLabel}
             </span>
           </div>
 
-          <div className="pointer-events-none relative z-10 border-t border-white/10 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3.5 pb-2.5 pt-8">
-            <div className="flex items-center justify-between gap-2">
-              <span className="truncate text-[11px] font-medium text-white/85">{formattedDate}</span>
-              <div className="pointer-events-auto flex items-center justify-end gap-1">
-                <Button variant="ghost" size="icon" onClick={handleShare} aria-label="Share" className={ACTION_ICON_CLASS}><Share2 className="h-3.5 w-3.5" /></Button>
-                {onViewDetail && <Button variant="ghost" size="icon" onClick={() => onViewDetail(favorite)} aria-label="View" className={ACTION_ICON_CLASS}><Eye className="h-3.5 w-3.5" /></Button>}
-                <Button variant="ghost" size="icon" onClick={handleRemove} disabled={isRemoving} aria-label="Remove" className={`${ACTION_ICON_CLASS} !text-rose-400`}>
-                  {isRemoving ? <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-rose-500/30 border-t-rose-500" /> : <Trash2 className="h-3.5 w-3.5" />}
-                </Button>
-              </div>
-            </div>
-          </div>
+          <FloatingQuoteControls
+            quoteId={quote._id}
+            onShare={handleShare}
+            onViewDetail={onViewDetail ? () => onViewDetail(favorite) : undefined}
+            onRemove={handleRemove}
+            isRemoving={isRemoving}
+            showFavorite={false}
+            showCollection={false}
+            customLeftContent={
+              formattedDate ? (
+                <span className="truncate text-[11px] font-medium text-white/90">
+                  {formattedDate}
+                </span>
+              ) : null
+            }
+          />
         </>
       ) : (
         <>
@@ -192,7 +247,7 @@ export default function FavoriteCard({ favorite, view = 'grid', onRemove, onView
 
           <div className="pointer-events-none relative z-10 p-3 flex items-start justify-between gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-black/30 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-white/95 backdrop-blur-md light:border-[#E8DFCE]/80 light:bg-white/70 light:text-[#4A3C2D]">
-              {quote.author || 'MyInspireTag'}
+              {authorName}
             </span>
             <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize backdrop-blur-md ${chip.border} ${chip.bg} ${chip.text} ${chip.lightText} ${chip.glow}`}>
               {categoryLabel}
@@ -203,23 +258,27 @@ export default function FavoriteCard({ favorite, view = 'grid', onRemove, onView
             <div className="relative">
               <QuoteIcon className="absolute -top-5 left-1/2 h-8 w-8 -translate-x-1/2 text-accent/15 light:text-[#C6922D]/15" strokeWidth={1} fill="currentColor" stroke="none" />
               <p className="relative line-clamp-4 text-[14px] sm:text-[15px] font-medium leading-[1.6] text-foreground">
-                &ldquo;{quote.text}&rdquo;
+                {quoteText ? `“${quoteText}”` : quote.description?.trim() || fallbackTitle}
               </p>
             </div>
           </div>
 
-          <div className="pointer-events-none relative z-10 border-t border-border/40 bg-gradient-to-t from-background/90 via-background/40 to-transparent px-3.5 pb-2.5 pt-4">
-            <div className="flex items-center justify-between gap-2">
-              <span className="truncate text-[11px] font-medium text-foreground-tertiary">{formattedDate}</span>
-              <div className="pointer-events-auto flex items-center justify-end gap-1">
-                <Button variant="ghost" size="icon" onClick={handleShare} aria-label="Share" className={ACTION_ICON_CLASS}><Share2 className="h-3.5 w-3.5" /></Button>
-                {onViewDetail && <Button variant="ghost" size="icon" onClick={() => onViewDetail(favorite)} aria-label="View" className={ACTION_ICON_CLASS}><Eye className="h-3.5 w-3.5" /></Button>}
-                <Button variant="ghost" size="icon" onClick={handleRemove} disabled={isRemoving} aria-label="Remove" className={`${ACTION_ICON_CLASS} !text-rose-400`}>
-                  {isRemoving ? <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-rose-500/30 border-t-rose-500" /> : <Trash2 className="h-3.5 w-3.5" />}
-                </Button>
-              </div>
-            </div>
-          </div>
+          <FloatingQuoteControls
+            quoteId={quote._id}
+            onShare={handleShare}
+            onViewDetail={onViewDetail ? () => onViewDetail(favorite) : undefined}
+            onRemove={handleRemove}
+            isRemoving={isRemoving}
+            showFavorite={false}
+            showCollection={false}
+            customLeftContent={
+              formattedDate ? (
+                <span className="truncate text-[11px] font-medium text-foreground-tertiary">
+                  {formattedDate}
+                </span>
+              ) : null
+            }
+          />
         </>
       )}
     </motion.div>
