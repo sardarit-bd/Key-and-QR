@@ -648,7 +648,7 @@ export default function AdminProfilePage() {
             >
               <div className="flex items-center justify-between border-b border-border pb-3">
                 <div className="flex items-center gap-2">
-                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#24272D] text-muted-foreground border border-[#2A2D35]">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-muted-foreground border border-border">
                     <Lock size={16} />
                   </span>
                   <h3 className="text-base font-bold text-foreground">Change Password</h3>

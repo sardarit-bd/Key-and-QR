@@ -418,7 +418,7 @@ export default function AdminPendingQuotesPage({ defaultStatus = '', title = 'Pe
                   variant="outline"
                   onClick={() => { setReviewQuote(null); setAdminNote(''); }}
                   disabled={reviewLoading}
-                  className="h-10 px-4 rounded-lg border border-[#2A2D35] bg-transparent text-[#9BA1AD] hover:bg-[#24272D] hover:text-white font-medium transition-colors cursor-pointer select-none"
+                  className="h-10 px-4 rounded-lg border border-border bg-transparent text-muted-foreground hover:bg-secondary hover:text-foreground font-medium transition-colors cursor-pointer select-none"
                 >
                   Cancel
                 </Button>

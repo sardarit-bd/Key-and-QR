@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { usePathname } from 'next/navigation';
 import { X } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
@@ -26,10 +26,20 @@ export default function Sidebar({
 
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(isCollapsed);
 
-  // Close mobile sidebar on route change
+  // Keep fresh ref to onMobileClose to avoid stale closures without triggering re-effects
+  const onMobileCloseRef = useRef(onMobileClose);
   useEffect(() => {
-    onMobileClose?.();
-  }, [pathname, onMobileClose]);
+    onMobileCloseRef.current = onMobileClose;
+  }, [onMobileClose]);
+
+  // Close mobile sidebar strictly when pathname actually changes
+  const prevPathnameRef = useRef(pathname);
+  useEffect(() => {
+    if (prevPathnameRef.current !== pathname) {
+      prevPathnameRef.current = pathname;
+      onMobileCloseRef.current?.();
+    }
+  }, [pathname]);
 
   // Handle escape key to close mobile sidebar
   useEffect(() => {

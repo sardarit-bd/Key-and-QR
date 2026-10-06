@@ -219,7 +219,7 @@ function PrimarySalesChart({ salesTrend = [] }) {
                 </linearGradient>
               </defs>
 
-              <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis
                 dataKey="label"
                 tick={{ fontSize: 11, fill: 'var(--foreground-tertiary)' }}
@@ -325,7 +325,7 @@ function OrdersTrendChart({ ordersTrend = [] }) {
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart data={ordersTrend} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--foreground-tertiary)' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: 'var(--foreground-tertiary)' }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip content={<GenericChartTooltip unit="orders" />} />
@@ -369,7 +369,7 @@ function CustomerGrowthChart({ customerGrowth = [] }) {
                   <stop offset="95%" stopColor={COLORS.teal} stopOpacity={0.0} />
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#262626" vertical={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
               <XAxis dataKey="label" tick={{ fontSize: 10, fill: 'var(--foreground-tertiary)' }} axisLine={false} tickLine={false} />
               <YAxis tick={{ fontSize: 10, fill: 'var(--foreground-tertiary)' }} axisLine={false} tickLine={false} allowDecimals={false} />
               <Tooltip content={<GenericChartTooltip unit="users" />} />
@@ -604,7 +604,7 @@ function TopProductsChart({ topProducts = [] }) {
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart layout="vertical" data={chartData} margin={{ top: 5, right: 20, left: 20, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#262626" horizontal={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
               <XAxis
                 type="number"
                 tick={{ fontSize: 10, fill: 'var(--foreground-tertiary)' }}
@@ -660,7 +660,7 @@ function CategorySalesChart({ categorySales = [] }) {
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <BarChart layout="vertical" data={chartData} margin={{ top: 5, right: 20, left: 15, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#262626" horizontal={false} />
+              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" horizontal={false} />
               <XAxis
                 type="number"
                 tick={{ fontSize: 10, fill: 'var(--foreground-tertiary)' }}

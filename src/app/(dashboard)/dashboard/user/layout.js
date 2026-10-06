@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Sidebar from "@/components/dashboard/user/layout/Sidebar";
 import MobileTopNavbar from "@/components/dashboard/user/layout/MobileTopNavbar";
@@ -52,6 +52,10 @@ export default function UserDashboardLayout({ children }) {
   const [hydrated, setHydrated] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const handleMobileClose = useCallback(() => {
+    setIsMobileMenuOpen(false);
+  }, []);
+
   useEffect(() => {
     setHydrated(true);
   }, []);
@@ -78,7 +82,7 @@ export default function UserDashboardLayout({ children }) {
           <Sidebar
             user={user}
             isMobileOpen={isMobileMenuOpen}
-            onMobileClose={() => setIsMobileMenuOpen(false)}
+            onMobileClose={handleMobileClose}
           />
 
           {/* 3. Main Content Container */}
