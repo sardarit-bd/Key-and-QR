@@ -188,7 +188,7 @@ export default function FavoriteCard({ favorite, view = 'grid', onRemove, onView
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ scale: 1.015, y: -4 }}
       transition={{ duration: 0.25, ease: 'easeOut' }}
-      className={`group relative overflow-hidden ${FAVORITE_CARD_SURFACE} ${FAVORITE_HOVER} transition-all duration-300 aspect-[16/9] min-h-[220px] sm:min-h-[240px] flex flex-col justify-between`}
+      className={`group relative overflow-hidden ${FAVORITE_CARD_SURFACE} ${FAVORITE_HOVER} transition-all duration-300 w-full aspect-[375/667] sm:aspect-[16/9] sm:min-h-[240px] flex flex-col justify-between`}
     >
       {hasVisualArtwork ? (
         <>
@@ -198,13 +198,13 @@ export default function FavoriteCard({ favorite, view = 'grid', onRemove, onView
                 src={artworkUrl}
                 alt={quoteText || fallbackTitle}
                 onError={() => setImageError(true)}
-                className="w-full h-full object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02]"
+                className="w-full h-full object-cover sm:object-contain transition-transform duration-500 ease-out group-hover:scale-[1.02]"
               />
             ) : hasCanvasElements ? (
               <div className="w-full h-full flex items-center justify-center overflow-hidden pointer-events-none">
                 <VisualQuoteRenderer
                   editorData={editorData}
-                  mode="desktop"
+                  mode="auto"
                   showAudioPlayer={false}
                   className="w-full h-full"
                 />
@@ -231,7 +231,7 @@ export default function FavoriteCard({ favorite, view = 'grid', onRemove, onView
             showCollection={false}
             customLeftContent={
               formattedDate ? (
-                <span className="truncate text-[11px] font-medium text-white/90">
+                <span className="truncate text-[10px] sm:text-[11px] font-semibold text-[#18181B] select-none">
                   {formattedDate}
                 </span>
               ) : null
@@ -273,7 +273,7 @@ export default function FavoriteCard({ favorite, view = 'grid', onRemove, onView
             showCollection={false}
             customLeftContent={
               formattedDate ? (
-                <span className="truncate text-[11px] font-medium text-foreground-tertiary">
+                <span className="truncate text-[10px] sm:text-[11px] font-semibold text-[#18181B] select-none">
                   {formattedDate}
                 </span>
               ) : null
