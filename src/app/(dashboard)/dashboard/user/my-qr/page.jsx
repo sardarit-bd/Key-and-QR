@@ -26,6 +26,7 @@ import { QRCodeCanvas } from 'qrcode.react';
 import toast, { Toaster } from 'react-hot-toast';
 import api from '@/lib/api';
 import { Button } from '@/components/ui/button';
+import { getPublicTagUrl } from '@/utils/qr.utils';
 
 export default function MyQRPage() {
   const [copiedCode, setCopiedCode] = useState(null);
@@ -46,15 +47,8 @@ export default function MyQRPage() {
     staleTime: 30_000,
   });
 
-  const getBaseUrl = () => {
-    if (typeof window !== 'undefined') {
-      return process.env.NEXT_PUBLIC_FRONTEND_URL || window.location.origin;
-    }
-    return '';
-  };
-
   const handleCopy = async (tagCode) => {
-    const url = `${getBaseUrl()}/t/${tagCode}`;
+    const url = getPublicTagUrl(tagCode);
     try {
       await navigator.clipboard.writeText(url);
       setCopiedCode(tagCode);
@@ -222,7 +216,7 @@ export default function MyQRPage() {
             {/* QR Cards Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {tags.map((tag) => {
-                const tagUrl = `${getBaseUrl()}/t/${tag.tagCode}`;
+                const tagUrl = getPublicTagUrl(tag.tagCode);
                 const orderData = tag.assignedOrderId;
                 const orderNumber = orderData?._id
                   ? `#${orderData._id.slice(-8).toUpperCase()}`

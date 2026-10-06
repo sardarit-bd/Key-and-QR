@@ -1144,7 +1144,6 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
           giftDedication?.author ||
           activeQuote?.author ||
           quoteAuthor ||
-          author ||
           "A Loved One"
         }
         message={
@@ -1159,7 +1158,6 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
           activeQuote?.quote ||
           activeQuote?.text ||
           quoteText ||
-          quote ||
           quoteData?.quote ||
           quoteData?.text ||
           data?.quote ||
@@ -1170,9 +1168,9 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
         giftDedication={giftDedication}
         activeQuote={activeQuote}
         data={quoteData || data}
-        quoteText={quoteText || quote}
-        text={quoteText || quote}
-        quote={quote}
+        quoteText={quoteText || ""}
+        text={quoteText || ""}
+        quote={quoteText || ""}
         onSave={handleFavoriteDedication}
         isSaved={dedicationSaved}
         isSaving={dedicationFavoriteLoading}

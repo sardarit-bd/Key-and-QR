@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { QrCode, Layers, Plus } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
+import { getPublicTagUrl } from '@/utils/qr.utils';
 import Card from '@/components/dashboard/user/dashboard/Card';
 import {
   useAdminTags,
@@ -332,7 +333,7 @@ export default function AdminTagsPage() {
       {downloadTag && (
         <div id="hidden-qr-download" className="hidden" style={{ display: 'none' }}>
           <QRCodeCanvas
-            value={typeof window !== 'undefined' ? `${window.location.origin}/t/${downloadTag.tagCode}` : ''}
+            value={getPublicTagUrl(downloadTag.tagCode)}
             size={220}
             level="H"
             includeMargin
