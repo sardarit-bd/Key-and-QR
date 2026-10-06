@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
 import { CheckCircle, Trash2 } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
+import { getPublicTagUrl } from '@/utils/qr.utils';
 import Card from '@/components/dashboard/user/dashboard/Card';
 import { useDebounce } from '@/hooks/search-with-debounce/useDebounce';
 import { adminTagsService } from '@/services/dashboard-service/admin-tags.service';
@@ -345,7 +346,7 @@ export default function AdminAssignedTagsPage() {
       {downloadTag && (
         <div id="hidden-assigned-qr-download" className="hidden" style={{ display: 'none' }}>
           <QRCodeCanvas
-            value={typeof window !== 'undefined' ? `${window.location.origin}/t/${downloadTag.tagCode}` : ''}
+            value={getPublicTagUrl(downloadTag.tagCode)}
             size={220}
             level="H"
             includeMargin

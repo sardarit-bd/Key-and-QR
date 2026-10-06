@@ -11,16 +11,14 @@ import {
 import { Button } from '@/components/ui/button';
 import { Download, Copy, ExternalLink, Check, Printer } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
+import { getPublicTagUrl } from '@/utils/qr.utils';
 
 export default function TagQRDialog({ open, onOpenChange, tag }) {
   const [copied, setCopied] = useState(false);
 
   if (!tag) return null;
 
-  const baseUrl = typeof window !== 'undefined'
-    ? (process.env.NEXT_PUBLIC_FRONTEND_URL || window.location.origin)
-    : '';
-  const tagUrl = `${baseUrl}/t/${tag.tagCode}`;
+  const tagUrl = getPublicTagUrl(tag.tagCode);
 
   const handleDownload = () => {
     const canvas = document.querySelector('#qr-dialog-canvas canvas');
