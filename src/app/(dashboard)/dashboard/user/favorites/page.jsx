@@ -122,7 +122,7 @@ export default function FavoritesPage() {
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }} className="min-h-screen bg-background">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-[calc(4rem+env(safe-area-inset-bottom,0px)+24px)] lg:pb-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-6 sm:pb-8 lg:pb-12">
         <FavoritesHeader total={meta.total} />
 
         <div className="mt-6">
