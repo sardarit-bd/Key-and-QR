@@ -14,11 +14,11 @@
   --gold: #c59226;
   --gold-light: #dfb251;
   --gold-deep: #9e6f10;
-  --text-primary: #1c1917;
-  --text-secondary: #574e43;
-  --text-muted: #786b59;
-  --ivory-base: #fdfbf7;
-  --ivory-panel: #faf6ee;
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #71717a;
+  --whitish-base: #fcfcfd;
+  --whitish-panel: #ffffff;
 
   position: relative;
   width: 100%;
@@ -28,18 +28,18 @@
   overscroll-behavior: contain;
   padding: 28px 28px 24px;
   border-radius: 24px;
-  border: 1px solid rgba(197, 146, 38, 0.4);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   background:
-    radial-gradient(60% 40% at 90% 12%, rgba(212, 163, 49, 0.1), transparent 70%),
-    radial-gradient(50% 35% at 8% 20%, rgba(212, 163, 49, 0.08), transparent 70%),
-    linear-gradient(180deg, #fdfbf7 0%, #f5efe3 100%);
+    radial-gradient(60% 40% at 90% 12%, rgba(212, 163, 49, 0.03), transparent 70%),
+    radial-gradient(50% 35% at 8% 20%, rgba(212, 163, 49, 0.02), transparent 70%),
+    linear-gradient(180deg, #ffffff 0%, #f7f7f9 100%);
   box-shadow:
-    0 0 0 1px rgba(197, 146, 38, 0.2),
-    0 24px 60px rgba(44, 33, 14, 0.22),
-    0 0 40px rgba(212, 163, 49, 0.12);
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 24px 60px rgba(0, 0, 0, 0.14),
+    0 0 30px rgba(212, 163, 49, 0.04);
   color: var(--text-primary);
   scrollbar-width: thin;
-  scrollbar-color: rgba(197, 146, 38, 0.35) transparent;
+  scrollbar-color: rgba(197, 146, 38, 0.3) transparent;
 }
 
 .card::-webkit-scrollbar {
@@ -65,7 +65,7 @@
   height: 34px;
   color: var(--text-muted);
   background: rgba(0, 0, 0, 0.03);
-  border: 1px solid rgba(197, 146, 38, 0.2);
+  border: 1px solid rgba(0, 0, 0, 0.08);
   border-radius: 999px;
   cursor: pointer;
   transition: all 0.2s;
@@ -74,8 +74,8 @@
 
 .closeX:hover {
   color: var(--text-primary);
-  background: rgba(0, 0, 0, 0.08);
-  border-color: rgba(197, 146, 38, 0.45);
+  background: rgba(0, 0, 0, 0.06);
+  border-color: rgba(0, 0, 0, 0.14);
 }
 
 .closeX:focus-visible {
@@ -103,9 +103,9 @@
   height: 58px;
   border-radius: 50%;
   color: var(--gold);
-  border: 1.5px solid var(--gold);
-  background: radial-gradient(circle at 50% 40%, rgba(233, 185, 63, 0.22), #fffdf7 70%);
-  box-shadow: 0 0 24px rgba(212, 163, 49, 0.25), inset 0 0 14px rgba(255, 255, 255, 0.9);
+  border: 1.5px solid rgba(197, 146, 38, 0.55);
+  background: radial-gradient(circle at 50% 40%, rgba(233, 185, 63, 0.12), #ffffff 70%);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06), inset 0 0 14px rgba(255, 255, 255, 0.9);
 }
 
 .sparkSmall {
@@ -125,8 +125,8 @@
   gap: 7px;
   padding: 5px 13px;
   border-radius: 999px;
-  border: 1px solid rgba(197, 146, 38, 0.45);
-  background: rgba(233, 185, 63, 0.12);
+  border: 1px solid rgba(197, 146, 38, 0.3);
+  background: rgba(233, 185, 63, 0.08);
   color: #8c620e;
   font-size: 11px;
   font-weight: 600;
@@ -187,13 +187,13 @@
   margin-top: 10px;
   padding: 44px 36px 54px;
   border-radius: 16px;
-  border: 1px solid rgba(197, 146, 38, 0.45);
+  border: 1px solid rgba(0, 0, 0, 0.07);
   background:
-    radial-gradient(80% 70% at 50% 30%, rgba(255, 255, 255, 0.95), transparent 75%),
-    linear-gradient(180deg, #fffdf9 0%, #faf5eb 100%);
+    radial-gradient(80% 70% at 50% 30%, rgba(255, 255, 255, 0.98), transparent 75%),
+    linear-gradient(180deg, #ffffff 0%, #f9f9fb 100%);
   box-shadow:
-    inset 0 0 32px rgba(220, 195, 145, 0.2),
-    0 4px 20px rgba(44, 33, 14, 0.05);
+    inset 0 0 24px rgba(0, 0, 0, 0.015),
+    0 4px 20px rgba(0, 0, 0, 0.04);
   text-align: center;
 }
 
