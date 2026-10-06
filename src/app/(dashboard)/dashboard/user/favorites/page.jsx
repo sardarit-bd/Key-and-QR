@@ -48,7 +48,11 @@ export default function FavoritesPage() {
   const removeFavorite = useRemoveFavoriteMutation();
   const { data: quoteCategories = [] } = useQuoteCategories();
 
-  const favorites = data?.data || [];
+  const favorites = useMemo(() => {
+    return (data?.data || []).filter(
+      (item) => item && item.quote && typeof item.quote === 'object'
+    );
+  }, [data?.data]);
   const meta = data?.meta || { page: 1, limit: FAVORITES_PER_PAGE, total: 0, totalPage: 0 };
 
   // Alphabetical sort (A-Z) handling

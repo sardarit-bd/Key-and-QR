@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Sidebar from '@/components/dashboard/user/layout/Sidebar';
 import MobileTopNavbar from '@/components/dashboard/user/layout/MobileTopNavbar';
 import { ThemeProvider } from '@/config/dashboard/engine/ThemeProvider';
@@ -52,6 +52,10 @@ export default function AdminDashboardLayout({ children }) {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
+  const handleMobileClose = useCallback(() => {
+    setIsMobileMenuOpen(false);
+  }, []);
+
   useEffect(() => {
     setHydrated(true);
   }, []);
@@ -83,7 +87,7 @@ export default function AdminDashboardLayout({ children }) {
             isCollapsed={sidebarCollapsed}
             onToggle={(collapsed) => setSidebarCollapsed(collapsed)}
             isMobileOpen={isMobileMenuOpen}
-            onMobileClose={() => setIsMobileMenuOpen(false)}
+            onMobileClose={handleMobileClose}
           />
 
           <main className={`flex-1 w-full ${marginLeftClass} transition-[margin] duration-300`}>

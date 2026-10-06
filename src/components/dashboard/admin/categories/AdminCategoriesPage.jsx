@@ -160,7 +160,7 @@ export default function AdminCategoriesPage() {
         <div className="flex items-center justify-between gap-3 flex-wrap sm:flex-nowrap">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
-              <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#24272D] border border-[#2A2D35]">
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-secondary border border-border">
                 <Layers size={20} className="text-muted-foreground" />
               </span>
               Category Management

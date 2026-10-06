@@ -153,7 +153,7 @@ export default function AdminUsersPage({
     <div className="w-full p-4 sm:p-6 lg:p-8 space-y-6">
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl sm:text-3xl font-bold text-foreground flex items-center gap-3">
-          <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#24272D] border border-[#2A2D35]">
+          <span className="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-secondary border border-border">
             <Users size={20} className="text-muted-foreground" />
           </span>
           {title}

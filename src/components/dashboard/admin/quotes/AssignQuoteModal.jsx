@@ -839,7 +839,7 @@ export default function AssignQuoteModal({ open, onOpenChange, quote, onSuccess 
           <button
             type="button"
             onClick={() => onOpenChange(false)}
-            className="px-4 py-2.5 text-xs sm:text-sm font-medium rounded-lg border border-[#2A2D35] bg-transparent text-[#9BA1AD] hover:bg-[#24272D] hover:text-white transition-colors cursor-pointer select-none"
+            className="px-4 py-2.5 text-xs sm:text-sm font-medium rounded-lg border border-border bg-transparent text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors cursor-pointer select-none"
           >
             {activeTab === 'assign' ? 'Cancel' : 'Close'}
           </button>

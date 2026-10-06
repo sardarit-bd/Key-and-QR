@@ -42,15 +42,15 @@ export default function DataTableToolbar({
   // Surface classes based on variant
   const triggerBaseClass = isUser
     ? 'h-10 sm:h-11 rounded-xl border border-white/6 bg-background-secondary/50 backdrop-blur-md text-xs sm:text-sm text-foreground-secondary hover:border-white/12 hover:bg-background-secondary/70 focus:border-accent/50 focus:ring-2 focus:ring-accent/20 light:border-[#E8DFCE]/80 light:bg-white/70 transition-all duration-200'
-    : 'h-10 rounded-xl border border-white/10 bg-neutral-900/80 backdrop-blur-md text-xs sm:text-sm text-neutral-200 hover:border-white/20 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 shadow-sm transition-all duration-200';
+    : 'h-10 rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-neutral-900/80 backdrop-blur-md text-xs sm:text-sm text-neutral-900 dark:text-neutral-200 hover:border-neutral-300 dark:hover:border-white/20 focus:border-amber-500/50 focus:ring-2 focus:ring-amber-500/20 shadow-sm transition-all duration-200';
 
   const triggerActiveClass = isUser
     ? 'border-accent/50 bg-accent/10 text-accent font-medium shadow-[0_0_15px_-3px_rgba(253,182,92,0.25)] dark:text-amber-200'
-    : 'border-amber-500/40 bg-amber-500/10 text-amber-300 font-medium shadow-[0_0_12px_-2px_rgba(245,158,11,0.2)]';
+    : 'border-amber-500/40 bg-amber-500/10 text-amber-700 dark:border-amber-500/40 dark:bg-amber-500/10 dark:text-amber-300 font-medium shadow-[0_0_12px_-2px_rgba(245,158,11,0.2)]';
 
   const contentClass = isUser
     ? 'rounded-xl border border-white/6 bg-popover text-foreground shadow-xl backdrop-blur-xl light:border-[#E8DFCE]/80'
-    : 'rounded-xl border border-white/10 bg-neutral-900 text-neutral-100 shadow-2xl backdrop-blur-xl';
+    : 'rounded-xl border border-neutral-200 dark:border-white/10 bg-white dark:bg-neutral-900 text-neutral-900 dark:text-neutral-100 shadow-2xl backdrop-blur-xl';
 
   const searchClass = isUser
     ? 'h-10 sm:h-11 border-white/6 bg-background-secondary/50 backdrop-blur-md hover:border-white/12 hover:bg-background-secondary/70 focus-within:border-accent/50 focus-within:ring-accent/20 light:border-[#E8DFCE]/80 light:bg-white/70'
@@ -200,7 +200,7 @@ export default function DataTableToolbar({
                 'h-10 sm:h-11 cursor-pointer gap-1.5 rounded-xl px-3.5 text-xs sm:text-sm transition-all duration-200 border border-dashed',
                 isUser
                   ? 'border-white/10 text-foreground-tertiary hover:bg-background-secondary/70 hover:text-foreground hover:border-white/20 light:border-[#E8DFCE]'
-                  : 'border-white/15 text-neutral-400 hover:bg-white/5 hover:text-white hover:border-white/30'
+                  : 'border-neutral-300 dark:border-white/15 text-neutral-500 dark:text-neutral-400 hover:bg-neutral-100 dark:hover:bg-white/5 hover:text-neutral-900 dark:hover:text-white hover:border-neutral-400 dark:hover:border-white/30'
               )}
             >
               <RotateCcw size={13} className="shrink-0" />
@@ -240,7 +240,7 @@ export default function DataTableToolbar({
                   'flex items-center gap-1 rounded-xl p-1 backdrop-blur-md shrink-0',
                   isUser
                     ? 'border border-white/6 bg-background-secondary/50 light:border-[#E8DFCE]/80 light:bg-white/70'
-                    : 'border border-white/10 bg-neutral-900/60'
+                    : 'border border-neutral-200 dark:border-white/10 bg-white dark:bg-neutral-900/60'
                 )}
               >
                 <button

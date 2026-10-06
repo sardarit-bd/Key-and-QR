@@ -424,7 +424,7 @@ export default function AdminAnnouncementBannerPage() {
       >
         <div>
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#24272D] text-muted-foreground border border-[#2A2D35]">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary text-muted-foreground border border-border">
               <Megaphone size={18} />
             </span>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-foreground">

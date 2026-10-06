@@ -74,7 +74,7 @@ export default function UserEditDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <div className="w-12 h-12 rounded-2xl bg-[#24272D] border border-[#2A2D35] flex items-center justify-center mb-2">
+          <div className="w-12 h-12 rounded-2xl bg-secondary border border-border flex items-center justify-center mb-2">
             <span className="text-sm font-semibold text-foreground">{initials}</span>
           </div>
           <DialogTitle>Edit User</DialogTitle>
@@ -143,7 +143,7 @@ export default function UserEditDialog({
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={isLoading}
-            className="h-10 px-4 rounded-lg border border-[#2A2D35] bg-transparent text-[#9BA1AD] hover:bg-[#24272D] hover:text-white font-medium transition-colors cursor-pointer select-none"
+            className="h-10 px-4 rounded-lg border border-border bg-transparent text-muted-foreground hover:bg-secondary hover:text-foreground font-medium transition-colors cursor-pointer select-none"
           >
             Cancel
           </Button>
