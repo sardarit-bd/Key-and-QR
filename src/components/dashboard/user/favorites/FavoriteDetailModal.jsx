@@ -133,7 +133,7 @@ export default function FavoriteDetailModal({ favorite, onClose, onRemove, onSha
   return (
     <AnimatePresence>
       <motion.div
-        className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md p-3 sm:p-6"
+        className="fixed inset-0 z-40 overflow-y-auto overscroll-contain bg-black/85 backdrop-blur-md p-3 sm:p-6 pb-[calc(4rem+env(safe-area-inset-bottom,0px)+24px)] sm:pb-6 flex flex-col items-center justify-start sm:justify-center"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
@@ -145,7 +145,7 @@ export default function FavoriteDetailModal({ favorite, onClose, onRemove, onSha
           /* CONDITION 1: FULL-COVER ARTWORK LAYOUT (VISUAL / IMAGE)    */
           /* ========================================================= */
           <motion.div
-            className="relative w-full max-w-3xl max-h-[92vh] sm:max-h-[88vh] rounded-[24px] overflow-hidden border border-white/15 bg-black/95 shadow-2xl flex flex-col items-center justify-center"
+            className="my-auto relative w-full max-w-3xl rounded-[24px] overflow-hidden border border-white/15 bg-black/95 shadow-2xl flex flex-col items-center justify-center shrink-0"
             initial={{ scale: 0.92, opacity: 0, y: 16 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0 }}
@@ -177,15 +177,15 @@ export default function FavoriteDetailModal({ favorite, onClose, onRemove, onSha
             </div>
 
             {/* Immersive Centerstage Visual Artwork */}
-            <div className="relative w-full h-full max-h-[92vh] sm:max-h-[88vh] flex items-center justify-center overflow-hidden bg-black/95">
+            <div className="relative w-full h-full flex items-center justify-center overflow-hidden bg-black/95">
               {artworkUrl ? (
                 <img
                   src={artworkUrl}
                   alt={quoteText || quote.description?.trim() || fallbackTitle}
-                  className="w-full h-auto max-h-[85vh] sm:max-h-[82vh] object-contain select-none transition-transform duration-300"
+                  className="w-full h-auto sm:max-h-[82vh] object-contain select-none transition-transform duration-300"
                 />
               ) : hasCanvasElements ? (
-                <div className="w-full h-[65vh] sm:h-[75vh] flex items-center justify-center p-4">
+                <div className="w-full min-h-[50vh] sm:h-[75vh] flex items-center justify-center p-4">
                   <VisualQuoteRenderer
                     editorData={editorData}
                     mode="desktop"
@@ -245,7 +245,7 @@ export default function FavoriteDetailModal({ favorite, onClose, onRemove, onSha
           /* CONDITION 2: CLEAN TYPOGRAPHY LAYOUT (TEXT-ONLY QUOTE)     */
           /* ========================================================= */
           <motion.div
-            className="relative max-w-xl w-full max-h-[90vh] flex flex-col overflow-hidden rounded-[24px] border border-accent/20 bg-card shadow-2xl p-6 sm:p-10 text-center light:border-[#E8DFCE]/80"
+            className="my-auto relative max-w-xl w-full flex flex-col overflow-hidden rounded-[24px] border border-accent/20 bg-card shadow-2xl p-6 sm:p-10 text-center light:border-[#E8DFCE]/80 shrink-0"
             initial={{ scale: 0.9, opacity: 0, y: 16 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.95, opacity: 0 }}
