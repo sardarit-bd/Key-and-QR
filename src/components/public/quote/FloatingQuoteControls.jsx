@@ -8,20 +8,13 @@ import FavoriteButton from '@/components/ui/FavoriteButton';
 /**
  * FloatingQuoteControls
  *
- * Glassmorphic Quote Card Action Controls matching design specification:
- * 1. Layout Structure:
- *    - Primary "Inspire" action button clearly separated on the left.
- *    - Secondary actions (Save/Favorite, Share, Reflect/Read, Collection)
- *      grouped inside a single, elegant, pill-shaped frosted glass capsule dock.
- * 2. Styling & Theme Adaptation:
- *    - Refined translucent frosted glass aesthetic (`backdrop-blur-md`).
- *    - Light theme: Crisp frosted whitish glass (`bg-white/75 border-white/40 shadow-black/10`).
- *    - Dark theme: Deep translucent obsidian glass (`dark:bg-neutral-950/75 dark:border-white/15 dark:shadow-black/40`).
- *    - Clean line-art icons with consistent stroke and hover transitions.
- * 3. Positioning & Touch Accessibility:
- *    - Absolute positioning (`absolute bottom-4 left-4 right-4 z-20`) directly over the artwork image.
- *    - Fully visible on mobile touch devices (`opacity-100`) without relying on hover states.
- *    - `e.stopPropagation()` bound to prevent triggering underlying card navigation.
+ * Lightweight, compact floating controls over the quote artwork image:
+ * - Visual direction: image → soft translucent/whitish glass background → buttons/icons
+ * - Increased transparency (bg-white/35 dark:bg-black/35) with rich backdrop blur (backdrop-blur-xl)
+ *   so the quote/image underneath remains visually readable.
+ * - Compact capsule dock for secondary actions (Save, Share, Reflect, Collection).
+ * - Primary "Inspire" button clearly accessible on the left when present.
+ * - All actions preserve full functionality with e.stopPropagation().
  */
 export default function FloatingQuoteControls({
   quoteId,
@@ -51,192 +44,247 @@ export default function FloatingQuoteControls({
 }) {
   const hasLeftSection = Boolean(customLeftContent || onInspire);
 
-  const actionIconClass =
-    'flex h-8 w-8 sm:h-8.5 sm:w-8.5 cursor-pointer items-center justify-center rounded-full text-neutral-700 dark:text-neutral-200 hover:text-neutral-950 dark:hover:text-white hover:bg-black/10 dark:hover:bg-white/15 active:scale-95 transition-all duration-150';
+  const actionItemClass =
+    'flex min-w-[44px] sm:min-w-[54px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 sm:px-2 py-1 sm:py-1.5 text-[#18181B] hover:text-black hover:bg-black/10 active:scale-95 transition-all duration-150 cursor-pointer select-none';
+
+  const favoriteActionClass = `${actionItemClass} [&>div]:flex-col [&>div]:gap-0.5 [&>div>span]:!ml-0 [&>div>span]:!text-[10px] [&>div>span]:!font-medium [&>div>span]:!leading-none [&>div>span]:!text-[#18181B] [&>div>svg]:!text-[#18181B]`;
 
   return (
-    <div
-      className={`absolute bottom-4 left-4 right-4 z-20 pointer-events-auto flex items-center ${
-        hasLeftSection ? 'justify-between' : 'justify-center'
-      } gap-2 sm:gap-3 ${className}`}
-      onClick={(e) => e.stopPropagation()}
-    >
-      {/* 1. Left Section: Primary "Inspire" Action Button & Usage Indicator */}
-      {hasLeftSection && (
-        <div className="flex items-center gap-2 shrink-0">
-          {customLeftContent}
-
-          {onInspire && (
-            <>
-              <button
-                type="button"
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (!isLimitReached) onInspire(e);
-                }}
-                disabled={isReceiving || isLimitReached}
-                aria-disabled={isLimitReached}
-                title={isLimitReached ? 'Daily limit reached — come back tomorrow' : undefined}
-                className={`inline-flex h-9 sm:h-9.5 cursor-pointer items-center justify-center gap-1.5 rounded-full px-4 sm:px-4.5 text-[12px] sm:text-[13px] font-semibold transition-all duration-150 active:scale-[0.97] select-none shadow-md ${
-                  isLimitReached
-                    ? 'bg-neutral-800/80 text-white/40 cursor-not-allowed border border-white/10 backdrop-blur-md'
-                    : `bg-accent text-accent-foreground border border-accent/40 shadow-accent/25 hover:brightness-105 ${
-                        usedToday === 0 ? 'ring-2 ring-accent/60 shadow-accent/30' : ''
-                      }`
-                }`}
-              >
-                <Sparkles size={14} fill={isLimitReached ? 'none' : 'currentColor'} />
-                <span className="truncate">
-                  {isReceiving
-                    ? 'Inspiring...'
-                    : isLimitReached
-                    ? 'Limit reached'
-                    : usedToday === 0
-                    ? 'Receive Inspiration'
-                    : 'Inspire'}
-                </span>
-              </button>
-
-              {dailyLimit !== undefined && (
-                <div className="hidden md:inline-flex items-center gap-1.5 rounded-full border border-white/30 dark:border-white/15 bg-white/75 dark:bg-neutral-950/75 backdrop-blur-md px-3 py-1.5 text-[11px] font-medium text-neutral-700 dark:text-neutral-200 select-none shadow-sm">
-                  <Sparkles size={11} className="text-accent shrink-0" />
-                  <span>
-                    {dailyLimit === 0 ? 'Unlimited' : `${usedToday} of ${dailyLimit} used today`}
-                  </span>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      )}
-
-      {/* 2. Secondary Actions: Elegant Pill-Shaped Frosted Glass Capsule Dock */}
+    <>
       <div
-        className="flex items-center gap-0.5 sm:gap-1 rounded-full border border-white/35 dark:border-white/15 bg-white/75 dark:bg-neutral-950/75 backdrop-blur-md p-1 sm:p-1.5 shadow-lg shadow-black/10 dark:shadow-black/40 text-neutral-800 dark:text-neutral-100 transition-all shrink-0"
+        className={`floating-quote-controls-dock flex items-center ${
+          hasLeftSection ? 'justify-between' : 'justify-center w-fit'
+        } gap-1.5 sm:gap-3 rounded-2xl border border-white/30 bg-white/20 backdrop-blur-[10px] px-2 py-1.5 sm:px-3 sm:py-2 shadow-[0_4px_20px_rgba(0,0,0,0.04)] text-[#18181B] select-none ${
+          className ||
+          (hasLeftSection
+            ? 'absolute bottom-3 sm:bottom-4 left-2.5 sm:left-4 right-2.5 sm:right-4 z-20'
+            : 'absolute bottom-3 sm:bottom-4 left-1/2 -translate-x-1/2 z-20 max-w-[calc(100%-1.5rem)]')
+        }`}
         onClick={(e) => e.stopPropagation()}
       >
-        {customRightContent}
+        {/* 1. Left Section: Primary "Inspire" Action Button */}
+        {hasLeftSection && (
+          <div className="flex items-center gap-1 sm:gap-2 min-w-0 flex-1 sm:flex-initial">
+            {customLeftContent}
 
-        {/* 1. Save / Favorite */}
-        {showFavorite && (
-          quoteId ? (
-            <div onClick={(e) => e.stopPropagation()}>
-              <FavoriteButton
-                id={quoteId}
-                type={favoriteType}
-                onToggle={onFavoriteChange}
-                className={actionIconClass}
-                size="sm"
-              />
-            </div>
-          ) : (
-            <span
-              aria-hidden="true"
-              className="flex h-8 w-8 sm:h-8.5 sm:w-8.5 cursor-not-allowed items-center justify-center rounded-full text-neutral-400 dark:text-white/30"
-              title="Save"
-            >
-              <Heart size={16} strokeWidth={1.75} />
-            </span>
-          )
-        )}
+            {onInspire && (
+              <>
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    if (!isLimitReached) onInspire(e);
+                  }}
+                  disabled={isReceiving || isLimitReached}
+                  aria-disabled={isLimitReached}
+                  title={isLimitReached ? 'Daily limit reached — come back tomorrow' : undefined}
+                  className={`inline-flex h-8 sm:h-8.5 cursor-pointer items-center justify-center gap-1 sm:gap-1.5 rounded-full px-2.5 sm:px-3.5 text-[11px] sm:text-[12.5px] font-semibold transition-all duration-150 active:scale-[0.97] select-none shadow-sm backdrop-blur-sm min-w-0 max-w-full ${
+                    isLimitReached
+                      ? 'bg-black/[0.08] text-[#3F3F46] border border-black/[0.08] cursor-not-allowed'
+                      : isReceiving
+                      ? 'bg-white/20 text-[#18181B] border border-white/30 cursor-wait'
+                      : `bg-white/25 hover:bg-white/40 active:scale-[0.97] border border-white/40 text-[#18181B] shadow-[0_2px_8px_rgba(0,0,0,0.04)] ${
+                          usedToday === 0 ? 'ring-1 ring-black/10 border-white/60' : ''
+                        }`
+                  }`}
+                >
+                  <Sparkles
+                    size={13}
+                    className={isLimitReached ? 'text-zinc-600 shrink-0' : 'text-amber-600 shrink-0'}
+                    fill={isLimitReached ? 'none' : 'currentColor'}
+                  />
+                  <span className="truncate">
+                    {isReceiving ? (
+                      'Inspiring...'
+                    ) : isLimitReached ? (
+                      'Limit reached'
+                    ) : usedToday === 0 ? (
+                      <>
+                        <span className="hidden sm:inline">Receive Inspiration</span>
+                        <span className="sm:hidden">Inspire</span>
+                      </>
+                    ) : (
+                      'Inspire'
+                    )}
+                  </span>
+                </button>
 
-        {/* 2. Share */}
-        {onShare && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onShare(e);
-            }}
-            aria-label="Share quote"
-            title="Share"
-            className={actionIconClass}
-          >
-            <Share2 size={16} strokeWidth={1.75} />
-          </button>
-        )}
-
-        {/* 3. Reflect / Read */}
-        {onReadAgain ? (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onReadAgain(e);
-            }}
-            aria-label="Reflect on quote"
-            title="Reflect / Read"
-            className={actionIconClass}
-          >
-            <BookOpen size={16} strokeWidth={1.75} />
-          </button>
-        ) : onViewDetail ? (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onViewDetail(e);
-            }}
-            aria-label="Reflect on quote"
-            title="Reflect / Read"
-            className={actionIconClass}
-          >
-            <BookOpen size={16} strokeWidth={1.75} />
-          </button>
-        ) : detailHref ? (
-          <Link
-            href={detailHref}
-            onClick={(e) => e.stopPropagation()}
-            aria-label="Reflect on quote"
-            title="Reflect / Read"
-            className={actionIconClass}
-          >
-            <BookOpen size={16} strokeWidth={1.75} />
-          </Link>
-        ) : null}
-
-        {/* 4. Collection */}
-        {showCollection && (
-          <Link
-            href={collectionHref}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (onCollection) onCollection(e);
-            }}
-            aria-label="View Collection"
-            title="Collection"
-            className={actionIconClass}
-          >
-            <Bookmark size={16} strokeWidth={1.75} />
-          </Link>
-        )}
-
-        {/* 5. Remove (Collection management) */}
-        {onRemove && (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onRemove(e);
-            }}
-            disabled={isRemoving}
-            aria-label="Remove Quote"
-            title="Remove from Collection"
-            className="flex h-8 w-8 sm:h-8.5 sm:w-8.5 cursor-pointer items-center justify-center rounded-full text-rose-500 hover:text-rose-600 dark:text-rose-400 dark:hover:text-rose-300 hover:bg-rose-500/15 active:scale-95 transition-all disabled:opacity-50"
-          >
-            {isRemoving ? (
-              <div className="h-3.5 w-3.5 animate-spin rounded-full border-2 border-rose-400/30 border-t-rose-400" />
-            ) : (
-              <Trash2 size={16} strokeWidth={1.75} />
+                {dailyLimit !== undefined && (
+                  <span className="hidden md:inline-flex items-center gap-1 text-[11px] font-medium text-[#27272A] select-none px-1 shrink-0">
+                    <Sparkles size={11} className="text-amber-600 shrink-0" />
+                    <span>
+                      {dailyLimit === 0 ? 'Unlimited' : `${usedToday} of ${dailyLimit} used`}
+                    </span>
+                  </span>
+                )}
+              </>
             )}
-          </button>
+          </div>
         )}
+
+        {/* 2. Secondary Actions: Balanced Horizontal Action Group with Priority Width */}
+        <div
+          className="flex items-center justify-end sm:justify-evenly gap-0.5 sm:gap-1.5 shrink-0 ml-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {customRightContent}
+
+          {/* 1. Save / Favorite */}
+          {showFavorite && (
+            quoteId ? (
+              <div onClick={(e) => e.stopPropagation()}>
+                <FavoriteButton
+                  id={quoteId}
+                  type={favoriteType}
+                  onToggle={onFavoriteChange}
+                  className={favoriteActionClass}
+                  size="sm"
+                  showText={true}
+                  activeText="Saved"
+                  inactiveText="Save"
+                />
+              </div>
+            ) : (
+              <span
+                aria-hidden="true"
+                className="flex min-w-[44px] sm:min-w-[54px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 sm:px-2 py-1 sm:py-1.5 text-zinc-400 cursor-not-allowed select-none"
+                title="Save"
+              >
+                <Heart size={16} strokeWidth={1.75} />
+                <span className="text-[10px] font-medium leading-none text-zinc-400">Save</span>
+              </span>
+            )
+          )}
+
+          {/* 2. Share */}
+          {onShare && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onShare(e);
+              }}
+              aria-label="Share quote"
+              title="Share"
+              className={actionItemClass}
+            >
+              <Share2 size={16} strokeWidth={1.75} />
+              <span className="text-[10px] font-medium leading-none text-[#18181B]">Share</span>
+            </button>
+          )}
+
+          {/* 3. Reflect / Read */}
+          {onReadAgain ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onReadAgain(e);
+              }}
+              aria-label="Reflect on quote"
+              title="Reflect"
+              className={actionItemClass}
+            >
+              <BookOpen size={16} strokeWidth={1.75} />
+              <span className="text-[10px] font-medium leading-none text-[#18181B]">Reflect</span>
+            </button>
+          ) : onViewDetail ? (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onViewDetail(e);
+              }}
+              aria-label="Reflect on quote"
+              title="Reflect"
+              className={actionItemClass}
+            >
+              <BookOpen size={16} strokeWidth={1.75} />
+              <span className="text-[10px] font-medium leading-none text-[#18181B]">Reflect</span>
+            </button>
+          ) : detailHref ? (
+            <Link
+              href={detailHref}
+              onClick={(e) => e.stopPropagation()}
+              aria-label="Reflect on quote"
+              title="Reflect"
+              className={actionItemClass}
+            >
+              <BookOpen size={16} strokeWidth={1.75} />
+              <span className="text-[10px] font-medium leading-none text-[#18181B]">Reflect</span>
+            </Link>
+          ) : null}
+
+          {/* 4. Collection */}
+          {showCollection && (
+            <Link
+              href={collectionHref}
+              onClick={(e) => {
+                e.stopPropagation();
+                if (onCollection) onCollection(e);
+              }}
+              aria-label="View Collection"
+              title="Collection"
+              className={actionItemClass}
+            >
+              <Bookmark size={16} strokeWidth={1.75} />
+              <span className="text-[10px] font-medium leading-none text-[#18181B]">Collection</span>
+            </Link>
+          )}
+
+          {/* 5. Remove (Collection management) */}
+          {onRemove && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onRemove(e);
+              }}
+              disabled={isRemoving}
+              aria-label="Remove Quote"
+              title="Remove"
+              className="flex min-w-[44px] sm:min-w-[54px] flex-col items-center justify-center gap-0.5 rounded-xl px-1 sm:px-2 py-1 sm:py-1.5 text-rose-600 hover:text-rose-700 hover:bg-rose-500/10 active:scale-95 transition-all cursor-pointer select-none disabled:opacity-50"
+            >
+              {isRemoving ? (
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-rose-400/30 border-t-rose-400" />
+              ) : (
+                <Trash2 size={16} strokeWidth={1.75} />
+              )}
+              <span className="text-[10px] font-medium leading-none text-rose-600">Remove</span>
+            </button>
+          )}
+        </div>
       </div>
-    </div>
+
+      <style>{`
+        /* Mobile / Tablet / Touch devices: ALWAYS visible, NEVER hidden, NO hover required */
+        .floating-quote-controls-dock {
+          opacity: 1 !important;
+          visibility: visible !important;
+          pointer-events: auto !important;
+        }
+
+        /* Desktop / Mouse devices ONLY: hidden by default, smoothly revealed when user hovers the Quote Card */
+        @media (hover: hover) and (pointer: fine) {
+          .floating-quote-controls-dock {
+            opacity: 0 !important;
+            visibility: hidden !important;
+            pointer-events: none !important;
+            transition: opacity 220ms ease-out, visibility 220ms ease-out !important;
+          }
+          .group:hover .floating-quote-controls-dock,
+          .group:focus-within .floating-quote-controls-dock {
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+          }
+        }
+      `}</style>
+    </>
   );
 }
