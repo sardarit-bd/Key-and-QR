@@ -66,6 +66,25 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
   const [isLimitReached, setIsLimitReached] = useState(
     () => Boolean(quoteData?.canReveal === false && (!quoteData?.latestQuote || quoteData?.dailyLimitReached))
   );
+  const [showUnlockedNotice, setShowUnlockedNotice] = useState(() => {
+    return Boolean(
+      !quoteData?.canReveal &&
+        (quoteData?.isAlreadyUnlockedToday ||
+          quoteData?.latestQuote?.isAlreadyUnlockedToday ||
+          quoteData?.message ||
+          quoteData?.latestQuote?.message)
+    );
+  });
+
+  // Auto-dismiss the already-unlocked notice after 4 seconds so it doesn't obstruct quote & actions
+  useEffect(() => {
+    if (!showUnlockedNotice) return;
+    const timer = setTimeout(() => {
+      setShowUnlockedNotice(false);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, [showUnlockedNotice]);
+
   const lastClickTimeRef = useRef(0);
 
   // Sync quoteData if parent passes updated data prop
@@ -665,8 +684,8 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
           />
         ) : null}
 
-        {/* Keep top & center 100% clean and clear; only subtle bottom scrim for floating actions */}
-        <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-black/60 to-transparent -z-10 pointer-events-none" />
+        {/* Dark translucent frosted scrim behind floating actions so controls are 100% crisp over bright images */}
+        <div className="absolute inset-x-0 bottom-0 h-56 sm:h-64 bg-gradient-to-t from-black/85 via-black/45 to-transparent -z-10 pointer-events-none" />
       </motion.div>
 
       {/* Full-Screen Interaction Overlay for Autoplay Audio on Mobile */}
@@ -914,15 +933,43 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             </div>
           )}
 
-          {/* Repeat Scan Notice (Shown when quote was already unlocked today and quota is exhausted) */}
-          {Boolean(!quoteData?.canReveal && (quoteData?.isAlreadyUnlockedToday || quoteData?.latestQuote?.isAlreadyUnlockedToday || quoteData?.message || quoteData?.latestQuote?.message)) && (
-            <div className="w-full mb-2.5 rounded-2xl border border-amber-400/25 bg-neutral-950/80 backdrop-blur-xl px-3.5 py-1.5 shadow-lg flex items-center justify-center gap-2 text-center animate-in fade-in duration-300">
-              <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0" />
-              <p className="text-[11.5px] text-amber-200/90 font-light">
-                {quoteData?.message || quoteData?.latestQuote?.message || "Today's quote has already been unlocked. Come back tomorrow!"}
-              </p>
-            </div>
-          )}
+          {/* Repeat Scan Notice (Auto-dismisses after 4s or on close so it does not obstruct view) */}
+          <AnimatePresence>
+            {showUnlockedNotice &&
+              Boolean(
+                !quoteData?.canReveal &&
+                  (quoteData?.isAlreadyUnlockedToday ||
+                    quoteData?.latestQuote?.isAlreadyUnlockedToday ||
+                    quoteData?.message ||
+                    quoteData?.latestQuote?.message)
+              ) && (
+                <motion.div
+                  key="unlocked-notice"
+                  initial={{ opacity: 0, y: 10, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.96 }}
+                  transition={{ duration: 0.3, ease: "easeOut" }}
+                  className="w-full mb-2.5 rounded-2xl border border-amber-400/30 bg-neutral-950/85 backdrop-blur-xl px-3.5 py-2 shadow-lg flex items-center justify-between gap-2.5 text-center"
+                >
+                  <div className="flex items-center gap-2 flex-1 justify-center min-w-0">
+                    <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                    <p className="text-[11.5px] text-amber-200/90 font-light truncate sm:whitespace-normal">
+                      {quoteData?.message ||
+                        quoteData?.latestQuote?.message ||
+                        "Today's quote has already been unlocked. Come back tomorrow!"}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowUnlockedNotice(false)}
+                    className="text-white/50 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors shrink-0 cursor-pointer"
+                    aria-label="Dismiss notice"
+                  >
+                    <X size={13} />
+                  </button>
+                </motion.div>
+              )}
+          </AnimatePresence>
 
           {/* Persistent Gift Dedication Indicator / Button */}
           {giftDedication && (
@@ -957,24 +1004,25 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             </motion.button>
           )}
 
-          {/* Liquid Glass Floating Action Card (Compact & Optimized) */}
-          <div className="mx-auto flex max-w-[340px] items-center justify-around rounded-[22px] bg-white/[0.02] px-3 py-2.5 shadow-[inset_0_1px_1px_rgba(255,255,255,0.2),0_8px_25px_rgba(0,0,0,0.2)] sm:max-w-sm sm:px-4 sm:py-3">
+          {/* Liquid Glass Floating Action Card (Enhanced Glassmorphism & High Contrast) */}
+          <div className="mx-auto flex max-w-[340px] items-center justify-around rounded-[24px] border border-white/20 sm:border-white/25 bg-neutral-950/80 backdrop-blur-xl saturate-150 px-3.5 py-2.5 sm:max-w-sm sm:px-4 sm:py-3 shadow-[0_16px_40px_rgba(0,0,0,0.7),inset_0_1px_1px_rgba(255,255,255,0.25)] ring-1 ring-black/40">
             {/* Save button */}
             <button
               onClick={handleFavoriteClick}
               disabled={favoriteLoading || !canFavorite}
-              className="flex flex-col items-center gap-0.5 text-[#e6b76f] hover:text-white transition-all active:scale-95 disabled:opacity-40 cursor-pointer group"
+              className="flex flex-col items-center gap-1 text-[#f3d6a0] hover:text-white transition-all active:scale-95 disabled:opacity-40 cursor-pointer group"
               aria-label={saved ? "Saved to favorites" : "Save quote"}
             >
               <div
-                className={`w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border transition-all duration-200 ${saved
-                  ? "bg-amber-400/25 border-amber-400 text-amber-300 shadow-[0_0_12px_rgba(245,158,11,0.4)]"
-                  : "border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10 group-hover:scale-105"
-                  }`}
+                className={`w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border transition-all duration-200 ${
+                  saved
+                    ? "bg-amber-400/25 border-amber-400 text-amber-300 shadow-[0_0_14px_rgba(245,158,11,0.5)]"
+                    : "border-white/25 bg-white/10 hover:border-amber-400/60 hover:bg-white/20 text-white/95 group-hover:scale-105 shadow-sm"
+                }`}
               >
-                <Heart size={15} className={saved ? "fill-current text-amber-400" : ""} />
+                <Heart size={16} className={saved ? "fill-current text-amber-400" : ""} />
               </div>
-              <span className="text-[9.5px] sm:text-[10px] font-medium tracking-tight">
+              <span className="text-[10px] sm:text-[11px] font-semibold tracking-wide text-amber-200/95 group-hover:text-amber-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
                 {saved ? "Saved" : "Save"}
               </span>
             </button>
@@ -982,37 +1030,43 @@ export default function PublicQuoteDisplay({ data, tagCode }) {
             {/* Share button */}
             <button
               onClick={handleShare}
-              className="flex flex-col items-center gap-0.5 text-[#e6b76f] hover:text-white transition-all active:scale-95 cursor-pointer group"
+              className="flex flex-col items-center gap-1 text-[#f3d6a0] hover:text-white transition-all active:scale-95 cursor-pointer group"
               aria-label="Share quote"
             >
-              <div className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10 group-hover:scale-105 transition-all duration-200">
-                <Share2 size={15} />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border border-white/25 bg-white/10 hover:border-amber-400/60 hover:bg-white/20 text-white/95 group-hover:scale-105 transition-all duration-200 shadow-sm">
+                <Share2 size={16} />
               </div>
-              <span className="text-[9.5px] sm:text-[10px] font-medium tracking-tight">Share</span>
+              <span className="text-[10px] sm:text-[11px] font-semibold tracking-wide text-amber-200/95 group-hover:text-amber-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                Share
+              </span>
             </button>
 
             {/* Reflect button */}
             <button
               onClick={handleReflect}
-              className="flex flex-col items-center gap-0.5 text-[#e6b76f] hover:text-white transition-all active:scale-95 cursor-pointer group"
+              className="flex flex-col items-center gap-1 text-[#f3d6a0] hover:text-white transition-all active:scale-95 cursor-pointer group"
               aria-label="Write a reflection"
             >
-              <div className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10 group-hover:scale-105 transition-all duration-200">
-                <BookOpen size={15} />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border border-white/25 bg-white/10 hover:border-amber-400/60 hover:bg-white/20 text-white/95 group-hover:scale-105 transition-all duration-200 shadow-sm">
+                <BookOpen size={16} />
               </div>
-              <span className="text-[9.5px] sm:text-[10px] font-medium tracking-tight">Reflect</span>
+              <span className="text-[10px] sm:text-[11px] font-semibold tracking-wide text-amber-200/95 group-hover:text-amber-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                Reflect
+              </span>
             </button>
 
             {/* Collection button */}
             <button
               onClick={() => (user ? router.push("/dashboard/user/favorites") : goToAuth("login"))}
-              className="flex flex-col items-center gap-0.5 text-[#e6b76f] hover:text-white transition-all active:scale-95 cursor-pointer group"
+              className="flex flex-col items-center gap-1 text-[#f3d6a0] hover:text-white transition-all active:scale-95 cursor-pointer group"
               aria-label="View collection"
             >
-              <div className="w-8.5 h-8.5 sm:w-9 sm:h-9 rounded-full flex items-center justify-center border border-white/20 bg-white/5 hover:border-white/40 hover:bg-white/10 group-hover:scale-105 transition-all duration-200">
-                <Sparkles size={15} />
+              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-full flex items-center justify-center border border-white/25 bg-white/10 hover:border-amber-400/60 hover:bg-white/20 text-white/95 group-hover:scale-105 transition-all duration-200 shadow-sm">
+                <Sparkles size={16} />
               </div>
-              <span className="text-[9.5px] sm:text-[10px] font-medium tracking-tight">Collection</span>
+              <span className="text-[10px] sm:text-[11px] font-semibold tracking-wide text-amber-200/95 group-hover:text-amber-100 drop-shadow-[0_1px_2px_rgba(0,0,0,0.9)]">
+                Collection
+              </span>
             </button>
           </div>
 
