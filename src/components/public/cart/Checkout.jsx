@@ -135,7 +135,9 @@ export default function Checkout() {
                 qty: item.qty || 1,
                 img: item.img || PLACEHOLDER_IMAGE,
                 purchaseType: item.purchaseType || CHECKOUT_CONFIG.defaults.purchaseType,
+                giftOption: item.giftOption || "same",
                 giftMessage: item.giftMessage || null,
+                giftMessages: item.giftMessages || [],
             }));
         }
 
@@ -254,17 +256,35 @@ export default function Checkout() {
         // Determine if this order or any item is a gift, and resolve unified message
         const isGiftOrder =
             formData.purchaseType === "gift" || cartItems.some((item) => item.purchaseType === "gift");
+
+        const hasDifferentGiftOption = cartItems.some(
+            (item) => item.purchaseType === "gift" && item.giftOption === "different"
+        );
+
         const resolvedGiftMessage = isGiftOrder
             ? (formData.giftMessage?.trim() || cartItems.find((item) => item.giftMessage)?.giftMessage?.trim() || null)
             : null;
 
         // Convert to backend expected format
-        const items = cartItems.map(item => ({
-            product: item.productId,
-            quantity: item.quantity || 1,
-            purchaseType: isGiftOrder ? "gift" : (item.purchaseType || "self"),
-            giftMessage: isGiftOrder ? (resolvedGiftMessage || item.giftMessage || null) : null,
-        }));
+        const items = cartItems.map(item => {
+            const isItemGift = isGiftOrder ? (item.purchaseType === "gift" || formData.purchaseType === "gift") : false;
+            const itemGiftOption = isItemGift ? (item.giftOption || "same") : "same";
+            const itemMessages = isItemGift && itemGiftOption === "different" && Array.isArray(item.giftMessages)
+                ? item.giftMessages
+                : [];
+
+            return {
+                product: item.productId,
+                quantity: item.quantity || 1,
+                purchaseType: isItemGift ? "gift" : (item.purchaseType || "self"),
+                giftOption: itemGiftOption,
+                giftMessage: isItemGift ? (item.giftMessage || resolvedGiftMessage || null) : null,
+                giftMessages: itemMessages,
+            };
+        });
+
+        // Collect all distinct gift messages across items
+        const allGiftMessages = items.flatMap(i => i.giftMessages || []);
 
         return {
             items,
@@ -272,7 +292,9 @@ export default function Checkout() {
             productId: items.length === 1 ? items[0].product : undefined,
             quantity: items.length === 1 ? items[0].quantity : undefined,
             purchaseType: isGiftOrder ? "gift" : "self",
+            giftOption: hasDifferentGiftOption ? "different" : "same",
             giftMessage: isGiftOrder ? resolvedGiftMessage : null,
+            giftMessages: allGiftMessages.length > 0 ? allGiftMessages : undefined,
             fullName: formData.fullName,
             email: formData.email,
             phone: formData.phone,
@@ -452,7 +474,7 @@ export default function Checkout() {
                 </Link>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-8 lg:gap-12 items-start">
                 {/* LEFT: Checkout Form */}
                 <div className="lg:col-span-3">
                     <form onSubmit={handleSubmit} className="space-y-8">
@@ -857,8 +879,8 @@ export default function Checkout() {
                 </div>
 
                 {/* RIGHT: Sticky Order Summary */}
-                <div className="lg:col-span-2">
-                    <div className="rounded-2xl border border-[#EDE4D0]/80 bg-white p-6 shadow-[0_12px_40px_-16px_rgb(60_45_15/0.12)] lg:sticky lg:top-8">
+                <div className="lg:col-span-2 lg:sticky lg:top-24">
+                    <div className="rounded-2xl border border-[#EDE4D0]/80 bg-white p-6 shadow-[0_12px_40px_-16px_rgb(60_45_15/0.12)] sticky top-24">
                         <h2 className="text-lg font-bold tracking-tight text-[#2E2A24]">
                             Order Summary ({checkoutItems.reduce((sum, i) => sum + (i.qty || 1), 0)} items)
                         </h2>

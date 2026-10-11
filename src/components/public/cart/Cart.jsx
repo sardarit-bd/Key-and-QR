@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useCartStore, useCartHydration } from "@/store/cartStore";
 import { ProductImage } from "@/components/ui/ProductImage";
-import { Minus, Plus, Trash2, ShoppingBag, ShieldCheck, ArrowRight, Lock } from "lucide-react";
+import { Minus, Plus, Trash2, ShoppingBag, ShieldCheck, ArrowRight, Lock, Gift } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import CartSkeleton from "@/components/ui/skeletons/CartSkeleton";
@@ -150,7 +150,7 @@ export default function Cart() {
                     </Link>
                 </motion.div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-10 items-start">
                     {/* LEFT: Cart Items */}
                     <div className="lg:col-span-2">
                         {isValidating && (
@@ -204,9 +204,17 @@ export default function Cart() {
                                                         ${Number(item.price).toFixed(2)}
                                                     </p>
                                                     {item.purchaseType === "gift" && (
-                                                        <span className="mt-1.5 inline-flex items-center rounded-full bg-[#FCE8E8] px-2 py-0.5 text-[11px] font-semibold text-[#C25B5B]">
-                                                            Gift
-                                                        </span>
+                                                        <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                                                            <span className="inline-flex items-center gap-1 rounded-full bg-[#FCE8E8] px-2 py-0.5 text-[11px] font-semibold text-[#C25B5B]">
+                                                                <Gift size={11} />
+                                                                Gift
+                                                            </span>
+                                                            {item.giftOption === "different" && (
+                                                                <span className="inline-flex items-center rounded-full bg-[#F5EDDC] px-2 py-0.5 text-[10.5px] font-medium text-[#8A6D3B]">
+                                                                    {item.qty || 1} custom messages
+                                                                </span>
+                                                            )}
+                                                        </div>
                                                     )}
                                                     {isMaxStock && (
                                                         <p className="mt-1.5 text-[11.5px] font-medium text-[#C25B5B] flex items-center gap-1">
@@ -269,8 +277,8 @@ export default function Cart() {
                     </div>
 
                     {/* RIGHT: Sticky Order Summary */}
-                    <div className="lg:col-span-1">
-                        <div className="rounded-2xl border border-[#EDE4D0]/80 bg-white p-6 shadow-[0_12px_40px_-16px_rgb(60_45_15/0.12)] lg:sticky lg:top-8">
+                    <div className="lg:col-span-1 lg:sticky lg:top-24">
+                        <div className="rounded-2xl border border-[#EDE4D0]/80 bg-white p-6 shadow-[0_12px_40px_-16px_rgb(60_45_15/0.12)] sticky top-24">
                             <h3 className="text-lg font-bold tracking-tight text-[#2E2A24]">
                                 Order Summary
                             </h3>

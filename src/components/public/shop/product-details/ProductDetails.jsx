@@ -40,6 +40,8 @@ export const ProductDetails = () => {
   // Shared purchase state
   const [selectedOption, setSelectedOption] = useState("self");
   const [customMessage, setCustomMessage] = useState("");
+  const [giftOption, setGiftOption] = useState("same");
+  const [giftMessages, setGiftMessages] = useState([]);
   const [quantity, setQuantity] = useState(1);
   const [selectedImage, setSelectedImage] = useState("");
 
@@ -122,6 +124,10 @@ export const ProductDetails = () => {
                 onOptionChange={setSelectedOption}
                 customMessage={customMessage}
                 onGiftMessageChange={setCustomMessage}
+                giftOption={giftOption}
+                onGiftOptionChange={setGiftOption}
+                giftMessages={giftMessages}
+                onGiftMessagesChange={setGiftMessages}
                 quantity={quantity}
                 onQuantityChange={setQuantity}
               />
@@ -145,6 +151,8 @@ export const ProductDetails = () => {
         selectedImage={selectedImage}
         selectedOption={selectedOption}
         customMessage={customMessage}
+        giftOption={giftOption}
+        giftMessages={giftMessages}
         quantity={quantity}
       />
     </section>
