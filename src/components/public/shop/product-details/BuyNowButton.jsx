@@ -14,6 +14,8 @@ export const BuyNowButton = ({
     selectedImage,
     selectedOption,
     customMessage,
+    giftOption = "same",
+    giftMessages = [],
     quantity,
     className,
 }) => {
@@ -39,7 +41,9 @@ export const BuyNowButton = ({
             stock: product.stock,
             stockQuantity: product.stock,
             purchaseType: selectedOption === "gift" ? "gift" : "self",
+            giftOption: selectedOption === "gift" ? giftOption : "same",
             giftMessage: selectedOption === "gift" ? customMessage?.trim() || null : null,
+            giftMessages: selectedOption === "gift" && giftOption === "different" ? giftMessages : [],
         });
 
         setIsProcessing(false);

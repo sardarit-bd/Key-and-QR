@@ -10,6 +10,8 @@ export default function StickyMobileBar({
   selectedImage,
   selectedOption,
   customMessage,
+  giftOption = "same",
+  giftMessages = [],
   quantity,
 }) {
   return (
@@ -27,6 +29,8 @@ export default function StickyMobileBar({
             selectedImage={selectedImage}
             selectedOption={selectedOption}
             customMessage={customMessage}
+            giftOption={giftOption}
+            giftMessages={giftMessages}
             quantity={quantity}
           />
         </div>
