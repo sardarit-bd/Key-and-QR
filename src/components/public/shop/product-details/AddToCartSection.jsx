@@ -15,6 +15,10 @@ export const AddToCartSection = ({
     selectedImage,
     selectedOption,
     customMessage,
+    giftOption = "same",
+    giftMessages = [],
+    quantity: externalQuantity,
+    onQuantityChange: externalOnQuantityChange,
 }) => {
     const router = useRouter();
     const cart = useCartStore((state) => state.cart);
@@ -26,14 +30,19 @@ export const AddToCartSection = ({
     const addToCart = useCartStore((state) => state.addToCart);
     const updateQuantity = useCartStore((state) => state.updateQuantity);
 
-    const [quantity, setQuantity] = useState(1);
+    const [localQuantity, setLocalQuantity] = useState(1);
     const [isAdding, setIsAdding] = useState(false);
+
+    const quantity = externalQuantity !== undefined ? externalQuantity : localQuantity;
+    const setQuantity = externalOnQuantityChange || setLocalQuantity;
+
+    const currentCartItem = cart.find((i) => i.id === product._id);
+    const effectiveQty = isProductInCart ? (currentCartItem?.qty || quantity) : quantity;
 
     const handleAddToCart = async () => {
         if (!product || product.stock <= 0 || isAdding || isAdmin) return;
 
         setIsAdding(true);
-        const currentCartItem = cart.find((i) => i.id === product._id);
         const isUpdatingOptions = isProductInCart;
         const qtyToAdd = isProductInCart
             ? (currentCartItem?.qty || quantity)
@@ -49,7 +58,9 @@ export const AddToCartSection = ({
             stock: product.stock,
             stockQuantity: product.stock,
             purchaseType: selectedOption === "gift" ? "gift" : "self",
+            giftOption: selectedOption === "gift" ? giftOption : "same",
             giftMessage: selectedOption === "gift" ? customMessage?.trim() || null : null,
+            giftMessages: selectedOption === "gift" && giftOption === "different" ? giftMessages : [],
         });
 
         setIsAdding(false);
@@ -57,8 +68,8 @@ export const AddToCartSection = ({
         if (result?.success) {
             toast.success(
                 isUpdatingOptions
-                    ? "Cart updated with your gift options"
-                    : "Added to cart successfully",
+                    ? (effectiveQty > 1 ? "Cart updated with your gift tags" : "Cart updated with your gift options")
+                    : (selectedOption === "gift" && effectiveQty > 1 ? "Added gifts to cart" : "Added to cart successfully"),
                 {
                     duration: 2500,
                     icon: "✓",
@@ -74,10 +85,9 @@ export const AddToCartSection = ({
     };
 
     const handleQuantityChange = (newQty) => {
+        setQuantity(newQty);
         if (isProductInCart) {
             updateQuantity(product._id, newQty);
-        } else {
-            setQuantity(newQty);
         }
     };
 
@@ -95,7 +105,7 @@ export const AddToCartSection = ({
     return (
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
             <QuantitySelector
-                quantity={isProductInCart ? (cart.find(i => i.id === product._id)?.qty || quantity) : quantity}
+                quantity={effectiveQty}
                 onQuantityChange={handleQuantityChange}
                 maxStock={product.stock}
                 disabled={isOutOfStock || isAdding}
@@ -108,7 +118,15 @@ export const AddToCartSection = ({
                 <Button
                     onClick={handleAddToCart}
                     disabled={isOutOfStock || isAdding}
-                    aria-label={isProductInCart ? (selectedOption === "gift" ? "Update gift in cart" : "In cart - Click to update") : "Add to cart"}
+                    aria-label={
+                        isProductInCart
+                            ? selectedOption === "gift"
+                                ? effectiveQty > 1 ? "Update gifts in cart" : "Update gift in cart"
+                                : "In cart - Click to update"
+                            : selectedOption === "gift"
+                                ? effectiveQty > 1 ? "Add gifts to cart" : "Add gift to cart"
+                                : "Add to cart"
+                    }
                     className={`flex-1 sm:flex-none h-12 px-7 py-3 rounded-xl text-white transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] cursor-pointer disabled:cursor-not-allowed disabled:hover:translate-y-0 ${
                         isProductInCart
                             ? "bg-[#2E5B3A] hover:bg-[#24502F] shadow-[0_8px_24px_-8px_rgba(46,91,58,0.55)]"
@@ -139,7 +157,7 @@ export const AddToCartSection = ({
                                 {selectedOption === "gift" ? (
                                     <>
                                         <Gift className="mr-2 h-4 w-4 text-[#C6922D]" />
-                                        Update Gift in Cart
+                                        {effectiveQty > 1 ? "Update Gifts in Cart" : "Update Gift in Cart"}
                                     </>
                                 ) : (
                                     <>
@@ -164,8 +182,17 @@ export const AddToCartSection = ({
                                 transition={{ duration: 0.15 }}
                                 className="flex items-center"
                             >
-                                <ShoppingCart className="mr-2 h-4 w-4" />
-                                Add to Cart
+                                {selectedOption === "gift" ? (
+                                    <>
+                                        <Gift className="mr-2 h-4 w-4" />
+                                        {effectiveQty > 1 ? "Add Gifts to Cart" : "Add Gift to Cart"}
+                                    </>
+                                ) : (
+                                    <>
+                                        <ShoppingCart className="mr-2 h-4 w-4" />
+                                        Add to Cart
+                                    </>
+                                )}
                             </motion.span>
                         )}
                     </AnimatePresence>

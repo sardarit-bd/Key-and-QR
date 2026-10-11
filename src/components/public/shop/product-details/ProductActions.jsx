@@ -16,6 +16,10 @@ export default function ProductActions({
   onOptionChange,
   customMessage,
   onGiftMessageChange,
+  giftOption = "same",
+  onGiftOptionChange,
+  giftMessages = [],
+  onGiftMessagesChange,
   quantity,
   onQuantityChange,
 }) {
@@ -27,6 +31,11 @@ export default function ProductActions({
         onOptionChange={onOptionChange}
         giftMessage={customMessage}
         onGiftMessageChange={onGiftMessageChange}
+        giftOption={giftOption}
+        onGiftOptionChange={onGiftOptionChange}
+        giftMessages={giftMessages}
+        onGiftMessagesChange={onGiftMessagesChange}
+        quantity={quantity}
       />
 
       {/* Quantity + Add to Cart */}
@@ -36,6 +45,10 @@ export default function ProductActions({
           selectedImage={selectedImage}
           selectedOption={selectedOption}
           customMessage={customMessage}
+          giftOption={giftOption}
+          giftMessages={giftMessages}
+          quantity={quantity}
+          onQuantityChange={onQuantityChange}
         />
       </div>
 
@@ -46,6 +59,8 @@ export default function ProductActions({
           selectedImage={selectedImage}
           selectedOption={selectedOption}
           customMessage={customMessage}
+          giftOption={giftOption}
+          giftMessages={giftMessages}
           quantity={quantity}
           className="w-full flex items-center justify-center"
         />
