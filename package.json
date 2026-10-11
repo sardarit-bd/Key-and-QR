@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 3001",
-    "build": "next build",
-    "start": "next start"
+    "dev": "node api.js && next dev -p 3001",
+    "build": "node api.js && next build",
+    "start": "node api.js && next start"
   },
   "dependencies": {
     "@tailwindcss/postcss": "^4.2.2",

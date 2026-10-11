@@ -65,7 +65,9 @@ export const useCartStore = create(
                                 ...item, 
                                 qty: targetQty,
                                 purchaseType: product.purchaseType !== undefined ? product.purchaseType : (item.purchaseType || "self"),
+                                giftOption: product.giftOption !== undefined ? product.giftOption : (item.giftOption || "same"),
                                 giftMessage: product.giftMessage !== undefined ? product.giftMessage : item.giftMessage,
+                                giftMessages: product.giftMessages !== undefined ? product.giftMessages : (item.giftMessages || []),
                                 stock: typeof resolvedStock === 'number' ? resolvedStock : item.stock,
                                 stockQuantity: typeof resolvedStock === 'number' ? resolvedStock : item.stockQuantity,
                               }
@@ -77,6 +79,10 @@ export const useCartStore = create(
                         cart: [...cart, { 
                             ...product, 
                             qty: quantityToAdd,
+                            purchaseType: product.purchaseType || "self",
+                            giftOption: product.giftOption || "same",
+                            giftMessage: product.giftMessage || null,
+                            giftMessages: product.giftMessages || [],
                             stock: typeof resolvedStock === 'number' ? resolvedStock : product.stock,
                             stockQuantity: typeof resolvedStock === 'number' ? resolvedStock : product.stockQuantity,
                             addedAt: new Date().toISOString()
@@ -179,7 +185,9 @@ export const useCartStore = create(
                     productId: item.id,
                     quantity: item.qty || 1,
                     purchaseType: item.purchaseType || "self",
+                    giftOption: item.giftOption || "same",
                     giftMessage: item.giftMessage || null,
+                    giftMessages: item.giftMessages || [],
                 }));
             },
 
