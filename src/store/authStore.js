@@ -304,12 +304,13 @@ export const useAuthStore = create(
                         isInitialized: true,
                     });
 
-                    const claimResult = await claimGuestResourcesIfAvailable(set);
+                    // Security Fix (SEC-02): Do not automatically claim guest resources on unverified registration.
+                    // Guest claiming is preserved during verified login flows and Google OAuth callbacks.
 
                     return {
                         success: true,
                         user: filteredUser,
-                        guestClaimed: claimResult?.claimed || false,
+                        guestClaimed: false,
                         tagClaimResult: tagClaimResult || response?.data?.tagClaimResult || null,
                     };
                 } catch (error) {
