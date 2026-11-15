@@ -34,10 +34,12 @@ export const orderService = {
     /**
      * Verify payment status directly with backend Stripe verification
      * @param {string} orderId - Order ID
+     * @param {string} [token] - Optional guest access token
      */
-    verifyPaymentStatus: async (orderId) => {
+    verifyPaymentStatus: async (orderId, token = null) => {
         try {
-            const response = await api.get(`/payment/status/${orderId}`);
+            const params = token ? { token } : {};
+            const response = await api.get(`/payment/status/${orderId}`, { params });
             return response.data;
         } catch (error) {
             console.error("Verify payment status error:", error);

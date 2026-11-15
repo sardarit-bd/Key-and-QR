@@ -52,7 +52,7 @@ export default function SuccessPage() {
         try {
             // Attempt active verification via backend payment service if available
             try {
-                await orderService.verifyPaymentStatus(orderId);
+                await orderService.verifyPaymentStatus(orderId, token);
             } catch {
                 // Ignore verification endpoint errors and continue fetching order
             }
