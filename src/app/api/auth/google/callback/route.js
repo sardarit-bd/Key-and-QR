@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
-  const backendUrl = process.env.BACKEND_URL || 'http://localhost:5000';
-  const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3000';
+  const backendUrl = process.env.BACKEND_URL || 'http://localhost:5001';
+  const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3001';
   
   // Forward all query params to backend
   const url = new URL(req.url);
