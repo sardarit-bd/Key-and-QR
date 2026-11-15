@@ -1,0 +1,94 @@
+name: MyInspireTag Frontend CI/CD
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**'
+      - '.github/workflows/frontend-deploy.yml'
+
+  workflow_dispatch:
+
+concurrency:
+  group: myinspiretag-frontend-production
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Build Frontend
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Next.js application
+        run: npm run build
+
+  deploy:
+    name: Deploy Frontend to VPS
+    needs: validate
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy through SSH
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+
+          ssh-keyscan -p "$VPS_PORT" "$VPS_HOST" >> ~/.ssh/known_hosts
+
+          ssh -i ~/.ssh/deploy_key \
+            -p "$VPS_PORT" \
+            -o StrictHostKeyChecking=yes \
+            "$VPS_USER@$VPS_HOST" \
+            'bash -se' <<'REMOTE'
+              set -e
+
+              cd /var/www/myinspiretag/frontend
+
+              echo "Pulling latest frontend code..."
+              git pull --ff-only origin main
+
+              echo "Installing dependencies..."
+              npm ci
+
+              echo "Building frontend..."
+              npm run build
+
+              echo "Restarting MyInspireTag frontend..."
+              pm2 restart myinspiretag-frontend
+
+              echo "Checking frontend health..."
+              for i in $(seq 1 15); do
+                if curl -fsS http://127.0.0.1:3101/ > /dev/null; then
+                  echo "Frontend deployment successful!"
+                  exit 0
+                fi
+                sleep 2
+              done
+
+              echo "Frontend health check failed!"
+              exit 1
+          REMOTE
+
+          rm -f ~/.ssh/deploy_key
