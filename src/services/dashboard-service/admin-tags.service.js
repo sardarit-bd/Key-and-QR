@@ -51,8 +51,14 @@ export const adminTagsService = {
   },
 
   /** Bulk generate QR tags */
-  bulkGenerateTags: async ({ quantity, prefix = 'TAG' }) => {
-    const response = await api.post('/tags/bulk-generate', { quantity, prefix });
+  bulkGenerateTags: async ({ quantity, prefix = 'TAG', batchType = 'production' }) => {
+    const response = await api.post('/tags/bulk-generate', { quantity, prefix, batchType });
+    return response.data;
+  },
+
+  /** Delete eligible tags in a batch */
+  deleteBatchTags: async (batchId) => {
+    const response = await api.delete(`/tags/batches/${batchId}/tags`);
     return response.data;
   },
 
