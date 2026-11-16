@@ -19,6 +19,7 @@ import TagsStatsCards from './TagsStatsCards';
 import TagsFilters from './TagsFilters';
 import TagsTable from './TagsTable';
 import TagMobileCards from './TagMobileCards';
+import TagBatchesList from './TagBatchesList';
 import TagQRDialog from './TagQRDialog';
 import TagCreateDialog from './TagCreateDialog';
 import TagBatchGenerateDialog from './TagBatchGenerateDialog';
@@ -37,10 +38,21 @@ function mapFilters({ search, status, page, limit }) {
 }
 
 export default function AdminTagsPage() {
+  // Tabs: 'all' | 'batches'
+  const [activeTab, setActiveTab] = useState('all');
+
   // Filters
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('all');
   const [page, setPage] = useState(1);
+
+  // Batch history state
+  const [batchesPage, setBatchesPage] = useState(1);
+  const [batchesData, setBatchesData] = useState({ data: [], meta: { page: 1, totalPage: 1, total: 0 } });
+  const [batchesLoading, setBatchesLoading] = useState(false);
+  const [batchToDelete, setBatchToDelete] = useState(null);
+  const [batchDeleteOpen, setBatchDeleteOpen] = useState(false);
+  const [batchDeleteLoading, setBatchDeleteLoading] = useState(false);
 
   // Dialogs
   const [qrTag, setQrTag] = useState(null);
@@ -74,6 +86,25 @@ export default function AdminTagsPage() {
 
   const tags = data?.data || [];
   const meta = data?.meta || { page: 1, totalPage: 0, total: 0 };
+
+  // Fetch batches
+  const fetchBatches = useCallback(async (p = 1) => {
+    setBatchesLoading(true);
+    try {
+      const res = await adminTagsService.getAllBatches({ page: p, limit: 10 });
+      setBatchesData(res || { data: [], meta: { page: 1, totalPage: 1, total: 0 } });
+    } catch (err) {
+      toast.error('Failed to load batch history');
+    } finally {
+      setBatchesLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (activeTab === 'batches') {
+      fetchBatches(batchesPage);
+    }
+  }, [activeTab, batchesPage, fetchBatches]);
 
   // Trigger file download offscreen when downloadTag is set
   useEffect(() => {
@@ -191,20 +222,57 @@ export default function AdminTagsPage() {
   }, [createTag]);
 
   // Batch generate
-  const handleBatchGenerateSave = useCallback(async ({ quantity, prefix }) => {
+  const handleBatchGenerateSave = useCallback(async ({ quantity, prefix, batchType }) => {
     setBatchLoading(true);
     try {
-      const response = await bulkGenerateTags.mutateAsync({ quantity, prefix });
+      const response = await bulkGenerateTags.mutateAsync({ quantity, prefix, batchType });
       const batchData = response?.data || response;
       setCompletedBatch(batchData);
       toast.success(`Batch generated exactly ${quantity} QR tags successfully`);
       refetch();
+      if (activeTab === 'batches') {
+        fetchBatches(1);
+      }
     } catch (err) {
       toast.error(err?.response?.data?.message || err?.message || 'Failed to generate tags');
     } finally {
       setBatchLoading(false);
     }
-  }, [bulkGenerateTags, refetch]);
+  }, [bulkGenerateTags, refetch, activeTab, fetchBatches]);
+
+  const handleDeleteBatchPrompt = useCallback((batch) => {
+    setBatchToDelete(batch);
+    setBatchDeleteOpen(true);
+  }, []);
+
+  const handleDeleteBatchConfirm = useCallback(async () => {
+    if (!batchToDelete?.batchId) return;
+    setBatchDeleteLoading(true);
+    try {
+      const res = await adminTagsService.deleteBatchTags(batchToDelete.batchId);
+      const data = res?.data || res;
+      if (data.deleted > 0) {
+        toast.success(`Deleted ${data.deleted} tag(s) from batch ${data.batchId}`);
+      }
+      if (data.skipped > 0) {
+        toast.error(`${data.skipped} tag(s) skipped (already claimed or ordered)`);
+      }
+      setBatchDeleteOpen(false);
+      setBatchToDelete(null);
+      fetchBatches(batchesPage);
+      refetch();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to delete batch');
+    } finally {
+      setBatchDeleteLoading(false);
+    }
+  }, [batchToDelete, batchesPage, fetchBatches, refetch]);
+
+  const handleFilterByBatch = useCallback((batchId) => {
+    setSearch(batchId);
+    setActiveTab('all');
+    setPage(1);
+  }, []);
 
   const handleDownloadCsv = useCallback(async (batchId) => {
     try {
@@ -364,16 +432,61 @@ export default function AdminTagsPage() {
       {/* Stats */}
       <TagsStatsCards stats={statsData || {}} />
 
-      {/* Filters */}
-      <TagsFilters
-        search={search}
-        onSearchChange={handleSearchChange}
-        status={status}
-        onStatusChange={handleStatusChange}
-        totalItems={meta.total}
-      />
+      {/* Tabs */}
+      <div className="flex items-center gap-2 border-b border-border pb-2">
+        <button
+          type="button"
+          onClick={() => setActiveTab('all')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer ${
+            activeTab === 'all'
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'text-foreground-secondary hover:text-foreground hover:bg-muted'
+          }`}
+        >
+          All QR Tags
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('batches')}
+          className={`px-4 py-2 rounded-lg text-sm font-medium transition-all cursor-pointer flex items-center gap-2 ${
+            activeTab === 'batches'
+              ? 'bg-primary text-primary-foreground shadow-sm'
+              : 'text-foreground-secondary hover:text-foreground hover:bg-muted'
+          }`}
+        >
+          <Layers size={15} />
+          <span>Generated Batches</span>
+          {batchesData?.meta?.total > 0 && (
+            <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-white/20">
+              {batchesData.meta.total}
+            </span>
+          )}
+        </button>
+      </div>
 
-      {/* Bulk Action Toolbar */}
+      {activeTab === 'batches' ? (
+        <TagBatchesList
+          batches={batchesData.data}
+          meta={batchesData.meta}
+          onPageChange={(p) => setBatchesPage(p)}
+          onDownloadCsv={handleDownloadCsv}
+          onDownloadZip={handleDownloadZip}
+          onDeleteBatch={handleDeleteBatchPrompt}
+          onFilterByBatch={handleFilterByBatch}
+          isLoading={batchesLoading}
+        />
+      ) : (
+        <>
+          {/* Filters */}
+          <TagsFilters
+            search={search}
+            onSearchChange={handleSearchChange}
+            status={status}
+            onStatusChange={handleStatusChange}
+            totalItems={meta.total}
+          />
+
+          {/* Bulk Action Toolbar */}
       {selectedIds.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
@@ -484,6 +597,8 @@ export default function AdminTagsPage() {
           className="pt-2"
         />
       )}
+        </>
+      )}
 
       {/* Offscreen Canvas for Direct PNG Downloads */}
       {downloadTag && (
@@ -550,6 +665,21 @@ export default function AdminTagsPage() {
         confirmLabel={`Delete ${selectedIds.length} Tag(s)`}
         onConfirm={handleBulkDeleteConfirm}
         isLoading={bulkDeleteLoading}
+      />
+      <ConfirmDialog
+        open={batchDeleteOpen}
+        onOpenChange={setBatchDeleteOpen}
+        variant="delete"
+        userName={batchToDelete?.batchId || ''}
+        title={`Delete QR Batch: ${batchToDelete?.batchId || ''}`}
+        description={`Are you sure you want to delete this batch? All eligible unassigned/unclaimed tags (approx. ${
+          batchToDelete?.availableCount ?? batchToDelete?.createdQuantity ?? 0
+        }) will be permanently deleted. Any claimed or order-linked tags (${
+          batchToDelete?.claimedCount ?? 0
+        }) will remain strictly protected and preserved.`}
+        confirmLabel="Delete Eligible Batch Tags"
+        onConfirm={handleDeleteBatchConfirm}
+        isLoading={batchDeleteLoading}
       />
 
       <Toaster position="top-right" toastOptions={{ duration: 3000, style: { borderRadius: '12px', background: 'var(--popover)', color: 'var(--popover-foreground)', border: '1px solid var(--border)' }, success: { iconTheme: { primary: '#22c55e', secondary: '#fff' } }, error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } } }} />

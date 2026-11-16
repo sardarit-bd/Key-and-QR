@@ -27,6 +27,7 @@ export default function TagBatchGenerateDialog({
 }) {
   const [quantity, setQuantity] = useState(200);
   const [prefix, setPrefix] = useState('TAG');
+  const [batchType, setBatchType] = useState('production');
   const [error, setError] = useState('');
   const [downloadingCsv, setDownloadingCsv] = useState(false);
   const [downloadingZip, setDownloadingZip] = useState(false);
@@ -35,6 +36,7 @@ export default function TagBatchGenerateDialog({
     if (open && !completedBatch) {
       setQuantity(200);
       setPrefix('TAG');
+      setBatchType('production');
       setError('');
     }
   }, [open, completedBatch]);
@@ -57,7 +59,7 @@ export default function TagBatchGenerateDialog({
 
   const handleSave = () => {
     if (!validate()) return;
-    onSave({ quantity: Number(quantity), prefix: prefix.trim() });
+    onSave({ quantity: Number(quantity), prefix: prefix.trim(), batchType });
   };
 
   const handleCsvDownload = async () => {
@@ -200,6 +202,36 @@ export default function TagBatchGenerateDialog({
                 placeholder="e.g. TAG"
                 className={`text-sm ${error && error.includes('prefix') ? 'border-destructive' : ''}`}
               />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="block text-xs font-medium text-foreground-secondary">
+                Batch Purpose / Type
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setBatchType('production')}
+                  className={`py-2 px-3 rounded-lg text-xs font-medium border text-center transition-all cursor-pointer ${
+                    batchType === 'production'
+                      ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                      : 'bg-card text-foreground-secondary hover:text-foreground border-border'
+                  }`}
+                >
+                  Production (Manufacturing)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setBatchType('testing')}
+                  className={`py-2 px-3 rounded-lg text-xs font-medium border text-center transition-all cursor-pointer ${
+                    batchType === 'testing'
+                      ? 'bg-amber-500/10 text-amber-400 border-amber-500/40 shadow-sm'
+                      : 'bg-card text-foreground-secondary hover:text-foreground border-border'
+                  }`}
+                >
+                  Testing (QA / Sample)
+                </button>
+              </div>
             </div>
             {error && <p className="text-[11px] text-destructive font-medium">{error}</p>}
           </div>
