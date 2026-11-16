@@ -32,7 +32,16 @@ function getStatusKey(tag) {
   return 'unused';
 }
 
-function TagRow({ tag, onShowQR, onDownload, onAssign, onToggleStatus, onDelete }) {
+function TagRow({
+  tag,
+  isSelected = false,
+  onToggleSelect,
+  onShowQR,
+  onDownload,
+  onAssign,
+  onToggleStatus,
+  onDelete,
+}) {
   const sk = getStatusKey(tag);
   const style = STATUS_STYLES[sk];
   const label = STATUS_LABELS[sk];
@@ -65,7 +74,22 @@ function TagRow({ tag, onShowQR, onDownload, onAssign, onToggleStatus, onDelete 
   const quoteCategory = assignedQuote?.category;
 
   return (
-    <div className="grid grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)_minmax(0,2.2fr)_minmax(0,1.8fr)_minmax(0,90px)_minmax(0,36px)] items-center gap-2.5 py-3 px-2 hover:bg-muted/30 rounded-lg transition-colors">
+    <div
+      className={`grid grid-cols-[36px_minmax(0,1.8fr)_minmax(0,1fr)_minmax(0,2.2fr)_minmax(0,1.8fr)_minmax(0,90px)_minmax(0,36px)] items-center gap-2.5 py-3 px-2 rounded-lg transition-colors ${
+        isSelected ? 'bg-primary/5 hover:bg-primary/10' : 'hover:bg-muted/30'
+      }`}
+    >
+      {/* Checkbox */}
+      <div className="flex items-center justify-center">
+        <input
+          type="checkbox"
+          checked={isSelected}
+          onChange={() => onToggleSelect && onToggleSelect(tag._id)}
+          className="w-3.5 h-3.5 rounded border-border bg-background cursor-pointer accent-primary"
+          aria-label={`Select tag ${tag.tagCode}`}
+        />
+      </div>
+
       {/* Tag Code + ID + Plan */}
       <div className="min-w-0">
         <p className="text-sm font-semibold text-foreground truncate">{tag.tagCode}</p>
@@ -142,8 +166,21 @@ function TagRow({ tag, onShowQR, onDownload, onAssign, onToggleStatus, onDelete 
   );
 }
 
-export default function TagsTable({ tags = [], onShowQR, onDownload, onAssign, onToggleStatus, onDelete }) {
+export default function TagsTable({
+  tags = [],
+  selectedIds = [],
+  onToggleSelect,
+  onSelectAll,
+  onShowQR,
+  onDownload,
+  onAssign,
+  onToggleStatus,
+  onDelete,
+}) {
   if (tags.length === 0) return null;
+
+  const allSelected = tags.length > 0 && tags.every((t) => selectedIds.includes(t._id));
+  const someSelected = selectedIds.length > 0 && !allSelected;
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}>
@@ -155,7 +192,19 @@ export default function TagsTable({ tags = [], onShowQR, onDownload, onAssign, o
           </h2>
         </div>
 
-        <div className="hidden lg:grid grid-cols-[minmax(0,1.8fr)_minmax(0,1fr)_minmax(0,2.2fr)_minmax(0,1.8fr)_minmax(0,90px)_minmax(0,36px)] items-center gap-2.5 px-2 pb-2 text-[10px] text-foreground-tertiary font-medium uppercase tracking-wider border-b border-border/50 mb-1">
+        <div className="hidden lg:grid grid-cols-[36px_minmax(0,1.8fr)_minmax(0,1fr)_minmax(0,2.2fr)_minmax(0,1.8fr)_minmax(0,90px)_minmax(0,36px)] items-center gap-2.5 px-2 pb-2 text-[10px] text-foreground-tertiary font-medium uppercase tracking-wider border-b border-border/50 mb-1">
+          <div className="flex items-center justify-center">
+            <input
+              type="checkbox"
+              checked={allSelected}
+              ref={(el) => {
+                if (el) el.indeterminate = someSelected;
+              }}
+              onChange={onSelectAll}
+              className="w-3.5 h-3.5 rounded border-border bg-background cursor-pointer accent-primary"
+              aria-label="Select all tags on this page"
+            />
+          </div>
           <span>Tag</span>
           <span>Status</span>
           <span>Assigned Quote / Category</span>
@@ -169,6 +218,8 @@ export default function TagsTable({ tags = [], onShowQR, onDownload, onAssign, o
             <motion.div key={tag._id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.05 * i }}>
               <TagRow
                 tag={tag}
+                isSelected={selectedIds.includes(tag._id)}
+                onToggleSelect={onToggleSelect}
                 onShowQR={onShowQR}
                 onDownload={onDownload}
                 onAssign={onAssign}

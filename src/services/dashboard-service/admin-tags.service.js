@@ -100,6 +100,44 @@ export const adminTagsService = {
     window.URL.revokeObjectURL(url);
   },
 
+  /** Bulk delete selected tags */
+  bulkDeleteTags: async (tagIds) => {
+    const response = await api.post('/tags/bulk-delete', { tagIds });
+    return response.data;
+  },
+
+  /** Download selected tags CSV */
+  downloadSelectedCsv: async (tagIds) => {
+    const response = await api.post('/tags/export/csv', { tagIds }, {
+      responseType: 'blob',
+    });
+    const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `myinspiretag-selected-tags.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
+
+  /** Download selected tags ZIP */
+  downloadSelectedZip: async (tagIds) => {
+    const response = await api.post('/tags/export/zip', { tagIds }, {
+      responseType: 'blob',
+    });
+    const blob = new Blob([response.data], { type: 'application/zip' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `MyInspireTag-Selected-QR-Codes.zip`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
+
   /** Update a tag (isActive, subscriptionType) */
   updateTag: async (id, payload) => {
     const response = await api.patch(`/tags/${id}`, payload);

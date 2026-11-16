@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { Toaster } from 'react-hot-toast';
 import { motion } from 'framer-motion';
-import { QrCode, Layers, Plus } from 'lucide-react';
+import { QrCode, Layers, Plus, Download, FileText, Trash2, X, Loader2 } from 'lucide-react';
 import { QRCodeCanvas } from 'qrcode.react';
 import { getPublicTagUrl } from '@/utils/qr.utils';
 import Card from '@/components/dashboard/user/dashboard/Card';
@@ -13,6 +13,7 @@ import {
   useAdminTagStats,
   useAdminTagActions,
 } from '@/hooks/dashboard/useAdminTags';
+import { adminTagsService } from '@/services/dashboard-service/admin-tags.service';
 import { adminOrdersService } from '@/services/dashboard-service/admin-orders.service';
 import TagsStatsCards from './TagsStatsCards';
 import TagsFilters from './TagsFilters';
@@ -94,8 +95,82 @@ export default function AdminTagsPage() {
   }, [downloadTag]);
 
   // Filter handlers
-  const handleSearchChange = useCallback((v) => { setSearch(v); setPage(1); }, []);
-  const handleStatusChange = useCallback((v) => { setStatus(v); setPage(1); }, []);
+  const handleSearchChange = useCallback((v) => { setSearch(v); setPage(1); setSelectedIds([]); }, []);
+  const handleStatusChange = useCallback((v) => { setStatus(v); setPage(1); setSelectedIds([]); }, []);
+
+  // Selection state
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
+  const [bulkExportCsvLoading, setBulkExportCsvLoading] = useState(false);
+  const [bulkExportZipLoading, setBulkExportZipLoading] = useState(false);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+
+  const handleToggleSelect = useCallback((id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  }, []);
+
+  const handleSelectAll = useCallback(() => {
+    if (selectedIds.length === tags.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(tags.map((t) => t._id));
+    }
+  }, [tags, selectedIds]);
+
+  const handleClearSelection = useCallback(() => {
+    setSelectedIds([]);
+  }, []);
+
+  const handleExportSelectedCsv = useCallback(async () => {
+    if (selectedIds.length === 0) return;
+    setBulkExportCsvLoading(true);
+    try {
+      await adminTagsService.downloadSelectedCsv(selectedIds);
+      toast.success(`Exported ${selectedIds.length} tags to CSV`);
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to export CSV');
+    } finally {
+      setBulkExportCsvLoading(false);
+    }
+  }, [selectedIds]);
+
+  const handleExportSelectedZip = useCallback(async () => {
+    if (selectedIds.length === 0) return;
+    setBulkExportZipLoading(true);
+    try {
+      toast.loading(`Generating ZIP for ${selectedIds.length} QR codes...`, { id: 'bulk-zip-download' });
+      await adminTagsService.downloadSelectedZip(selectedIds);
+      toast.success(`Exported ${selectedIds.length} QR codes to ZIP`, { id: 'bulk-zip-download' });
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to export ZIP', { id: 'bulk-zip-download' });
+    } finally {
+      setBulkExportZipLoading(false);
+    }
+  }, [selectedIds]);
+
+  const handleBulkDeleteConfirm = useCallback(async () => {
+    if (selectedIds.length === 0) return;
+    setBulkDeleteLoading(true);
+    try {
+      const res = await adminTagsService.bulkDeleteTags(selectedIds);
+      const data = res?.data || res;
+      if (data.deleted > 0) {
+        toast.success(`Successfully deleted ${data.deleted} tag(s)`);
+      }
+      if (data.failed > 0) {
+        toast.error(`${data.failed} tag(s) could not be deleted (already assigned or claimed)`);
+      }
+      setBulkDeleteOpen(false);
+      setSelectedIds([]);
+      refetch();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to delete tags');
+    } finally {
+      setBulkDeleteLoading(false);
+    }
+  }, [selectedIds, refetch]);
 
   // QR & Download Actions
   const handleShowQR = useCallback((tag) => setQrTag(tag), []);
@@ -298,6 +373,61 @@ export default function AdminTagsPage() {
         totalItems={meta.total}
       />
 
+      {/* Bulk Action Toolbar */}
+      {selectedIds.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-wrap items-center justify-between gap-3 p-3 sm:px-4 rounded-xl bg-card border border-primary/30 shadow-md"
+        >
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-semibold text-primary px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20">
+              {selectedIds.length} selected
+            </span>
+            <button
+              type="button"
+              onClick={handleClearSelection}
+              className="text-xs text-foreground-secondary hover:text-foreground flex items-center gap-1 cursor-pointer transition-colors"
+            >
+              <X size={13} />
+              Clear Selection
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              type="button"
+              onClick={handleExportSelectedCsv}
+              disabled={bulkExportCsvLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-border bg-card hover:bg-muted text-xs font-medium text-foreground transition-all cursor-pointer disabled:opacity-50"
+            >
+              {bulkExportCsvLoading ? <Loader2 size={13} className="animate-spin" /> : <FileText size={13} />}
+              Export CSV
+            </button>
+
+            <button
+              type="button"
+              onClick={handleExportSelectedZip}
+              disabled={bulkExportZipLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-primary/30 bg-primary/10 hover:bg-primary/20 text-xs font-medium text-primary transition-all cursor-pointer disabled:opacity-50"
+            >
+              {bulkExportZipLoading ? <Loader2 size={13} className="animate-spin" /> : <Download size={13} />}
+              Download ZIP
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setBulkDeleteOpen(true)}
+              disabled={bulkDeleteLoading}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-destructive/30 bg-destructive/10 hover:bg-destructive/20 text-xs font-medium text-destructive transition-all cursor-pointer disabled:opacity-50"
+            >
+              {bulkDeleteLoading ? <Loader2 size={13} className="animate-spin" /> : <Trash2 size={13} />}
+              Delete Selected
+            </button>
+          </div>
+        </motion.div>
+      )}
+
       {/* No results */}
       {!isLoading && tags.length === 0 && (
         <Card className="p-10 sm:p-12">
@@ -314,6 +444,9 @@ export default function AdminTagsPage() {
         <div className="hidden lg:block">
           <TagsTable
             tags={tags}
+            selectedIds={selectedIds}
+            onToggleSelect={handleToggleSelect}
+            onSelectAll={handleSelectAll}
             onShowQR={handleShowQR}
             onDownload={handleDownload}
             onAssign={handleAssignToOrder}
@@ -344,6 +477,7 @@ export default function AdminTagsPage() {
           onItemsPerPageChange={(newLimit) => {
             setLimit(newLimit);
             setPage(1);
+            setSelectedIds([]);
           }}
           itemsPerPageOptions={[5, 10, 20, 50]}
           label="tags"
@@ -405,6 +539,17 @@ export default function AdminTagsPage() {
         confirmLabel="Delete Permanently"
         onConfirm={handleDeleteConfirm}
         isLoading={deleteLoading || deleteTagMutation.isPending}
+      />
+      <ConfirmDialog
+        open={bulkDeleteOpen}
+        onOpenChange={setBulkDeleteOpen}
+        variant="delete"
+        userName={`${selectedIds.length} tag(s)`}
+        title="Delete Selected QR Tags"
+        description="Are you sure you want to delete the selected tags? Note that only unassigned and unactivated tags will be deleted. Any claimed or order-assigned tags will be protected and preserved."
+        confirmLabel={`Delete ${selectedIds.length} Tag(s)`}
+        onConfirm={handleBulkDeleteConfirm}
+        isLoading={bulkDeleteLoading}
       />
 
       <Toaster position="top-right" toastOptions={{ duration: 3000, style: { borderRadius: '12px', background: 'var(--popover)', color: 'var(--popover-foreground)', border: '1px solid var(--border)' }, success: { iconTheme: { primary: '#22c55e', secondary: '#fff' } }, error: { iconTheme: { primary: '#ef4444', secondary: '#fff' } } }} />
