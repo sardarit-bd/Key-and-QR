@@ -56,6 +56,50 @@ export const adminTagsService = {
     return response.data;
   },
 
+  /** Get all batches */
+  getAllBatches: async ({ page = 1, limit = 10 } = {}) => {
+    const response = await api.get('/tags/batches', { params: { page, limit } });
+    return response.data;
+  },
+
+  /** Get batch details by ID */
+  getBatchById: async (batchId) => {
+    const response = await api.get(`/tags/batches/${batchId}`);
+    return response.data;
+  },
+
+  /** Download batch CSV */
+  downloadBatchCsv: async (batchId) => {
+    const response = await api.get(`/tags/batches/${batchId}/export/csv`, {
+      responseType: 'blob',
+    });
+    const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `MyInspireTag-Batch-${batchId}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
+
+  /** Download batch ZIP */
+  downloadBatchZip: async (batchId) => {
+    const response = await api.get(`/tags/batches/${batchId}/export/zip`, {
+      responseType: 'blob',
+    });
+    const blob = new Blob([response.data], { type: 'application/zip' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `MyInspireTag-Batch-${batchId}.zip`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  },
+
   /** Update a tag (isActive, subscriptionType) */
   updateTag: async (id, payload) => {
     const response = await api.patch(`/tags/${id}`, payload);

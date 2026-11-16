@@ -48,6 +48,7 @@ export default function AdminTagsPage() {
 
   const [batchOpen, setBatchOpen] = useState(false);
   const [batchLoading, setBatchLoading] = useState(false);
+  const [completedBatch, setCompletedBatch] = useState(null);
 
   const [assignTag, setAssignTag] = useState(null);
   const [assignOpen, setAssignOpen] = useState(false);
@@ -118,15 +119,36 @@ export default function AdminTagsPage() {
   const handleBatchGenerateSave = useCallback(async ({ quantity, prefix }) => {
     setBatchLoading(true);
     try {
-      await bulkGenerateTags.mutateAsync({ quantity, prefix });
-      toast.success(`Batch generated ${quantity} QR tags successfully`);
-      setBatchOpen(false);
+      const response = await bulkGenerateTags.mutateAsync({ quantity, prefix });
+      const batchData = response?.data || response;
+      setCompletedBatch(batchData);
+      toast.success(`Batch generated exactly ${quantity} QR tags successfully`);
+      refetch();
     } catch (err) {
       toast.error(err?.response?.data?.message || err?.message || 'Failed to generate tags');
     } finally {
       setBatchLoading(false);
     }
-  }, [bulkGenerateTags]);
+  }, [bulkGenerateTags, refetch]);
+
+  const handleDownloadCsv = useCallback(async (batchId) => {
+    try {
+      await adminTagsService.downloadBatchCsv(batchId);
+      toast.success('CSV downloaded successfully');
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to download CSV');
+    }
+  }, []);
+
+  const handleDownloadZip = useCallback(async (batchId) => {
+    try {
+      toast.loading('Generating ZIP package, please wait...', { id: 'zip-download' });
+      await adminTagsService.downloadBatchZip(batchId);
+      toast.success('ZIP package downloaded successfully', { id: 'zip-download' });
+    } catch (err) {
+      toast.error(err?.response?.data?.message || err?.message || 'Failed to download ZIP', { id: 'zip-download' });
+    }
+  }, []);
 
   // Assignment
   const handleAssignToOrder = useCallback((tag) => {
@@ -344,7 +366,18 @@ export default function AdminTagsPage() {
       {/* Dialogs */}
       <TagQRDialog open={!!qrTag} onOpenChange={(o) => { if (!o) setQrTag(null); }} tag={qrTag} />
       <TagCreateDialog open={createOpen} onOpenChange={setCreateOpen} onSave={handleCreateSave} isLoading={createLoading} />
-      <TagBatchGenerateDialog open={batchOpen} onOpenChange={setBatchOpen} onSave={handleBatchGenerateSave} isLoading={batchLoading} />
+      <TagBatchGenerateDialog
+        open={batchOpen}
+        onOpenChange={(open) => {
+          setBatchOpen(open);
+          if (!open) setCompletedBatch(null);
+        }}
+        onSave={handleBatchGenerateSave}
+        isLoading={batchLoading}
+        completedBatch={completedBatch}
+        onDownloadCsv={handleDownloadCsv}
+        onDownloadZip={handleDownloadZip}
+      />
       <AssignOrderModal open={assignOpen} onOpenChange={setAssignOpen} onAssign={handleAssignConfirm} />
 
       <ConfirmDialog
